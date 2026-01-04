@@ -1,0 +1,5 @@
+# cat=basic/enable; type=boolean; label=Enable enableLogging:Log API requests
+enableLogging = 0
+
+# cat=basic/expiration; type=int; label=Time in seconds until a JWT / Bearer-Token expires
+tokenExpirationTime = 86400

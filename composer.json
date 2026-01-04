@@ -1,0 +1,24 @@
+{
+	"name": "sgalinski/sg-apicore",
+	"type": "typo3-cms-extension",
+	"description": "Provides an API framework for TYPO3: routing, logging, FE user/bearer auth, entity registration (field whitelist), pagination, custom endpoints and CRUD permissions.",
+	"homepage": "https://www.sgalinski.de",
+	"license": "GPL-2.0-or-later",
+	"version": "1.0.0",
+	"require": {
+		"typo3/cms-core": "^12.4.0|^13.4.0"
+	},
+	"replace": {
+		"sgalinski/sg_apicore": "self.version"
+	},
+	"extra": {
+		"typo3/cms": {
+			"extension-key": "sg_apicore"
+		}
+	},
+	"autoload": {
+		"psr-4": {
+			"SGalinski\\SgApiCore\\": "Classes/"
+		}
+	}
+}
