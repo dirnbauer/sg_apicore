@@ -12,7 +12,7 @@ $EM_CONF['sg_apicore'] = [
 	'constraints' => [
 		'depends' => [
 			'typo3' => '12.4.0-13.4.99',
-			'php' => '8.2.0-8.4.99',
+			'php' => '8.3.0-8.4.99',
 		],
 		'conflicts' => [],
 		'suggests' => [],
