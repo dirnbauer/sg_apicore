@@ -31,6 +31,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
 /**
@@ -43,10 +45,28 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	protected ExtensionConfiguration $extensionConfiguration;
 
 	/**
-	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @var ApiRegistry
 	 */
-	public function __construct(ExtensionConfiguration $extensionConfiguration) {
+	protected ApiRegistry $apiRegistry;
+
+	/**
+	 * @var Router
+	 */
+	protected Router $router;
+
+	/**
+	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @param ApiRegistry $apiRegistry
+	 * @param Router $router
+	 */
+	public function __construct(
+		ExtensionConfiguration $extensionConfiguration,
+		ApiRegistry $apiRegistry,
+		Router $router
+	) {
 		$this->extensionConfiguration = $extensionConfiguration;
+		$this->apiRegistry = $apiRegistry;
+		$this->router = $router;
 	}
 
 	/**
@@ -55,6 +75,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
+	 * @throws \ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
@@ -64,10 +85,61 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			return $handler->handle($request);
 		}
 
-		if (rtrim($path, '/') === $apiPathPrefix . 'health') {
+		// Normalize a path for internal processing: remove trailing slash if it's not just '/'
+		$normalizedPath = $path !== '/' ? rtrim($path, '/') : $path;
+
+		// basic API health check
+		if ($normalizedPath === rtrim($apiPathPrefix, '/')) {
 			return new JsonResponse(['status' => 'ok']);
 		}
 
-		return $handler->handle($request);
+		if ($normalizedPath === rtrim($apiPathPrefix, '/') . '/health') {
+			return new JsonResponse(['status' => 'ok']);
+		}
+
+		// Pattern: /api/{apiId}/v{version}/{remainingPath}
+		$relativeWeight = strlen($apiPathPrefix);
+		$relativeRequestPath = substr($path, $relativeWeight);
+		// Normalize a relative path: remove the trailing slash but keep it if it's empty to allow regex match
+		$relativeRequestPath = rtrim($relativeRequestPath, '/');
+
+		// Regex to match {apiId}/v(\d+)(/.*)?
+		if (preg_match('#^([^/]+)/v(\d+)(/.*)?$#', $relativeRequestPath, $matches)) {
+			$apiId = $matches[1];
+			/** @noinspection MultiAssignmentUsageInspection */
+			$version = $matches[2];
+			$remainingPath = $matches[3] ?? '/';
+			// Normalize the remaining path for the router
+			$remainingPath = $remainingPath !== '/' ? rtrim($remainingPath, '/') : $remainingPath;
+			if ($remainingPath === '') {
+				$remainingPath = '/';
+			}
+
+			if ($this->apiRegistry->hasApi($apiId)) {
+				$apiConfig = $this->apiRegistry->getApi($apiId);
+				if (in_array($version, $apiConfig['versions'], TRUE)) {
+					return $this->router->dispatch($request, $apiId, $version, $remainingPath);
+				}
+			}
+		}
+
+		return $this->createErrorResponse('Not Found', 'The requested API or version does not exist.', 404);
+	}
+
+	/**
+	 * Creates a Problem JSON error response (RFC 7807)
+	 *
+	 * @param string $title
+	 * @param string $detail
+	 * @param int $status
+	 * @return ResponseInterface
+	 */
+	protected function createErrorResponse(string $title, string $detail, int $status): ResponseInterface {
+		return new JsonResponse([
+			'title' => $title,
+			'detail' => $detail,
+			'status' => $status,
+			'type' => 'about:blank'
+		], $status, ['Content-Type' => 'application/problem+json']);
 	}
 }

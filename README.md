@@ -27,17 +27,72 @@ pagination, custom endpoints and CRUD permissions.
 You can test the API by calling the health endpoint:
 
 ```bash
+# Basic health check
 curl http://your-project.local/api/health
+
+# API-specific health check (if registered)
+curl http://your-project.local/api/public/v1/health
 ```
 
 The API path prefix is configurable via the extension configuration (default: `/api/`).
 
-## Development
+## API Registration
 
-Run the following commands in the project root for code quality checks:
+To register a new API, you can use the `ApiRegistry` service in your `ext_localconf.php`:
 
-```bash
-composer ecs
-composer phpstan
-composer phpunit -- local/sg-apicore/tests/Unit/
+```php
+use SGalinski\SgApiCore\Service\ApiRegistry;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
+$apiRegistry->registerApi('public', ['1']);
+$apiRegistry->registerApi('partner', ['1', '2']);
 ```
+
+## Routing
+
+Endpoints are defined using PHP attributes on controller methods:
+
+```php
+use SGalinski\SgApiCore\Attribute\ApiRoute;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Http\JsonResponse;
+
+class MyController {
+    #[ApiRoute(path: '/my-endpoint', methods: ['GET'], apiId: 'public', version: '1')]
+    public function myAction(ServerRequestInterface $request): ResponseInterface {
+        return new JsonResponse(['message' => 'Hello World']);
+    }
+}
+```
+
+### Endpoint Filtering
+
+By default, an endpoint is available for all registered APIs and versions. You can restrict an endpoint to a specific
+API or version by using the `apiId` and `version` properties of the `ApiRoute` attribute:
+
+```php
+// Only available for /api/public/v1/...
+#[ApiRoute(path: '/public-only', methods: ['GET'], apiId: 'public', version: '1')]
+
+// Available for all APIs in version 1
+#[ApiRoute(path: '/v1-global', methods: ['GET'], version: '1')]
+```
+
+The router dynamically filters the available routes based on the `apiId` and `version` extracted from the request URL.
+
+### Why not standard TYPO3 Routing?
+
+Standard TYPO3 routing (via Site Configuration and Enhancers) is tightly coupled to the page tree and site handling. For
+a high-performance data API, we chose `nikic/fast-route` for several reasons:
+
+- **Performance**: It is extremely fast and operates independently of the TYPO3 page tree resolution.
+- **Decoupling**: The API layer remains lean and isn't affected by frontend-related routing logic or redirects.
+- **Flexibility**: Attributes allow for a modern, developer-friendly way to define endpoints directly in the controller,
+  similar to Symfony or other modern frameworks.
+- **Multi-API & Versioning**: It simplifies the implementation of complex patterns like `/api/{apiId}/v{version}/...`
+  without requiring complex Enhancer configurations.
+
+This approach allows the API to function as a specialized layer that intercepts requests before they hit the standard
+frontend processing.

@@ -8,6 +8,8 @@ use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
+use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -21,18 +23,71 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri->method('getPath')->willReturn('/api/health');
 		$request->method('getUri')->willReturn($uri);
 
-		$handler = $this->createMock(RequestHandlerInterface::class);
-		$handler->expects($this->never())->method('handle');
+		$handler = $this->createStub(RequestHandlerInterface::class);
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$router = $this->createStub(Router::class);
+
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
 		$this->assertEquals(200, $response->getStatusCode());
 		$this->assertEquals('{"status":"ok"}', (string) $response->getBody());
+	}
+
+	public function testProcessReturnsJsonResponseForHealthEndpointWithTrailingSlash(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/health/');
+		$request->method('getUri')->willReturn($uri);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$router = $this->createStub(Router::class);
+
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+		$this->assertEquals('{"status":"ok"}', (string) $response->getBody());
+	}
+
+	public function testProcessCallsRouterForValidApiRequestWithTrailingSlash(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('GET');
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/public/v1/health/');
+		$request->method('getUri')->willReturn($uri);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('public')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('public')->willReturn(['versions' => ['1']]);
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$router = $this->createMock(Router::class);
+		$router->expects($this->once())
+			->method('dispatch')
+			->with($request, 'public', '1', '/health')
+			->willReturn($responseMock);
+
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertSame($responseMock, $response);
 	}
 
 	public function testProcessDelegatesToHandlerForNonApiRequests(): void {
@@ -48,9 +103,65 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$router = $this->createStub(Router::class);
+
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertSame($responseMock, $response);
+	}
+
+	public function testProcessCallsRouterForValidApiRequest(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('GET');
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/public/v1/health');
+		$request->method('getUri')->willReturn($uri);
+
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->never())->method('handle');
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('public')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('public')->willReturn(['versions' => ['1']]);
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$router = $this->createMock(Router::class);
+		$router->expects($this->once())
+			->method('dispatch')
+			->with($request, 'public', '1', '/health')
+			->willReturn($responseMock);
+
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertSame($responseMock, $response);
+	}
+
+	public function testProcessReturns404ForUnknownApi(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/unknown/v1/health');
+		$request->method('getUri')->willReturn($uri);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('unknown')->willReturn(FALSE);
+
+		$router = $this->createStub(Router::class);
+
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertEquals(404, $response->getStatusCode());
+		$this->assertStringContainsString('application/problem+json', $response->getHeaderLine('Content-Type'));
 	}
 }
