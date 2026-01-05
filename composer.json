@@ -20,5 +20,10 @@
 		"psr-4": {
 			"SGalinski\\SgApiCore\\": "Classes/"
 		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"SGalinski\\SgApiCore\\Tests\\": "tests/"
+		}
 	}
 }

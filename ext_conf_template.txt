@@ -3,3 +3,6 @@ enableLogging = 0
 
 # cat=basic/expiration; type=int; label=Time in seconds until a JWT / Bearer-Token expires
 tokenExpirationTime = 86400
+
+# cat=basic/path; type=string; label=The path prefix for the API (default: /api/)
+apiPathPrefix = /api/
