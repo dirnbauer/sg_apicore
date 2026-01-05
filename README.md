@@ -10,8 +10,25 @@ Please report bugs here: https://gitlab.sgalinski.de/typo3/sg_apicore/-/issues
 
 ## Short Summary
 
-Provides an API framework for TYPO3: routing, logging, FE user/bearer auth, entity registration (field whitelist),
-pagination, custom endpoints and CRUD permissions.
+Provides an API framework for TYPO3: Multi-API, Mulit-Tenants, Attribute based endpoint configuration, Logging,
+Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints
+
+## Directory Structure
+
+The extension follows a standard TYPO3 extension structure with a focus on clean separation of concerns:
+
+- `Classes/`
+    - `Attribute/`: PHP attributes for routing and configuration (e.g., `#[ApiRoute]`).
+    - `Configuration/`: Configuration readers and objects.
+    - `Context/`: Value objects for request context (e.g., `TenantContext`).
+    - `Controller/`: API controllers handling the requests.
+    - `Middleware/`: PSR-15 middlewares (e.g., `ApiRequestMiddleware` for request interception).
+    - `Service/`
+        - `Tenant/`: Tenant resolution logic and resolvers.
+        - `ApiRegistry.php`: Service to register APIs and versions.
+        - `Router.php`: FastRoute-based dispatcher.
+- `Configuration/`: TYPO3 configuration files (Services, Middlewares, TCA).
+- `tests/`: Unit and functional tests.
 
 ## Installation
 
@@ -28,10 +45,10 @@ You can test the API by calling the health endpoint:
 
 ```bash
 # Basic health check
-curl http://your-project.local/api/health
+curl https://your-project.local/api/health
 
 # API-specific health check (if registered)
-curl http://your-project.local/api/public/v1/health
+curl https://your-project.local/api/public/v1/health
 ```
 
 The API path prefix is configurable via the extension configuration (default: `/api/`).
@@ -96,3 +113,70 @@ a high-performance data API, we chose `nikic/fast-route` for several reasons:
 
 This approach allows the API to function as a specialized layer that intercepts requests before they hit the standard
 frontend processing.
+
+## Multi-Tenancy
+
+Every API request runs in a **Tenant Context**. By default, the tenant is derived from the **TYPO3 Site** (Site
+Identifier).
+
+### Tenant Context
+
+The `TenantContext` is available in the request attributes as `api.tenant`:
+
+```php
+use SGalinski\SgApiCore\Context\TenantContext;
+
+public function myAction(ServerRequestInterface $request): ResponseInterface {
+    /** @var TenantContext $tenantContext */
+    $tenantContext = $request->getAttribute('api.tenant');
+    $tenantId = $tenantContext->getTenantId();
+    // ...
+}
+```
+
+### Tenant Resolution
+
+The extension uses a `TenantResolverChain` to determine the tenant. The following resolvers are active by default:
+
+1. **SiteTenantResolver**: Derives the tenant from the TYPO3 Site.
+2. **HeaderTenantResolver**: Checks for an `X-Tenant-Id` header.
+
+### Configuration
+
+You can configure how the `SiteTenantResolver` derives the `tenantId` via the extension configuration:
+
+- `siteTenantIdSource`: `identifier` (default), `baseHost`, or `rootPageId`.
+- `onMissingTenant`: The HTTP status code to return when no tenant can be resolved (default: `404`).
+
+### Custom Tenant Resolvers
+
+You can implement your own tenant resolution logic by creating a class that implements `TenantResolverInterface`:
+
+```php
+namespace MyVendor\MyExtension\Service\Tenant;
+
+use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
+use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
+use SGalinski\SgApiCore\Context\TenantContext;
+
+class MyCustomResolver implements TenantResolverInterface {
+    public function resolve(ServerRequestInterface $request): TenantContextResult {
+        $myId = $request->getQueryParams()['tenant'] ?? null;
+        if ($myId) {
+            return TenantContextResult::success(new TenantContext($myId));
+        }
+        return TenantContextResult::error('Tenant query parameter missing');
+    }
+}
+```
+
+To register your resolver, add it to the `TenantResolverChain` in your `Services.php`:
+
+```php
+$services->set(TenantResolverChain::class)
+    ->arg('$resolvers', [
+        Configurator\service(SiteTenantResolver::class),
+        Configurator\service(MyCustomResolver::class),
+    ]);
+```

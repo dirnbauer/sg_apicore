@@ -6,3 +6,9 @@ tokenExpirationTime = 86400
 
 # cat=basic/path; type=string; label=The path prefix for the API (default: /api/)
 apiPathPrefix = /api/
+
+# cat=basic/tenant; type=string; label=The source for the tenant ID when using the site strategy (identifier|baseHost|rootPageId)
+siteTenantIdSource = identifier
+
+# cat=basic/tenant; type=int; label=The HTTP status code to return when the tenant is missing (404|400)
+onMissingTenant = 404

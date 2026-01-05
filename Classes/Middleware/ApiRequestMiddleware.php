@@ -33,6 +33,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\Router;
+use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
 /**
@@ -55,18 +56,26 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	protected Router $router;
 
 	/**
+	 * @var TenantResolverInterface
+	 */
+	protected TenantResolverInterface $tenantResolver;
+
+	/**
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @param ApiRegistry $apiRegistry
 	 * @param Router $router
+	 * @param TenantResolverInterface $tenantResolver
 	 */
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		ApiRegistry $apiRegistry,
-		Router $router
+		Router $router,
+		TenantResolverInterface $tenantResolver
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->apiRegistry = $apiRegistry;
 		$this->router = $router;
+		$this->tenantResolver = $tenantResolver;
 	}
 
 	/**
@@ -84,6 +93,17 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		if (!str_starts_with($path, $apiPathPrefix)) {
 			return $handler->handle($request);
 		}
+
+		// Resolve tenant early
+		$tenantResult = $this->tenantResolver->resolve($request);
+		if (!$tenantResult->isSuccess()) {
+			return $this->createErrorResponse(
+				'Tenant Resolution Failed',
+				'Could not resolve a valid tenant for this request. Reason: ' . $tenantResult->getError(),
+				$this->extensionConfiguration->getOnMissingTenantStatusCode()
+			);
+		}
+		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
 
 		// Normalize a path for internal processing: remove trailing slash if it's not just '/'
 		$normalizedPath = $path !== '/' ? rtrim($path, '/') : $path;

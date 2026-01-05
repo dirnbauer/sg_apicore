@@ -90,4 +90,22 @@ class ExtensionConfiguration implements SingletonInterface {
 		$prefix = trim($this->get('apiPathPrefix', '/api/'));
 		return '/' . trim($prefix, '/') . '/';
 	}
+
+	/**
+	 * Returns the site tenant ID source (identifier|baseHost|rootPageId)
+	 *
+	 * @return string
+	 */
+	public function getSiteTenantIdSource(): string {
+		return (string) $this->get('siteTenantIdSource', 'identifier');
+	}
+
+	/**
+	 * Returns the HTTP status code to return when the tenant is missing
+	 *
+	 * @return int
+	 */
+	public function getOnMissingTenantStatusCode(): int {
+		return (int) $this->get('onMissingTenant', 404);
+	}
 }
