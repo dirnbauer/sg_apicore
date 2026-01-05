@@ -1,6 +1,6 @@
 # Ext: sg_apicore
 
-<img src="https://www.sgalinski.de/typo3conf/ext/project_theme/Resources/Public/Images/logo.svg" />
+<img src="https://www.sgalinski.de/typo3conf/ext/project_theme/Resources/Public/Images/logo.svg" alt=""/>
 
 License: [GNU GPL, Version 2](https://www.gnu.org/licenses/gpl-2.0.html)
 
@@ -18,11 +18,14 @@ Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints
 The extension follows a standard TYPO3 extension structure with a focus on clean separation of concerns:
 
 - `Classes/`
-    - `Attribute/`: PHP attributes for routing and configuration (e.g., `#[ApiRoute]`).
+    - `Attribute/`: PHP attributes for routing, configuration, and security (e.g., `#[ApiRoute]`, `#[RequireScopes]`).
     - `Configuration/`: Configuration readers and objects.
     - `Context/`: Value objects for request context (e.g., `TenantContext`).
     - `Controller/`: API controllers handling the requests.
+    - `Domain/`:
+        - `Repository/`: Repositories for database access (e.g., `TokenRepository`).
     - `Middleware/`: PSR-15 middlewares (e.g., `ApiRequestMiddleware` for request interception).
+    - `Security/`: Authentication and authorization logic (e.g., `BearerTokenProvider`, `AuthContext`).
     - `Service/`
         - `Tenant/`: Tenant resolution logic and resolvers.
         - `ApiRegistry.php`: Service to register APIs and versions.
@@ -121,7 +124,7 @@ Identifier).
 
 ### Tenant Context
 
-The `TenantContext` is available in the request attributes as `api.tenant`:
+The `TenantContext` is available in the request attributes as `api.tenant`. It also contains the full TYPO3 Site object if the `SiteTenantResolver` was used:
 
 ```php
 use SGalinski\SgApiCore\Context\TenantContext;
@@ -130,6 +133,14 @@ public function myAction(ServerRequestInterface $request): ResponseInterface {
     /** @var TenantContext $tenantContext */
     $tenantContext = $request->getAttribute('api.tenant');
     $tenantId = $tenantContext->getTenantId();
+
+    // Access the TYPO3 Site object
+    $site = $tenantContext->getSite();
+    if ($site) {
+        $configuration = $site->getConfiguration();
+        // Access apicore specific settings if stored in site config
+        $mySetting = $configuration['apicore']['my_setting'] ?? 'default';
+    }
     // ...
 }
 ```
@@ -178,5 +189,110 @@ $services->set(TenantResolverChain::class)
     ->arg('$resolvers', [
         Configurator\service(SiteTenantResolver::class),
         Configurator\service(MyCustomResolver::class),
+    ]);
+```
+
+## Security
+
+The extension provides a robust security layer based on Bearer Token authentication and scope-based authorization.
+
+### Bearer Token Authentication
+
+Authentication is handled by the `BearerTokenProvider`. It expects a token in the `Authorization` header:
+
+```bash
+Authorization: Bearer <your-token>
+```
+
+Tokens are stored in the `tx_apicore_token` table. The system supports both **Plaintext tokens** and **JWTs**.
+The `BearerTokenProvider` will automatically detect the token type.
+
+#### Token Storage & Lookup
+
+Tokens are bound to a **Tenant** and an **API**. Additionally, tokens should only be managed at the **Root Page** (pid 0
+or root of a site) to support multi-domain setups in TYPO3.
+
+#### Creating a Token (Manual)
+
+1. Generate a secure random string or a JWT.
+2. Insert a record into `tx_apicore_token` (at the root level):
+    - `tenant_id`: The ID of the tenant (e.g., site identifier).
+    - `api_id`: The ID of the API (e.g., `public`).
+    - `token`: The plaintext token or JWT string.
+    - `scopes`: A JSON array of scopes (e.g., `["read", "write"]`).
+    - `expires_at`: (Optional) Unix timestamp.
+
+### Scope-based Authorization
+
+You can restrict access to endpoints based on scopes using the `#[RequireScopes]` attribute:
+
+```php
+use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\RequireScopes;
+
+class MyController {
+    #[ApiRoute(path: '/secure-data', methods: ['GET'], apiId: 'public', version: '1')]
+    #[RequireScopes(['data:read'])]
+    public function secureAction(ServerRequestInterface $request): ResponseInterface {
+        // ...
+    }
+}
+```
+
+#### How Scopes Work
+
+- **If an endpoint has NO `#[RequireScopes]` attribute**: It is publicly accessible (still requires a valid token if any
+  `LoginProvider` is active, unless you implement a public provider).
+- **If an endpoint has an EMPTY `#[RequireScopes([])]` attribute**: It still requires a valid authentication but no
+  specific scope.
+- **If an endpoint has Scopes defined**: The authenticated `AuthContext` must have **ALL** the specified scopes to
+  access the endpoint.
+
+If a request is made without a valid token or without the required scopes, the API will return a **401 Unauthorized** or
+**403 Forbidden** Problem JSON response.
+
+### Auth Context
+
+If a request is authenticated, the `AuthContext` is available in the request attributes:
+
+```php
+use SGalinski\SgApiCore\Security\AuthContext;
+
+public function myAction(ServerRequestInterface $request): ResponseInterface {
+    /** @var AuthContext $authContext */
+    $authContext = $request->getAttribute('api.auth');
+    if ($authContext) {
+        $tokenUid = $authContext->getTokenUid();
+        $scopes = $authContext->getScopes();
+    }
+}
+```
+
+### Custom Login Providers
+
+You can extend the security layer by implementing your own `LoginProviderInterface`:
+
+```php
+namespace MyVendor\MyExtension\Security;
+
+use Psr\Http\Message\ServerRequestInterface;use SGalinski\SgApiCore\Security\AuthContext;use SGalinski\SgApiCore\Security\LoginProviderInterface;
+
+class MyLoginProvider implements LoginProviderInterface {
+    public function authenticate(ServerRequestInterface $request, string $apiId, string $tenantId): ?AuthContext {
+        // Your custom authentication logic (e.g., check a custom header or session)
+        // Returns an AuthContext object on success, or null on failure.
+    }
+}
+```
+
+To register your provider, add it to the `LoginProviderChain` in your `Services.php`:
+
+```php
+use SGalinski\SgApiCore\Security\BearerTokenProvider;use SGalinski\SgApiCore\Security\LoginProviderChain;use Symfony\Component\DependencyInjection\Loader\Configurator;
+
+$services->set(LoginProviderChain::class)
+    ->arg('$providers', [
+        Configurator\service(BearerTokenProvider::class),
+        Configurator\service(MyLoginProvider::class),
     ]);
 ```

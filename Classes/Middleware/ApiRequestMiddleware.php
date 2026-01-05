@@ -31,6 +31,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
@@ -61,21 +62,29 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	protected TenantResolverInterface $tenantResolver;
 
 	/**
+	 * @var LoginProviderInterface
+	 */
+	protected LoginProviderInterface $loginProvider;
+
+	/**
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @param ApiRegistry $apiRegistry
 	 * @param Router $router
 	 * @param TenantResolverInterface $tenantResolver
+	 * @param LoginProviderInterface $loginProvider
 	 */
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		ApiRegistry $apiRegistry,
 		Router $router,
-		TenantResolverInterface $tenantResolver
+		TenantResolverInterface $tenantResolver,
+		LoginProviderInterface $loginProvider
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->apiRegistry = $apiRegistry;
 		$this->router = $router;
 		$this->tenantResolver = $tenantResolver;
+		$this->loginProvider = $loginProvider;
 	}
 
 	/**
@@ -138,6 +147,16 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			if ($this->apiRegistry->hasApi($apiId)) {
 				$apiConfig = $this->apiRegistry->getApi($apiId);
 				if (in_array($version, $apiConfig['versions'], TRUE)) {
+					// Authenticate
+					$authContext = $this->loginProvider->authenticate(
+						$request,
+						$apiId,
+						$tenantResult->getContext()?->getTenantId()
+					);
+					if ($authContext !== NULL) {
+						$request = $request->withAttribute('api.auth', $authContext);
+					}
+
 					return $this->router->dispatch($request, $apiId, $version, $remainingPath);
 				}
 			}

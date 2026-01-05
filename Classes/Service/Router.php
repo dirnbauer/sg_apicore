@@ -31,7 +31,9 @@ use FastRoute\RouteCollector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\HealthController;
+use SGalinski\SgApiCore\Security\AuthContext;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -112,6 +114,31 @@ class Router implements SingletonInterface {
 				$handler = $routeInfo[1];
 				/** @noinspection MultiAssignmentUsageInspection */
 				$vars = $routeInfo[2];
+
+				// Scope Enforcement
+				$reflectionClass = new \ReflectionClass($handler['controller']);
+				$reflectionMethod = $reflectionClass->getMethod($handler['action']);
+				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
+				if (count($scopeAttributes) > 0) {
+					/** @var AuthContext|null $authContext */
+					$authContext = $request->getAttribute('api.auth');
+					if ($authContext === NULL) {
+						return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
+					}
+
+					/** @var RequireScopes $requireScopes */
+					$requireScopes = $scopeAttributes[0]->newInstance();
+					foreach ($requireScopes->scopes as $scope) {
+						if (!$authContext->hasScope($scope)) {
+							return $this->createErrorResponse(
+								'Forbidden',
+								'You do not have the required scope: ' . $scope,
+								403
+							);
+						}
+					}
+				}
+
 				$controller = GeneralUtility::makeInstance($handler['controller']);
 				return call_user_func_array([$controller, $handler['action']], [$request, ...array_values($vars)]);
 		}

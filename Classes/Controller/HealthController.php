@@ -29,14 +29,17 @@ namespace SGalinski\SgApiCore\Controller;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\RequireScopes;
+use SGalinski\SgApiCore\Context\TenantContext;
+use SGalinski\SgApiCore\Security\AuthContext;
 use TYPO3\CMS\Core\Http\JsonResponse;
 
 /**
- * Controller for health check endpoints
+ * Controller for health check and test endpoints
  */
 class HealthController {
 	/**
-	 * Returns a simple health status
+	 * Returns a simple health status (Global)
 	 *
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
@@ -44,5 +47,56 @@ class HealthController {
 	#[ApiRoute(path: '/health', methods: ['GET'])]
 	public function health(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse(['status' => 'ok']);
+	}
+
+	/**
+	 * Test endpoint for 'public' API
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/test', methods: ['GET'], apiId: 'public', version: '1')]
+	public function publicTest(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse([
+			'api' => 'public',
+			'version' => '1',
+			'message' => 'Public API test successful'
+		]);
+	}
+
+	/**
+	 * Test endpoint for 'partner' API with required scope
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/test', methods: ['GET'], apiId: 'partner', version: '1')]
+	#[RequireScopes(['partner:read'])]
+	public function partnerTest(ServerRequestInterface $request): ResponseInterface {
+		/** @var AuthContext $authContext */
+		$authContext = $request->getAttribute('api.auth');
+		/** @var TenantContext $tenantContext */
+		$tenantContext = $request->getAttribute('api.tenant');
+
+		return new JsonResponse([
+			'api' => 'partner',
+			'version' => '1',
+			'tenant' => $tenantContext->getTenantId(),
+			'tokenUid' => $authContext->getTokenUid(),
+			'scopes' => $authContext->getScopes(),
+			'message' => 'Partner API test successful'
+		]);
+	}
+
+	/**
+	 * Test endpoint for multi-scope requirement
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/admin-test', methods: ['GET'], version: '1')]
+	#[RequireScopes(['admin', 'super-admin'])]
+	public function adminTest(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse(['message' => 'Admin test successful']);
 	}
 }

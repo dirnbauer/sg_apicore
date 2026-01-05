@@ -160,19 +160,18 @@ DB / Domain
         - scopes (json)
         - expires_at, revoked_at, last_used_at
         - optional: allowed_ips / rate_limit (später)
-- optional Tabelle tx_apicore_tenant (oder Tenant aus externer Quelle)
 
 Tasks
 
 - LoginProviderInterface → authenticate(request): ?AuthContext
 - BearerTokenProvider:
-- liest Authorization: Bearer …
-- hasht Token, lädt Record, prüft Tenant + API + Expiry + Revocation
-- liefert Scopes + Token Identity
-- Scope Enforcement pro Endpoint (Attribute #[RequireScopes([...])])
+  - liest Authorization: Bearer …
+  - hasht Token, lädt Record, prüft Tenant + API + Expiry + Revocation
+  - liefert Scopes + Token Identity
+  - Scope Enforcement pro Endpoint (Attribute #[RequireScopes([...])])
 - Mechanismus zur Erweiterung:
-- AdditionalLoginProvider kann User Identity liefern (z.B. “User Login”), Scopes erweitern
-- Merge-Regeln (z.B. tokenScopes ∩ userScopes oder tokenScopes ∪ userScopes – als ADR)
+  - AdditionalLoginProvider kann User Identity liefern (z. B. “User Login”), Scopes erweitern
+  - Merge-Regeln (z.B. tokenScopes ∩ userScopes oder tokenScopes ∪ userScopes – als ADR)
 
 Definition of Done
 
@@ -189,6 +188,7 @@ Implementiere Bearer Token Auth:
 - ApiEndpoint Attribute kann requiredScopes definieren. Wenn scopes fehlen => 403 Problem JSON
 - Tests: 401 ohne Token, 403 ohne Scope, 200 mit Scope
 - Doku: Token anlegen (zunächst manuell), Format der Scopes
+- Funktionsweise und Mechanimus in der README erklären
 
 ---
 
@@ -294,3 +294,11 @@ Definition of Done
 - “Hello world API” in 10 Minuten nachvollziehbar
 - Alle Konfigurationen dokumentiert
 - Changelog / Versioning Policy (SemVer)
+
+---
+
+Next Phases
+
+- Verbindung erweiterter Scope via Frontend-User-Login und Nutzung des neuen Auto-Expire-Tokens
+  - braucht RefreshToken, etc
+- sg_rest DropIn replacement für alte API möglich?

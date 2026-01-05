@@ -9,6 +9,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
+use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
@@ -43,7 +44,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
 			->willReturn($request);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
@@ -74,7 +75,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
 			->willReturn($request);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
@@ -115,7 +116,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			->with($request, 'public', '1', '/health')
 			->willReturn($responseMock);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertSame($responseMock, $response);
@@ -138,7 +139,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$router = $this->createStub(Router::class);
 		$tenantResolver = $this->createStub(TenantResolverInterface::class);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertSame($responseMock, $response);
@@ -178,7 +179,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			->with($request, 'public', '1', '/health')
 			->willReturn($responseMock);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertSame($responseMock, $response);
@@ -209,7 +210,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
 			->willReturn($request);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertEquals(404, $response->getStatusCode());
@@ -235,7 +236,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::failure('site_not_found')
 		);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver);
+		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
 		$response = $middleware->process($request, $handler);
 
 		$this->assertEquals(400, $response->getStatusCode());

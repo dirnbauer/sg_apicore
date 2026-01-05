@@ -1,34 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
-	<file source-language="en" datatype="plaintext" original="EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf" date="2024-01-05T21:40:00Z" product-name="sg_apicore">
+	<file source-language="en" target-language="de" datatype="plaintext" original="EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf" date="2024-01-05T21:40:00Z" product-name="sg_apicore">
 		<header/>
 		<body>
 			<trans-unit id="tx_apicore_token" resname="tx_apicore_token">
 				<source>API Token</source>
+				<target>API Token</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.tenant_id" resname="tx_apicore_token.tenant_id">
 				<source>Tenant ID</source>
+				<target>Mandanten-ID</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.api_id" resname="tx_apicore_token.api_id">
 				<source>API ID</source>
+				<target>API-ID</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.token" resname="tx_apicore_token.token">
 				<source>Token (Plaintext or JWT)</source>
+				<target>Token (Klartext oder JWT)</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.label" resname="tx_apicore_token.label">
 				<source>Label</source>
+				<target>Bezeichnung</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.scopes" resname="tx_apicore_token.scopes">
 				<source>Scopes (JSON array, e.g. ["read", "write"])</source>
+				<target>Scopes (JSON-Array, z.B. ["read", "write"])</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.expires_at" resname="tx_apicore_token.expires_at">
 				<source>Expires At</source>
+				<target>Gültig bis</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.revoked_at" resname="tx_apicore_token.revoked_at">
 				<source>Revoked At</source>
+				<target>Widerrufen am</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.last_used_at" resname="tx_apicore_token.last_used_at">
 				<source>Last Used At</source>
+				<target>Zuletzt verwendet am</target>
 			</trans-unit>
 		</body>
 	</file>

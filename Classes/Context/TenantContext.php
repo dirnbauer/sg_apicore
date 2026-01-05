@@ -26,10 +26,12 @@
 
 namespace SGalinski\SgApiCore\Context;
 
+use TYPO3\CMS\Core\Site\Entity\Site;
+
 /**
  * Immutable Value Object for the Tenant Context
  */
-final class TenantContext {
+final readonly class TenantContext {
 	/**
 	 * @var string
 	 */
@@ -46,14 +48,41 @@ final class TenantContext {
 	private ?string $baseHost;
 
 	/**
+	 * @var int|null
+	 */
+	private ?int $siteRootPageId;
+
+	/**
+	 * @var Site|null
+	 */
+	private ?Site $site;
+
+	/**
 	 * @param string $tenantId
 	 * @param string|null $siteIdentifier
 	 * @param string|null $baseHost
+	 * @param int|null $siteRootPageId
+	 * @param Site|null $site
 	 */
-	public function __construct(string $tenantId, ?string $siteIdentifier = NULL, ?string $baseHost = NULL) {
+	public function __construct(
+		string $tenantId,
+		?string $siteIdentifier = NULL,
+		?string $baseHost = NULL,
+		?int $siteRootPageId = NULL,
+		?Site $site = NULL
+	) {
 		$this->tenantId = $tenantId;
 		$this->siteIdentifier = $siteIdentifier;
 		$this->baseHost = $baseHost;
+		$this->siteRootPageId = $siteRootPageId;
+		$this->site = $site;
+	}
+
+	/**
+	 * @return int|null
+	 */
+	public function getSiteRootPageId(): ?int {
+		return $this->siteRootPageId ?? $this->site?->getRootPageId();
 	}
 
 	/**
@@ -67,13 +96,20 @@ final class TenantContext {
 	 * @return string|null
 	 */
 	public function getSiteIdentifier(): ?string {
-		return $this->siteIdentifier;
+		return $this->siteIdentifier ?? $this->site?->getIdentifier();
 	}
 
 	/**
 	 * @return string|null
 	 */
 	public function getBaseHost(): ?string {
-		return $this->baseHost;
+		return $this->baseHost ?? $this->site?->getBase()->getHost();
+	}
+
+	/**
+	 * @return Site|null
+	 */
+	public function getSite(): ?Site {
+		return $this->site;
 	}
 }

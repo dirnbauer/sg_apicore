@@ -72,7 +72,9 @@ class SiteTenantResolver implements TenantResolverInterface {
 		$context = new TenantContext(
 			$tenantId,
 			$site->getIdentifier(),
-			$site->getBase()->getHost()
+			$site->getBase()->getHost(),
+			$site->getRootPageId(),
+			$site
 		);
 
 		return TenantContextResult::success($context);

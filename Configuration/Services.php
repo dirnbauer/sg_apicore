@@ -1,5 +1,8 @@
 <?php
 
+use SGalinski\SgApiCore\Security\BearerTokenProvider;
+use SGalinski\SgApiCore\Security\LoginProviderChain;
+use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\Tenant\HeaderTenantResolver;
 use SGalinski\SgApiCore\Service\Tenant\SiteTenantResolver;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverChain;
@@ -22,5 +25,11 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 			Configurator\service(HeaderTenantResolver::class),
 		]);
 
+	$services->set(LoginProviderChain::class)
+		->arg('$providers', [
+			Configurator\service(BearerTokenProvider::class),
+		]);
+
 	$services->alias(TenantResolverInterface::class, TenantResolverChain::class);
+	$services->alias(LoginProviderInterface::class, LoginProviderChain::class);
 };
