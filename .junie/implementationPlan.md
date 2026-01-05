@@ -80,7 +80,7 @@ Tasks
     - Felder: `tenantId` (string), optional `siteIdentifier` (string), optional `baseHost` (string)
 - `TenantResolverInterface`
     - `resolve(ServerRequestInterface $request): TenantContextResult`
-    - Das Ergebnis enthält entweder TenantContext oder einen Fehlergrund (z. B. „site_not_found“)
+    - Das Ergebnis enthält entweder TenantContext oder einen Fehlergrund (z. B. „site_not_found“)
 
 #### 2) Default Resolver: SiteTenantResolver
 
@@ -165,13 +165,13 @@ Tasks
 
 - LoginProviderInterface → authenticate(request): ?AuthContext
 - BearerTokenProvider:
-  - liest Authorization: Bearer …
-  - hasht Token, lädt Record, prüft Tenant + API + Expiry + Revocation
-  - liefert Scopes + Token Identity
-  - Scope Enforcement pro Endpoint (Attribute #[RequireScopes([...])])
+    - liest Authorization: Bearer …
+    - hasht Token, lädt Record, prüft Tenant + API + Expiry + Revocation
+    - liefert Scopes + Token Identity
+    - Scope Enforcement pro Endpoint (Attribute #[RequireScopes([...])])
 - Mechanismus zur Erweiterung:
-  - AdditionalLoginProvider kann User Identity liefern (z. B. “User Login”), Scopes erweitern
-  - Merge-Regeln (z.B. tokenScopes ∩ userScopes oder tokenScopes ∪ userScopes – als ADR)
+    - AdditionalLoginProvider kann User Identity liefern (z. B. “User Login”), Scopes erweitern
+    - Merge-Regeln (z.B. tokenScopes ∩ userScopes oder tokenScopes ∪ userScopes – als ADR)
 
 Definition of Done
 
@@ -189,6 +189,98 @@ Implementiere Bearer Token Auth:
 - Tests: 401 ohne Token, 403 ohne Scope, 200 mit Scope
 - Doku: Token anlegen (zunächst manuell), Format der Scopes
 - Funktionsweise und Mechanimus in der README erklären
+
+---
+
+Phase D-II – Extended Security Definition (Private APIs)
+Ziel: Private API, Proper JWT Auth. Opaque Tokens
+
+**Ziel**
+Auth in `sg_apicore` so strukturieren, dass:
+
+- **Public/simple private APIs*- primär über **Opaque Tokens (harte Tokens)*- laufen
+- **User-Level APIs*- standardmäßig ebenfalls **Opaque Access Tokens*- nutzen (DB-basiert, revokable), aber **optional
+  JWT Access Tokens + Refresh Token Flow*- unterstützen.
+
+Generell:
+
+- Bisherige Realisierung ist dann partiell nicht mehr gültig und zu ändern und aufzuräumen.
+- token wieder zu token_hash SHA256 ändern, aber in der TCA-DEscription eine Hilfsanleitung und gegebenfalls Online-Tool
+  anbieten. Aus Sicherheitsgründen.
+- Test-Controller erweitern
+
+Scope der Phase (was zu bauen ist)
+
+1) Auth-Konfiguration pro API (und optional pro Version)
+
+- API-Security erweitern, z. B.:
+    - `auth.mode`: `token | user`
+    - `auth.providers`: Liste aktiver Provider (z. B. `bearer_opaque`, optional `jwt_access`)
+- Default:
+    - `public`: keine Auth-Pflicht
+    - `token`: Opaque Bearer Token Pflicht
+    - `user`: Opaque Access Token Pflicht (JWT optional aktivierbar)
+
+**DoD:*- API kann pro `apiId` (und optional Version) definieren, ob Auth required ist und welche Provider aktiv sind.
+
+2) Opaque Bearer Token als Standard (für “token” und “user”)
+
+- Token ist ein zufälliger String (Bearer), **DB speichert nur Hash*- (z. B. SHA-256).
+- Scopes kommen aus DB.
+- `last_used_at` wird aktualisiert.
+
+**DoD:*- Opaque Tokens funktionieren tenant+api gebunden, revokable, performant (kein Iterieren über alle Tokens).
+
+3) User-Level: Opaque Access Token + Refresh Token (Default)
+
+- Für User-Level wird ein **Access Token*- (kurzlebig) + **Refresh Token*- (langlebig) eingeführt.
+- Zum Erhalt des Refresh Tokens Tokens muss der User erstmal authentifiziert werden mit User/Password wie in TYPO3
+  vorgesehen.
+- Refresh Endpoint (z. B. `/auth/refresh`) tauscht Refresh Token gegen neuen Access Token.
+- Refresh Tokens sind:
+    - ebenfalls opaque + gehasht in DB
+    - revokable
+    - optional “rotation” (Refresh Token wird bei Nutzung ersetzt)
+
+**DoD:*- Refresh Flow existiert und ist minimal dokumentiert (wie anfordern, wie refreshen, welche TTL).
+
+4) JWT Access Token für User-Level
+
+- JWT ist **aktiv**, wenn erkannt.
+- JWT wird **für Access Tokens*- genutzt, Refresh bleibt opaque (DB).
+- Minimal JWT Best Practices:
+    - nur erlaubter `alg` (Whitelist)
+    - `hash_equals` für Signatur
+    - `exp` Pflicht, `jti` Pflicht
+    - `tenantId` + `apiId` in Claims, müssen zum Request Context passen
+- JWT Access Token werden erzeugt beim Login/Refresh (statt opaque Access Token), wenn aktiviert.
+- bitte aktuelle JWT-Implementierung prüfen, da die nicht so sonderlich korrekt ist.
+
+**DoD:*- Umschaltbar: User-Level Access Token ist entweder opaque oder JWT, Refresh bleibt identisch.
+
+5) Provider-Struktur (einheitlich für alle Modi)
+
+- Login Provider Chain bleibt simpel:
+    - `BearerOpaqueTokenProvider` (standard)
+    - optional `JwtAccessTokenProvider` (nur user-mode + config)
+- Provider liefert immer `AuthContext` (mit optional `userId`).
+
+**DoD:*- Endpoints arbeiten immer gegen `AuthContext` + Scopes, unabhängig vom Auth-Modus.
+
+Tests (minimal)
+
+- Public mode: Endpunkt ohne Authorization → 200
+- Token mode: ohne Bearer → 401, mit valid token → 200
+- User mode opaque: Access token gültig → 200, expired/revoked → 401
+- Refresh: gültiger refresh → neuer access → 200
+- JWT optional: falscher alg/signature/exp/tenant/api mismatch → 401
+
+Dokumentation (minimal)
+
+- Auth Modes (public/token/user) public = more or less our current implementation if no scope is given
+- Opaque Token Handling (Hashing, Revocation, Scopes)
+- User-Level Flow (Access/Refresh)
+- JWT optional aktivieren (Konfig + Claim-Anforderungen)
 
 ---
 
@@ -300,5 +392,5 @@ Definition of Done
 Next Phases
 
 - Verbindung erweiterter Scope via Frontend-User-Login und Nutzung des neuen Auto-Expire-Tokens
-  - braucht RefreshToken, etc
+    - braucht RefreshToken, etc
 - sg_rest DropIn replacement für alte API möglich?
