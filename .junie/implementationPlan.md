@@ -58,30 +58,92 @@ Erweitere ApiRequestMiddleware um Routing:
 
 ---
 
-Phase C – Tenant Context (Multi‑Tenant)
-Ziel: Tenant ist immer bekannt und durchsetzbar.
+Phase C – Tenant Context (Multi-Tenant über TYPO3 Site)
+Ziel : Jeder API-Request läuft **immer*- in einem eindeutigen **Tenant-Kontext**, der standardmäßig aus der **TYPO3 Site
+*- (Host/Pfad) abgeleitet wird.
+Damit bleibt die API in TYPO3 „site-spezifisch“, ohne dass ein zusätzlicher Header benötigt wird – und trotzdem ist der
+Code später leicht auf echte Multi-Tenant-Strategien (Header/Host/Path) erweiterbar.
+
+Konzept
+
+- **Tenant = Site*- (Default): `tenantId` wird aus der ermittelten TYPO3 Site abgeleitet (z. B. `siteIdentifier`).
+- TenantContext wird **früh*- im Request gesetzt (Request Attribute), damit:
+    - Auth/Token-Prüfung Tokens **an tenantId*- binden kann
+    - Logging, Rate-Limits, Feature Flags etc. tenant-aware werden können
+- Optional: Zusätzliche Resolver (Header/Host/Path) können später als **Konfiguration*- davor/danach geschaltet werden.
+
 Tasks
 
-- TenantResolverInterface
-- Implementierungen:
-- Header Resolver (X-Tenant-Id)
-- optional Host Resolver (tenant.example.com)
-- optional Path Resolver (/t/{tenant}/api/...)
-- TenantContext (immutable) in Request Attribute
-- Validierung: unknown tenant → 404 oder 400 (als config)
+1) TenantContext + Interface
+
+- `TenantContext` (immutable Value Object)
+    - Felder: `tenantId` (string), optional `siteIdentifier` (string), optional `baseHost` (string)
+- `TenantResolverInterface`
+    - `resolve(ServerRequestInterface $request): TenantContextResult`
+    - Das Ergebnis enthält entweder TenantContext oder einen Fehlergrund (z. B. „site_not_found“)
+
+#### 2) Default Resolver: SiteTenantResolver
+
+- Implementiere `SiteTenantResolver`, der:
+    - die **TYPO3 Site*- aus dem Request ableitet (Host/Pfad → Site)
+    - `tenantId` setzt als:
+        - bevorzugt: `siteIdentifier`
+        - alternativ: konfigurierbar (z. B. base host, rootPageId)
+- Falls keine Site ermittelbar ist:
+    - **Reaktion**: `404` oder `400` oder was anderes ?
+
+Hinweis: In TYPO3 ist „Site ermitteln“ in FE-Requests normal. Für API-Requests (Middleware) kann das je nach Stack
+passieren, bevor/ob TYPO3 es schon gemacht hat. Deshalb: Resolver soll robust sein und nicht davon ausgehen, dass Site
+bereits im Request liegt.
+
+3) Resolver Chain vorbereiten (für später)
+
+- `TenantResolverChain` (minimal)
+    - nimmt eine Liste von Resolvern
+    - nutzt den ersten, der einen Tenant liefern kann
+- Für 1.0 aktiv: nur `SiteTenantResolver`
+- Optional später: `HeaderTenantResolver`, `HostTenantResolver`, `PathTenantResolver`
+
+4) Middleware Integration
+
+- In der API Middleware:
+    - `TenantContext` wird **immer*- in Request Attribut gesetzt (z. B. `api.tenant`)
+    - Bei Fehler: Problem JSON mit konfigurierbarem Status (`404`/`400`)
+
+Konfiguration (Minimal)
+
+Beispiel (als PHP-Array oder YAML – je nach eurem Konfigstil):
+
+```php
+'tenant' => [
+  'strategy' => 'site', // default
+  'siteTenantIdSource' => 'identifier', // identifier|baseHost|rootPageId
+  'onMissingTenant' => 404, // 404 oder 400
+],
+```
+
+5) Bonuspunkte - Header Resolver (X-Tenant-Id)
 
 Definition of Done
 
-- Request ohne Tenant wird sauber abgelehnt (konfigurierbar)
-- Token ist an Tenant gebunden (Security folgt in Phase D)
+- Für jeden `/api/...` Request wird ein `TenantContext` gesetzt, standardmäßig aus der TYPO3 Site.
+- Request ohne auflösbare Site/Tenant wird sauber abgelehnt (Problem JSON), Status konfigurierbar.
+- `TenantContext` ist im Request verfügbar und kann von Security/Logging genutzt werden.
+- Tests:
+    - “Tenant wird gesetzt, wenn Site vorhanden”
+    - “Fehler, wenn Site nicht bestimmbar” (404/400)
+- Doku:
+    - Erklärung: “Tenant = TYPO3 Site”
+    - wie `tenantId` abgeleitet wird (identifier/host/rootPageId)
+    - Hinweis auf spätere Erweiterung via Resolver Chain
 
-Füge Multi-Tenant hinzu:
+## Optional (aber sehr sinnvoll) – Token-Bindung vorbereiten
 
-- TenantResolverInterface + HeaderTenantResolver (X-Tenant-Id)
-- TenantContext wird als Request attribute gesetzt (tenantId)
-- Wenn tenant fehlt: 400 Problem JSON (konfigurierbar)
-- Tests: fehlender Header => 400, vorhandener => weiter.
-- Doku: Wie Tenant über Header gesetzt wird.
+Auch wenn die eigentliche Security erst Phase D ist:
+Lege die Erwartung schon fest, dass Tokens später **immer*- mindestens an `tenantId + apiId` gebunden werden.
+
+Das verhindert, dass ein Token aus Versehen zwischen Sites/API-Kontexten “funktioniert”, selbst wenn die Infrastruktur
+ohnehin trennt.
 
 ---
 
