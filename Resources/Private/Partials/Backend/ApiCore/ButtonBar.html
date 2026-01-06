@@ -1,0 +1,23 @@
+<html data-namespace-typo3-fluid="true" lang="">
+<div class="btn-toolbar" role="toolbar" aria-label="">
+	<a href="https://www.sgalinski.de/" target="_blank" rel="noopener noreferrer"
+	   title="Created by the TYPO3 agency sgalinski">
+		<img src="{f:uri.resource(path: 'Icons/logo-icon.svg', extensionName:'SgLogs')}" alt="Sgalinski Logo"
+			 style="margin-right: 0.5rem; height: 25.75px;"/>
+	</a>
+	<f:for each="{buttons}" as="buttonGroup">
+		<f:if condition="{buttonGroup -> f:count()} > 1">
+			<f:then>
+				<div class="btn-group" role="group" aria-label="">
+					<f:for each="{buttonGroup}" as="button">
+						{button -> f:format.raw()}
+					</f:for>
+				</div>
+			</f:then>
+			<f:else>
+				{buttonGroup.0 -> f:format.raw()}
+			</f:else>
+		</f:if>
+	</f:for>
+</div>
+</html>

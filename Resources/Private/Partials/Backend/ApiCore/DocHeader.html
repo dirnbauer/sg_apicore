@@ -3,6 +3,7 @@
 		<!-- Navigation left -->
 	</div>
 	<div class="module-docheader-bar-column-right">
+		<f:render partial="Backend/ApiCore/Path" arguments="{docHeader: docHeader}"/>
 	</div>
 </div>
 <div class="module-docheader-bar module-docheader-bar-buttons t3js-module-docheader-bar-buttons">
@@ -10,6 +11,6 @@
 		<!-- Buttons left -->
 	</div>
 	<div class="module-docheader-bar-column-right">
-		<f:render section="Buttons" optional="true" />
+		<f:render partial="Backend/ApiCore/ButtonBar" arguments="{buttons: docHeader.buttons.right}"/>
 	</div>
 </div>

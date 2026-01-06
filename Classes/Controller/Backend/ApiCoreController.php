@@ -31,8 +31,14 @@ use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\TokenService;
+use TYPO3\CMS\Backend\Template\Components\ButtonBar;
+use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /**
  * Backend Controller for the API Core Module
@@ -92,6 +98,7 @@ class ApiCoreController extends ActionController {
 	public function indexAction(): ResponseInterface {
 		$apis = $this->apiRegistry->getApis();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Overview');
 		$moduleTemplate->assign('apis', $apis);
 		$moduleTemplate->assign('currentTab', 'index');
@@ -115,6 +122,7 @@ class ApiCoreController extends ActionController {
 		$apiOptions = array_combine(array_keys($apis), array_keys($apis));
 
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Tokens');
 		$moduleTemplate->assign('tokens', $tokens);
 		$moduleTemplate->assign('apis', $apiOptions);
@@ -165,6 +173,7 @@ class ApiCoreController extends ActionController {
 		$this->addFlashMessage('Token created successfully. Please copy it now, it will not be shown again.');
 
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Token Created');
 		$moduleTemplate->assign('tokenKey', $newTokenKey);
 		$moduleTemplate->assign('apiId', $apiId);
@@ -193,6 +202,7 @@ class ApiCoreController extends ActionController {
 	public function providersAction(): ResponseInterface {
 		$apis = $this->apiRegistry->getApis();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Providers');
 		$moduleTemplate->assign('apis', $apis);
 		$moduleTemplate->assign('currentTab', 'providers');
@@ -208,9 +218,40 @@ class ApiCoreController extends ActionController {
 	public function endpointsAction(): ResponseInterface {
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Endpoints');
 		$moduleTemplate->assign('endpoints', $endpoints);
 		$moduleTemplate->assign('currentTab', 'endpoints');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Endpoints');
+	}
+
+	/**
+	 * Prepares the DocHeader with meta-information
+	 *
+	 * @param ModuleTemplate $moduleTemplate
+	 */
+	protected function prepareDocHeader(ModuleTemplate $moduleTemplate): void {
+		$pageInfo = BackendUtility::readPageAccess(0, $GLOBALS['BE_USER']->getPagePermsClause(1));
+		if (is_array($pageInfo)) {
+			$moduleTemplate->getDocHeaderComponent()->setMetaInformation($pageInfo);
+		}
+
+		// Refresh button using core translation
+		$buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
+		$refreshTitle = LocalizationUtility::translate('labels.reload', 'core') ?? 'Reload';
+		$iconFactory = GeneralUtility::makeInstance(IconFactory::class);
+		$refreshButton = $buttonBar->makeLinkButton()
+			->setHref(GeneralUtility::getIndpEnv('REQUEST_URI'))
+			->setTitle($refreshTitle)
+			->setIcon($iconFactory->getIcon('actions-refresh', \TYPO3\CMS\Core\Imaging\IconSize::SMALL));
+		$buttonBar->addButton($refreshButton, ButtonBar::BUTTON_POSITION_RIGHT);
+		$shortcutButton = $buttonBar->makeShortcutButton()
+			->setDisplayName('Shortcut')
+			->setRouteIdentifier('system_SgApiCore') // Replace 'web_SgLogs' with your actual module route identifier
+			->setArguments([
+				'id' => [],
+				'M' => [] // You can specify additional arguments here if required
+			]);
+		$buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
 	}
 }
