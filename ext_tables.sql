@@ -12,6 +12,10 @@ CREATE TABLE tx_apicore_token (
 	expires_at       int(11)      DEFAULT '0' NOT NULL,
 	revoked_at       int(11)      DEFAULT '0' NOT NULL,
 	last_used_at     int(11)      DEFAULT '0' NOT NULL,
+	tstamp           int(11)      DEFAULT '0' NOT NULL,
+	crdate           int(11)      DEFAULT '0' NOT NULL,
+	cruser_id        int(11)      DEFAULT '0' NOT NULL,
+	deleted          tinyint(4)   DEFAULT '0' NOT NULL,
 
 	PRIMARY KEY (uid),
 	KEY parent(pid),

@@ -341,15 +341,55 @@ ecosystem while following modern best practices.
 The extension provides a comprehensive logging system for API requests and responses. It can be configured globally and
 overridden per endpoint.
 
-#### Where are the logs?
+#### Customizing Log Destination (e.g., Database or Separate File)
 
-The API uses the standard **TYPO3 LogManager**. Depending on your TYPO3 configuration, the logs can typically be found:
+By default, API logs are written to a separate file: `var/log/sg_apicore.log`. This is pre-configured in the extension's
+`LogService`.
 
-- In the file system: `var/log/typo3_*.log` (e.g. `var/log/typo3_7581426.log`).
-- In the TYPO3 Backend: **System > Log** (if the `DatabaseBackend` is configured for logging).
+You can override the log destination, writers, and processors in your TYPO3 configuration (`config/system/settings.php`)
+under the `['LOG']` key.
 
-You can configure the log destination, writers, and processors globally in your TYPO3 configuration (`settings.php` or
-`LocalConfiguration.php`) under the `['LOG']` key.
+**Example: Redirecting API logs to a different file**
+
+```php
+'LOG' => [
+    'SGalinski' => [
+        'SgApiCore' => [
+            'Service' => [
+                'LogService' => [
+                    'writerConfiguration' => [
+                        \TYPO3\CMS\Core\Log\LogLevel::INFO => [
+                            \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
+                                'logFile' => 'var/log/custom_api_filename.log'
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+]
+```
+
+**Example: Logging to the Database (Visible in Backend)**
+
+```php
+'LOG' => [
+    'SGalinski' => [
+        'SgApiCore' => [
+            'Service' => [
+                'LogService' => [
+                    'writerConfiguration' => [
+                        \TYPO3\CMS\Core\Log\LogLevel::INFO => [
+                            \TYPO3\CMS\Core\Log\Writer\DatabaseWriter::class => []
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ]
+]
+```
 
 #### Global Configuration
 

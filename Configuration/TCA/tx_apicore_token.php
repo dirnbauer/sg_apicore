@@ -6,6 +6,7 @@ return [
 		'label' => 'label',
 		'tstamp' => 'tstamp',
 		'crdate' => 'crdate',
+		'cruser_id' => 'cruser_id',
 		'delete' => 'deleted',
 		'searchFields' => 'label,token,tenant_id,api_id',
 		'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/content/content-text.svg',
