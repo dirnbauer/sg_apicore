@@ -5,7 +5,6 @@ namespace SGalinski\SgApiCore\Tests\Unit\Service\Tenant;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\Tenant\SiteTenantResolver;
-use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
 use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;

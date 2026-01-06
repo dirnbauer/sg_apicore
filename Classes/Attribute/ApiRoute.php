@@ -36,14 +36,16 @@ class ApiRoute {
 	/**
 	 * @param string $path The route path (e.g., /health)
 	 * @param array $methods The allowed HTTP methods (e.g., ['GET'])
-	 * @param string|null $apiId Optional API ID restriction
-	 * @param string|null $version Optional version restriction
+	 * @param string|array|null $apiId Optional API ID restriction (string or array of strings)
+	 * @param string|array|null $version Optional version restriction (string or array of strings)
+	 * @param string|array|null $authMode Optional auth mode restriction (e.g., 'user', 'token', 'public')
 	 */
 	public function __construct(
 		public string $path,
 		public array $methods = ['GET'],
-		public ?string $apiId = NULL,
-		public ?string $version = NULL
+		public string|array|NULL $apiId = NULL,
+		public string|array|NULL $version = NULL,
+		public string|array|NULL $authMode = NULL
 	) {
 	}
 }

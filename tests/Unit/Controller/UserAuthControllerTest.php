@@ -1,0 +1,173 @@
+<?php
+
+namespace SGalinski\SgApiCore\Tests\Unit\Controller;
+
+use Doctrine\DBAL\Result;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Context\TenantContext;
+use SGalinski\SgApiCore\Controller\UserAuthController;
+use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
+use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\TokenService;
+use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
+use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashInterface;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
+
+/**
+ * Test case for UserAuthController
+ */
+#[AllowMockObjectsWithoutExpectations]
+class UserAuthControllerTest extends UnitTestCase {
+	/**
+	 * @var UserAuthController
+	 */
+	protected UserAuthController $controller;
+
+	/**
+	 * @var TokenRepository|MockObject
+	 */
+	protected $tokenRepository;
+
+	/**
+	 * @var TokenService|MockObject
+	 */
+	protected $tokenService;
+
+	/**
+	 * @var ApiRegistry|MockObject
+	 */
+	protected $apiRegistry;
+
+	/**
+	 * @var PasswordHashFactory|MockObject
+	 */
+	protected $passwordHashFactory;
+
+	/**
+	 * @var ConnectionPool|MockObject
+	 */
+	protected $connectionPool;
+
+	protected function setUp(): void {
+		parent::setUp();
+		$this->tokenRepository = $this->createStub(TokenRepository::class);
+		$this->tokenService = $this->createMock(TokenService::class);
+		$this->apiRegistry = $this->createStub(ApiRegistry::class);
+		$this->passwordHashFactory = $this->createStub(PasswordHashFactory::class);
+		$this->connectionPool = $this->createStub(ConnectionPool::class);
+
+		$this->controller = new UserAuthController(
+			$this->tokenRepository,
+			$this->tokenService,
+			$this->apiRegistry,
+			$this->passwordHashFactory,
+			$this->connectionPool
+		);
+	}
+
+	public function testLoginSuccessful(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
+		$tenantContext = new TenantContext('test-tenant');
+		$request->method('getAttribute')->willReturnMap([
+			['api.tenant', NULL, $tenantContext],
+			['api.id', NULL, 'public'],
+			['api.version', NULL, '1']
+		]);
+
+		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('where')->willReturn($queryBuilder);
+		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$result->method('fetchAssociative')->willReturn([
+			'uid' => 123,
+			'username' => 'testuser',
+			'password' => 'hashed-password'
+		]);
+
+		$hashInstance = $this->createStub(PasswordHashInterface::class);
+		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
+		$hashInstance->method('checkPassword')->willReturn(TRUE);
+
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
+
+		$this->tokenService->method('generateRandomToken')->willReturn('random-token');
+		$this->tokenService->expects($this->exactly(2))->method('createToken');
+
+		$response = $this->controller->login($request);
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+		$data = json_decode((string) $response->getBody(), TRUE);
+		$this->assertEquals('random-token', $data['access_token']);
+		$this->assertEquals('random-token', $data['refresh_token']);
+	}
+
+	public function testLoginInvalidCredentials(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'wrongpass']);
+
+		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('where')->willReturn($queryBuilder);
+		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$result->method('fetchAssociative')->willReturn([
+			'uid' => 123,
+			'username' => 'testuser',
+			'password' => 'hashed-password'
+		]);
+
+		$hashInstance = $this->createStub(PasswordHashInterface::class);
+		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
+		$hashInstance->method('checkPassword')->willReturn(FALSE);
+
+		$response = $this->controller->login($request);
+
+		$this->assertEquals(401, $response->getStatusCode());
+	}
+
+	public function testRefreshSuccessful(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getParsedBody')->willReturn(['refresh_token' => 'valid-refresh-token']);
+		$request->method('getAttribute')->willReturnMap([
+			['api.tenant', NULL, new TenantContext('test-tenant')],
+			['api.id', NULL, 'public'],
+			['api.version', NULL, '1']
+		]);
+
+		$tokenRecord = [
+			'uid' => 456,
+			'user_id' => 123,
+			'is_refresh_token' => 1,
+			'expires_at' => 0,
+			'scopes' => '["user"]'
+		];
+		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
+
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
+		$this->tokenService->method('generateRandomToken')->willReturn('new-access-token');
+
+		$response = $this->controller->refresh($request);
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+		$data = json_decode((string) $response->getBody(), TRUE);
+		$this->assertEquals('new-access-token', $data['access_token']);
+	}
+}

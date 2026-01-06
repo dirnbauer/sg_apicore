@@ -35,12 +35,29 @@ return [
 				'eval' => 'trim,required'
 			],
 		],
-		'token' => [
-			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.token',
+		'token_hash' => [
+			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.token_hash',
+			'description' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.token_hash.description',
 			'config' => [
 				'type' => 'input',
 				'size' => 64,
 				'eval' => 'trim,required',
+			],
+		],
+		'user_id' => [
+			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.user_id',
+			'config' => [
+				'type' => 'input',
+				'size' => 10,
+				'eval' => 'int',
+				'default' => 0
+			],
+		],
+		'is_refresh_token' => [
+			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.is_refresh_token',
+			'config' => [
+				'type' => 'check',
+				'default' => 0
 			],
 		],
 		'label' => [
@@ -53,7 +70,7 @@ return [
 		],
 		'scopes' => [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.scopes',
-			'description' => 'A JSON-formatted array of scopes. Example: ["read", "write"]',
+			'description' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.scopes.description',
 			'config' => [
 				'type' => 'text',
 				'cols' => 40,
@@ -92,6 +109,6 @@ return [
 		],
 	],
 	'types' => [
-		'0' => ['showitem' => 'label, tenant_id, api_id, token, scopes, expires_at, revoked_at, last_used_at'],
+		'0' => ['showitem' => 'label, tenant_id, api_id, token_hash, user_id, is_refresh_token, scopes, expires_at, revoked_at, last_used_at'],
 	],
 ];

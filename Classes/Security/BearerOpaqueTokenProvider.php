@@ -1,33 +1,49 @@
 <?php
 
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) sgalinski Internet Services (https://www.sgalinski.de)
+ *
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
 namespace SGalinski\SgApiCore\Security;
 
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
-use SGalinski\SgApiCore\Service\JwtService;
 
 /**
  * Bearer Token login provider
  */
-class BearerTokenProvider implements LoginProviderInterface {
+class BearerOpaqueTokenProvider implements LoginProviderInterface {
 	/**
 	 * @var TokenRepository
 	 */
 	protected TokenRepository $tokenRepository;
 
 	/**
-	 * @var JwtService
-	 */
-	protected JwtService $jwtService;
-
-	/**
 	 * @param TokenRepository $tokenRepository
-	 * @param JwtService $jwtService
 	 */
-	public function __construct(TokenRepository $tokenRepository, JwtService $jwtService) {
+	public function __construct(TokenRepository $tokenRepository) {
 		$this->tokenRepository = $tokenRepository;
-		$this->jwtService = $jwtService;
 	}
 
 	/**
@@ -36,11 +52,17 @@ class BearerTokenProvider implements LoginProviderInterface {
 	 * @param ServerRequestInterface $request
 	 * @param string $apiId
 	 * @param string $tenantId
+	 * @param array $activeProviders
 	 * @return AuthContext|null
 	 * @throws Exception
 	 * @throws \JsonException
 	 */
-	public function authenticate(ServerRequestInterface $request, string $apiId, string $tenantId): ?AuthContext {
+	public function authenticate(
+		ServerRequestInterface $request,
+		string $apiId,
+		string $tenantId,
+		array $activeProviders = []
+	): ?AuthContext {
 		$authorizationHeader = $request->getHeaderLine('Authorization');
 		if (!str_starts_with($authorizationHeader, 'Bearer ')) {
 			return NULL;
@@ -80,13 +102,13 @@ class BearerTokenProvider implements LoginProviderInterface {
 			apiId: $apiId,
 			tenantId: $tenantId,
 			tokenUid: (int) $tokenRecord['uid'],
-			scopes: $scopes
+			scopes: $scopes,
+			userId: (int) ($tokenRecord['user_id'] ?? 0) ?: NULL
 		);
 	}
 
 	/**
 	 * Finds a matching token record.
-	 * Supports both JWT and plaintext token comparison.
 	 *
 	 * @param string $token
 	 * @param string $apiId
@@ -94,7 +116,6 @@ class BearerTokenProvider implements LoginProviderInterface {
 	 * @param int|null $siteRootPageId
 	 * @return array|null
 	 * @throws Exception
-	 * @throws \JsonException
 	 */
 	protected function findMatchingToken(
 		string $token,
@@ -102,24 +123,7 @@ class BearerTokenProvider implements LoginProviderInterface {
 		string $tenantId,
 		?int $siteRootPageId = NULL
 	): ?array {
-		$isJwt = count(explode('.', $token)) === 3;
-		if ($isJwt) {
-			$payload = $this->jwtService->decode($token);
-			if ($payload === NULL) {
-				return NULL;
-			}
-			// In JWT mode, we can look up by a unique identifier from payload if present,
-			// or we just look up by the whole token string if it's stored that way.
-			// Let's assume we store the JWT in the 'token' field if it's a static JWT.
-		}
-
-		$tokenRecords = $this->tokenRepository->findByApiAndTenant($apiId, $tenantId, $siteRootPageId);
-		foreach ($tokenRecords as $record) {
-			if (hash_equals((string) $record['token'], $token)) {
-				return $record;
-			}
-		}
-
-		return NULL;
+		$tokenHash = hash('sha256', $token);
+		return $this->tokenRepository->findByHashApiAndTenant($tokenHash, $apiId, $tenantId, $siteRootPageId);
 	}
 }

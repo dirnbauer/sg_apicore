@@ -38,6 +38,56 @@ class TokenRepository implements SingletonInterface {
 	private const string TABLE_NAME = 'tx_apicore_token';
 
 	/**
+	 * Finds a token by hash, apiId, and tenantId
+	 *
+	 * @param string $tokenHash
+	 * @param string $apiId
+	 * @param string $tenantId
+	 * @param int|null $siteRootPageId
+	 * @param bool $includeRefreshTokens
+	 * @return array|null
+	 * @throws Exception
+	 */
+	public function findByHashApiAndTenant(
+		string $tokenHash,
+		string $apiId,
+		string $tenantId,
+		?int $siteRootPageId = NULL,
+		bool $includeRefreshTokens = FALSE
+	): ?array {
+		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+			?->getQueryBuilderForTable(self::TABLE_NAME);
+
+		$constraints = [
+			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
+			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
+			$queryBuilder->expr()->eq('token_hash', $queryBuilder->createNamedParameter($tokenHash)),
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT))
+		];
+
+		if (!$includeRefreshTokens) {
+			$constraints[] = $queryBuilder->expr()->eq(
+				'is_refresh_token',
+				$queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+			);
+		}
+
+		if ($siteRootPageId !== NULL) {
+			$constraints[] = $queryBuilder->expr()->eq(
+				'pid',
+				$queryBuilder->createNamedParameter($siteRootPageId, \PDO::PARAM_INT)
+			);
+		}
+
+		return $queryBuilder
+			->select('*')
+			->from(self::TABLE_NAME)
+			->where(...$constraints)
+			->executeQuery()
+			->fetchAssociative() ?: NULL;
+	}
+
+	/**
 	 * Finds tokens by apiId, and tenantId
 	 *
 	 * @param string $apiId

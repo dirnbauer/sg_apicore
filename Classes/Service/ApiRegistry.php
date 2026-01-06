@@ -42,13 +42,33 @@ class ApiRegistry implements SingletonInterface {
 	 *
 	 * @param string $apiId Unique identifier for the API
 	 * @param array $versions Supported versions (e.g., ['1', '2'])
+	 * @param array $security Security configuration
 	 * @param string|null $basePath Optional base path override
 	 */
-	public function registerApi(string $apiId, array $versions, ?string $basePath = NULL): void {
+	public function registerApi(string $apiId, array $versions, array $security = [], ?string $basePath = NULL): void {
 		$this->apis[$apiId] = [
 			'versions' => $versions,
+			'security' => $security,
 			'basePath' => $basePath
 		];
+	}
+
+	/**
+	 * Returns the security configuration for a given API and version
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @return array
+	 */
+	public function getSecurityConfig(string $apiId, string $version): array {
+		$api = $this->getApi($apiId);
+		if ($api === NULL) {
+			return [];
+		}
+
+		$security = $api['security'] ?? [];
+		// Version-specific security if defined
+		return $security['versions'][$version] ?? $security;
 	}
 
 	/**

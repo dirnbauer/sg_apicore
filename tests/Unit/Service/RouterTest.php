@@ -19,7 +19,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router();
+		$router = new Router(new \ArrayIterator([]));
 		$router->setControllers([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/test');
@@ -33,7 +33,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router();
+		$router = new Router(new \ArrayIterator([]));
 		$router->setControllers([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/unknown');
@@ -45,7 +45,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router();
+		$router = new Router(new \ArrayIterator([]));
 		$router->setControllers([MockController::class]);
 
 		// Route is restricted to 'other-api'
@@ -61,7 +61,7 @@ class RouterTest extends UnitTestCase {
 		$authContext = new AuthContext('public', 'tenant-1', 1, ['read']);
 		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
 
-		$router = new Router();
+		$router = new Router(new \ArrayIterator([]));
 		$router->setControllers([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped');
@@ -76,7 +76,7 @@ class RouterTest extends UnitTestCase {
 		$authContext = new AuthContext('public', 'tenant-1', 1, ['wrong-scope']);
 		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
 
-		$router = new Router();
+		$router = new Router(new \ArrayIterator([]));
 		$router->setControllers([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped');
@@ -89,12 +89,27 @@ class RouterTest extends UnitTestCase {
 		$request->method('getMethod')->willReturn('GET');
 		$request->method('getAttribute')->with('api.auth')->willReturn(NULL);
 
-		$router = new Router();
+		$router = new Router(new \ArrayIterator([]));
 		$router->setControllers([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped');
 
 		$this->assertEquals(401, $response->getStatusCode());
+	}
+
+	public function testDispatchFiltersByAuthMode(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('GET');
+
+		$router = new Router(new \ArrayIterator([]));
+		$router->setControllers([MockController::class]);
+
+		// Route is restricted to authMode 'user'
+		$response = $router->dispatch($request, 'public', '1', '/user-only', 'token');
+		$this->assertEquals(404, $response->getStatusCode());
+
+		$response = $router->dispatch($request, 'public', '1', '/user-only', 'user');
+		$this->assertEquals(200, $response->getStatusCode());
 	}
 }
 
@@ -109,6 +124,11 @@ class MockController {
 
 	#[ApiRoute(path: '/api-restricted', methods: ['GET'], apiId: 'other-api')]
 	public function restrictedAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse(['matched' => TRUE]);
+	}
+
+	#[ApiRoute(path: '/user-only', methods: ['GET'], authMode: 'user')]
+	public function userOnlyAction(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse(['matched' => TRUE]);
 	}
 

@@ -43,11 +43,6 @@ final readonly class TenantContext {
 	private ?string $siteIdentifier;
 
 	/**
-	 * @var string|null
-	 */
-	private ?string $baseHost;
-
-	/**
 	 * @var int|null
 	 */
 	private ?int $siteRootPageId;
@@ -60,20 +55,17 @@ final readonly class TenantContext {
 	/**
 	 * @param string $tenantId
 	 * @param string|null $siteIdentifier
-	 * @param string|null $baseHost
 	 * @param int|null $siteRootPageId
 	 * @param Site|null $site
 	 */
 	public function __construct(
 		string $tenantId,
 		?string $siteIdentifier = NULL,
-		?string $baseHost = NULL,
 		?int $siteRootPageId = NULL,
 		?Site $site = NULL
 	) {
 		$this->tenantId = $tenantId;
 		$this->siteIdentifier = $siteIdentifier;
-		$this->baseHost = $baseHost;
 		$this->siteRootPageId = $siteRootPageId;
 		$this->site = $site;
 	}
@@ -97,13 +89,6 @@ final readonly class TenantContext {
 	 */
 	public function getSiteIdentifier(): ?string {
 		return $this->siteIdentifier ?? $this->site?->getIdentifier();
-	}
-
-	/**
-	 * @return string|null
-	 */
-	public function getBaseHost(): ?string {
-		return $this->baseHost ?? $this->site?->getBase()->getHost();
 	}
 
 	/**

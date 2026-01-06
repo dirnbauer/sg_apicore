@@ -1,0 +1,157 @@
+<?php
+
+/***************************************************************
+ *  Copyright notice
+ *
+ *  (c) sgalinski Internet Services (https://www.sgalinski.de)
+ *
+ *  All rights reserved
+ *
+ *  This script is part of the TYPO3 project. The TYPO3 project is
+ *  free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  The GNU General Public License can be found at
+ *  http://www.gnu.org/copyleft/gpl.html.
+ *
+ *  This script is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  This copyright notice MUST APPEAR in all copies of the script!
+ ***************************************************************/
+
+namespace SGalinski\SgApiCore\Service;
+
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+/**
+ * Service for managing API tokens
+ */
+class TokenService implements SingletonInterface {
+	/**
+	 * @var TokenRepository
+	 */
+	protected TokenRepository $tokenRepository;
+
+	/**
+	 * @var JwtService
+	 */
+	protected JwtService $jwtService;
+
+	/**
+	 * @var ExtensionConfiguration
+	 */
+	protected ExtensionConfiguration $extensionConfiguration;
+
+	/**
+	 * @param TokenRepository $tokenRepository
+	 * @param JwtService $jwtService
+	 * @param ExtensionConfiguration $extensionConfiguration
+	 */
+	public function __construct(
+		TokenRepository $tokenRepository,
+		JwtService $jwtService,
+		ExtensionConfiguration $extensionConfiguration
+	) {
+		$this->tokenRepository = $tokenRepository;
+		$this->jwtService = $jwtService;
+		$this->extensionConfiguration = $extensionConfiguration;
+	}
+
+	/**
+	 * Generates a new random token
+	 *
+	 * @return string
+	 * @throws \Random\RandomException
+	 */
+	public function generateRandomToken(): string {
+		return bin2hex(random_bytes(32));
+	}
+
+	/**
+	 * Creates a new token record in the database
+	 *
+	 * @param string $token The plaintext token
+	 * @param string $apiId
+	 * @param string $tenantId
+	 * @param int $pid
+	 * @param array $scopes
+	 * @param int|null $userId
+	 * @param bool $isRefreshToken
+	 * @param int|null $expiresAt
+	 * @param string $label
+	 * @return int The UID of the new token record
+	 * @throws \JsonException
+	 */
+	public function createToken(
+		string $token,
+		string $apiId,
+		string $tenantId,
+		int $pid,
+		array $scopes = [],
+		?int $userId = NULL,
+		bool $isRefreshToken = FALSE,
+		?int $expiresAt = NULL,
+		string $label = ''
+	): int {
+		$tokenHash = hash('sha256', $token);
+		$connection = GeneralUtility::makeInstance(ConnectionPool::class)
+			?->getConnectionForTable('tx_apicore_token');
+
+		$connection->insert('tx_apicore_token', [
+			'pid' => $pid,
+			'tenant_id' => $tenantId,
+			'api_id' => $apiId,
+			'token_hash' => $tokenHash,
+			'user_id' => (int) $userId,
+			'is_refresh_token' => (int) $isRefreshToken,
+			'scopes' => json_encode($scopes, JSON_THROW_ON_ERROR),
+			'expires_at' => (int) $expiresAt,
+			'label' => $label,
+			'crdate' => time(),
+			'tstamp' => time()
+		]);
+
+		return (int) $connection->lastInsertId();
+	}
+
+	/**
+	 * Generates a JWT access token for a user
+	 *
+	 * @param int $userId
+	 * @param string $apiId
+	 * @param string $tenantId
+	 * @param array $scopes
+	 * @param int|string $jti Unique ID for the token (usually the UID of the database record or a unique string)
+	 * @return string
+	 * @throws \JsonException
+	 */
+	public function generateJwtAccessToken(
+		int $userId,
+		string $apiId,
+		string $tenantId,
+		array $scopes,
+		int|string $jti
+	): string {
+		$ttl = $this->extensionConfiguration->getTokenExpirationTime();
+		$payload = [
+			'userId' => $userId,
+			'apiId' => $apiId,
+			'tenantId' => $tenantId,
+			'scopes' => $scopes,
+			'iat' => time(),
+			'exp' => time() + $ttl,
+			'jti' => $jti
+		];
+
+		return $this->jwtService->encode($payload);
+	}
+}

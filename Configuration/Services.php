@@ -1,14 +1,15 @@
 <?php
 
-use SGalinski\SgApiCore\Security\BearerTokenProvider;
+use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
+use SGalinski\SgApiCore\Security\JwtAccessTokenProvider;
 use SGalinski\SgApiCore\Security\LoginProviderChain;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\Tenant\HeaderTenantResolver;
 use SGalinski\SgApiCore\Service\Tenant\SiteTenantResolver;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverChain;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
-use Symfony\Component\DependencyInjection\Loader\Configurator;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return static function (ContainerConfigurator $containerConfigurator): void {
 	$services = $containerConfigurator->services();
@@ -19,16 +20,32 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
 	$services->load('SGalinski\\SgApiCore\\', __DIR__ . '/../Classes/');
 
+	$services->set(SGalinski\SgApiCore\Service\Router::class)
+		->arg('$controllers', tagged_iterator('sg_apicore.router'));
+
+	$services->set(SGalinski\SgApiCore\Controller\HealthController::class)
+		->tag('sg_apicore.router');
+
+	$services->set(SGalinski\SgApiCore\Controller\UserAuthController::class)
+		->tag('sg_apicore.router');
+
 	$services->set(TenantResolverChain::class)
-		->arg('$resolvers', [
-			Configurator\service(SiteTenantResolver::class),
-			Configurator\service(HeaderTenantResolver::class),
-		]);
+		->arg('$resolvers', tagged_iterator('sg_apicore.tenant_resolver'));
+
+	$services->set(SiteTenantResolver::class)
+		->tag('sg_apicore.tenant_resolver');
+
+	$services->set(HeaderTenantResolver::class)
+		->tag('sg_apicore.tenant_resolver');
 
 	$services->set(LoginProviderChain::class)
-		->arg('$providers', [
-			Configurator\service(BearerTokenProvider::class),
-		]);
+		->arg('$providers', tagged_iterator('sg_apicore.login_provider'));
+
+	$services->set(BearerOpaqueTokenProvider::class)
+		->tag('sg_apicore.login_provider');
+
+	$services->set(JwtAccessTokenProvider::class)
+		->tag('sg_apicore.login_provider');
 
 	$services->alias(TenantResolverInterface::class, TenantResolverChain::class);
 	$services->alias(LoginProviderInterface::class, LoginProviderChain::class);

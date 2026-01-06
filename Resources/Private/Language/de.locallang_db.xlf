@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
 	<file source-language="en" target-language="de" datatype="plaintext" original="EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf" date="2024-01-05T21:40:00Z" product-name="sg_apicore">
-		<header/>
+		<header />
 		<body>
 			<trans-unit id="tx_apicore_token" resname="tx_apicore_token">
 				<source>API Token</source>
@@ -15,9 +15,21 @@
 				<source>API ID</source>
 				<target>API-ID</target>
 			</trans-unit>
-			<trans-unit id="tx_apicore_token.token" resname="tx_apicore_token.token">
-				<source>Token (Plaintext or JWT)</source>
-				<target>Token (Klartext oder JWT)</target>
+			<trans-unit id="tx_apicore_token.token_hash" resname="tx_apicore_token.token_hash">
+				<source>Token Hash (SHA-256 of the token)</source>
+				<target>Token Hash (SHA-256 des Token)</target>
+			</trans-unit>
+			<trans-unit id="tx_apicore_token.token_hash.description" resname="tx_apicore_token.token_hash.description">
+				<source>For security reasons, please store only the SHA-256 hash of your token. You can use online tools or the command line (echo -n "your-token" | sha256sum) to generate the hash.</source>
+				<target>Aus Sicherheitsgründen speichern Sie bitte nur den SHA-256-Hash Ihres Tokens. Sie können Online-Tools oder die Befehlszeile (echo -n "ihr-token" | sha256sum) verwenden, um den Hash zu generieren.</target>
+			</trans-unit>
+			<trans-unit id="tx_apicore_token.user_id" resname="tx_apicore_token.user_id">
+				<source>User ID (for User-Level API)</source>
+				<target>Benutzer-ID (für User-Level API)</target>
+			</trans-unit>
+			<trans-unit id="tx_apicore_token.is_refresh_token" resname="tx_apicore_token.is_refresh_token">
+				<source>Is Refresh Token</source>
+				<target>Ist Refresh-Token</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.label" resname="tx_apicore_token.label">
 				<source>Label</source>
@@ -26,6 +38,10 @@
 			<trans-unit id="tx_apicore_token.scopes" resname="tx_apicore_token.scopes">
 				<source>Scopes (JSON array, e.g. ["read", "write"])</source>
 				<target>Scopes (JSON-Array, z.B. ["read", "write"])</target>
+			</trans-unit>
+			<trans-unit id="tx_apicore_token.scopes.description" resname="tx_apicore_token.scopes.description">
+				<source>A JSON-formatted array of scopes. Example: ["read", "write"]</source>
+				<target>Ein JSON-formatiertes Array von Scopes. Beispiel: ["read", "write"]</target>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.expires_at" resname="tx_apicore_token.expires_at">
 				<source>Expires At</source>

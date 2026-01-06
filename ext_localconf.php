@@ -5,6 +5,15 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 (static function () {
 	$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
-	$apiRegistry->registerApi('public', ['1']);
-	$apiRegistry->registerApi('partner', ['1']);
+	$apiRegistry->registerApi('public', ['1'], [
+		'authMode' => 'public'
+	]);
+	$apiRegistry->registerApi('partner', ['1'], [
+		'authMode' => 'token',
+		'authProviders' => ['beareropaquetokenprovider']
+	]);
+	$apiRegistry->registerApi('user', ['1'], [
+		'authMode' => 'user',
+		'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider']
+	]);
 })();

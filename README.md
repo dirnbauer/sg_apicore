@@ -89,18 +89,25 @@ class MyController {
 
 ### Endpoint Filtering
 
-By default, an endpoint is available for all registered APIs and versions. You can restrict an endpoint to a specific
-API or version by using the `apiId` and `version` properties of the `ApiRoute` attribute:
+By default, an endpoint is available for all registered APIs and versions. You can restrict an endpoint to specific
+APIs, versions or auth modes by using the properties of the `ApiRoute` attribute. These properties support both single
+strings and arrays of strings:
 
 ```php
 // Only available for /api/public/v1/...
 #[ApiRoute(path: '/public-only', methods: ['GET'], apiId: 'public', version: '1')]
 
+// Available for both public and partner APIs in version 1
+#[ApiRoute(path: '/v1-shared', methods: ['GET'], apiId: ['public', 'partner'], version: '1')]
+
 // Available for all APIs in version 1
 #[ApiRoute(path: '/v1-global', methods: ['GET'], version: '1')]
 ```
 
-The router dynamically filters the available routes based on the `apiId` and `version` extracted from the request URL.
+The router dynamically filters the available routes based on the `apiId`, `version` and `authMode` extracted from the
+request URL.
+If a property is an array, the route is included if the current value matches any of the values in the array.
+Multiple `#[ApiRoute]` attributes can also be used on the same method (repeatable attribute).
 
 ### Why not standard TYPO3 Routing?
 
@@ -117,6 +124,50 @@ a high-performance data API, we chose `nikic/fast-route` for several reasons:
 This approach allows the API to function as a specialized layer that intercepts requests before they hit the standard
 frontend processing.
 
+### Custom Controllers & Extensions
+
+Other extensions can register their own controllers to the API by using the `sg_apicore.router` service tag in their
+`Services.php`:
+
+```php
+$services->set(MyCustomController::class)
+    ->tag('sg_apicore.router');
+```
+
+The `Router` will automatically collect all services tagged with `sg_apicore.router` and scan them for `#[ApiRoute]`
+attributes.
+
+#### Overriding or Disabling Default Controllers
+
+Since default controllers like `HealthController` or `UserAuthController` are registered as standard services in TYPO3's
+Symfony DI, you can override or disable them in your own `Services.php`.
+
+To **override** a default controller with your own implementation:
+
+```php
+// In your extension's Configuration/Services.php
+$services->set(SGalinski\SgApiCore\Controller\HealthController::class, MyCustomHealthController::class)
+    ->tag('sg_apicore.router');
+```
+
+To **disable** a default controller:
+
+```php
+// In your extension's Configuration/Services.php
+$services->remove(SGalinski\SgApiCore\Controller\HealthController::class);
+```
+
+### Route Filtering by Auth Mode
+
+You can restrict endpoints to specific authentication modes (e.g., only available when the API is in `user` mode). This
+is useful for internal API endpoints like login or refresh:
+
+```php
+#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'user')]
+```
+
+If an endpoint defines an `authMode`, it will only be available in APIs that are configured with that exact `authMode`.
+
 ## Multi-Tenancy
 
 Every API request runs in a **Tenant Context**. By default, the tenant is derived from the **TYPO3 Site** (Site
@@ -124,7 +175,8 @@ Identifier).
 
 ### Tenant Context
 
-The `TenantContext` is available in the request attributes as `api.tenant`. It also contains the full TYPO3 Site object if the `SiteTenantResolver` was used:
+The `TenantContext` is available in the request attributes as `api.tenant`. It also contains the full TYPO3 Site object
+if the `SiteTenantResolver` was used:
 
 ```php
 use SGalinski\SgApiCore\Context\TenantContext;
@@ -194,105 +246,119 @@ $services->set(TenantResolverChain::class)
 
 ## Security
 
-The extension provides a robust security layer based on Bearer Token authentication and scope-based authorization.
+Authentication and Authorization are handled by the `LoginProviderChain`. The system supports multiple auth modes and
+token types.
 
-### Bearer Token Authentication
+### Auth Modes
 
-Authentication is handled by the `BearerTokenProvider`. It expects a token in the `Authorization` header:
+You can configure the authentication mode per API (and version) in your `ext_localconf.php`:
 
-```bash
-Authorization: Bearer <your-token>
+- **public**: No authentication required by default (unless scopes are defined).
+- **token**: Opaque Bearer Token required.
+- **user**: Opaque Access Token (default) or JWT Access Token (optional) required. Supports Refresh Token flow.
+
+Example configuration:
+
+```php
+$apiRegistry->registerApi('partner', ['1'], [
+    'authMode' => 'token',
+    'authProviders' => ['beareropaquetokenprovider']
+]);
 ```
 
-Tokens are stored in the `tx_apicore_token` table. The system supports both **Plaintext tokens** and **JWTs**.
-The `BearerTokenProvider` will automatically detect the token type.
+### Opaque Bearer Token (Standard)
 
-#### Token Storage & Lookup
-
-Tokens are bound to a **Tenant** and an **API**. Additionally, tokens should only be managed at the **Root Page** (pid 0
-or root of a site) to support multi-domain setups in TYPO3.
+Standard tokens are random strings (Bearer) and are stored as **SHA-256 hashes** in the database for security.
 
 #### Creating a Token (Manual)
 
-1. Generate a secure random string or a JWT.
-2. Insert a record into `tx_apicore_token` (at the root level):
-    - `tenant_id`: The ID of the tenant (e.g., site identifier).
-    - `api_id`: The ID of the API (e.g., `public`).
-    - `token`: The plaintext token or JWT string.
-    - `scopes`: A JSON array of scopes (e.g., `["read", "write"]`).
-    - `expires_at`: (Optional) Unix timestamp.
+1. Generate a secure random string (the token).
+2. Calculate the SHA-256 hash of the token.
+3. Insert a record into `tx_apicore_token`:
+    - `token_hash`: The SHA-256 hash.
+    - `tenant_id`: The ID of the tenant.
+    - `api_id`: The ID of the API.
+    - `scopes`: JSON array of scopes.
+
+### User-Level Auth (Access & Refresh Tokens)
+
+For `user` mode, the system supports a standard Access/Refresh token flow.
+
+#### 1. Login (Initial Authentication)
+
+The extension provides a default login endpoint that validates TYPO3 Frontend User credentials and returns an initial *
+*Access Token** and **Refresh Token**:
+
+- **URL**: `POST /api/{apiId}/v{version}/auth/login`
+- **Parameters**: `username`, `password`
+- **Returns**: `access_token`, `refresh_token`, `token_type`, `expires_in`
+
+The `UserAuthController` handles this process. It finds the user in `fe_users` and verifies the password hash.
+
+##### User Storage and Site Awareness
+
+By default, the controller looks for users in the current **TYPO3 Site Root**. You can customize the storage pages
+(PIDs) in several ways:
+
+1. **sg_account Integration**: If the extension `sg_account` is installed, it will automatically use the storage
+   configuration defined in your **Account Configuration** (Main Configuration).
+2. **Site Configuration**: You can explicitly define the storage PIDs in your `site.yaml`:
+   ```yaml
+   apicore:
+     userStoragePids: "123,456"
+   ```
+3. **Fallback**: If none of the above is configured, it falls back to the root page ID of the current site.
+
+It then uses the `TokenService` to generate the tokens.
+
+#### 2. Refresh
+
+To get a new Access Token after it expires, use the refresh endpoint with a valid Refresh Token:
+
+- **URL**: `POST /api/{apiId}/v{version}/auth/refresh`
+- **Parameters**: `refresh_token`
+- **Returns**: `access_token`, `token_type`, `expires_in`
+
+#### JWT Access Tokens (Optional)
+
+You can enable JWTs for Access Tokens. In this case, the `JwtAccessTokenProvider` validates the token without a database
+lookup for every request. Refresh tokens always remain opaque and database-backed.
+
+JWT Requirements:
+
+- Must have `exp` (expiry) and `jti` (unique ID) claims.
+- Must have `tenantId` and `apiId` claims matching the request context.
+- Should contain `userId` and `scopes` claims.
 
 ### Scope-based Authorization
 
 You can restrict access to endpoints based on scopes using the `#[RequireScopes]` attribute:
 
 ```php
-use SGalinski\SgApiCore\Attribute\ApiRoute;
-use SGalinski\SgApiCore\Attribute\RequireScopes;
-
-class MyController {
-    #[ApiRoute(path: '/secure-data', methods: ['GET'], apiId: 'public', version: '1')]
-    #[RequireScopes(['data:read'])]
-    public function secureAction(ServerRequestInterface $request): ResponseInterface {
-        // ...
-    }
-}
+#[RequireScopes(['orders:read'])]
 ```
 
-#### How Scopes Work
-
-- **If an endpoint has NO `#[RequireScopes]` attribute**: It is publicly accessible (still requires a valid token if any
-  `LoginProvider` is active, unless you implement a public provider).
-- **If an endpoint has an EMPTY `#[RequireScopes([])]` attribute**: It still requires a valid authentication but no
-  specific scope.
-- **If an endpoint has Scopes defined**: The authenticated `AuthContext` must have **ALL** the specified scopes to
-  access the endpoint.
-
-If a request is made without a valid token or without the required scopes, the API will return a **401 Unauthorized** or
-**403 Forbidden** Problem JSON response.
-
-### Auth Context
-
-If a request is authenticated, the `AuthContext` is available in the request attributes:
-
-```php
-use SGalinski\SgApiCore\Security\AuthContext;
-
-public function myAction(ServerRequestInterface $request): ResponseInterface {
-    /** @var AuthContext $authContext */
-    $authContext = $request->getAttribute('api.auth');
-    if ($authContext) {
-        $tokenUid = $authContext->getTokenUid();
-        $scopes = $authContext->getScopes();
-    }
-}
-```
+- **No attribute**: Publicly accessible if `authMode` is `public`.
+- **Empty attribute `#[RequireScopes([])]`**: Requires valid authentication but no specific scope.
+- **Scopes defined**: Requires a valid token with **ALL** specified scopes.
 
 ### Custom Login Providers
 
-You can extend the security layer by implementing your own `LoginProviderInterface`:
+Implement `LoginProviderInterface` and register it in `Services.php`. To have it automatically added to the
+`LoginProviderChain`, use the `sg_apicore.login_provider` tag:
 
 ```php
-namespace MyVendor\MyExtension\Security;
-
-use Psr\Http\Message\ServerRequestInterface;use SGalinski\SgApiCore\Security\AuthContext;use SGalinski\SgApiCore\Security\LoginProviderInterface;
-
-class MyLoginProvider implements LoginProviderInterface {
-    public function authenticate(ServerRequestInterface $request, string $apiId, string $tenantId): ?AuthContext {
-        // Your custom authentication logic (e.g., check a custom header or session)
-        // Returns an AuthContext object on success, or null on failure.
-    }
-}
+$services->set(MyCustomProvider::class)
+    ->tag('sg_apicore.login_provider');
 ```
 
-To register your provider, add it to the `LoginProviderChain` in your `Services.php`:
+Note: If you use the tag, make sure the `LoginProviderChain` is configured to collect these tagged services. By default,
+you can also manually add them to the `LoginProviderChain` definition in your `Services.php`:
 
 ```php
-use SGalinski\SgApiCore\Security\BearerTokenProvider;use SGalinski\SgApiCore\Security\LoginProviderChain;use Symfony\Component\DependencyInjection\Loader\Configurator;
-
 $services->set(LoginProviderChain::class)
     ->arg('$providers', [
-        Configurator\service(BearerTokenProvider::class),
-        Configurator\service(MyLoginProvider::class),
+        Configurator\service(BearerOpaqueTokenProvider::class),
+        Configurator\service(MyCustomProvider::class),
     ]);
 ```

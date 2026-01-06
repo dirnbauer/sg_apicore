@@ -67,10 +67,11 @@ class JwtService implements SingletonInterface {
 	 * Decodes and verifies a JWT
 	 *
 	 * @param string $jwt
+	 * @param array $expectedClaims (e.g. ['tenantId' => '...', 'apiId' => '...'])
 	 * @return array|null
 	 * @throws \JsonException
 	 */
-	public function decode(string $jwt): ?array {
+	public function decode(string $jwt, array $expectedClaims = []): ?array {
 		$tokenSegments = explode('.', $jwt);
 		if (count($tokenSegments) !== 3) {
 			return NULL;
@@ -89,8 +90,34 @@ class JwtService implements SingletonInterface {
 			return NULL;
 		}
 
-		if ($signature !== $this->sign("$jwtHeaderEncoded.$jwtPayloadEncoded", $this->privateKey, $header['alg'])) {
+		// Whitelist algorithms
+		if (!in_array($header['alg'], ['HS256', 'HS384', 'HS512'], TRUE)) {
 			return NULL;
+		}
+
+		// Use hash_equals for signature comparison
+		if (!hash_equals(
+			$signature,
+			$this->sign("$jwtHeaderEncoded.$jwtPayloadEncoded", $this->privateKey, $header['alg'])
+		)) {
+			return NULL;
+		}
+
+		// Verify exp claim
+		if (!isset($payload['exp']) || $payload['exp'] < time()) {
+			return NULL;
+		}
+
+		// Verify jti claim
+		if (!isset($payload['jti'])) {
+			return NULL;
+		}
+
+		// Verify expected claims
+		foreach ($expectedClaims as $key => $value) {
+			if (!isset($payload[$key]) || $payload[$key] !== $value) {
+				return NULL;
+			}
 		}
 
 		return $payload;

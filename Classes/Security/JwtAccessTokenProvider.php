@@ -27,30 +27,33 @@
 namespace SGalinski\SgApiCore\Security;
 
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Service\JwtService;
 
 /**
- * Chain of login providers
+ * JWT Access Token login provider
  */
-class LoginProviderChain implements LoginProviderInterface {
+class JwtAccessTokenProvider implements LoginProviderInterface {
 	/**
-	 * @var LoginProviderInterface[]
+	 * @var JwtService
 	 */
-	protected array $providers;
+	protected JwtService $jwtService;
 
 	/**
-	 * @param LoginProviderInterface[] $providers
+	 * @param JwtService $jwtService
 	 */
-	public function __construct(array $providers) {
-		$this->providers = $providers;
+	public function __construct(JwtService $jwtService) {
+		$this->jwtService = $jwtService;
 	}
 
 	/**
+	 * Authenticates the request and returns an AuthContext if successful
+	 *
 	 * @param ServerRequestInterface $request
 	 * @param string $apiId
 	 * @param string $tenantId
 	 * @param array $activeProviders
 	 * @return AuthContext|null
-	 * @throws \ReflectionException
+	 * @throws \JsonException
 	 */
 	public function authenticate(
 		ServerRequestInterface $request,
@@ -58,29 +61,31 @@ class LoginProviderChain implements LoginProviderInterface {
 		string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
-		foreach ($this->providers as $provider) {
-			if (!empty($activeProviders)) {
-				$className = get_class($provider);
-				$shortName = strtolower((new \ReflectionClass($className))->getShortName());
-				// Allow matching by full class name or simplified short name (e.g. 'beareropaquetokenprovider')
-				$match = FALSE;
-				foreach ($activeProviders as $activeProvider) {
-					if ($className === $activeProvider || $shortName === strtolower($activeProvider)) {
-						$match = TRUE;
-						break;
-					}
-				}
-				if (!$match) {
-					continue;
-				}
-			}
-
-			$authContext = $provider->authenticate($request, $apiId, $tenantId);
-			if ($authContext !== NULL) {
-				return $authContext;
-			}
+		$authorizationHeader = $request->getHeaderLine('Authorization');
+		if (!str_starts_with($authorizationHeader, 'Bearer ')) {
+			return NULL;
 		}
 
-		return NULL;
+		$token = substr($authorizationHeader, 7);
+		if ($token === '' || count(explode('.', $token)) !== 3) {
+			return NULL;
+		}
+
+		$payload = $this->jwtService->decode($token, [
+			'tenantId' => $tenantId,
+			'apiId' => $apiId
+		]);
+
+		if ($payload === NULL) {
+			return NULL;
+		}
+
+		return new AuthContext(
+			apiId: $apiId,
+			tenantId: $tenantId,
+			tokenUid: $payload['jti'] ?? NULL,
+			scopes: $payload['scopes'] ?? [],
+			userId: $payload['userId'] ?? NULL
+		);
 	}
 }

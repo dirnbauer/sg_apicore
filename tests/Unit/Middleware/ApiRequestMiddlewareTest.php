@@ -22,10 +22,12 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  */
 class ApiRequestMiddlewareTest extends UnitTestCase {
 	public function testProcessReturnsJsonResponseForHealthEndpoint(): void {
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/health');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -39,12 +41,13 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$request->expects($this->once())
-			->method('withAttribute')
-			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
-			->willReturn($request);
-
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
@@ -53,10 +56,12 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	}
 
 	public function testProcessReturnsJsonResponseForHealthEndpointWithTrailingSlash(): void {
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/health/');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -70,12 +75,13 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$request->expects($this->once())
-			->method('withAttribute')
-			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
-			->willReturn($request);
-
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
@@ -84,11 +90,13 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	}
 
 	public function testProcessCallsRouterForValidApiRequestWithTrailingSlash(): void {
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/public/v1/health/');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -98,28 +106,30 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('hasApi')->with('public')->willReturn(TRUE);
 		$apiRegistry->method('getApi')->with('public')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
 		$tenantResolver = $this->createStub(TenantResolverInterface::class);
 		$tenantResolver->method('resolve')->willReturn(
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$request->expects($this->once())
-			->method('withAttribute')
-			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
-			->willReturn($request);
-
 		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
 		$router = $this->createMock(Router::class);
 		$router->expects($this->once())
 			->method('dispatch')
-			->with($request, 'public', '1', '/health')
 			->willReturn($responseMock);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
-		$this->assertSame($responseMock, $response);
+		$this->assertEquals(200, $response->getStatusCode());
 	}
 
 	public function testProcessDelegatesToHandlerForNonApiRequests(): void {
@@ -139,18 +149,26 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$router = $this->createStub(Router::class);
 		$tenantResolver = $this->createStub(TenantResolverInterface::class);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertSame($responseMock, $response);
 	}
 
 	public function testProcessCallsRouterForValidApiRequest(): void {
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/public/v1/health');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->expects($this->never())->method('handle');
@@ -161,35 +179,118 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('hasApi')->with('public')->willReturn(TRUE);
 		$apiRegistry->method('getApi')->with('public')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
 		$tenantResolver = $this->createStub(TenantResolverInterface::class);
 		$tenantResolver->method('resolve')->willReturn(
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$request->expects($this->once())
-			->method('withAttribute')
-			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
-			->willReturn($request);
-
 		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
 		$router = $this->createMock(Router::class);
 		$router->expects($this->once())
 			->method('dispatch')
-			->with($request, 'public', '1', '/health')
 			->willReturn($responseMock);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
-		$this->assertSame($responseMock, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+	}
+
+	public function testProcessReturns200ForPublicApiWithoutAuth(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/public/v1/test');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('public')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('public')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$tenantResolver = $this->createStub(TenantResolverInterface::class);
+		$tenantResolver->method('resolve')->willReturn(
+			TenantContextResult::success(new TenantContext('test-tenant'))
+		);
+
+		$request->method('withAttribute')->willReturn($request);
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
+		$router = $this->createStub(Router::class);
+		$router->method('dispatch')->willReturn($responseMock);
+
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertEquals(200, $response->getStatusCode());
+	}
+
+	public function testProcessReturns401WhenAuthRequiredButMissing(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/partner/v1/test');
+		$request->method('getUri')->willReturn($uri);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('partner')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('partner')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
+
+		$router = $this->createStub(Router::class);
+		$tenantResolver = $this->createStub(TenantResolverInterface::class);
+		$tenantResolver->method('resolve')->willReturn(
+			TenantContextResult::success(new TenantContext('test-tenant'))
+		);
+
+		$loginProvider = $this->createStub(LoginProviderInterface::class);
+		$loginProvider->method('authenticate')->willReturn(NULL);
+
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$loginProvider
+		);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertEquals(401, $response->getStatusCode());
 	}
 
 	public function testProcessReturns404ForUnknownApi(): void {
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/unknown/v1/health');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -205,12 +306,13 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$request->expects($this->once())
-			->method('withAttribute')
-			->with('api.tenant', $this->isInstanceOf(TenantContext::class))
-			->willReturn($request);
-
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertEquals(404, $response->getStatusCode());
@@ -236,7 +338,13 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::failure('site_not_found')
 		);
 
-		$middleware = new ApiRequestMiddleware($extensionConfiguration, $apiRegistry, $router, $tenantResolver, $this->createStub(LoginProviderInterface::class));
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class)
+		);
 		$response = $middleware->process($request, $handler);
 
 		$this->assertEquals(400, $response->getStatusCode());

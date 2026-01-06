@@ -65,7 +65,7 @@ class HealthController {
 	}
 
 	/**
-	 * Test endpoint for 'partner' API with required scope
+	 * Test endpoint for 'partner' API with the required scope
 	 *
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
@@ -85,6 +85,25 @@ class HealthController {
 			'tokenUid' => $authContext->getTokenUid(),
 			'scopes' => $authContext->getScopes(),
 			'message' => 'Partner API test successful'
+		]);
+	}
+
+	/**
+	 * Test endpoint for 'user' level API (opaque access tokens)
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/user-test', methods: ['GET'], apiId: 'user', version: '1')]
+	public function userTest(ServerRequestInterface $request): ResponseInterface {
+		/** @var AuthContext $authContext */
+		$authContext = $request->getAttribute('api.auth');
+
+		return new JsonResponse([
+			'api' => 'user',
+			'userId' => $authContext->getUserId(),
+			'scopes' => $authContext->getScopes(),
+			'message' => 'User-Level API test successful'
 		]);
 	}
 

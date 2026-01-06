@@ -32,7 +32,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
-use SGalinski\SgApiCore\Controller\HealthController;
 use SGalinski\SgApiCore\Security\AuthContext;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\SingletonInterface;
@@ -46,9 +45,16 @@ class Router implements SingletonInterface {
 	/**
 	 * @var array
 	 */
-	protected array $controllers = [
-		HealthController::class
-	];
+	protected array $controllers = [];
+
+	/**
+	 * @param \Traversable $controllers
+	 */
+	public function __construct(\Traversable $controllers) {
+		foreach ($controllers as $controller) {
+			$this->controllers[] = get_class($controller);
+		}
+	}
 
 	/**
 	 * @param array $controllers
@@ -64,6 +70,7 @@ class Router implements SingletonInterface {
 	 * @param string $apiId
 	 * @param string $version
 	 * @param string $path
+	 * @param string|null $authMode
 	 * @return ResponseInterface
 	 * @throws \ReflectionException
 	 */
@@ -71,9 +78,10 @@ class Router implements SingletonInterface {
 		ServerRequestInterface $request,
 		string $apiId,
 		string $version,
-		string $path
+		string $path,
+		?string $authMode = NULL
 	): ResponseInterface {
-		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version) {
+		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version, $authMode) {
 			foreach ($this->controllers as $controllerClass) {
 				$reflectionClass = new \ReflectionClass($controllerClass);
 				foreach ($reflectionClass->getMethods() as $method) {
@@ -82,12 +90,24 @@ class Router implements SingletonInterface {
 						/** @var ApiRoute $routeAttribute */
 						$routeAttribute = $attribute->newInstance();
 
-						// Filter by API ID and version if specified
-						if ($routeAttribute->apiId !== NULL && $routeAttribute->apiId !== $apiId) {
-							continue;
+						// Filter by API ID, version and auth mode if specified
+						if ($routeAttribute->apiId !== NULL) {
+							$apiIds = is_array($routeAttribute->apiId) ? $routeAttribute->apiId : [$routeAttribute->apiId];
+							if (!in_array($apiId, $apiIds, TRUE)) {
+								continue;
+							}
 						}
-						if ($routeAttribute->version !== NULL && $routeAttribute->version !== $version) {
-							continue;
+						if ($routeAttribute->version !== NULL) {
+							$versions = is_array($routeAttribute->version) ? $routeAttribute->version : [$routeAttribute->version];
+							if (!in_array($version, $versions, TRUE)) {
+								continue;
+							}
+						}
+						if ($routeAttribute->authMode !== NULL) {
+							$authModes = is_array($routeAttribute->authMode) ? $routeAttribute->authMode : [$routeAttribute->authMode];
+							if (!in_array($authMode, $authModes, TRUE)) {
+								continue;
+							}
 						}
 
 						$r->addRoute($routeAttribute->methods, $routeAttribute->path, [

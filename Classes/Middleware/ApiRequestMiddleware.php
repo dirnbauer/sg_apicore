@@ -145,19 +145,29 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			}
 
 			if ($this->apiRegistry->hasApi($apiId)) {
+				$request = $request->withAttribute('api.id', $apiId);
 				$apiConfig = $this->apiRegistry->getApi($apiId);
 				if (in_array($version, $apiConfig['versions'], TRUE)) {
+					// Get security config
+					$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
+					$authMode = $securityConfig['authMode'] ?? 'token';
+					$activeProviders = $securityConfig['authProviders'] ?? [];
+
 					// Authenticate
 					$authContext = $this->loginProvider->authenticate(
 						$request,
 						$apiId,
-						$tenantResult->getContext()?->getTenantId()
+						$tenantResult->getContext()?->getTenantId(),
+						$activeProviders
 					);
+
 					if ($authContext !== NULL) {
 						$request = $request->withAttribute('api.auth', $authContext);
+					} elseif ($authMode !== 'public') {
+						return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
 					}
 
-					return $this->router->dispatch($request, $apiId, $version, $remainingPath);
+					return $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
 				}
 			}
 		}
