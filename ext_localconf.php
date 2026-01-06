@@ -1,6 +1,9 @@
 <?php
 
+use Psr\Log\LogLevel;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Log\Writer\FileWriter;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 (static function () {
@@ -19,9 +22,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 	// Default Log Configuration
 	$GLOBALS['TYPO3_CONF_VARS']['LOG']['SGalinski']['SgApiCore']['Service']['LogService']['writerConfiguration'] = [
-		\TYPO3\CMS\Core\Log\LogLevel::INFO => [
-			\TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
-				'logFile' => 'var/log/sg_apicore.log'
+		LogLevel::INFO => [
+			FileWriter::class => [
+				'logFile' => Environment::getVarPath() . '/log/sg_apicore.log'
 			]
 		]
 	];

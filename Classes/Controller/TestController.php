@@ -36,6 +36,7 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Context\TenantContext;
+use SGalinski\SgApiCore\Mapper\TcaMapper;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
@@ -55,12 +56,23 @@ class TestController {
 	protected PaginationService $paginationService;
 
 	/**
+	 * @var TcaMapper
+	 */
+	protected TcaMapper $tcaMapper;
+
+	/**
 	 * @param ResponseService $responseService
 	 * @param PaginationService $paginationService
+	 * @param TcaMapper $tcaMapper
 	 */
-	public function __construct(ResponseService $responseService, PaginationService $paginationService) {
+	public function __construct(
+		ResponseService $responseService,
+		PaginationService $paginationService,
+		TcaMapper $tcaMapper
+	) {
 		$this->responseService = $responseService;
 		$this->paginationService = $paginationService;
+		$this->tcaMapper = $tcaMapper;
 	}
 
 	/**
@@ -210,5 +222,46 @@ class TestController {
 		}
 
 		return $this->responseService->createErrorResponse('Not Found', 'The requested example was not found.', 404);
+	}
+
+	/**
+	 * Demonstration of TcaMapper with tt_content
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/tca-test', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(summary: 'TCA Mapper test', tags: ['Test'])]
+	public function tcaTest(ServerRequestInterface $request): ResponseInterface {
+		// Mock record for demonstration (as we might not have real DB access/records here)
+		$record = [
+			'uid' => 42,
+			'pid' => 1,
+			'header' => 'Example Header',
+			'bodytext' => '<p>Example bodytext</p>',
+			'hidden' => 0,
+			'tstamp' => time(),
+			'crdate' => time(),
+			'CType' => 'text',
+		];
+
+		// We need to ensure TCA is loaded for the mapper to work properly
+		// In a real TYPO3 context, $GLOBALS['TCA'] would be populated.
+		if (!isset($GLOBALS['TCA']['tt_content'])) {
+			$GLOBALS['TCA']['tt_content'] = [
+				'columns' => [
+					'uid' => ['config' => ['type' => 'number']],
+					'pid' => ['config' => ['type' => 'number']],
+					'header' => ['config' => ['type' => 'input']],
+					'bodytext' => ['config' => ['type' => 'text']],
+					'CType' => ['config' => ['type' => 'select']],
+					'hidden' => ['config' => ['type' => 'check']],
+				]
+			];
+		}
+
+		$mappedRecord = $this->tcaMapper->mapRecord('tt_content', $record);
+
+		return $this->responseService->createSuccessResponse($mappedRecord);
 	}
 }

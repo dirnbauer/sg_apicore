@@ -303,6 +303,50 @@ explicitly passed):
 }
 ```
 
+## TCA Mapper
+
+The `TcaMapper` service allows you to map TYPO3 database records to API response arrays based on the Table Configuration
+Array (TCA). It automatically handles field whitelisting and basic type transformations (e.g., Booleans, Integers,
+Date/Time).
+
+### Using the TcaMapper
+
+```php
+use SGalinski\SgApiCore\Mapper\TcaMapper;
+
+class MyController {
+    protected TcaMapper $tcaMapper;
+    protected ResponseService $responseService;
+
+    public function __construct(TcaMapper $tcaMapper, ResponseService $responseService) {
+        $this->tcaMapper = $tcaMapper;
+        $this->responseService = $responseService;
+    }
+
+    public function getAction(ServerRequestInterface $request, string $id): ResponseInterface {
+        $record = $this->myRepository->findByUid($id);
+        if (!$record) {
+             return $this->responseService->createErrorResponse('Not Found', '...', 404);
+        }
+
+        // Map the record using TCA for 'tt_content'
+        $mappedData = $this->tcaMapper->mapRecord('tt_content', $record);
+
+        return $this->responseService->createSuccessResponse($mappedData);
+    }
+}
+```
+
+#### Filtering Fields
+
+By default, the mapper excludes common TYPO3 internal fields (like `tstamp`, `crdate`, `hidden`, etc.). You can
+explicitly define which fields should be included:
+
+```php
+$allowedFields = ['uid', 'pid', 'header', 'bodytext'];
+$mappedData = $this->tcaMapper->mapRecord('tt_content', $record, $allowedFields);
+```
+
 ## OpenAPI Documentation
 
 The extension automatically generates OpenAPI 3.0 specifications based on your controller attributes.
@@ -463,7 +507,7 @@ under the `['LOG']` key.
                     'writerConfiguration' => [
                         \TYPO3\CMS\Core\Log\LogLevel::INFO => [
                             \TYPO3\CMS\Core\Log\Writer\FileWriter::class => [
-                                'logFile' => 'var/log/custom_api_filename.log'
+                                'logFile' => \TYPO3\CMS\Core\Core\Environment::getVarPath() . 'log/custom_api_filename.log'
                             ]
                         ]
                     ]
