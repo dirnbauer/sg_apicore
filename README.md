@@ -177,6 +177,61 @@ request URL.
 If a property is an array, the route is included if the current value matches any of the values in the array.
 Multiple `#[ApiRoute]` attributes can also be used on the same method (repeatable attribute).
 
+### Extbase Compatibility & Manual Mapping
+
+Since this extension avoids the heavy Extbase bootstrap for performance reasons, automatic argument mapping and
+validation (like in `ActionController`) are not available. However, you can still use Extbase's powerful mapping and
+validation tools manually when needed.
+
+#### Manual Property Mapping & Validation
+
+To map a request body to an Extbase Domain Model and validate it, you can use the `PropertyMapper` and
+`ValidatorResolver`. Note that in a manual flow, mapping and validation are separate steps:
+
+```php
+use TYPO3\CMS\Extbase\Property\PropertyMapper;
+use TYPO3\CMS\Extbase\Validation\ValidatorResolver;
+use MyVendor\MyExt\Domain\Model\MyModel;
+
+class MyController {
+    protected PropertyMapper $propertyMapper;
+    protected ValidatorResolver $validatorResolver;
+    protected ResponseService $responseService;
+
+    public function __construct(
+        PropertyMapper $propertyMapper,
+        ValidatorResolver $validatorResolver,
+        ResponseService $responseService
+    ) {
+        $this->propertyMapper = $propertyMapper;
+        $this->validatorResolver = $validatorResolver;
+        $this->responseService = $responseService;
+    }
+
+    public function createAction(ServerRequestInterface $request): ResponseInterface {
+        $data = $request->getParsedBody()['myModel'] ?? [];
+
+        try {
+            // 1. Map to object
+            /** @var MyModel $myModel */
+            $myModel = $this->propertyMapper->convert($data, MyModel::class);
+
+            // 2. Validate object
+            $validator = $this->validatorResolver->getBaseValidatorConjunction(MyModel::class);
+            $results = $validator->validate($myModel);
+
+            if ($results->hasErrors()) {
+                return $this->responseService->createErrorResponse('Validation Failed', 'Invalid data.', 400);
+            }
+        } catch (\Exception $e) {
+            return $this->responseService->createErrorResponse('Mapping Failed', $e->getMessage(), 400);
+        }
+
+        // ...
+    }
+}
+```
+
 ### Why not standard TYPO3 Routing?
 
 Standard TYPO3 routing (via Site Configuration and Enhancers) is tightly coupled to the page tree and site handling. For
