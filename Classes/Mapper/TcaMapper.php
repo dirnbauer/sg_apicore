@@ -29,7 +29,7 @@ namespace SGalinski\SgApiCore\Mapper;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
- * Service for mapping TYPO3 records to API responses based on TCA
+ * Service for mapping TYPO3 records to API responses based on TCA and vice versa
  */
 class TcaMapper implements SingletonInterface {
 	/**
@@ -106,6 +106,37 @@ class TcaMapper implements SingletonInterface {
 	}
 
 	/**
+	 * Maps an array of data (e.g., from JSON) to database-ready values based on TCA
+	 *
+	 * @param string $tableName
+	 * @param array $data
+	 * @param array $allowedFields Whitelist of fields to accept
+	 * @return array
+	 */
+	public function mapDataForDatabase(string $tableName, array $data, array $allowedFields = []): array {
+		$mappedData = [];
+		$tca = $GLOBALS['TCA'][$tableName] ?? [];
+		if (empty($tca)) {
+			return $data;
+		}
+
+		foreach ($data as $fieldName => $value) {
+			if (!empty($allowedFields) && !in_array($fieldName, $allowedFields, TRUE)) {
+				continue;
+			}
+
+			if (!isset($tca['columns'][$fieldName])) {
+				continue;
+			}
+
+			$columnConfig = $tca['columns'][$fieldName]['config'] ?? [];
+			$mappedData[$fieldName] = $this->transformValueForDatabase($value, $columnConfig);
+		}
+
+		return $mappedData;
+	}
+
+	/**
 	 * Transforms a value based on TCA configuration
 	 *
 	 * @param mixed $value
@@ -137,6 +168,44 @@ class TcaMapper implements SingletonInterface {
 					return is_string($value) ? explode(',', $value) : $value;
 				}
 				return $value;
+			default:
+				return $value;
+		}
+	}
+
+	/**
+	 * Transforms a value to be database-ready based on TCA configuration
+	 *
+	 * @param mixed $value
+	 * @param array $config
+	 * @return mixed
+	 */
+	protected function transformValueForDatabase(mixed $value, array $config): mixed {
+		$type = $config['type'] ?? '';
+
+		switch ($type) {
+			case 'check':
+				return $value ? 1 : 0;
+			case 'input':
+				if (isset($config['eval']) && str_contains($config['eval'], 'int')) {
+					return (int) $value;
+				}
+				if (($config['renderType'] ?? '') === 'inputDateTime' || (isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))) {
+					if (is_string($value)) {
+						$timestamp = strtotime($value);
+						return $timestamp !== FALSE ? $timestamp : (int) $value;
+					}
+					return (int) $value;
+				}
+				return (string) $value;
+			case 'number':
+				return str_contains($config['format'] ?? '', 'decimal') ? (float) $value : (int) $value;
+			case 'select':
+			case 'group':
+				if (is_array($value)) {
+					return implode(',', $value);
+				}
+				return (string) $value;
 			default:
 				return $value;
 		}

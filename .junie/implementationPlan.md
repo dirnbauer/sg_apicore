@@ -1,4 +1,4 @@
-Phase A – Repo/Extension Setup (Foundation)
+Phase A – Repo/Extension Setup (Foundation) ✓
 Ziel: Bau- und Test-bereite Extension-Struktur.
 Tasks
 
@@ -26,7 +26,7 @@ Erzeuge (insofern noch nicht gemacht):
 
 ---
 
-Phase B – Routing + Versionierung + Multi‑API
+Phase B – Routing + Versionierung + Multi‑API ✓
 Ziel: Requests deterministisch auf Handler mappen.
 Entscheidungen (als ADR)
 
@@ -58,7 +58,7 @@ Erweitere ApiRequestMiddleware um Routing:
 
 ---
 
-Phase C – Tenant Context (Multi-Tenant über TYPO3 Site)
+Phase C – Tenant Context (Multi-Tenant über TYPO3 Site) ✓
 Ziel : Jeder API-Request läuft **immer*- in einem eindeutigen **Tenant-Kontext**, der standardmäßig aus der **TYPO3 Site
 *- (Host/Pfad) abgeleitet wird.
 Damit bleibt die API in TYPO3 „site-spezifisch“, ohne dass ein zusätzlicher Header benötigt wird – und trotzdem ist der
@@ -147,7 +147,7 @@ ohnehin trennt.
 
 ---
 
-Phase D – Security (Bearer Token + Scopes + LoginProvider)
+Phase D – Security (Bearer Token + Scopes + LoginProvider) ✓
 Ziel: Sicherer Zugriff, erweiterbar.
 DB / Domain
 
@@ -192,7 +192,7 @@ Implementiere Bearer Token Auth:
 
 ---
 
-Phase D-II – Extended Security Definition (Private APIs)
+Phase D-II – Extended Security Definition (Private APIs) ✓
 Ziel: Private API, Proper JWT Auth. Opaque Tokens
 
 **Ziel**
@@ -284,7 +284,7 @@ Dokumentation (minimal)
 
 ---
 
-Phase E – Endpoint Metadata (Attributes) + Controller Pattern
+Phase E – Endpoint Metadata (Attributes) + Controller Pattern ✓
 Ziel: Business-Endpunkte sauber deklarieren.
 Tasks
 
@@ -310,7 +310,7 @@ Definition of Done
 
 ---
 
-Phase F – OpenAPI Generator + Swagger UI
+Phase F – OpenAPI Generator + Swagger UI ✓
 Ziel: Doku ist first-class und releasefähig.
 Tasks
 
@@ -342,7 +342,7 @@ Baue OpenAPI Generator:
 
 ---
 
-Phase G – Logging (konfigurierbar, redacted)
+Phase G – Logging (konfigurierbar, redacted) ✓
 Ziel: Nachvollziehbarkeit ohne Datenleak.
 Tasks
 
@@ -360,7 +360,7 @@ Definition of Done
 
 ---
 
-Phase H – TCA Mapper (Basis)
+Phase H – TCA Mapper (Basis) ✓
 Ziel: TYPO3‑Records sauber mappen.
 Tasks
 
@@ -376,7 +376,7 @@ Definition of Done
 
 ---
 
-Phase I – Dokumentation & Open Source Readiness
+Phase I – Dokumentation & Open Source Readiness ✓
 Ziel: Releasefähig.
 Tasks
 
@@ -394,7 +394,7 @@ Definition of Done
 
 ---
 
-Phase J – Backend-Modul: Verwaltung von APIs, Tokens, Providern & Endpunkten (kurz)
+Phase J – Backend-Modul: Verwaltung von APIs, Tokens, Providern & Endpunkten ✓
 
 **Ziel**
 TYPO3 Backend-Modul für `sg_apicore`, um **APIs**, **Tenants**, **Tokens (Access/Refresh)**, **Provider-Konfiguration*-
