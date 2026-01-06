@@ -454,7 +454,118 @@ Definition of Done
 
 ---
 
-### Phase K – sg_rest Drop-In Replacement & Migrationspfad (kurz)
+### Phase K – TCA-CRUD Auto-Endpunkte (Resource CRUD aus TCA, Erweiterung der TcaMapper-Phase)
+
+**Ziel**
+Aus einer konfigurierten TYPO3-Tabelle (TCA) automatisch **CRUD-Endpunkte*- erzeugen (Collection + Item), inkl. *
+*Pagination**, **Sorting/Filter (minimal)**, **TCA-Mapping*- für Output und **Write-Mapping*- für Create/Update.
+
+---
+
+## Scope (MVP)
+
+### 1) Resource-Konfiguration
+
+- Konfig pro Resource (Tabelle):
+
+    - `table` (z.B. `tt_content`, `tx_myext_domain_model_foo`)
+    - `basePath` (z.B. `/contents`)
+    - `idField` (default `uid`)
+    - `allowedOperations`: `list|get|create|update|delete`
+    - `readFields` (Whitelist) + optional `writeFields` (Whitelist)
+    - `requiredScopes` pro Operation
+
+**DoD:*- Mind. 1 Resource per Konfig aktivierbar; Operationen können einzeln deaktiviert werden.
+
+---
+
+### 2) Auto-Routen / Endpunkte
+
+Erzeuge automatisch:
+
+- `GET    {basePath}` (Collection, Pagination)
+- `GET    {basePath}/{id}` (Item)
+- `POST   {basePath}` (Create)
+- `PATCH  {basePath}/{id}` (Partial Update)
+- `DELETE {basePath}/{id}` (Delete)
+
+**DoD:*- Endpunkte werden ohne manuelles Controller-Coding registriert und funktionieren tenant+api gebunden.
+
+---
+
+### 3) Read-Pipeline (TCA Mapper)
+
+- Query via QueryBuilder
+- Output via bestehendem `TcaMapper`:
+
+    - Whitelist-Felder (readFields)
+    - Basis-Transformer (int/bool/DateTime)
+    - Relations im MVP nur “flach” (uids/strings), optional später expand
+
+**DoD:*- Responses sind konsistent und folgen dem API-Envelope (falls aktiv).
+
+---
+
+### 4) Write-Pipeline (TCA Write Mapper)
+
+- Input JSON → Feldwerte anhand `writeFields` akzeptieren
+- Basic Validierung:
+
+    - unbekannte Felder ignorieren/ablehnen (config)
+    - simple type casting (int/bool/string)
+- Persistenz:
+
+    - Create/Update/Delete über DataHandler (oder minimal DBAL, aber bevorzugt DataHandler für TYPO3-Konformität)
+
+**DoD:*- POST/PATCH/DELETE ändern Daten korrekt; EnableFields/Permissions werden TYPO3-konform berücksichtigt (soweit
+DataHandler).
+
+---
+
+### 5) Pagination / Filter / Sort (minimal)
+
+- Pagination:
+
+    - `page` (1-based), `perPage` (default + max limit)
+    - Response `meta`: `page`, `perPage`, `total`, `pages`
+- Sort:
+
+    - `sort` (z.B. `title` oder `-title`)
+- Filter (minimal):
+
+    - `filter[field]=value` nur für Whitelist-Felder
+
+**DoD:*- Collection Endpoint liefert stabile Paging-Metadaten; Limits werden enforced.
+
+---
+
+### 6) OpenAPI Integration (basic)
+
+- Generiere OpenAPI paths für die Resource-Endpunkte
+- Schema “basic object” aus `readFields` (types grob: string/int/bool)
+
+**DoD:*- Swagger UI zeigt CRUD-Endpunkte der Resource an.
+
+---
+
+## Tests (minimal)
+
+- List + Pagination
+- Get Item
+- Create + Update + Delete (Happy Path)
+- Scope Enforcement pro Operation
+
+---
+
+## Non-Goals (für MVP)
+
+- komplexe Relations (MM/FAL/inline) voll auflösen
+- Workspaces/Translation-Fallstricke vollständig abdecken
+- Query-DSL wie API Platform
+
+---
+
+### Phase L – sg_rest Drop-In Replacement & Migrationspfad (kurz)
 
 **Ziel**
 `sg_apicore` so erweitern, dass bestehende Installationen mit `sg_rest` **schrittweise*- migriert werden können –
