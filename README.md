@@ -294,10 +294,10 @@ You can also export the OpenAPI specification to a file using the CLI:
 
 ```bash
 # Export public API v1 to a file
-typo3 api:openapi:generate --api=public --version=1 --out=public-api.json
+typo3 api:openapi:generate --api=public --api-version=1 --out=public-api.json
 
 # Output to stdout
-typo3 api:openapi:generate --api=partner --version=2
+typo3 api:openapi:generate --api=partner --api-version=2
 ```
 
 ### Security Schemes
@@ -305,7 +305,9 @@ typo3 api:openapi:generate --api=partner --version=2
 The generated specification includes a `bearerAuth` security scheme. If an API is not in `public` mode, this security
 scheme is automatically required for all its endpoints.
 
-### Why not standard TYPO3 Routing?
+### Philosophy / Architectural Decisions
+
+#### Why not standard TYPO3 Routing?
 
 Standard TYPO3 routing (via Site Configuration and Enhancers) is tightly coupled to the page tree and site handling. For
 a high-performance data API, we chose `nikic/fast-route` for several reasons:
@@ -319,6 +321,46 @@ a high-performance data API, we chose `nikic/fast-route` for several reasons:
 
 This approach allows the API to function as a specialized layer that intercepts requests before they hit the standard
 frontend processing.
+
+#### Why not Hydra or JSON-LD?
+
+We consciously decided against using **Hydra** or **JSON-LD** for this API framework. While these standards provide
+powerful hypermedia capabilities, they also introduce significant complexity and overhead:
+
+- **Performance**: Standard JSON is faster to generate and parse.
+- **Simplicity**: Most integration projects prefer a pragmatical REST/JSON approach that is straightforward to consume
+  with standard tools and libraries.
+- **Maintenance**: Maintaining a full Hydra-compliant API requires significantly more effort in terms of metadata and
+  schema definitions.
+
+Our focus is on a high-performance, easy-to-use, and developer-friendly API that integrates seamlessly into the TYPO3
+ecosystem while following modern best practices.
+
+### Logging
+
+The extension provides a comprehensive logging system for API requests and responses. It can be configured globally and
+overridden per endpoint.
+
+#### Where are the logs?
+
+The API uses the standard **TYPO3 LogManager**. Depending on your TYPO3 configuration, the logs can typically be found:
+
+- In the file system: `var/log/typo3_*.log` (e.g. `var/log/typo3_7581426.log`).
+- In the TYPO3 Backend: **System > Log** (if the `DatabaseBackend` is configured for logging).
+
+You can configure the log destination, writers, and processors globally in your TYPO3 configuration (`settings.php` or
+`LocalConfiguration.php`) under the `['LOG']` key.
+
+#### Global Configuration
+
+Logging can be configured in the Extension Configuration (Extension Manager or `settings.php`):
+
+- **`enableLogging`**: Global toggle for API logging.
+- **`logHeaders`**: Whether to log request headers.
+- **`logBody`**: Whether to log the request body.
+- **`logResponse`**: Whether to log the response body.
+- Redact keys: Comma-separated list of keys to mask in logs (e.g.,
+  `password,token,authorization,secret,access_token,refresh_token`).
 
 ### Custom Controllers & Extensions
 
