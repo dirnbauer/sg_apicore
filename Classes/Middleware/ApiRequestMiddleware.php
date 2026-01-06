@@ -118,6 +118,22 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		$requestId = bin2hex(random_bytes(8));
 		$request = $request->withAttribute('api.requestId', $requestId);
 
+		// Parse JSON Body if applicable
+		if (str_contains($request->getHeaderLine('Content-Type'), 'application/json')) {
+			$body = (string) $request->getBody();
+			if ($body !== '') {
+				try {
+					$parsedBody = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
+					if (is_array($parsedBody)) {
+						$request = $request->withParsedBody($parsedBody);
+					}
+				} catch (\JsonException) {
+					// Invalid JSON, we keep the original request and let the controller handle it
+					// or return a 400 error later if needed.
+				}
+			}
+		}
+
 		$startTime = microtime(TRUE);
 		$response = $this->handleApiRequest($request, $handler);
 		$duration = microtime(TRUE) - $startTime;

@@ -531,4 +531,53 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$this->assertEquals(302, $response->getStatusCode());
 		$this->assertEquals('/api/public/v1/docs/ui', $response->getHeaderLine('Location'));
 	}
+
+	public function testProcessParsesJsonBody(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('POST');
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/public/v1/test');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getHeaderLine')->with('Content-Type')->willReturn('application/json');
+		$request->method('getBody')->willReturn(new \TYPO3\CMS\Core\Http\Stream('php://temp', 'rw'));
+		$request->getBody()->write('{"foo":"bar"}');
+		$request->getBody()->rewind();
+
+		$request->expects($this->exactly(3))
+			->method('withAttribute')
+			->willReturnSelf();
+
+		$request->expects($this->once())
+			->method('withParsedBody')
+			->with(['foo' => 'bar'])
+			->willReturnSelf();
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('public')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('public')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$tenantResolver = $this->createStub(TenantResolverInterface::class);
+		$tenantResolver->method('resolve')->willReturn(
+			TenantContextResult::success(new TenantContext('test-tenant'))
+		);
+
+		$router = $this->createStub(Router::class);
+		$router->method('dispatch')->willReturn(new JsonResponse([]));
+
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
+		);
+		$middleware->process($request, $handler);
+	}
 }
