@@ -7,6 +7,7 @@ use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\OpenApiService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -22,8 +23,8 @@ class OpenApiServiceTest extends UnitTestCase {
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
-
-		$service = new OpenApiService($controllers, $apiRegistry, $extensionConfiguration);
+		$discoveryService = new EndpointDiscoveryService($controllers);
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 
 		$this->assertEquals('3.0.3', $spec['openapi']);
@@ -39,8 +40,8 @@ class OpenApiServiceTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
-
-		$service = new OpenApiService($controllers, $apiRegistry, $extensionConfiguration);
+		$discoveryService = new EndpointDiscoveryService($controllers);
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
 		// 'public' api should have /test but not /partner-only
 		$spec = $service->generateSpec('public', '1');
@@ -62,8 +63,9 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockHybridController()]);
+		$discoveryService = new EndpointDiscoveryService($controllers);
 
-		$service = new OpenApiService($controllers, $apiRegistry, $extensionConfiguration);
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
 		// 'public' api should NOT have /hybrid
 		$specPublic = $service->generateSpec('public', '1');
@@ -82,8 +84,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockBodyParamController()]);
+		$discoveryService = new EndpointDiscoveryService($controllers);
 
-		$service = new OpenApiService($controllers, $apiRegistry, $extensionConfiguration);
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 
 		$this->assertArrayHasKey('/post-test', $spec['paths']);

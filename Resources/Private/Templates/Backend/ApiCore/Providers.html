@@ -1,0 +1,51 @@
+<f:layout name="Backend/Default" />
+
+<f:section name="Content">
+	<h1>Authentication Providers</h1>
+	<p>Currently configured authentication modes and providers per API.</p>
+
+	<f:for each="{apis}" as="config" key="apiId">
+		<div class="card mb-4">
+			<div class="card-header">
+				<strong>API: {apiId}</strong>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-md-6">
+						<h5>General Security</h5>
+						<f:alias map="{security: '{config.security}'}">
+							<table class="table table-bordered table-sm">
+								<tr>
+									<th>Auth Mode</th>
+									<td><code>{security.authMode}</code></td>
+								</tr>
+								<tr>
+									<th>Active Providers</th>
+									<td>
+										<f:if condition="{security.authProviders}">
+											<f:then>
+												<f:for each="{security.authProviders}" as="provider">
+													<span class="badge badge-primary">{provider}</span>
+												</f:for>
+											</f:then>
+											<f:else>
+												<span class="text-muted">None (Inherited or public)</span>
+											</f:else>
+										</f:if>
+									</td>
+								</tr>
+							</table>
+						</f:alias>
+					</div>
+					<div class="col-md-6">
+						<div class="alert alert-info">
+							<h5>Configuration Note</h5>
+							<p>These settings are currently defined in <code>ext_localconf.php</code> via <code>ApiRegistry</code>.</p>
+							<pre>$apiRegistry->registerApi('{apiId}', ...);</pre>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</f:for>
+</f:section>

@@ -1,0 +1,40 @@
+<f:layout name="Backend/Default" />
+
+<f:section name="Content">
+	<h1>Token Created</h1>
+	<div class="alert alert-warning">
+		<h4 class="alert-heading">Copy your token now!</h4>
+		<p>For security reasons, this token will only be shown <strong>once</strong>. We store only a SHA-256 hash of it.</p>
+		<hr>
+		<div class="input-group">
+			<input type="text" class="form-control form-control-lg" value="{plaintextToken}" readonly id="plaintextToken">
+			<div class="input-group-append">
+				<button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">Copy</button>
+			</div>
+		</div>
+	</div>
+
+	<h3>Details</h3>
+	<table class="table table-bordered">
+		<tr>
+			<th>API ID</th>
+			<td>{apiId}</td>
+		</tr>
+		<tr>
+			<th>Tenant ID</th>
+			<td>{tenantId}</td>
+		</tr>
+	</table>
+
+	<f:link.action action="tokens" class="btn btn-primary">Back to Token Management</f:link.action>
+
+	<script>
+		function copyToClipboard() {
+			var copyText = document.getElementById("plaintextToken");
+			copyText.select();
+			copyText.setSelectionRange(0, 99999);
+			document.execCommand("copy");
+			alert("Copied to clipboard");
+		}
+	</script>
+</f:section>

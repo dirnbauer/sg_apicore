@@ -1,0 +1,45 @@
+<f:layout name="Backend/Default" />
+
+<f:section name="Content">
+	<h1>Registered APIs & Versions</h1>
+	<p>The following APIs are currently registered in the system via <code>ApiRegistry</code>.</p>
+
+	<table class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th>API ID</th>
+				<th>Versions</th>
+				<th>Auth Mode</th>
+				<th>Base Path</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<f:for each="{apis}" as="config" key="apiId">
+				<tr>
+					<td><strong>{apiId}</strong></td>
+					<td>
+						<f:for each="{config.versions}" as="version">
+							<span class="badge badge-info">{version}</span>
+						</f:for>
+					</td>
+					<td>
+						<f:alias map="{security: '{config.security}'}">
+							<code>{security.authMode}</code>
+						</f:alias>
+					</td>
+					<td>
+						<code>{f:if(condition: config.basePath, then: config.basePath, else: '/api/{apiId}/v{version}')}</code>
+					</td>
+					<td>
+						<f:for each="{config.versions}" as="version">
+							<a href="/api/{apiId}/v{version}/docs/ui" target="_blank" class="btn btn-default btn-sm" title="Open Swagger UI">
+								<core:icon identifier="actions-document-view" size="small" /> v{version}
+							</a>
+						</f:for>
+					</td>
+				</tr>
+			</f:for>
+		</tbody>
+	</table>
+</f:section>

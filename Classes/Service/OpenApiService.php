@@ -41,14 +41,9 @@ use TYPO3\CMS\Core\SingletonInterface;
  */
 class OpenApiService implements SingletonInterface {
 	/**
-	 * @var iterable
+	 * @var EndpointDiscoveryService
 	 */
-	protected iterable $controllers;
-
-	/**
-	 * @var array|null
-	 */
-	protected ?array $controllerClasses = NULL;
+	protected EndpointDiscoveryService $endpointDiscoveryService;
 
 	/**
 	 * @var ApiRegistry
@@ -61,34 +56,18 @@ class OpenApiService implements SingletonInterface {
 	protected ExtensionConfiguration $extensionConfiguration;
 
 	/**
-	 * @param iterable $controllers
+	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param ApiRegistry $apiRegistry
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
 	public function __construct(
-		iterable $controllers,
+		EndpointDiscoveryService $endpointDiscoveryService,
 		ApiRegistry $apiRegistry,
 		ExtensionConfiguration $extensionConfiguration
 	) {
-		$this->controllers = $controllers;
+		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->apiRegistry = $apiRegistry;
 		$this->extensionConfiguration = $extensionConfiguration;
-	}
-
-	/**
-	 * Returns the class names of all registered controllers
-	 *
-	 * @return array
-	 */
-	protected function getControllerClasses(): array {
-		if ($this->controllerClasses === NULL) {
-			$this->controllerClasses = [];
-			foreach ($this->controllers as $controller) {
-				$this->controllerClasses[] = get_class($controller);
-			}
-		}
-
-		return $this->controllerClasses;
 	}
 
 	/**
@@ -133,47 +112,35 @@ class OpenApiService implements SingletonInterface {
 			$spec['security'] = [['bearerAuth' => []]];
 		}
 
-		foreach ($this->getControllerClasses() as $controllerClass) {
-			$reflectionClass = new \ReflectionClass($controllerClass);
-			foreach ($reflectionClass->getMethods() as $method) {
-				$routeAttributes = $method->getAttributes(ApiRoute::class);
-				foreach ($routeAttributes as $routeAttr) {
-					/** @var ApiRoute $route */
-					$route = $routeAttr->newInstance();
-
-					// Check if this route belongs to the requested apiId, version and authMode
-					if ($route->apiId !== NULL) {
-						$apiIds = is_array($route->apiId) ? $route->apiId : [$route->apiId];
-						if (!in_array($apiId, $apiIds, TRUE)) {
-							continue;
-						}
-					}
-					if ($route->version !== NULL) {
-						$versions = is_array($route->version) ? $route->version : [$route->version];
-						if (!in_array($version, $versions, TRUE)) {
-							continue;
-						}
-					}
-					if ($route->authMode !== NULL) {
-						$authModes = is_array($route->authMode) ? $route->authMode : [$route->authMode];
-
-						// Visibility logic:
-						// If it's specifically restricted to certain modes (e.g. 'user'),
-						// it must match the current API's authMode even if 'public' is also allowed.
-						// This ensures that 'user' endpoints don't clutter the 'public' API documentation.
-						$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
-						if (!empty($restrictedTo)) {
-							if (!in_array($authMode, $restrictedTo, TRUE)) {
-								continue;
-							}
-						} elseif (!in_array('public', $authModes, TRUE)) {
-							continue;
-						}
-					}
-
-					$this->addRouteToSpec($spec, $method, $route);
+		foreach ($this->endpointDiscoveryService->getAllEndpoints() as $endpoint) {
+			// Filter by API ID, version and auth mode if specified
+			if ($endpoint['apiId'] !== NULL) {
+				$apiIds = is_array($endpoint['apiId']) ? $endpoint['apiId'] : [$endpoint['apiId']];
+				if (!in_array($apiId, $apiIds, TRUE)) {
+					continue;
 				}
 			}
+			if ($endpoint['version'] !== NULL) {
+				$versions = is_array($endpoint['version']) ? $endpoint['version'] : [$endpoint['version']];
+				if (!in_array($version, $versions, TRUE)) {
+					continue;
+				}
+			}
+			if ($endpoint['authMode'] !== NULL) {
+				$authModes = is_array($endpoint['authMode']) ? $endpoint['authMode'] : [$endpoint['authMode']];
+
+				// Visibility logic
+				$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
+				if (!empty($restrictedTo)) {
+					if (!in_array($authMode, $restrictedTo, TRUE)) {
+						continue;
+					}
+				} elseif (!in_array('public', $authModes, TRUE)) {
+					continue;
+				}
+			}
+
+			$this->addRouteToSpec($spec, $endpoint);
 		}
 
 		return $spec;
@@ -183,45 +150,32 @@ class OpenApiService implements SingletonInterface {
 	 * Adds a route and its metadata to the OpenAPI spec
 	 *
 	 * @param array &$spec
-	 * @param \ReflectionMethod $method
-	 * @param ApiRoute $route
+	 * @param array $endpoint
 	 */
-	protected function addRouteToSpec(array &$spec, \ReflectionMethod $method, ApiRoute $route): void {
-		$path = $route->path;
-		// OpenAPI paths must start with a slash and shouldn't have trailing slashes
-		$path = '/' . ltrim($path, '/');
+	protected function addRouteToSpec(array &$spec, array $endpoint): void {
+		$path = '/' . ltrim($endpoint['path'], '/');
 
 		if (!isset($spec['paths'][$path])) {
 			$spec['paths'][$path] = [];
 		}
 
-		$endpointAttr = $method->getAttributes(ApiEndpoint::class)[0] ?? NULL;
-		/** @var ApiEndpoint|null $endpoint */
-		$endpoint = $endpointAttr?->newInstance();
-
-		$scopeAttr = $method->getAttributes(RequireScopes::class)[0] ?? NULL;
-		/** @var RequireScopes|null $requireScopes */
-		$requireScopes = $scopeAttr?->newInstance();
-
 		$operation = [
-			'summary' => $endpoint?->summary ?? $method->getName(),
-			'description' => $endpoint?->description ?? '',
-			'tags' => $endpoint?->tags ?? [],
+			'summary' => $endpoint['summary'],
+			'description' => $endpoint['description'],
+			'tags' => $endpoint['tags'],
 			'responses' => []
 		];
 
-		if ($requireScopes && count($requireScopes->scopes) > 0) {
-			$operation['description'] .= "\n\n**Required Scopes:** " . implode(', ', $requireScopes->scopes);
+		if (count($endpoint['scopes']) > 0) {
+			$operation['description'] .= "\n\n**Required Scopes:** " . implode(', ', $endpoint['scopes']);
 		}
 
 		// Request Body (JSON)
-		$bodyParams = $method->getAttributes(ApiBodyParam::class);
-		if (count($bodyParams) > 0) {
+		if (count($endpoint['bodyParams']) > 0) {
 			$properties = [];
 			$required = [];
-			foreach ($bodyParams as $attr) {
-				/** @var ApiBodyParam $param */
-				$param = $attr->newInstance();
+			/** @var ApiBodyParam $param */
+			foreach ($endpoint['bodyParams'] as $param) {
 				$properties[$param->name] = [
 					'type' => $this->mapPhpTypeToOpenApi($param->type),
 					'description' => $param->description
@@ -250,9 +204,8 @@ class OpenApiService implements SingletonInterface {
 
 		// Parameters (Query, Path)
 		$operation['parameters'] = [];
-		foreach ($method->getAttributes(ApiQueryParam::class) as $attr) {
-			/** @var ApiQueryParam $param */
-			$param = $attr->newInstance();
+		/** @var ApiQueryParam $param */
+		foreach ($endpoint['queryParams'] as $param) {
 			$operation['parameters'][] = [
 				'name' => $param->name,
 				'in' => 'query',
@@ -261,9 +214,8 @@ class OpenApiService implements SingletonInterface {
 				'schema' => ['type' => $this->mapPhpTypeToOpenApi($param->type)]
 			];
 		}
-		foreach ($method->getAttributes(ApiPathParam::class) as $attr) {
-			/** @var ApiPathParam $param */
-			$param = $attr->newInstance();
+		/** @var ApiPathParam $param */
+		foreach ($endpoint['pathParams'] as $param) {
 			$operation['parameters'][] = [
 				'name' => $param->name,
 				'in' => 'path',
@@ -274,9 +226,8 @@ class OpenApiService implements SingletonInterface {
 		}
 
 		// Responses
-		foreach ($method->getAttributes(ApiResponse::class) as $attr) {
-			/** @var ApiResponse $response */
-			$response = $attr->newInstance();
+		/** @var ApiResponse $response */
+		foreach ($endpoint['responses'] as $response) {
 			$resp = [
 				'description' => $response->description
 			];
@@ -295,7 +246,7 @@ class OpenApiService implements SingletonInterface {
 			$operation['responses']['200'] = ['description' => 'Success'];
 		}
 
-		foreach ($route->methods as $httpMethod) {
+		foreach ($endpoint['methods'] as $httpMethod) {
 			$spec['paths'][$path][strtolower($httpMethod)] = $operation;
 		}
 	}

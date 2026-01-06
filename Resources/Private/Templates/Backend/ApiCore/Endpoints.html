@@ -1,0 +1,58 @@
+<f:layout name="Backend/Default" />
+
+<f:section name="Content">
+	<h1>API Endpoints Overview</h1>
+	<p>Listing of all registered endpoints discovered via <code>EndpointDiscoveryService</code>.</p>
+
+	<table class="table table-striped table-hover">
+		<thead>
+			<tr>
+				<th>Method</th>
+				<th>Path</th>
+				<th>API / Version</th>
+				<th>Summary / Auth</th>
+				<th>Scopes</th>
+				<th>Actions</th>
+			</tr>
+		</thead>
+		<tbody>
+			<f:for each="{endpoints}" as="endpoint">
+				<tr>
+					<td>
+						<f:for each="{endpoint.methods}" as="method">
+							<span class="badge {f:if(condition: '{method} == \'GET\'', then: 'badge-success', else: '{f:if(condition: \'{method} == \\\'POST\\\'\', then: \'badge-primary\', else: \'badge-warning\')}')}">{method}</span>
+						</f:for>
+					</td>
+					<td><code>{endpoint.path}</code></td>
+					<td>
+						<span class="badge badge-info">{f:if(condition: endpoint.apiId, then: endpoint.apiId, else: 'global')}</span>
+						<br /><span class="badge badge-secondary">v{f:if(condition: endpoint.version, then: endpoint.version, else: '1')}</span>
+					</td>
+					<td>
+						<strong>{endpoint.summary}</strong>
+						<br /><small class="text-muted">Auth: <code>{f:if(condition: endpoint.authMode, then: endpoint.authMode, else: 'default')}</code></small>
+					</td>
+					<td>
+						<f:if condition="{endpoint.scopes}">
+							<f:then>
+								<f:for each="{endpoint.scopes}" as="scope">
+									<span class="badge badge-outline-dark">{scope}</span>
+								</f:for>
+							</f:then>
+							<f:else>-</f:else>
+						</f:if>
+					</td>
+					<td>
+						<f:if condition="{endpoint.apiId}">
+							<f:then>
+								<a href="/api/{endpoint.apiId}/v{f:if(condition: endpoint.version, then: endpoint.version, else: '1')}/docs/ui" target="_blank" class="btn btn-default btn-sm" title="View in Swagger UI">
+									<core:icon identifier="actions-document-view" size="small" /> Docs
+								</a>
+							</f:then>
+						</f:if>
+					</td>
+				</tr>
+			</f:for>
+		</tbody>
+	</table>
+</f:section>

@@ -360,40 +360,6 @@ Definition of Done
 
 ---
 
-Phase H – TCA Mapper (Basis)
-Ziel: TYPO3‑Records sauber mappen.
-Tasks
-
-- TcaMapper:
-    - Whitelist-Felder
-    - Relations (zunächst simpel: uid lists / resolved via Repository optional)
-    - Field transformers (DateTime, int, bool)
-    - DTO/Schema Integration: Mapper liefert arrays passend zu OpenAPI schema (wenn möglich)
-
-Definition of Done
-
-- Beispiel: Tabelle tt_content oder eigene Demo-Tabelle → JSON Ausgabe über Endpunkt
-
----
-
-Phase I – Dokumentation & Open Source Readiness
-Ziel: Releasefähig.
-Tasks
-
-- README: Quickstart, Installation, Konfiguration
-    - docs/:
-    - Tenants, APIs, Auth & Scopes, Writing Endpoints, OpenAPI, Logging, TCA Mapper
-    - docs/adr/: Router Wahl, Scope Merge Regeln, Tenant Auflösung
-    - “Example extension” oder examples/ Ordner
-
-Definition of Done
-
-- “Hello world API” in 10 Minuten nachvollziehbar
-- Alle Konfigurationen dokumentiert
-- Changelog / Versioning Policy (SemVer)
-
----
-
 Phase J – Backend-Modul: Verwaltung von APIs, Tokens, Providern & Endpunkten (kurz)
 
 **Ziel**
@@ -451,6 +417,40 @@ Tests & Doku (minimal)
 
 - Smoke-Test: Modul lädt, Token create/revoke läuft.
 - Doku: “Token im Backend anlegen und im Client nutzen” + Screenshots optional.
+
+---
+
+Phase H – TCA Mapper (Basis)
+Ziel: TYPO3‑Records sauber mappen.
+Tasks
+
+- TcaMapper:
+    - Whitelist-Felder
+    - Relations (zunächst simpel: uid lists / resolved via Repository optional)
+    - Field transformers (DateTime, int, bool)
+    - DTO/Schema Integration: Mapper liefert arrays passend zu OpenAPI schema (wenn möglich)
+
+Definition of Done
+
+- Beispiel: Tabelle tt_content oder eigene Demo-Tabelle → JSON Ausgabe über Endpunkt
+
+---
+
+Phase I – Dokumentation & Open Source Readiness
+Ziel: Releasefähig.
+Tasks
+
+- README: Quickstart, Installation, Konfiguration
+    - docs/:
+    - Tenants, APIs, Auth & Scopes, Writing Endpoints, OpenAPI, Logging, TCA Mapper
+    - docs/adr/: Router Wahl, Scope Merge Regeln, Tenant Auflösung
+    - “Example extension” oder examples/ Ordner
+
+Definition of Done
+
+- “Hello world API” in 10 Minuten nachvollziehbar
+- Alle Konfigurationen dokumentiert
+- Changelog / Versioning Policy (SemVer)
 
 ---
 

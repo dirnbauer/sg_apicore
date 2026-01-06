@@ -1,0 +1,14 @@
+.badge-outline-dark {
+	color: #343a40;
+	border: 1px solid #343a40;
+	background-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+	border-bottom-color: #fff;
+	font-weight: bold;
+}
+
+.card {
+	margin-bottom: 1.5rem;
+}

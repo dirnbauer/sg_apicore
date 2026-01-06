@@ -123,6 +123,74 @@ class TokenRepository implements SingletonInterface {
 	}
 
 	/**
+	 * Finds tokens by filters
+	 *
+	 * @param array $filters
+	 * @return array
+	 * @throws Exception
+	 */
+	public function findAllWithFilters(array $filters = []): array {
+		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+			?->getQueryBuilderForTable(self::TABLE_NAME);
+
+		$query = $queryBuilder
+			->select('*')
+			->from(self::TABLE_NAME);
+
+		if (isset($filters['apiId']) && $filters['apiId'] !== '') {
+			$query->andWhere($queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($filters['apiId'])));
+		}
+		if (isset($filters['tenantId']) && $filters['tenantId'] !== '') {
+			$query->andWhere(
+				$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($filters['tenantId']))
+			);
+		}
+		if (isset($filters['isRefreshToken'])) {
+			$query->andWhere(
+				$queryBuilder->expr()->eq(
+					'is_refresh_token',
+					$queryBuilder->createNamedParameter((int) $filters['isRefreshToken'], ParameterType::INTEGER)
+				)
+			);
+		}
+		if (isset($filters['status']) && $filters['status'] !== '') {
+			if ($filters['status'] === 'revoked') {
+				$query->andWhere($queryBuilder->expr()->gt('revoked_at', 0));
+			} elseif ($filters['status'] === 'expired') {
+				$query->andWhere($queryBuilder->expr()->gt('expires_at', 0));
+				$query->andWhere($queryBuilder->expr()->lt('expires_at', time()));
+			} elseif ($filters['status'] === 'active') {
+				$query->andWhere($queryBuilder->expr()->eq('revoked_at', 0));
+				$query->andWhere(
+					$queryBuilder->expr()->or(
+						$queryBuilder->expr()->eq('expires_at', 0),
+						$queryBuilder->expr()->gt('expires_at', time())
+					)
+				);
+			}
+		}
+
+		return $query->orderBy('uid', 'DESC')->executeQuery()->fetchAllAssociative();
+	}
+
+	/**
+	 * Revokes a token by UID
+	 *
+	 * @param int $uid
+	 * @return void
+	 */
+	public function revoke(int $uid): void {
+		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+			?->getQueryBuilderForTable(self::TABLE_NAME);
+
+		$queryBuilder
+			->update(self::TABLE_NAME)
+			->set('revoked_at', time())
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)))
+			->executeStatement();
+	}
+
+	/**
 	 * Updates the last used timestamp of a token
 	 *
 	 * @param int $uid

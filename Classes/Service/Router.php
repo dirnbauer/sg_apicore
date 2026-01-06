@@ -48,15 +48,22 @@ class Router implements SingletonInterface {
 	protected iterable $controllers;
 
 	/**
+	 * @var EndpointDiscoveryService
+	 */
+	protected EndpointDiscoveryService $endpointDiscoveryService;
+
+	/**
 	 * @var array|null
 	 */
 	protected ?array $controllerInstances = NULL;
 
 	/**
 	 * @param iterable $controllers
+	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 */
-	public function __construct(iterable $controllers) {
+	public function __construct(iterable $controllers, EndpointDiscoveryService $endpointDiscoveryService) {
 		$this->controllers = $controllers;
+		$this->endpointDiscoveryService = $endpointDiscoveryService;
 	}
 
 	/**
@@ -68,7 +75,9 @@ class Router implements SingletonInterface {
 			if (is_string($controller)) {
 				$controller = GeneralUtility::makeInstance($controller);
 			}
-			$this->controllerInstances[get_class($controller)] = $controller;
+			if ($controller) {
+				$this->controllerInstances[get_class($controller)] = $controller;
+			}
 		}
 	}
 
@@ -107,57 +116,39 @@ class Router implements SingletonInterface {
 		?string $authMode = NULL
 	): ResponseInterface {
 		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version, $authMode) {
-			foreach ($this->getControllerInstances() as $controllerClass => $controllerInstance) {
-				$reflectionClass = new \ReflectionClass($controllerClass);
-				foreach ($reflectionClass->getMethods() as $method) {
-					$attributes = $method->getAttributes(ApiRoute::class);
-					foreach ($attributes as $attribute) {
-						/** @var ApiRoute $routeAttribute */
-						$routeAttribute = $attribute->newInstance();
-
-						// Filter by API ID, version and auth mode if specified
-						if ($routeAttribute->apiId !== NULL) {
-							$apiIds = is_array(
-								$routeAttribute->apiId
-							) ? $routeAttribute->apiId : [$routeAttribute->apiId];
-							if (!in_array($apiId, $apiIds, TRUE)) {
-								continue;
-							}
-						}
-						if ($routeAttribute->version !== NULL) {
-							$versions = is_array(
-								$routeAttribute->version
-							) ? $routeAttribute->version : [$routeAttribute->version];
-							if (!in_array($version, $versions, TRUE)) {
-								continue;
-							}
-						}
-						if ($routeAttribute->authMode !== NULL) {
-							$authModes = is_array(
-								$routeAttribute->authMode
-							) ? $routeAttribute->authMode : [$routeAttribute->authMode];
-
-							// Visibility logic:
-							// If it's specifically restricted to certain modes (e.g. 'user'),
-							// it must match the current API's authMode even if 'public' is also allowed.
-							// This ensures that 'user' endpoints don't clutter the 'public' API documentation.
-							$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
-							if (!empty($restrictedTo)) {
-								if (!in_array($authMode, $restrictedTo, TRUE)) {
-									continue;
-								}
-							} elseif (!in_array('public', $authModes, TRUE)) {
-								continue;
-							}
-						}
-
-						$r->addRoute($routeAttribute->methods, $routeAttribute->path, [
-							'controller' => $controllerClass,
-							'action' => $method->getName(),
-							'authMode' => $routeAttribute->authMode
-						]);
+			foreach ($this->endpointDiscoveryService->getAllEndpoints() as $endpoint) {
+				// Filter by API ID, version and auth mode if specified
+				if ($endpoint['apiId'] !== NULL) {
+					$apiIds = is_array($endpoint['apiId']) ? $endpoint['apiId'] : [$endpoint['apiId']];
+					if (!in_array($apiId, $apiIds, TRUE)) {
+						continue;
 					}
 				}
+				if ($endpoint['version'] !== NULL) {
+					$versions = is_array($endpoint['version']) ? $endpoint['version'] : [$endpoint['version']];
+					if (!in_array($version, $versions, TRUE)) {
+						continue;
+					}
+				}
+				if ($endpoint['authMode'] !== NULL) {
+					$authModes = is_array($endpoint['authMode']) ? $endpoint['authMode'] : [$endpoint['authMode']];
+
+					// Visibility logic
+					$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
+					if (!empty($restrictedTo)) {
+						if (!in_array($authMode, $restrictedTo, TRUE)) {
+							continue;
+						}
+					} elseif (!in_array('public', $authModes, TRUE)) {
+						continue;
+					}
+				}
+
+				$r->addRoute($endpoint['methods'], $endpoint['path'], [
+					'controller' => $endpoint['controller'],
+					'action' => $endpoint['action'],
+					'authMode' => $endpoint['authMode']
+				]);
 			}
 		});
 

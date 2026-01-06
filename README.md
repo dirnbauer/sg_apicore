@@ -316,6 +316,38 @@ You can access the documentation for any registered API and version:
 
 For example: `https://your-project.local/api/public/v1/docs/ui`
 
+## Backend Module
+
+The extension provides a TYPO3 Backend Module located under **System > API Core**.
+
+### Features
+
+- **APIs & Versions**: Overview of all registered APIs and links to their Swagger UI.
+- **Token Management**:
+    - List and filter existing tokens (Opaque and Refresh).
+    - Create new Opaque API tokens (M2M).
+    - Revoke tokens.
+    - View token usage (last used timestamp).
+- **Providers**: View configured authentication modes and providers per API.
+- **Endpoints**: A complete list of all registered endpoints, including their required scopes and authentication modes.
+
+### Creating a Token in the Backend
+
+1. Navigate to **System > API Core**.
+2. Select the **Tokens** tab.
+3. Use the **Create New Opaque Token** form on the right.
+4. Enter the API ID, Tenant ID, a Label, and optional Scopes.
+5. Click **Create Token**.
+6. **Important**: Copy the plaintext token shown in the next screen. It will only be shown once!
+
+### Using the Token in your Client
+
+Add the following header to your API requests:
+
+```http
+Authorization: Bearer <your-copied-token>
+```
+
 ### Logging
 
 The extension provides a comprehensive logging system for API requests and responses. It can be configured globally and

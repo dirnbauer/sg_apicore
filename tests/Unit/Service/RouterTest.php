@@ -8,6 +8,7 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Security\AuthContext;
+use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -16,12 +17,27 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for Router
  */
 class RouterTest extends UnitTestCase {
+	/**
+	 * Helper to create a router with mock controllers
+	 *
+	 * @param array $controllers
+	 * @return Router
+	 */
+	protected function createRouter(array $controllers = []): Router {
+		$instances = [];
+		foreach ($controllers as $controllerClass) {
+			$instances[] = new $controllerClass();
+		}
+		$controllersIterator = new \ArrayIterator($instances);
+		$discoveryService = new EndpointDiscoveryService($controllersIterator);
+		return new Router($controllersIterator, $discoveryService);
+	}
+
 	public function testDispatchMatchesRouteAndCallsController(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/test', 'public');
 
@@ -34,8 +50,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/unknown', 'public');
 
@@ -46,8 +61,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		// Route is restricted to 'other-api'
 		$response = $router->dispatch($request, 'public', '1', '/api-restricted', 'public');
@@ -62,8 +76,7 @@ class RouterTest extends UnitTestCase {
 		$authContext = new AuthContext('public', 'tenant-1', 1, ['read']);
 		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped', 'public');
 
@@ -77,8 +90,7 @@ class RouterTest extends UnitTestCase {
 		$authContext = new AuthContext('public', 'tenant-1', 1, ['wrong-scope']);
 		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped', 'public');
 
@@ -90,8 +102,7 @@ class RouterTest extends UnitTestCase {
 		$request->method('getMethod')->willReturn('GET');
 		$request->method('getAttribute')->with('api.auth')->willReturn(NULL);
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped', 'token');
 
@@ -102,8 +113,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		// Route is restricted to authMode 'user'
 		$response = $router->dispatch($request, 'public', '1', '/user-only', 'token');
@@ -124,8 +134,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		// /login is marked as public, so it should work in 'user' API without auth
 		$response = $router->dispatch($request, 'public', '1', '/login', 'user');
@@ -136,8 +145,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockHybridRouterController::class]);
+		$router = $this->createRouter([MockHybridRouterController::class]);
 
 		// 'public' api should NOT match /hybrid
 		$response = $router->dispatch($request, 'public', '1', '/hybrid', 'public');
@@ -152,8 +160,7 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
-		$router = new Router(new \ArrayIterator([]));
-		$router->setControllers([MockController::class]);
+		$router = $this->createRouter([MockController::class]);
 
 		// 1. No auth -> 401
 		$response = $router->dispatch($request, 'public', '1', '/user-required', 'user');
