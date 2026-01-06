@@ -27,6 +27,7 @@
 namespace SGalinski\SgApiCore\Domain\Repository;
 
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\ParameterType;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -62,20 +63,20 @@ class TokenRepository implements SingletonInterface {
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
 			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
 			$queryBuilder->expr()->eq('token_hash', $queryBuilder->createNamedParameter($tokenHash)),
-			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT))
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
 		];
 
 		if (!$includeRefreshTokens) {
 			$constraints[] = $queryBuilder->expr()->eq(
 				'is_refresh_token',
-				$queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)
+				$queryBuilder->createNamedParameter(0, ParameterType::INTEGER)
 			);
 		}
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->eq(
 				'pid',
-				$queryBuilder->createNamedParameter($siteRootPageId, \PDO::PARAM_INT)
+				$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
 			);
 		}
 
@@ -103,13 +104,13 @@ class TokenRepository implements SingletonInterface {
 		$constraints = [
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
 			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
-			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT))
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
 		];
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->eq(
 				'pid',
-				$queryBuilder->createNamedParameter($siteRootPageId, \PDO::PARAM_INT)
+				$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
 			);
 		}
 
@@ -134,7 +135,7 @@ class TokenRepository implements SingletonInterface {
 		$queryBuilder
 			->update(self::TABLE_NAME)
 			->set('last_used_at', time())
-			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, \PDO::PARAM_INT)))
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)))
 			->executeStatement();
 	}
 }

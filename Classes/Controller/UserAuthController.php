@@ -26,6 +26,7 @@
 
 namespace SGalinski\SgApiCore\Controller;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -178,7 +179,7 @@ class UserAuthController {
 			$queryBuilder->andWhere(
 				$queryBuilder->expr()->in(
 					'pid',
-					$queryBuilder->createNamedParameter($storagePids, \Doctrine\DBAL\ArrayParameterType::INTEGER)
+					$queryBuilder->createNamedParameter($storagePids, ArrayParameterType::INTEGER)
 				)
 			);
 		}
