@@ -56,7 +56,7 @@ class OpenApiController {
 	 * @return ResponseInterface
 	 * @throws \ReflectionException
 	 */
-	#[ApiRoute(path: '/docs.json', methods: ['GET'])]
+	#[ApiRoute(path: '/docs.json', methods: ['GET'], authMode: 'public')]
 	public function jsonAction(ServerRequestInterface $request): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
@@ -71,7 +71,7 @@ class OpenApiController {
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
 	 */
-	#[ApiRoute(path: '/docs/ui', methods: ['GET'])]
+	#[ApiRoute(path: '/docs/ui', methods: ['GET'], authMode: 'public')]
 	public function uiAction(ServerRequestInterface $request): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');

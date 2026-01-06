@@ -51,6 +51,27 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertArrayHasKey('/partner-only', $specPartner['paths']);
 		$this->assertArrayNotHasKey('/test', $specPartner['paths']);
 	}
+
+	public function testGenerateSpecFiltersHybridAuthModeCorrectly(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturnMap([
+			['public', '1', ['authMode' => 'public']],
+			['user', '1', ['authMode' => 'user']],
+		]);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockHybridController()]);
+
+		$service = new OpenApiService($controllers, $apiRegistry, $extensionConfiguration);
+
+		// 'public' api should NOT have /hybrid
+		$specPublic = $service->generateSpec('public', '1');
+		$this->assertArrayNotHasKey('/hybrid', $specPublic['paths']);
+
+		// 'user' api SHOULD have /hybrid
+		$specUser = $service->generateSpec('user', '1');
+		$this->assertArrayHasKey('/hybrid', $specUser['paths']);
+	}
 }
 
 /**
@@ -64,5 +85,14 @@ class MockOpenApiController {
 
 	#[ApiRoute(path: '/partner-only', methods: ['GET'], apiId: 'partner', version: '1')]
 	public function partnerAction(): void {
+	}
+}
+
+/**
+ * Mock controller for hybrid auth
+ */
+class MockHybridController {
+	#[ApiRoute(path: '/hybrid', methods: ['GET'], authMode: ['user', 'public'])]
+	public function hybridAction(): void {
 	}
 }

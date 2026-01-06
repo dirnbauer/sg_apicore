@@ -34,6 +34,7 @@ use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
+use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\PaginationService;
@@ -124,6 +125,7 @@ class TestController {
 	 */
 	#[ApiRoute(path: '/user-test', methods: ['GET'], apiId: 'user', version: '1')]
 	#[ApiEndpoint(summary: 'User-Level API test', tags: ['Test'])]
+	#[RequireUser]
 	public function userTest(ServerRequestInterface $request): ResponseInterface {
 		/** @var AuthContext $authContext */
 		$authContext = $request->getAttribute('api.auth');

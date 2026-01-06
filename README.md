@@ -170,12 +170,30 @@ strings and arrays of strings:
 
 // Available for all APIs in version 1
 #[ApiRoute(path: '/v1-global', methods: ['GET'], version: '1')]
+
+// Publicly accessible even in a protected 'user' or 'token' API
+#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'public')]
 ```
 
 The router dynamically filters the available routes based on the `apiId`, `version` and `authMode` extracted from the
 request URL.
 If a property is an array, the route is included if the current value matches any of the values in the array.
 Multiple `#[ApiRoute]` attributes can also be used on the same method (repeatable attribute).
+
+#### Overriding Authentication Requirements
+
+If an API is registered with a protected `authMode` (e.g., `user` or `token`), all its endpoints require authentication
+by default. You can override this for specific endpoints by setting `authMode: 'public'` in the `#[ApiRoute]` attribute.
+This is useful for login or registration endpoints within a protected API.
+
+### Security Attributes
+
+In addition to the `authMode` filtering, you can use specialized attributes to further restrict access:
+
+- **`#[RequireScopes(['scope1', 'scope2'])]`**: Ensures the authenticated token has at least one of the specified
+  scopes.
+- **`#[RequireUser]`**: Ensures that the authentication context belongs to a real user (contains a `userId`), and not
+  just a machine-to-machine (M2M) API token.
 
 ### Extbase Compatibility & Manual Mapping
 

@@ -111,7 +111,7 @@ class UserAuthController {
 	 * @throws \JsonException
 	 * @throws InvalidPasswordHashException
 	 */
-	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'user')]
+	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'User login', description: 'Authenticates a user with username and password and returns access and refresh tokens.', tags: ['Authentication'])]
 	public function login(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
@@ -260,7 +260,7 @@ class UserAuthController {
 	 * @throws RandomException
 	 * @throws \JsonException
 	 */
-	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: 'user')]
+	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token.', tags: ['Authentication'])]
 	public function refresh(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();

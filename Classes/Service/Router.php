@@ -32,7 +32,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
-use SGalinski\SgApiCore\Security\AuthContext;
+use SGalinski\SgApiCore\Attribute\RequireUser;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -136,14 +136,25 @@ class Router implements SingletonInterface {
 							$authModes = is_array(
 								$routeAttribute->authMode
 							) ? $routeAttribute->authMode : [$routeAttribute->authMode];
-							if (!in_array($authMode, $authModes, TRUE)) {
+
+							// Visibility logic:
+							// If it's specifically restricted to certain modes (e.g. 'user'),
+							// it must match the current API's authMode even if 'public' is also allowed.
+							// This ensures that 'user' endpoints don't clutter the 'public' API documentation.
+							$restrictedTo = array_filter($authModes, static fn($m) => $m !== 'public');
+							if (!empty($restrictedTo)) {
+								if (!in_array($authMode, $restrictedTo, TRUE)) {
+									continue;
+								}
+							} elseif (!in_array('public', $authModes, TRUE)) {
 								continue;
 							}
 						}
 
 						$r->addRoute($routeAttribute->methods, $routeAttribute->path, [
 							'controller' => $controllerClass,
-							'action' => $method->getName()
+							'action' => $method->getName(),
+							'authMode' => $routeAttribute->authMode
 						]);
 					}
 				}
@@ -166,27 +177,48 @@ class Router implements SingletonInterface {
 				/** @noinspection MultiAssignmentUsageInspection */
 				$vars = $routeInfo[2];
 
-				// Scope Enforcement
+				// Authentication Enforcement
 				$reflectionClass = new \ReflectionClass($handler['controller']);
 				$reflectionMethod = $reflectionClass->getMethod($handler['action']);
+
+				$effectiveAuthMode = $handler['authMode'] ?? $authMode ?? 'public';
+				$authContext = $request->getAttribute('api.auth');
+
+				// If effective auth mode is not public, require authentication
+				$isPublic = $effectiveAuthMode === 'public' || (is_array($effectiveAuthMode) && in_array(
+					'public',
+					$effectiveAuthMode,
+					TRUE
+				));
+				if (!$isPublic && $authContext === NULL) {
+					return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
+				}
+
+				// Scope Enforcement
 				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
 				if (count($scopeAttributes) > 0) {
-					/** @var AuthContext|null $authContext */
-					$authContext = $request->getAttribute('api.auth');
-					if ($authContext === NULL) {
-						return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
-					}
-
 					/** @var RequireScopes $requireScopes */
 					$requireScopes = $scopeAttributes[0]->newInstance();
 					foreach ($requireScopes->scopes as $scope) {
-						if (!$authContext->hasScope($scope)) {
+						if ($authContext === NULL || !$authContext->hasScope($scope)) {
 							return $this->createErrorResponse(
 								'Forbidden',
 								'You do not have the required scope: ' . $scope,
 								403
 							);
 						}
+					}
+				}
+
+				// User Enforcement
+				$userAttributes = $reflectionMethod->getAttributes(RequireUser::class);
+				if (count($userAttributes) > 0) {
+					if ($authContext === NULL || $authContext->getUserId() === NULL) {
+						return $this->createErrorResponse(
+							'Forbidden',
+							'This endpoint requires a user login context.',
+							403
+						);
 					}
 				}
 

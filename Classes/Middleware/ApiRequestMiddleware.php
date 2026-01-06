@@ -37,6 +37,7 @@ use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Http\RedirectResponse;
 
 /**
  * Middleware to handle API requests
@@ -200,11 +201,14 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 					);
 
 					// Documentation endpoints should always be accessible without authentication
-					$isDocsPath = $remainingPath === '/docs.json' || str_starts_with($remainingPath, '/docs/ui');
 					if ($authContext !== NULL) {
 						$request = $request->withAttribute('api.auth', $authContext);
-					} elseif ($authMode !== 'public' && !$isDocsPath) {
-						return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
+					}
+
+					// Redirect to documentation if the base API URL is called
+					if ($remainingPath === '/' && $request->getMethod() === 'GET') {
+						$redirectPath = rtrim($path, '/') . '/docs/ui';
+						return new RedirectResponse($redirectPath);
 					}
 
 					return $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
