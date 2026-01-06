@@ -101,6 +101,8 @@ class OpenApiService implements SingletonInterface {
 	public function generateSpec(string $apiId, string $version): array {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
+		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
+		$baseUrl = rtrim($apiPathPrefix, '/') . '/' . $apiId . '/v' . $version;
 
 		$spec = [
 			'openapi' => '3.0.3',
@@ -108,6 +110,12 @@ class OpenApiService implements SingletonInterface {
 				'title' => 'API: ' . $apiId . ' (v' . $version . ')',
 				'version' => $version,
 				'description' => 'Automatically generated OpenAPI specification for the ' . $apiId . ' API.'
+			],
+			'servers' => [
+				[
+					'url' => $baseUrl,
+					'description' => 'Current API server'
+				]
 			],
 			'paths' => [],
 			'components' => [
