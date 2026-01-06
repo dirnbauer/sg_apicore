@@ -28,16 +28,32 @@ namespace SGalinski\SgApiCore\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiPathParam;
+use SGalinski\SgApiCore\Attribute\ApiQueryParam;
+use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Security\AuthContext;
-use TYPO3\CMS\Core\Http\JsonResponse;
+use SGalinski\SgApiCore\Service\ResponseService;
 
 /**
- * Controller for health check and test endpoints
+ * Test and Example controller for demonstration purposes
  */
-class HealthController {
+class TestController {
+	/**
+	 * @var ResponseService
+	 */
+	protected ResponseService $responseService;
+
+	/**
+	 * @param ResponseService $responseService
+	 */
+	public function __construct(ResponseService $responseService) {
+		$this->responseService = $responseService;
+	}
+
 	/**
 	 * Returns a simple health status (Global)
 	 *
@@ -45,8 +61,10 @@ class HealthController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/health', methods: ['GET'])]
+	#[ApiEndpoint(summary: 'Global health check', tags: ['Health'])]
+	#[ApiResponse(status: 200, description: 'API is healthy')]
 	public function health(ServerRequestInterface $request): ResponseInterface {
-		return new JsonResponse(['status' => 'ok']);
+		return $this->responseService->createSuccessResponse(['status' => 'ok']);
 	}
 
 	/**
@@ -56,8 +74,9 @@ class HealthController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/test', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(summary: 'Public API test', tags: ['Test'])]
 	public function publicTest(ServerRequestInterface $request): ResponseInterface {
-		return new JsonResponse([
+		return $this->responseService->createSuccessResponse([
 			'api' => 'public',
 			'version' => '1',
 			'message' => 'Public API test successful'
@@ -71,6 +90,7 @@ class HealthController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/test', methods: ['GET'], apiId: 'partner', version: '1')]
+	#[ApiEndpoint(summary: 'Partner API test', tags: ['Test'])]
 	#[RequireScopes(['partner:read'])]
 	public function partnerTest(ServerRequestInterface $request): ResponseInterface {
 		/** @var AuthContext $authContext */
@@ -78,7 +98,7 @@ class HealthController {
 		/** @var TenantContext $tenantContext */
 		$tenantContext = $request->getAttribute('api.tenant');
 
-		return new JsonResponse([
+		return $this->responseService->createSuccessResponse([
 			'api' => 'partner',
 			'version' => '1',
 			'tenant' => $tenantContext->getTenantId(),
@@ -95,11 +115,12 @@ class HealthController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/user-test', methods: ['GET'], apiId: 'user', version: '1')]
+	#[ApiEndpoint(summary: 'User-Level API test', tags: ['Test'])]
 	public function userTest(ServerRequestInterface $request): ResponseInterface {
 		/** @var AuthContext $authContext */
 		$authContext = $request->getAttribute('api.auth');
 
-		return new JsonResponse([
+		return $this->responseService->createSuccessResponse([
 			'api' => 'user',
 			'userId' => $authContext->getUserId(),
 			'scopes' => $authContext->getScopes(),
@@ -114,8 +135,62 @@ class HealthController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/admin-test', methods: ['GET'], version: '1')]
+	#[ApiEndpoint(summary: 'Admin test', tags: ['Test'])]
 	#[RequireScopes(['admin', 'super-admin'])]
 	public function adminTest(ServerRequestInterface $request): ResponseInterface {
-		return new JsonResponse(['message' => 'Admin test successful']);
+		return $this->responseService->createSuccessResponse(['message' => 'Admin test successful']);
+	}
+
+	/**
+	 * Returns a list of example items
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/examples', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(
+		summary: 'Get a list of examples',
+		description: 'This endpoint returns a list of example items for demonstration purposes.',
+		tags: ['Examples']
+	)]
+	#[ApiQueryParam(name: 'limit', type: 'integer', description: 'Maximum number of items to return')]
+	#[ApiResponse(status: 200, description: 'Success', schema: 'ExampleItem[]')]
+	public function listAction(ServerRequestInterface $request): ResponseInterface {
+		$queryParams = $request->getQueryParams();
+		$limit = (int) ($queryParams['limit'] ?? 10);
+
+		$data = [
+			['id' => 1, 'name' => 'Example 1'],
+			['id' => 2, 'name' => 'Example 2'],
+		];
+
+		return $this->responseService->createSuccessResponse(
+			array_slice($data, 0, $limit),
+			['total' => count($data), 'limit' => $limit]
+		);
+	}
+
+	/**
+	 * Returns a single example item by ID
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $id
+	 * @return ResponseInterface
+	 */
+	#[ApiRoute(path: '/examples/{id}', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(
+		summary: 'Get a single example',
+		description: 'Returns a single example item by its unique ID.',
+		tags: ['Examples']
+	)]
+	#[ApiPathParam(name: 'id', type: 'integer', description: 'The unique ID of the example')]
+	#[ApiResponse(status: 200, description: 'Success', schema: 'ExampleItem')]
+	#[ApiResponse(status: 404, description: 'Example not found')]
+	public function getAction(ServerRequestInterface $request, string $id): ResponseInterface {
+		if ($id === '1') {
+			return $this->responseService->createSuccessResponse(['id' => 1, 'name' => 'Example 1']);
+		}
+
+		return $this->responseService->createErrorResponse('Not Found', 'The requested example was not found.', 404);
 	}
 }

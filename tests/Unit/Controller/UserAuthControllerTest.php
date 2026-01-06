@@ -10,6 +10,7 @@ use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\UserAuthController;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashInterface;
@@ -54,6 +55,11 @@ class UserAuthControllerTest extends UnitTestCase {
 	 */
 	protected $connectionPool;
 
+	/**
+	 * @var ResponseService|MockObject
+	 */
+	protected $responseService;
+
 	protected function setUp(): void {
 		parent::setUp();
 		$this->tokenRepository = $this->createStub(TokenRepository::class);
@@ -61,13 +67,15 @@ class UserAuthControllerTest extends UnitTestCase {
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->passwordHashFactory = $this->createStub(PasswordHashFactory::class);
 		$this->connectionPool = $this->createStub(ConnectionPool::class);
+		$this->responseService = $this->createStub(ResponseService::class);
 
 		$this->controller = new UserAuthController(
 			$this->tokenRepository,
 			$this->tokenService,
 			$this->apiRegistry,
 			$this->passwordHashFactory,
-			$this->connectionPool
+			$this->connectionPool,
+			$this->responseService
 		);
 	}
 
@@ -105,6 +113,10 @@ class UserAuthControllerTest extends UnitTestCase {
 		$this->tokenService->method('generateRandomToken')->willReturn('random-token');
 		$this->tokenService->expects($this->exactly(2))->method('createToken');
 
+		$this->responseService->method('createSuccessResponse')->willReturnCallback(
+			fn ($data) => new JsonResponse($data)
+		);
+
 		$response = $this->controller->login($request);
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
@@ -137,6 +149,10 @@ class UserAuthControllerTest extends UnitTestCase {
 		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
 		$hashInstance->method('checkPassword')->willReturn(FALSE);
 
+		$this->responseService->method('createErrorResponse')->willReturnCallback(
+			fn ($title, $detail, $status) => new JsonResponse(['title' => $title], $status)
+		);
+
 		$response = $this->controller->login($request);
 
 		$this->assertEquals(401, $response->getStatusCode());
@@ -162,6 +178,10 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
 		$this->tokenService->method('generateRandomToken')->willReturn('new-access-token');
+
+		$this->responseService->method('createSuccessResponse')->willReturnCallback(
+			fn ($data) => new JsonResponse($data)
+		);
 
 		$response = $this->controller->refresh($request);
 

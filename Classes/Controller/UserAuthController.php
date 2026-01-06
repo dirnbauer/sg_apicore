@@ -31,14 +31,15 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
+use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -71,24 +72,32 @@ class UserAuthController {
 	protected ConnectionPool $connectionPool;
 
 	/**
+	 * @var ResponseService
+	 */
+	protected ResponseService $responseService;
+
+	/**
 	 * @param TokenRepository $tokenRepository
 	 * @param TokenService $tokenService
 	 * @param ApiRegistry $apiRegistry
 	 * @param PasswordHashFactory $passwordHashFactory
 	 * @param ConnectionPool $connectionPool
+	 * @param ResponseService $responseService
 	 */
 	public function __construct(
 		TokenRepository $tokenRepository,
 		TokenService $tokenService,
 		ApiRegistry $apiRegistry,
 		PasswordHashFactory $passwordHashFactory,
-		ConnectionPool $connectionPool
+		ConnectionPool $connectionPool,
+		ResponseService $responseService
 	) {
 		$this->tokenRepository = $tokenRepository;
 		$this->tokenService = $tokenService;
 		$this->apiRegistry = $apiRegistry;
 		$this->passwordHashFactory = $passwordHashFactory;
 		$this->connectionPool = $connectionPool;
+		$this->responseService = $responseService;
 	}
 
 	/**
@@ -102,13 +111,14 @@ class UserAuthController {
 	 * @throws InvalidPasswordHashException
 	 */
 	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'user')]
+	#[ApiEndpoint(summary: 'User login', description: 'Authenticates a user with username and password and returns access and refresh tokens.', tags: ['Authentication'])]
 	public function login(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
 		$username = $params['username'] ?? '';
 		$password = $params['password'] ?? '';
 
 		if ($username === '' || $password === '') {
-			return $this->createErrorResponse('Bad Request', 'Missing username or password.', 400);
+			return $this->responseService->createErrorResponse('Bad Request', 'Missing username or password.', 400);
 		}
 
 		/** @var \SGalinski\SgApiCore\Context\TenantContext|null $tenantContext */
@@ -176,13 +186,13 @@ class UserAuthController {
 		$user = $queryBuilder->executeQuery()->fetchAssociative();
 
 		if (!$user) {
-			return $this->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
+			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
 
 		// Verify password
 		$hashInstance = $this->passwordHashFactory->get($user['password'], 'FE');
 		if (!$hashInstance->checkPassword($password, $user['password'])) {
-			return $this->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
+			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
 
 		// Success! Generate tokens
@@ -232,7 +242,7 @@ class UserAuthController {
 			);
 		}
 
-		return new JsonResponse([
+		return $this->responseService->createSuccessResponse([
 			'access_token' => $accessToken,
 			'refresh_token' => $refreshToken,
 			'token_type' => 'Bearer',
@@ -250,12 +260,13 @@ class UserAuthController {
 	 * @throws \JsonException
 	 */
 	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: 'user')]
+	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token.', tags: ['Authentication'])]
 	public function refresh(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
 		$refreshToken = $params['refresh_token'] ?? '';
 
 		if ($refreshToken === '') {
-			return $this->createErrorResponse('Bad Request', 'Missing refresh_token parameter.', 400);
+			return $this->responseService->createErrorResponse('Bad Request', 'Missing refresh_token parameter.', 400);
 		}
 
 		/** @var \SGalinski\SgApiCore\Context\TenantContext|null $tenantContext */
@@ -274,12 +285,12 @@ class UserAuthController {
 		);
 
 		if ($tokenRecord === NULL || !$tokenRecord['is_refresh_token']) {
-			return $this->createErrorResponse('Unauthorized', 'Invalid refresh token.', 401);
+			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid refresh token.', 401);
 		}
 
 		// Check expiry
 		if ((int) $tokenRecord['expires_at'] > 0 && (int) $tokenRecord['expires_at'] < time()) {
-			return $this->createErrorResponse('Unauthorized', 'Refresh token expired.', 401);
+			return $this->responseService->createErrorResponse('Unauthorized', 'Refresh token expired.', 401);
 		}
 
 		$scopes = [];
@@ -321,22 +332,10 @@ class UserAuthController {
 		// Update last used on the refresh token
 		$this->tokenRepository->updateLastUsed((int) $tokenRecord['uid']);
 
-		return new JsonResponse([
+		return $this->responseService->createSuccessResponse([
 			'access_token' => $accessToken,
 			'token_type' => 'Bearer',
 			'expires_in' => 3600
 		]);
-	}
-
-	/**
-	 * Creates a Problem JSON error response (RFC 7807)
-	 */
-	protected function createErrorResponse(string $title, string $detail, int $status): ResponseInterface {
-		return new JsonResponse([
-			'title' => $title,
-			'detail' => $detail,
-			'status' => $status,
-			'type' => 'about:blank'
-		], $status, ['Content-Type' => 'application/problem+json']);
 	}
 }

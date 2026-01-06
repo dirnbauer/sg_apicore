@@ -71,26 +71,94 @@ $apiRegistry->registerApi('partner', ['1', '2']);
 
 ## Routing
 
-Endpoints are defined using PHP attributes on controller methods:
+Endpoints are defined using PHP attributes on controller methods. In addition to the technical routing (`#[ApiRoute]`),
+you can provide metadata for documentation and OpenAPI generation.
 
 ```php
 use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiQueryParam;
+use SGalinski\SgApiCore\Attribute\ApiResponse;
+use SGalinski\SgApiCore\Service\ResponseService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Http\JsonResponse;
 
 class MyController {
-    #[ApiRoute(path: '/my-endpoint', methods: ['GET'], apiId: 'public', version: '1')]
-    public function myAction(ServerRequestInterface $request): ResponseInterface {
-        return new JsonResponse(['message' => 'Hello World']);
+    protected ResponseService $responseService;
+
+    public function __construct(ResponseService $responseService) {
+        $this->responseService = $responseService;
     }
+
+    #[ApiRoute(path: '/my-endpoint', methods: ['GET'], apiId: 'public', version: '1')]
+    #[ApiEndpoint(
+        summary: 'A short summary',
+        description: 'A longer description of the endpoint.',
+        tags: ['MyCategory']
+    )]
+    #[ApiQueryParam(name: 'filter', type: 'string', description: 'Filter the results')]
+    #[ApiResponse(status: 200, description: 'Success')]
+    public function myAction(ServerRequestInterface $request): ResponseInterface {
+        return $this->responseService->createSuccessResponse(['message' => 'Hello World']);
+    }
+}
+```
+
+### Metadata Attributes
+
+- **`#[ApiEndpoint]`**: Summary, description, tags, and schema references.
+- **`#[ApiQueryParam]`**: Describes a query parameter (name, type, required, description).
+- **`#[ApiPathParam]`**: Describes a path parameter (name, type, description).
+- **`#[ApiResponse]`**: Describes a possible response (status, description, schema).
+
+### Standardized Responses
+
+The `ResponseService` provides a unified way to create JSON responses.
+
+#### Success Responses
+
+```php
+return $this->responseService->createSuccessResponse($data, $meta, $status);
+```
+
+You can enable a **Response Envelope** in the extension configuration. If enabled (`responseEnvelope = 1`), all success
+responses will be wrapped:
+
+```json
+{
+    "data": {
+        "id": 1,
+        "name": "..."
+    },
+    "meta": {
+        "total": 10
+    }
+}
+```
+
+#### Error Responses (Problem JSON)
+
+Errors are returned using the **RFC 7807 (Problem Details for HTTP APIs)** format:
+
+```php
+return $this->responseService->createErrorResponse('Not Found', 'The item does not exist.', 404);
+```
+
+Result:
+
+```json
+{
+    "title": "Not Found",
+    "detail": "The item does not exist.",
+    "status": 404,
+    "type": "about:blank"
 }
 ```
 
 ### Endpoint Filtering
 
 By default, an endpoint is available for all registered APIs and versions. You can restrict an endpoint to specific
-APIs, versions or auth modes by using the properties of the `ApiRoute` attribute. These properties support both single
+APIs, versions, or auth modes by using the properties of the `ApiRoute` attribute. These properties support both single
 strings and arrays of strings:
 
 ```php
@@ -139,14 +207,14 @@ attributes.
 
 #### Overriding or Disabling Default Controllers
 
-Since default controllers like `HealthController` or `UserAuthController` are registered as standard services in TYPO3's
+Since default controllers like `TestController` or `UserAuthController` are registered as standard services in TYPO3's
 Symfony DI, you can override or disable them in your own `Services.php`.
 
 To **override** a default controller with your own implementation:
 
 ```php
 // In your extension's Configuration/Services.php
-$services->set(SGalinski\SgApiCore\Controller\HealthController::class, MyCustomHealthController::class)
+$services->set(SGalinski\SgApiCore\Controller\TestController::class, MyCustomTestController::class)
     ->tag('sg_apicore.router');
 ```
 
@@ -154,7 +222,7 @@ To **disable** a default controller:
 
 ```php
 // In your extension's Configuration/Services.php
-$services->remove(SGalinski\SgApiCore\Controller\HealthController::class);
+$services->remove(SGalinski\SgApiCore\Controller\TestController::class);
 ```
 
 ### Route Filtering by Auth Mode

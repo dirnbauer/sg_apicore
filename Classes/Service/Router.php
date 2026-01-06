@@ -92,19 +92,25 @@ class Router implements SingletonInterface {
 
 						// Filter by API ID, version and auth mode if specified
 						if ($routeAttribute->apiId !== NULL) {
-							$apiIds = is_array($routeAttribute->apiId) ? $routeAttribute->apiId : [$routeAttribute->apiId];
+							$apiIds = is_array(
+								$routeAttribute->apiId
+							) ? $routeAttribute->apiId : [$routeAttribute->apiId];
 							if (!in_array($apiId, $apiIds, TRUE)) {
 								continue;
 							}
 						}
 						if ($routeAttribute->version !== NULL) {
-							$versions = is_array($routeAttribute->version) ? $routeAttribute->version : [$routeAttribute->version];
+							$versions = is_array(
+								$routeAttribute->version
+							) ? $routeAttribute->version : [$routeAttribute->version];
 							if (!in_array($version, $versions, TRUE)) {
 								continue;
 							}
 						}
 						if ($routeAttribute->authMode !== NULL) {
-							$authModes = is_array($routeAttribute->authMode) ? $routeAttribute->authMode : [$routeAttribute->authMode];
+							$authModes = is_array(
+								$routeAttribute->authMode
+							) ? $routeAttribute->authMode : [$routeAttribute->authMode];
 							if (!in_array($authMode, $authModes, TRUE)) {
 								continue;
 							}

@@ -298,6 +298,11 @@ Tasks
     - {"data": ..., "meta": ...} (konfigurierbar)
     - Error Format vereinheitlichen (Problem JSON)
 
+Goal:
+
+- Vorbereitung für den openAPI-Generator (Textbeschreibungen, etc per Attributen)
+- Ich denke, dass hier einiges bereits vorab gelöst worden ist.
+
 Definition of Done
 
 - 2–3 Business-Endpunkte als Beispiel

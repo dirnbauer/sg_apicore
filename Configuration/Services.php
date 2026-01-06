@@ -23,7 +23,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 	$services->set(SGalinski\SgApiCore\Service\Router::class)
 		->arg('$controllers', tagged_iterator('sg_apicore.router'));
 
-	$services->set(SGalinski\SgApiCore\Controller\HealthController::class)
+	$services->set(SGalinski\SgApiCore\Controller\TestController::class)
 		->tag('sg_apicore.router');
 
 	$services->set(SGalinski\SgApiCore\Controller\UserAuthController::class)

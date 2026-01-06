@@ -108,4 +108,13 @@ class ExtensionConfiguration implements SingletonInterface {
 	public function getOnMissingTenantStatusCode(): int {
 		return (int) $this->get('onMissingTenant', 404);
 	}
+
+	/**
+	 * Returns whether the response envelope (data: ...) is enabled
+	 *
+	 * @return bool
+	 */
+	public function isResponseEnvelopeEnabled(): bool {
+		return (bool) $this->get('responseEnvelope', FALSE);
+	}
 }

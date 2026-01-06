@@ -12,3 +12,6 @@ siteTenantIdSource = identifier
 
 # cat=basic/tenant; type=int; label=The HTTP status code to return when the tenant is missing (404|400)
 onMissingTenant = 404
+
+# cat=basic/response; type=boolean; label=Enable response envelope:Wrap success responses in a "data" property
+responseEnvelope = 0
