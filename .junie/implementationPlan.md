@@ -389,8 +389,156 @@ Definition of Done
 
 ---
 
-Next Phases
+Phase J – Backend-Modul: Verwaltung von APIs, Tokens, Providern & Endpunkten (kurz)
 
-- Verbindung erweiterter Scope via Frontend-User-Login und Nutzung des neuen Auto-Expire-Tokens
-    - braucht RefreshToken, etc
-- sg_rest DropIn replacement für alte API möglich?
+**Ziel**
+TYPO3 Backend-Modul für `sg_apicore`, um **APIs**, **Tenants**, **Tokens (Access/Refresh)**, **Provider-Konfiguration*-
+sowie **Endpoint-Übersicht*- komfortabel zu verwalten – ohne manuelle DB-Eingriffe.
+
+Scope (MVP)
+
+1) Backend-Modul “API Core”
+
+- Modul-Entry unter System/Tools (oder eigener Main-Module-Punkt)
+- Tabs/Views:
+    1. **APIs & Versionen**
+    2. **Tokens**
+    3. **Provider**
+    4. **Endpoints (Read-only)**
+
+**DoD:*- Modul sichtbar, sauber berechtigt (Admin/Backend-Group), TYPO3 12/13 kompatibel.
+
+2) Token Management (MVP)
+
+- Liste + Filter: `apiId`, `tenantId`, `type` (access/refresh), `active/revoked/expired`
+- Aktionen:
+    - **Create Token*- (generiert plaintext einmalig, speichert nur Hash)
+    - **Revoke Token**
+    - **Set/Update Scopes**
+    - **Set Expiry**
+- Anzeige:
+    - `label`, `scopes`, `expires_at`, `last_used_at`, `revoked_at`
+
+**DoD:*- Token können im Backend erzeugt werden, plaintext wird nur einmal angezeigt, Auth funktioniert damit.
+
+3) Provider-Konfiguration (MVP)
+
+- Anzeige aktiver Provider pro `apiId` (z. B. `bearer_opaque`, optional `jwt_access`)
+- Konfig-Editor (minimal): enable/disable Provider, JWT Secret/Algo (falls aktiv)
+
+**DoD:*- Provider per API umschaltbar, Konfig wird gelesen und wirkt zur Laufzeit.
+
+4) Endpoint Overview (Read-only, MVP)
+
+- Liste aller registrierten Endpoints (aus Attributes/Registry):
+    - `method`, `path`, `summary`, `requiredScopes`, `apiId`, `version`
+- Optional: Link zu OpenAPI/Swagger UI
+
+**DoD:*- Übersicht entspricht dem Runtime-Routing (keine Fake-Daten).
+
+Non-Goals (für diese Phase)
+
+- Kein vollwertiger API-Designer
+- Keine CRUD-Generatoren
+- Keine komplexe Rechteverwaltung (nur Backend-Berechtigung + später optional)
+
+Tests & Doku (minimal)
+
+- Smoke-Test: Modul lädt, Token create/revoke läuft.
+- Doku: “Token im Backend anlegen und im Client nutzen” + Screenshots optional.
+
+---
+
+### Phase K – sg_rest Drop-In Replacement & Migrationspfad (kurz)
+
+**Ziel**
+`sg_apicore` so erweitern, dass bestehende Installationen mit `sg_rest` **schrittweise*- migriert werden können –
+idealerweise als **Drop-In Replacement*- für einen definierten Teilumfang (v1), ohne die alte Extension sofort zu
+entfernen.
+
+## Scope (MVP / v1 Drop-In)
+
+### 1) Kompatibilitätsmodus aktivierbar
+
+- Konfig-Flag: `compat.sg_rest.enabled = true`
+- Optional: `compat.sg_rest.basePath = /rest` (oder was bei sg_rest genutzt wurde)
+
+**DoD:*- Bei aktivem Flag werden Requests unter dem alten sg_rest Pfad von `sg_apicore` übernommen.
+
+---
+
+### 2) Routing-/Endpoint-Kompatibilität
+
+- Mapping alter sg_rest URLs → neue Endpoint-Definitionen
+
+    - 1:1 Route-Mapping (Preferred)
+    - oder Rewrite/Alias-Mechanismus (Fallback)
+- Unterstützung für alte Versionierung/Prefix-Logik (sofern vorhanden)
+
+**DoD:*- Ein definierter Satz “Legacy Routes” liefert identische Responses (Status + JSON Struktur) wie vorher.
+
+---
+
+### 3) Auth-Kompatibilität (minimal)
+
+- Support für bisherigen sg_rest Auth-Modus:
+
+    - Opaque Token / API-Key (wie in sg_rest)
+    - Optional: JWT, falls sg_rest das genutzt hat
+- Optional: Import/Bridge für bestehende Token-Daten (wenn DB-Schema abweicht)
+
+**DoD:*- Bestehende Clients können weiterhin authentifizieren, ohne Token-Rollout (oder mit minimaler Umstellung).
+
+---
+
+### 4) Response-Kompatibilität
+
+- Response Envelope kompatibel schaltbar:
+
+    - Felder/Keys (z. B. `data`, `meta`, `errors`)
+    - Pagination-Format wie bisher
+- Error-Format kompatibel schaltbar (sofern sg_rest abweicht)
+
+**DoD:*- Clients/Integrationen brechen nicht wegen anderer JSON-Struktur.
+
+---
+
+### 5) Logging & Behavior Parity (nur wo relevant)
+
+- Optional: gleiche Log-Felder wie sg_rest (Request/Response/Params)
+- Performance: keine “Legacy-Shims”, die pro Request massiv overhead erzeugen
+
+**DoD:*- Legacy Verhalten ist ausreichend gleich, ohne neue Bottlenecks.
+
+---
+
+## Vorgehen / Migrationsstrategie
+
+1. **Inventory**: Liste aller sg_rest Endpunkte + Auth + Response-Formate
+2. **Priorisieren**: Top 20 Endpunkte zuerst (nach Traffic/Business)
+3. **Dual-Run**: sg_rest bleibt installiert, `sg_apicore` übernimmt nur den Legacy-Prefix (oder nur einzelne Routen)
+4. **Cutover**: wenn parity erreicht, sg_rest Routen deaktivieren / entfernen
+
+---
+
+## Non-Goals (für v1)
+
+- 100% sg_rest Feature-Clone
+- automatische Migration aller Custom-Endpunkte ohne Mapping
+- vollständige Kompatibilität, wenn sg_rest “Magic”/Typoscript-Routing hatte (nur explizit gemappte Fälle)
+
+---
+
+## Tests & DoD global
+
+- Golden-Master Tests: legacy request → response JSON exakt gleich (oder definierte tolerierte Unterschiede)
+- Dokumentation: “Welche Endpunkte sind drop-in-kompatibel, welche nicht” + Migrations-Checkliste
+
+---
+
+**Hinweis (wichtig):*- Ob “Drop-In” wirklich möglich ist, hängt fast komplett davon ab, wie stark `sg_rest` bei euch *
+*Response-Formate, Routing-Magic, Token-Handling*- und **TCA/Entity-Mapping*- verzahnt hat. Für einen Teilumfang ist es
+meist gut machbar; als vollständiger Ersatz eher nur mit klarer Endpunktliste und Golden-Master-Tests.
+
+Wenn du mir sagst, wie sg_rest aktuell routet (Prefix, Versioning, Response Envelope, Auth), kann ich Phase Y noch enger
+auf eure Realität zuschneiden (inkl. “Minimum viable drop-in” Liste).
