@@ -141,7 +141,7 @@ class Router implements SingletonInterface {
 							// If it's specifically restricted to certain modes (e.g. 'user'),
 							// it must match the current API's authMode even if 'public' is also allowed.
 							// This ensures that 'user' endpoints don't clutter the 'public' API documentation.
-							$restrictedTo = array_filter($authModes, static fn($m) => $m !== 'public');
+							$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
 							if (!empty($restrictedTo)) {
 								if (!in_array($authMode, $restrictedTo, TRUE)) {
 									continue;

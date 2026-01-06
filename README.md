@@ -108,6 +108,7 @@ class MyController {
 
 - **`#[ApiEndpoint]`**: Summary, description, tags, and schema references.
 - **`#[ApiQueryParam]`**: Describes a query parameter (name, type, required, description).
+- **`#[ApiBodyParam]`**: Describes a parameter in the request body (name, type, required, description).
 - **`#[ApiPathParam]`**: Describes a path parameter (name, type, description).
 - **`#[ApiResponse]`**: Describes a possible response (status, description, schema).
 

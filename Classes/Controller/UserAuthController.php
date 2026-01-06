@@ -32,7 +32,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
+use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
@@ -113,6 +115,11 @@ class UserAuthController {
 	 */
 	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'User login', description: 'Authenticates a user with username and password and returns access and refresh tokens.', tags: ['Authentication'])]
+	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user')]
+	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user')]
+	#[ApiResponse(status: 200, description: 'Login successful, returns tokens')]
+	#[ApiResponse(status: 400, description: 'Missing username or password')]
+	#[ApiResponse(status: 401, description: 'Invalid credentials')]
 	public function login(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
 		$username = $params['username'] ?? '';
@@ -262,6 +269,10 @@ class UserAuthController {
 	 */
 	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token.', tags: ['Authentication'])]
+	#[ApiBodyParam(name: 'refresh_token', type: 'string', description: 'The refresh token obtained during login')]
+	#[ApiResponse(status: 200, description: 'Success, returns a new access token')]
+	#[ApiResponse(status: 400, description: 'Missing refresh_token parameter')]
+	#[ApiResponse(status: 401, description: 'Invalid or expired refresh token')]
 	public function refresh(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
 		$refreshToken = $params['refresh_token'] ?? '';

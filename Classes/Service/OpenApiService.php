@@ -26,6 +26,7 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
@@ -160,7 +161,7 @@ class OpenApiService implements SingletonInterface {
 						// If it's specifically restricted to certain modes (e.g. 'user'),
 						// it must match the current API's authMode even if 'public' is also allowed.
 						// This ensures that 'user' endpoints don't clutter the 'public' API documentation.
-						$restrictedTo = array_filter($authModes, static fn($m) => $m !== 'public');
+						$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
 						if (!empty($restrictedTo)) {
 							if (!in_array($authMode, $restrictedTo, TRUE)) {
 								continue;
@@ -211,6 +212,40 @@ class OpenApiService implements SingletonInterface {
 
 		if ($requireScopes && count($requireScopes->scopes) > 0) {
 			$operation['description'] .= "\n\n**Required Scopes:** " . implode(', ', $requireScopes->scopes);
+		}
+
+		// Request Body (JSON)
+		$bodyParams = $method->getAttributes(ApiBodyParam::class);
+		if (count($bodyParams) > 0) {
+			$properties = [];
+			$required = [];
+			foreach ($bodyParams as $attr) {
+				/** @var ApiBodyParam $param */
+				$param = $attr->newInstance();
+				$properties[$param->name] = [
+					'type' => $this->mapPhpTypeToOpenApi($param->type),
+					'description' => $param->description
+				];
+				if ($param->required) {
+					$required[] = $param->name;
+				}
+			}
+
+			$operation['requestBody'] = [
+				'required' => TRUE,
+				'content' => [
+					'application/json' => [
+						'schema' => [
+							'type' => 'object',
+							'properties' => $properties
+						]
+					]
+				]
+			];
+
+			if (!empty($required)) {
+				$operation['requestBody']['content']['application/json']['schema']['required'] = $required;
+			}
 		}
 
 		// Parameters (Query, Path)

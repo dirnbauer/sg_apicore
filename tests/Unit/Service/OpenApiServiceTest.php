@@ -2,6 +2,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
@@ -72,6 +73,30 @@ class OpenApiServiceTest extends UnitTestCase {
 		$specUser = $service->generateSpec('user', '1');
 		$this->assertArrayHasKey('/hybrid', $specUser['paths']);
 	}
+
+	public function testGenerateSpecContainsRequestBody(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$controllers = new \ArrayIterator([new MockBodyParamController()]);
+
+		$service = new OpenApiService($controllers, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+
+		$this->assertArrayHasKey('/post-test', $spec['paths']);
+		$operation = $spec['paths']['/post-test']['post'];
+		$this->assertArrayHasKey('requestBody', $operation);
+		$this->assertTrue($operation['requestBody']['required']);
+		$content = $operation['requestBody']['content']['application/json'];
+		$schema = $content['schema'];
+		$this->assertEquals('object', $schema['type']);
+		$this->assertArrayHasKey('username', $schema['properties']);
+		$this->assertEquals('string', $schema['properties']['username']['type']);
+		$this->assertContains('username', $schema['required']);
+	}
 }
 
 /**
@@ -94,5 +119,15 @@ class MockOpenApiController {
 class MockHybridController {
 	#[ApiRoute(path: '/hybrid', methods: ['GET'], authMode: ['user', 'public'])]
 	public function hybridAction(): void {
+	}
+}
+
+/**
+ * Mock controller for body params
+ */
+class MockBodyParamController {
+	#[ApiRoute(path: '/post-test', methods: ['POST'])]
+	#[ApiBodyParam(name: 'username', required: TRUE)]
+	public function postAction(): void {
 	}
 }
