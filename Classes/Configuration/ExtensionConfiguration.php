@@ -44,9 +44,8 @@ class ExtensionConfiguration implements SingletonInterface {
 	 */
 	public function __construct() {
 		try {
-			$this->configuration = GeneralUtility::makeInstance(Typo3ExtensionConfiguration::class)
-				->get('sg_apicore');
-		} catch (\Exception $e) {
+			$this->configuration = GeneralUtility::makeInstance(Typo3ExtensionConfiguration::class)?->get('sg_apicore');
+		} catch (\Exception) {
 			// Fallback to empty configuration
 			$this->configuration = [];
 		}
@@ -70,6 +69,43 @@ class ExtensionConfiguration implements SingletonInterface {
 	 */
 	public function isLoggingEnabled(): bool {
 		return (bool) $this->get('enableLogging', FALSE);
+	}
+
+	/**
+	 * Returns whether request headers should be logged
+	 *
+	 * @return bool
+	 */
+	public function isLogHeadersEnabled(): bool {
+		return (bool) $this->get('logHeaders', FALSE);
+	}
+
+	/**
+	 * Returns whether the request body should be logged
+	 *
+	 * @return bool
+	 */
+	public function isLogBodyEnabled(): bool {
+		return (bool) $this->get('logBody', FALSE);
+	}
+
+	/**
+	 * Returns whether the response body should be logged
+	 *
+	 * @return bool
+	 */
+	public function isLogResponseEnabled(): bool {
+		return (bool) $this->get('logResponse', FALSE);
+	}
+
+	/**
+	 * Returns the list of keys to redact in logs
+	 *
+	 * @return array
+	 */
+	public function getRedactKeys(): array {
+		$keys = $this->get('redactKeys', 'password,token,authorization,secret,access_token,refresh_token');
+		return GeneralUtility::trimExplode(',', (string) $keys, TRUE);
 	}
 
 	/**

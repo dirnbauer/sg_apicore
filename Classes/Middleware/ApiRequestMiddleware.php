@@ -33,6 +33,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -67,24 +68,32 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	protected LoginProviderInterface $loginProvider;
 
 	/**
+	 * @var LogService
+	 */
+	protected LogService $logService;
+
+	/**
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @param ApiRegistry $apiRegistry
 	 * @param Router $router
 	 * @param TenantResolverInterface $tenantResolver
 	 * @param LoginProviderInterface $loginProvider
+	 * @param LogService $logService
 	 */
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		ApiRegistry $apiRegistry,
 		Router $router,
 		TenantResolverInterface $tenantResolver,
-		LoginProviderInterface $loginProvider
+		LoginProviderInterface $loginProvider,
+		LogService $logService
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->apiRegistry = $apiRegistry;
 		$this->router = $router;
 		$this->tenantResolver = $tenantResolver;
 		$this->loginProvider = $loginProvider;
+		$this->logService = $logService;
 	}
 
 	/**
@@ -94,6 +103,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
 	 * @throws \ReflectionException
+	 * @throws \Exception
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
@@ -102,6 +112,31 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		if (!str_starts_with($path, $apiPathPrefix)) {
 			return $handler->handle($request);
 		}
+
+		// Add Request ID
+		$requestId = bin2hex(random_bytes(8));
+		$request = $request->withAttribute('api.requestId', $requestId);
+
+		$startTime = microtime(TRUE);
+		$response = $this->handleApiRequest($request, $handler);
+		$duration = microtime(TRUE) - $startTime;
+
+		$this->logService->logRequestResponse($request, $response, $duration);
+
+		return $response->withHeader('X-Request-ID', $requestId);
+	}
+
+	/**
+	 * Core API request handling logic
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param RequestHandlerInterface $handler
+	 * @return ResponseInterface
+	 * @throws \ReflectionException
+	 */
+	protected function handleApiRequest(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+		$path = $request->getUri()->getPath();
+		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
 		// Resolve tenant early
 		$tenantResult = $this->tenantResolver->resolve($request);

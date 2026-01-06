@@ -245,6 +245,49 @@ You can access the documentation for any registered API and version:
 
 For example: `https://your-project.local/api/public/v1/docs/ui`
 
+### Logging
+
+The extension provides a comprehensive logging system for API requests and responses. It can be configured globally and
+overridden per endpoint.
+
+#### Global Configuration
+
+Logging can be configured in the Extension Configuration (Extension Manager or `settings.php`):
+
+- **`enableLogging`**: Global toggle for API logging.
+- **`logHeaders`**: Whether to log request headers.
+- **`logBody`**: Whether to log the request body.
+- **`logResponse`**: Whether to log the response body.
+- **`redactKeys`**: Comma-separated list of keys to mask in logs (e.g., `password,token,access_token`).
+
+#### Per-Endpoint Configuration
+
+You can use the `#[ApiLogging]` attribute to override global logging settings for a specific method:
+
+```php
+use SGalinski\SgApiCore\Attribute\ApiLogging;
+
+#[ApiLogging(
+    enableLogging: true,
+    logHeaders: true,
+    logBody: true,
+    logResponse: true
+)]
+public function sensitiveAction(ServerRequestInterface $request): ResponseInterface {
+    // ...
+}
+```
+
+#### Request Tracking
+
+Every API request is assigned a unique **Request ID** (Correlation ID). This ID is:
+
+- Added to the request attributes as `api.requestId`.
+- Included in every log message.
+- Returned in the response as the `X-Request-ID` header.
+
+This allows you to easily trace an API call from the client through the logs.
+
 ### CLI Export
 
 You can also export the OpenAPI specification to a file using the CLI:

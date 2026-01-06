@@ -11,6 +11,7 @@ use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
@@ -46,7 +47,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -80,7 +82,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -113,8 +116,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$responseMock = $this->createStub(ResponseInterface::class);
-		$responseMock->method('getStatusCode')->willReturn(200);
+		$responseMock = new JsonResponse([], 200);
 		$router = $this->createMock(Router::class);
 		$router->expects($this->once())
 			->method('dispatch')
@@ -125,7 +127,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -138,7 +141,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri->method('getPath')->willReturn('/some-other-path');
 		$request->method('getUri')->willReturn($uri);
 
-		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock = new JsonResponse([], 200);
 		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->expects($this->once())->method('handle')->with($request)->willReturn($responseMock);
 
@@ -154,7 +157,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -186,8 +190,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			TenantContextResult::success(new TenantContext('test-tenant'))
 		);
 
-		$responseMock = $this->createStub(ResponseInterface::class);
-		$responseMock->method('getStatusCode')->willReturn(200);
+		$responseMock = new JsonResponse([], 200);
 		$router = $this->createMock(Router::class);
 		$router->expects($this->once())
 			->method('dispatch')
@@ -198,7 +201,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -230,8 +234,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 
 		$request->method('withAttribute')->willReturn($request);
 
-		$responseMock = $this->createStub(ResponseInterface::class);
-		$responseMock->method('getStatusCode')->willReturn(200);
+		$responseMock = new JsonResponse([], 200);
 		$router = $this->createStub(Router::class);
 		$router->method('dispatch')->willReturn($responseMock);
 
@@ -240,7 +243,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -252,6 +256,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/partner/v1/test');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -277,7 +283,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$loginProvider
+			$loginProvider,
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -311,7 +318,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
@@ -324,6 +332,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/health');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -343,7 +353,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$apiRegistry,
 			$router,
 			$tenantResolver,
-			$this->createStub(LoginProviderInterface::class)
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
 		);
 		$response = $middleware->process($request, $handler);
 
