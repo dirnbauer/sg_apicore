@@ -118,28 +118,24 @@ class Router implements SingletonInterface {
 		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version, $authMode) {
 			foreach ($this->endpointDiscoveryService->getAllEndpoints() as $endpoint) {
 				// Filter by API ID, version and auth mode if specified
-				if ($endpoint['apiId'] !== NULL) {
-					$apiIds = is_array($endpoint['apiId']) ? $endpoint['apiId'] : [$endpoint['apiId']];
-					if (!in_array($apiId, $apiIds, TRUE)) {
+				if (!empty($endpoint['apiId'])) {
+					if (!in_array($apiId, $endpoint['apiId'], TRUE)) {
 						continue;
 					}
 				}
-				if ($endpoint['version'] !== NULL) {
-					$versions = is_array($endpoint['version']) ? $endpoint['version'] : [$endpoint['version']];
-					if (!in_array($version, $versions, TRUE)) {
+				if (!empty($endpoint['version'])) {
+					if (!in_array($version, $endpoint['version'], TRUE)) {
 						continue;
 					}
 				}
-				if ($endpoint['authMode'] !== NULL) {
-					$authModes = is_array($endpoint['authMode']) ? $endpoint['authMode'] : [$endpoint['authMode']];
-
+				if (!empty($endpoint['authMode'])) {
 					// Visibility logic
-					$restrictedTo = array_filter($authModes, static fn ($m) => $m !== 'public');
+					$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
 					if (!empty($restrictedTo)) {
 						if (!in_array($authMode, $restrictedTo, TRUE)) {
 							continue;
 						}
-					} elseif (!in_array('public', $authModes, TRUE)) {
+					} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
 						continue;
 					}
 				}
@@ -172,7 +168,7 @@ class Router implements SingletonInterface {
 				$reflectionClass = new \ReflectionClass($handler['controller']);
 				$reflectionMethod = $reflectionClass->getMethod($handler['action']);
 
-				$effectiveAuthMode = $handler['authMode'] ?? $authMode ?? 'public';
+				$effectiveAuthMode = (!empty($handler['authMode'])) ? $handler['authMode'] : ($authMode ?? 'public');
 				$authContext = $request->getAttribute('api.auth');
 
 				// If effective auth mode is not public, require authentication

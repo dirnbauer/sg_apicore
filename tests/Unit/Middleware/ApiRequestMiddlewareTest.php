@@ -543,7 +543,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$request->getBody()->write('{"foo":"bar"}');
 		$request->getBody()->rewind();
 
-		$request->expects($this->exactly(3))
+		$request->expects($this->exactly(4))
 			->method('withAttribute')
 			->willReturnSelf();
 

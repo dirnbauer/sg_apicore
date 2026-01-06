@@ -101,11 +101,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 					}
 
 					$endpoints[] = [
-						'apiId' => $route->apiId,
-						'version' => $route->version,
+						'apiId' => is_array($route->apiId) ? $route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
+						'version' => is_array($route->version) ? $route->version : ($route->version !== NULL ? [$route->version] : []),
 						'path' => $route->path,
 						'methods' => $route->methods,
-						'authMode' => $route->authMode,
+						'authMode' => is_array($route->authMode) ? $route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
 						'summary' => $endpoint?->summary ?? $method->getName(),
 						'description' => $endpoint?->description ?? '',
 						'tags' => $endpoint?->tags ?? [],
@@ -133,7 +133,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 		if ($this->controllerClasses === NULL) {
 			$this->controllerClasses = [];
 			foreach ($this->controllers as $controller) {
-				$this->controllerClasses[] = get_class($controller);
+				$className = get_class($controller);
+				if (str_contains($className, '@anonymous')) {
+					$reflectionClass = new \ReflectionClass($controller);
+					$className = $reflectionClass->getName();
+				}
+				$this->controllerClasses[] = $className;
 			}
 		}
 

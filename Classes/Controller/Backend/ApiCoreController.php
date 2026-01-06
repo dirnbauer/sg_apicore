@@ -92,6 +92,7 @@ class ApiCoreController extends ActionController {
 	public function indexAction(): ResponseInterface {
 		$apis = $this->apiRegistry->getApis();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$moduleTemplate->setTitle('API Core - Overview');
 		$moduleTemplate->assign('apis', $apis);
 		$moduleTemplate->assign('currentTab', 'index');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Index');
@@ -105,12 +106,18 @@ class ApiCoreController extends ActionController {
 	 * @throws \Doctrine\DBAL\Exception
 	 */
 	public function tokensAction(array $filters = []): ResponseInterface {
+		if (!isset($filters['isUserToken'])) {
+			$filters['isUserToken'] = 0;
+		}
+
 		$tokens = $this->tokenRepository->findAllWithFilters($filters);
 		$apis = $this->apiRegistry->getApis();
+		$apiOptions = array_combine(array_keys($apis), array_keys($apis));
 
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$moduleTemplate->setTitle('API Core - Tokens');
 		$moduleTemplate->assign('tokens', $tokens);
-		$moduleTemplate->assign('apis', $apis);
+		$moduleTemplate->assign('apis', $apiOptions);
 		$moduleTemplate->assign('filters', $filters);
 		$moduleTemplate->assign('currentTab', 'tokens');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Tokens');
@@ -135,7 +142,7 @@ class ApiCoreController extends ActionController {
 		string $scopes = '',
 		int $expiresDays = 0
 	): ResponseInterface {
-		$plaintextToken = $this->tokenService->generateRandomToken();
+		$newTokenKey = $this->tokenService->generateRandomToken();
 		$expiresAt = $expiresDays > 0 ? time() + ($expiresDays * 24 * 3600) : 0;
 
 		$scopeArray = [];
@@ -144,7 +151,7 @@ class ApiCoreController extends ActionController {
 		}
 
 		$this->tokenService->createToken(
-			$plaintextToken,
+			$newTokenKey,
 			$apiId,
 			$tenantId,
 			0, // root level for manual tokens
@@ -158,7 +165,8 @@ class ApiCoreController extends ActionController {
 		$this->addFlashMessage('Token created successfully. Please copy it now, it will not be shown again.');
 
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
-		$moduleTemplate->assign('plaintextToken', $plaintextToken);
+		$moduleTemplate->setTitle('API Core - Token Created');
+		$moduleTemplate->assign('tokenKey', $newTokenKey);
 		$moduleTemplate->assign('apiId', $apiId);
 		$moduleTemplate->assign('tenantId', $tenantId);
 		$moduleTemplate->assign('currentTab', 'tokens');
@@ -185,6 +193,7 @@ class ApiCoreController extends ActionController {
 	public function providersAction(): ResponseInterface {
 		$apis = $this->apiRegistry->getApis();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$moduleTemplate->setTitle('API Core - Providers');
 		$moduleTemplate->assign('apis', $apis);
 		$moduleTemplate->assign('currentTab', 'providers');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Providers');
@@ -199,6 +208,7 @@ class ApiCoreController extends ActionController {
 	public function endpointsAction(): ResponseInterface {
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$moduleTemplate->setTitle('API Core - Endpoints');
 		$moduleTemplate->assign('endpoints', $endpoints);
 		$moduleTemplate->assign('currentTab', 'endpoints');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Endpoints');

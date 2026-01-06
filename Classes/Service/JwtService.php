@@ -29,7 +29,7 @@ namespace SGalinski\SgApiCore\Service;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
- * Service for JWT handling, inspired by sg_rest
+ * Service for JWT handling
  */
 class JwtService implements SingletonInterface {
 	/**

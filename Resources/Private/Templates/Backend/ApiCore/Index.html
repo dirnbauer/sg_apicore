@@ -29,7 +29,16 @@
 						</f:alias>
 					</td>
 					<td>
-						<code>{f:if(condition: config.basePath, then: config.basePath, else: '/api/{apiId}/v{version}')}</code>
+						<f:if condition="{config.basePath}">
+							<f:then>
+								<code>{config.basePath}</code>
+							</f:then>
+							<f:else>
+								<f:for each="{config.versions}" as="version">
+									<code>/api/{apiId}/v{version}</code><br />
+								</f:for>
+							</f:else>
+						</f:if>
 					</td>
 					<td>
 						<f:for each="{config.versions}" as="version">

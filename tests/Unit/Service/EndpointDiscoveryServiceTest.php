@@ -24,8 +24,8 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$this->assertCount(1, $endpoints);
 		$endpoint = $endpoints[0];
 
-		$this->assertEquals('public', $endpoint['apiId']);
-		$this->assertEquals('1', $endpoint['version']);
+		$this->assertEquals(['public'], $endpoint['apiId']);
+		$this->assertEquals(['1'], $endpoint['version']);
 		$this->assertEquals('/discovery-test/{id}', $endpoint['path']);
 		$this->assertEquals(['POST'], $endpoint['methods']);
 		$this->assertEquals('Test Summary', $endpoint['summary']);

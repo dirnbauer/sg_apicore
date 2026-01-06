@@ -74,9 +74,9 @@ class TokenRepository implements SingletonInterface {
 		}
 
 		if ($siteRootPageId !== NULL) {
-			$constraints[] = $queryBuilder->expr()->eq(
-				'pid',
-				$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
+			$constraints[] = $queryBuilder->expr()->or(
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)),
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
 			);
 		}
 
@@ -108,9 +108,9 @@ class TokenRepository implements SingletonInterface {
 		];
 
 		if ($siteRootPageId !== NULL) {
-			$constraints[] = $queryBuilder->expr()->eq(
-				'pid',
-				$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
+			$constraints[] = $queryBuilder->expr()->or(
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)),
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
 			);
 		}
 
@@ -152,6 +152,13 @@ class TokenRepository implements SingletonInterface {
 					$queryBuilder->createNamedParameter((int) $filters['isRefreshToken'], ParameterType::INTEGER)
 				)
 			);
+		}
+		if (isset($filters['isUserToken'])) {
+			if ((int) $filters['isUserToken'] === 1) {
+				$query->andWhere($queryBuilder->expr()->gt('user_id', 0));
+			} else {
+				$query->andWhere($queryBuilder->expr()->eq('user_id', 0));
+			}
 		}
 		if (isset($filters['status']) && $filters['status'] !== '') {
 			if ($filters['status'] === 'revoked') {

@@ -203,6 +203,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 				$request = $request->withAttribute('api.id', $apiId);
 				$apiConfig = $this->apiRegistry->getApi($apiId);
 				if (in_array($version, $apiConfig['versions'], TRUE)) {
+					$request = $request->withAttribute('api.version', $version);
 					// Get security config
 					$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 					$authMode = $securityConfig['authMode'] ?? 'token';

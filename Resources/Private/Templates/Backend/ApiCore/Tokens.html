@@ -1,4 +1,5 @@
 <f:layout name="Backend/Default" />
+{namespace sg=SGalinski\SgApiCore\ViewHelpers}
 
 <f:section name="Content">
 	<h1>Token Management</h1>
@@ -6,10 +7,11 @@
 	<div class="row">
 		<div class="col-md-8">
 			<h3>Existing Tokens</h3>
-			<f:form action="tokens" name="filters" object="{filters}" method="GET" class="form-inline mb-3">
-				<f:form.select name="filters[apiId]" options="{apis}" optionLabelField="key" prependOptionLabel="-- All APIs --" class="form-control mr-2" value="{filters.apiId}" />
+			<f:form action="tokens" name="filters" object="{filters}" method="POST" class="form-inline mb-3">
+				<f:form.select name="filters[apiId]" options="{apis}" prependOptionLabel="-- All APIs --" class="form-control mr-2" value="{filters.apiId}" />
 				<f:form.textfield name="filters[tenantId]" placeholder="Tenant ID" class="form-control mr-2" value="{filters.tenantId}" />
 				<f:form.select name="filters[status]" options="{active: 'Active', expired: 'Expired', revoked: 'Revoked'}" prependOptionLabel="-- All Status --" class="form-control mr-2" value="{filters.status}" />
+				<f:form.select name="filters[isUserToken]" options="{0: 'System/M2M Tokens', 1: 'User Tokens'}" class="form-control mr-2" value="{filters.isUserToken}" />
 				<f:form.submit value="Filter" class="btn btn-default" />
 			</f:form>
 
@@ -21,6 +23,7 @@
 						<th>API / Tenant</th>
 						<th>Type</th>
 						<th>Status</th>
+						<th>Expires</th>
 						<th>Last Used</th>
 						<th>Actions</th>
 					</tr>
@@ -57,6 +60,12 @@
 								</f:if>
 							</td>
 							<td>
+								<f:if condition="{token.expires_at}">
+									<f:then>{f:format.date(date: token.expires_at, format: 'Y-m-d H:i')}</f:then>
+									<f:else>Never</f:else>
+								</f:if>
+							</td>
+							<td>
 								<f:if condition="{token.last_used_at}">
 									<f:then>{f:format.date(date: token.last_used_at, format: 'Y-m-d H:i')}</f:then>
 									<f:else>-</f:else>
@@ -64,6 +73,9 @@
 							</td>
 							<td>
 								<f:if condition="!{token.revoked_at}">
+									<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: '{f:be.uri(route: \'system_SgApiCore\', parameters: {action: \'tokens\', filters: filters})}')}" class="btn btn-default btn-sm">
+										<core:icon identifier="actions-open" size="small" /> Edit
+									</a>
 									<f:link.action action="revokeToken" arguments="{uid: token.uid}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to revoke this token?')">
 										<core:icon identifier="actions-edit-delete" size="small" /> Revoke
 									</f:link.action>
@@ -81,7 +93,7 @@
 					<f:form action="createToken" name="newToken" method="POST">
 						<div class="form-group">
 							<label for="apiId">API ID</label>
-							<f:form.select name="apiId" options="{apis}" optionLabelField="key" class="form-control" />
+							<f:form.select name="apiId" options="{apis}" class="form-control" />
 						</div>
 						<div class="form-group">
 							<label for="tenantId">Tenant ID</label>

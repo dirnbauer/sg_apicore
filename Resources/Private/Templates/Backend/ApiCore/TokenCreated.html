@@ -7,7 +7,7 @@
 		<p>For security reasons, this token will only be shown <strong>once</strong>. We store only a SHA-256 hash of it.</p>
 		<hr>
 		<div class="input-group">
-			<input type="text" class="form-control form-control-lg" value="{plaintextToken}" readonly id="plaintextToken">
+			<input type="text" class="form-control form-control-lg" value="{tokenKey}" readonly id="tokenKey">
 			<div class="input-group-append">
 				<button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">Copy</button>
 			</div>
@@ -30,7 +30,7 @@
 
 	<script>
 		function copyToClipboard() {
-			var copyText = document.getElementById("plaintextToken");
+			var copyText = document.getElementById("tokenKey");
 			copyText.select();
 			copyText.setSelectionRange(0, 99999);
 			document.execCommand("copy");

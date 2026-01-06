@@ -25,12 +25,42 @@
 					</td>
 					<td><code>{endpoint.path}</code></td>
 					<td>
-						<span class="badge badge-info">{f:if(condition: endpoint.apiId, then: endpoint.apiId, else: 'global')}</span>
-						<br /><span class="badge badge-secondary">v{f:if(condition: endpoint.version, then: endpoint.version, else: '1')}</span>
+						<f:if condition="{endpoint.apiId}">
+							<f:then>
+								<f:for each="{endpoint.apiId}" as="apiId" iteration="it">
+									<span class="badge badge-info">{apiId}</span>{f:if(condition: it.isLast, else: ' ')}
+								</f:for>
+							</f:then>
+							<f:else>
+								<span class="badge badge-info">global</span>
+							</f:else>
+						</f:if>
+						<br />
+						<f:if condition="{endpoint.version}">
+							<f:then>
+								<f:for each="{endpoint.version}" as="version" iteration="it">
+									<span class="badge badge-secondary">v{version}</span>{f:if(condition: it.isLast, else: ' ')}
+								</f:for>
+							</f:then>
+							<f:else>
+								<span class="badge badge-secondary">v1</span>
+							</f:else>
+						</f:if>
 					</td>
 					<td>
 						<strong>{endpoint.summary}</strong>
-						<br /><small class="text-muted">Auth: <code>{f:if(condition: endpoint.authMode, then: endpoint.authMode, else: 'default')}</code></small>
+						<br /><small class="text-muted">Auth: <code>
+							<f:if condition="{endpoint.authMode}">
+								<f:then>
+									<f:for each="{endpoint.authMode}" as="mode" iteration="it">
+										{mode}{f:if(condition: it.isLast, else: ', ')}
+									</f:for>
+								</f:then>
+								<f:else>
+									default
+								</f:else>
+							</f:if>
+						</code></small>
 					</td>
 					<td>
 						<f:if condition="{endpoint.scopes}">
@@ -43,11 +73,22 @@
 						</f:if>
 					</td>
 					<td>
-						<f:if condition="{endpoint.apiId}">
+						<f:if condition="{endpoint.apiId -> f:count()} == 1">
 							<f:then>
-								<a href="/api/{endpoint.apiId}/v{f:if(condition: endpoint.version, then: endpoint.version, else: '1')}/docs/ui" target="_blank" class="btn btn-default btn-sm" title="View in Swagger UI">
-									<core:icon identifier="actions-document-view" size="small" /> Docs
-								</a>
+								<f:for each="{endpoint.apiId}" as="apiId">
+									<f:if condition="{endpoint.version -> f:count()} == 1">
+										<f:then>
+											<f:for each="{endpoint.version}" as="version">
+												<a href="/api/{apiId}/v{version}/docs/ui" target="_blank" class="btn btn-default btn-sm" title="View in Swagger UI">
+													<core:icon identifier="actions-document-view" size="small" /> Docs
+												</a>
+											</f:for>
+										</f:then>
+										<f:else>
+											<!-- Multiple versions, docs link might be ambiguous here if we want a single button -->
+										</f:else>
+									</f:if>
+								</f:for>
 							</f:then>
 						</f:if>
 					</td>
