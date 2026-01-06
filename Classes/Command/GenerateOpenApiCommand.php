@@ -57,7 +57,7 @@ class GenerateOpenApiCommand extends Command {
 		$this->setName('api:openapi:generate')
 			->setDescription('Generates an OpenAPI specification file for a specific API and version.')
 			->addOption('api', NULL, InputOption::VALUE_REQUIRED, 'The API ID (e.g. public)', 'public')
-			->addOption('version', NULL, InputOption::VALUE_REQUIRED, 'The API version (e.g. 1)', '1')
+			->addOption('api-version', NULL, InputOption::VALUE_REQUIRED, 'The API version (e.g. 1)', '1')
 			->addOption('format', NULL, InputOption::VALUE_REQUIRED, 'The output format (json)', 'json')
 			->addOption('out', NULL, InputOption::VALUE_REQUIRED, 'The output file path');
 	}
@@ -74,7 +74,7 @@ class GenerateOpenApiCommand extends Command {
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$io = new SymfonyStyle($input, $output);
 		$apiId = (string) $input->getOption('api');
-		$version = (string) $input->getOption('version');
+		$version = (string) $input->getOption('api-version');
 		$format = (string) $input->getOption('format');
 		$out = (string) $input->getOption('out');
 

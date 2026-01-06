@@ -9,8 +9,8 @@ return [
 		'delete' => 'deleted',
 		'searchFields' => 'label,token,tenant_id,api_id',
 		'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/content/content-text.svg',
-		'hideTable' => TRUE,
-		'rootLevel' => 1,
+		'hideTable' => FALSE,
+		'rootLevel' => 0,
 	],
 	'columns' => [
 		'pid' => [
