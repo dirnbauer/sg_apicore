@@ -36,6 +36,7 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Security\AuthContext;
+use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
 
 /**
@@ -48,10 +49,17 @@ class TestController {
 	protected ResponseService $responseService;
 
 	/**
-	 * @param ResponseService $responseService
+	 * @var PaginationService
 	 */
-	public function __construct(ResponseService $responseService) {
+	protected PaginationService $paginationService;
+
+	/**
+	 * @param ResponseService $responseService
+	 * @param PaginationService $paginationService
+	 */
+	public function __construct(ResponseService $responseService, PaginationService $paginationService) {
 		$this->responseService = $responseService;
+		$this->paginationService = $paginationService;
 	}
 
 	/**
@@ -153,20 +161,28 @@ class TestController {
 		description: 'This endpoint returns a list of example items for demonstration purposes.',
 		tags: ['Examples']
 	)]
+	#[ApiQueryParam(name: 'offset', type: 'integer', description: 'The offset to start from')]
 	#[ApiQueryParam(name: 'limit', type: 'integer', description: 'Maximum number of items to return')]
 	#[ApiResponse(status: 200, description: 'Success', schema: 'ExampleItem[]')]
 	public function listAction(ServerRequestInterface $request): ResponseInterface {
-		$queryParams = $request->getQueryParams();
-		$limit = (int) ($queryParams['limit'] ?? 10);
+		$pagination = $this->paginationService->getPaginationParams($request);
+		$offset = $pagination['offset'];
+		$limit = $pagination['limit'];
 
 		$data = [
 			['id' => 1, 'name' => 'Example 1'],
 			['id' => 2, 'name' => 'Example 2'],
+			['id' => 3, 'name' => 'Example 3'],
+			['id' => 4, 'name' => 'Example 4'],
+			['id' => 5, 'name' => 'Example 5'],
 		];
 
+		$total = count($data);
+		$slicedData = array_slice($data, $offset, $limit);
+
 		return $this->responseService->createSuccessResponse(
-			array_slice($data, 0, $limit),
-			['total' => count($data), 'limit' => $limit]
+			$slicedData,
+			$this->paginationService->buildPaginationMeta($total, $offset, $limit)
 		);
 	}
 

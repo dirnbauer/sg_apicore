@@ -134,7 +134,10 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @return ResponseInterface
 	 * @throws \ReflectionException
 	 */
-	protected function handleApiRequest(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+	protected function handleApiRequest(
+		ServerRequestInterface $request,
+		RequestHandlerInterface $handler
+	): ResponseInterface {
 		$path = $request->getUri()->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 

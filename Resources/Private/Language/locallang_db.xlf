@@ -9,8 +9,17 @@
 			<trans-unit id="tx_apicore_token.tenant_id" resname="tx_apicore_token.tenant_id">
 				<source>Tenant ID</source>
 			</trans-unit>
+			<trans-unit id="tx_apicore_token.tenant_id.description" resname="tx_apicore_token.tenant_id.description">
+				<source>The unique identifier for the tenant. Example: "default", "site_a", "123"</source>
+			</trans-unit>
 			<trans-unit id="tx_apicore_token.api_id" resname="tx_apicore_token.api_id">
 				<source>API ID</source>
+			</trans-unit>
+			<trans-unit id="tx_apicore_token.api_id.description" resname="tx_apicore_token.api_id.description">
+				<source>The identifier for the API this token belongs to. Example: "public", "partner", "user"</source>
+			</trans-unit>
+			<trans-unit id="tx_apicore_token.palette.management" resname="tx_apicore_token.palette.management">
+				<source>Management &amp; System</source>
 			</trans-unit>
 			<trans-unit id="tx_apicore_token.token_hash" resname="tx_apicore_token.token_hash">
 				<source>Token Hash (SHA-256 of the token)</source>

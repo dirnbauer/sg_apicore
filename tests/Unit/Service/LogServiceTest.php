@@ -4,7 +4,6 @@ namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
-use TYPO3\CMS\Core\Log\Logger;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 

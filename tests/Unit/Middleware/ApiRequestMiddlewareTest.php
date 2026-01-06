@@ -2,7 +2,6 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
-use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;

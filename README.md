@@ -232,6 +232,58 @@ class MyController {
 }
 ```
 
+### Pagination
+
+The extension provides a `PaginationService` to handle consistent pagination across endpoints.
+
+#### Using the PaginationService
+
+```php
+use SGalinski\SgApiCore\Service\PaginationService;
+
+class MyController {
+    protected PaginationService $paginationService;
+    protected ResponseService $responseService;
+
+    public function __construct(PaginationService $paginationService, ResponseService $responseService) {
+        $this->paginationService = $paginationService;
+        $this->responseService = $responseService;
+    }
+
+    public function listAction(ServerRequestInterface $request): ResponseInterface {
+        // 1. Get offset and limit from query parameters (with default/max values)
+        $pagination = $this->paginationService->getPaginationParams($request);
+        $offset = $pagination['offset'];
+        $limit = $pagination['limit'];
+
+        // 2. Fetch your data and total count
+        $items = $this->myRepository->findSubset($limit, $offset);
+        $total = $this->myRepository->countAll();
+
+        // 3. Create response with pagination metadata
+        return $this->responseService->createSuccessResponse(
+            $items,
+            $this->paginationService->buildPaginationMeta($total, $offset, $limit)
+        );
+    }
+}
+```
+
+The pagination metadata will be included in the `meta` object of the response (if the envelope is enabled or if meta is
+explicitly passed):
+
+```json
+{
+    "data": [],
+    "meta": {
+        "total": 100,
+        "offset": 10,
+        "limit": 20,
+        "count": 20
+    }
+}
+```
+
 ## OpenAPI Documentation
 
 The extension automatically generates OpenAPI 3.0 specifications based on your controller attributes.
