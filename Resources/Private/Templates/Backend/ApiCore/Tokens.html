@@ -72,13 +72,16 @@
 								</f:if>
 							</td>
 							<td>
+								<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: '{f:be.uri(route: \'system_SgApiCore\', parameters: {action: \'tokens\', filters: filters})}')}" class="btn btn-default btn-sm" title="Edit Scopes/Metadata">
+									<core:icon identifier="actions-open" size="small" /> Edit
+								</a>
 								<f:if condition="!{token.revoked_at}">
-									<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: '{f:be.uri(route: \'system_SgApiCore\', parameters: {action: \'tokens\', filters: filters})}')}" class="btn btn-default btn-sm">
-										<core:icon identifier="actions-open" size="small" /> Edit
+									<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'regenerateToken', uid: token.uid})}" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to regenerate the key? The old key will stop working immediately!')" title="Generate new plaintext key">
+										<core:icon identifier="actions-refresh" size="small" /> Re-generate
 									</a>
-									<f:link.action action="revokeToken" arguments="{uid: token.uid}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to revoke this token?')">
+									<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'revokeToken', uid: token.uid})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to revoke this token?')" title="Deactivate token">
 										<core:icon identifier="actions-edit-delete" size="small" /> Revoke
-									</f:link.action>
+									</a>
 								</f:if>
 							</td>
 						</tr>

@@ -17,8 +17,9 @@ return [
 				'tokens',
 				'createToken',
 				'revokeToken',
+				'regenerateToken',
 				'providers',
-				'endpoints'
+				'endpoints',
 			],
 		],
 	],

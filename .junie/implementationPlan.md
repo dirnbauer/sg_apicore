@@ -464,6 +464,13 @@ Aus einer konfigurierten TYPO3-Tabelle (TCA) automatisch **CRUD-Endpunkte*- erze
 
 ## Scope (MVP)
 
+### Dein Vorschlag
+
+Zentrale Resource-Registry: Aktuell registrieren wir APIs und Versionen. Für Phase K (TCA-CRUD) wäre es sinnvoll, eine
+ResourceRegistry einzuführen (oder die ApiRegistry zu erweitern), in der wir explizit sagen: "Tabelle tt_content ist als
+Resource unter /contents verfügbar". Das ist sauberer, als dies rein über Attribute zu lösen, da man so Resourcen auch
+projektübergreifend leicht an-/abschalten kann.
+
 ### 1) Resource-Konfiguration
 
 - Konfig pro Resource (Tabelle):

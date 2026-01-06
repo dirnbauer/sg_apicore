@@ -198,6 +198,25 @@ class TokenRepository implements SingletonInterface {
 	}
 
 	/**
+	 * Updates the hash of a token
+	 *
+	 * @param int $uid
+	 * @param string $tokenHash
+	 * @return void
+	 */
+	public function updateTokenHash(int $uid, string $tokenHash): void {
+		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+			?->getQueryBuilderForTable(self::TABLE_NAME);
+
+		$queryBuilder
+			->update(self::TABLE_NAME)
+			->set('token_hash', $tokenHash)
+			->set('tstamp', time())
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)))
+			->executeStatement();
+	}
+
+	/**
 	 * Updates the last used timestamp of a token
 	 *
 	 * @param int $uid

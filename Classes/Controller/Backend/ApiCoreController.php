@@ -31,6 +31,7 @@ use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\TokenService;
+use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
@@ -43,6 +44,7 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 /**
  * Backend Controller for the API Core Module
  */
+#[AsController]
 class ApiCoreController extends ActionController {
 	/**
 	 * @var ApiRegistry
@@ -192,6 +194,29 @@ class ApiCoreController extends ActionController {
 		$this->tokenRepository->revoke($uid);
 		$this->addFlashMessage('Token revoked successfully.');
 		return $this->redirect('tokens');
+	}
+
+	/**
+	 * Regenerate a token key
+	 *
+	 * @param int $uid
+	 * @return ResponseInterface
+	 * @throws \Doctrine\DBAL\Exception
+	 * @throws \Random\RandomException
+	 */
+	public function regenerateTokenAction(int $uid): ResponseInterface {
+		$newTokenKey = $this->tokenService->generateRandomToken();
+		$this->tokenRepository->updateTokenHash($uid, hash('sha256', $newTokenKey));
+
+		$this->addFlashMessage('Token regenerated successfully. Please copy the new key now.');
+
+		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
+		$moduleTemplate->setTitle('API Core - Token Regenerated');
+		$moduleTemplate->assign('tokenKey', $newTokenKey);
+		$moduleTemplate->assign('isRegenerated', TRUE);
+		$moduleTemplate->assign('currentTab', 'tokens');
+		return $moduleTemplate->renderResponse('Backend/ApiCore/TokenCreated');
 	}
 
 	/**

@@ -1,9 +1,15 @@
 <f:layout name="Backend/Default" />
 
 <f:section name="Content">
-	<h1>Token Created</h1>
+	<f:if condition="{isRegenerated}">
+		<f:then><h1>Token Regenerated</h1></f:then>
+		<f:else><h1>Token Created</h1></f:else>
+	</f:if>
 	<div class="alert alert-warning">
-		<h4 class="alert-heading">Copy your token now!</h4>
+		<f:if condition="{isRegenerated}">
+			<f:then><h4 class="alert-heading">Copy your new token key now!</h4></f:then>
+			<f:else><h4 class="alert-heading">Copy your token key now!</h4></f:else>
+		</f:if>
 		<p>For security reasons, this token will only be shown <strong>once</strong>. We store only a SHA-256 hash of it.</p>
 		<hr>
 		<div class="input-group">
@@ -14,19 +20,21 @@
 		</div>
 	</div>
 
-	<h3>Details</h3>
-	<table class="table table-bordered">
-		<tr>
-			<th>API ID</th>
-			<td>{apiId}</td>
-		</tr>
-		<tr>
-			<th>Tenant ID</th>
-			<td>{tenantId}</td>
-		</tr>
-	</table>
+	<f:if condition="!{isRegenerated}">
+		<h3>Details</h3>
+		<table class="table table-bordered">
+			<tr>
+				<th>API ID</th>
+				<td>{apiId}</td>
+			</tr>
+			<tr>
+				<th>Tenant ID</th>
+				<td>{tenantId}</td>
+			</tr>
+		</table>
+	</f:if>
 
-	<f:link.action action="tokens" class="btn btn-primary">Back to Token Management</f:link.action>
+	<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'tokens'})}" class="btn btn-primary">Back to Token Management</a>
 
 	<script>
 		function copyToClipboard() {
