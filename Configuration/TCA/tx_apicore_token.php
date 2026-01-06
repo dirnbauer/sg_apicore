@@ -8,17 +8,45 @@ return [
 		'crdate' => 'crdate',
 		'cruser_id' => 'cruser_id',
 		'delete' => 'deleted',
-		'searchFields' => 'label,token,tenant_id,api_id',
-		'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/content/content-text.svg',
+		'searchFields' => 'label,token_hash,tenant_id,api_id',
+		'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-key.svg',
 		'hideTable' => FALSE,
 		'rootLevel' => 0,
+		'security' => [
+			'ignorePageTypeRestriction' => TRUE,
+		],
+	],
+	'types' => [
+		'0' => ['showitem' => 'label, tenant_id, api_id, token_hash, user_id, is_refresh_token, scopes, expires_at, revoked_at, last_used_at'],
 	],
 	'columns' => [
-		'pid' => [
-			'label' => 'pid',
+		'crdate' => [
 			'config' => [
-				'type' => 'passthrough'
-			]
+				'type' => 'passthrough',
+			],
+		],
+		'tstamp' => [
+			'config' => [
+				'type' => 'passthrough',
+			],
+		],
+		'cruser_id' => [
+			'config' => [
+				'type' => 'passthrough',
+			],
+		],
+		'deleted' => [
+			'config' => [
+				'type' => 'passthrough',
+			],
+		],
+		'label' => [
+			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.label',
+			'config' => [
+				'type' => 'input',
+				'size' => 30,
+				'eval' => 'trim'
+			],
 		],
 		'tenant_id' => [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.tenant_id',
@@ -58,15 +86,8 @@ return [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.is_refresh_token',
 			'config' => [
 				'type' => 'check',
+				'renderType' => 'checkboxToggle',
 				'default' => 0
-			],
-		],
-		'label' => [
-			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.label',
-			'config' => [
-				'type' => 'input',
-				'size' => 30,
-				'eval' => 'trim'
 			],
 		],
 		'scopes' => [
@@ -108,8 +129,5 @@ return [
 				'readOnly' => TRUE,
 			],
 		],
-	],
-	'types' => [
-		'0' => ['showitem' => 'label, tenant_id, api_id, token_hash, user_id, is_refresh_token, scopes, expires_at, revoked_at, last_used_at'],
 	],
 ];
