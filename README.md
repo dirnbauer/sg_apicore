@@ -232,6 +232,36 @@ class MyController {
 }
 ```
 
+## OpenAPI Documentation
+
+The extension automatically generates OpenAPI 3.0 specifications based on your controller attributes.
+
+### Accessing the Documentation
+
+You can access the documentation for any registered API and version:
+
+- **JSON Specification**: `/api/{apiId}/v{version}/docs.json`
+- **Swagger UI**: `/api/{apiId}/v{version}/docs/ui`
+
+For example: `https://your-project.local/api/public/v1/docs/ui`
+
+### CLI Export
+
+You can also export the OpenAPI specification to a file using the CLI:
+
+```bash
+# Export public API v1 to a file
+typo3 api:openapi:generate --api=public --version=1 --out=public-api.json
+
+# Output to stdout
+typo3 api:openapi:generate --api=partner --version=2
+```
+
+### Security Schemes
+
+The generated specification includes a `bearerAuth` security scheme. If an API is not in `public` mode, this security
+scheme is automatically required for all its endpoints.
+
 ### Why not standard TYPO3 Routing?
 
 Standard TYPO3 routing (via Site Configuration and Enhancers) is tightly coupled to the page tree and site handling. For

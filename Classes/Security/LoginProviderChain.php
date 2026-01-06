@@ -35,13 +35,15 @@ class LoginProviderChain implements LoginProviderInterface {
 	/**
 	 * @var LoginProviderInterface[]
 	 */
-	protected array $providers;
+	protected array $providers = [];
 
 	/**
-	 * @param LoginProviderInterface[] $providers
+	 * @param iterable $providers
 	 */
-	public function __construct(array $providers) {
-		$this->providers = $providers;
+	public function __construct(iterable $providers) {
+		foreach ($providers as $provider) {
+			$this->providers[] = $provider;
+		}
 	}
 
 	/**

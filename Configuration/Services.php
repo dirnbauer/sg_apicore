@@ -23,11 +23,20 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 	$services->set(SGalinski\SgApiCore\Service\Router::class)
 		->arg('$controllers', tagged_iterator('sg_apicore.router'));
 
+	$services->set(SGalinski\SgApiCore\Service\OpenApiService::class)
+		->arg('$controllers', tagged_iterator('sg_apicore.router'));
+
+	$services->set(SGalinski\SgApiCore\Controller\OpenApiController::class)
+		->tag('sg_apicore.router');
+
 	$services->set(SGalinski\SgApiCore\Controller\TestController::class)
 		->tag('sg_apicore.router');
 
 	$services->set(SGalinski\SgApiCore\Controller\UserAuthController::class)
 		->tag('sg_apicore.router');
+
+	$services->set(SGalinski\SgApiCore\Command\GenerateOpenApiCommand::class)
+		->tag('console.command', ['command' => 'api:openapi:generate']);
 
 	$services->set(TenantResolverChain::class)
 		->arg('$resolvers', tagged_iterator('sg_apicore.tenant_resolver'));

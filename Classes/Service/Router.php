@@ -43,24 +43,49 @@ use function FastRoute\simpleDispatcher;
  */
 class Router implements SingletonInterface {
 	/**
-	 * @var array
+	 * @var iterable
 	 */
-	protected array $controllers = [];
+	protected iterable $controllers;
 
 	/**
-	 * @param \Traversable $controllers
+	 * @var array|null
 	 */
-	public function __construct(\Traversable $controllers) {
-		foreach ($controllers as $controller) {
-			$this->controllers[] = get_class($controller);
-		}
+	protected ?array $controllerInstances = NULL;
+
+	/**
+	 * @param iterable $controllers
+	 */
+	public function __construct(iterable $controllers) {
+		$this->controllers = $controllers;
 	}
 
 	/**
 	 * @param array $controllers
 	 */
 	public function setControllers(array $controllers): void {
-		$this->controllers = $controllers;
+		$this->controllerInstances = [];
+		foreach ($controllers as $controller) {
+			if (is_string($controller)) {
+				$controller = GeneralUtility::makeInstance($controller);
+			}
+			$this->controllerInstances[get_class($controller)] = $controller;
+		}
+	}
+
+	/**
+	 * Returns all registered controller instances
+	 *
+	 * @return array
+	 */
+	protected function getControllerInstances(): array {
+		if ($this->controllerInstances === NULL) {
+			$this->controllerInstances = [];
+			foreach ($this->controllers as $controller) {
+				$this->controllerInstances[get_class($controller)] = $controller;
+			}
+		}
+
+		return $this->controllerInstances;
 	}
 
 	/**
@@ -82,7 +107,7 @@ class Router implements SingletonInterface {
 		?string $authMode = NULL
 	): ResponseInterface {
 		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version, $authMode) {
-			foreach ($this->controllers as $controllerClass) {
+			foreach ($this->getControllerInstances() as $controllerClass => $controllerInstance) {
 				$reflectionClass = new \ReflectionClass($controllerClass);
 				foreach ($reflectionClass->getMethods() as $method) {
 					$attributes = $method->getAttributes(ApiRoute::class);
@@ -165,7 +190,7 @@ class Router implements SingletonInterface {
 					}
 				}
 
-				$controller = GeneralUtility::makeInstance($handler['controller']);
+				$controller = $this->getControllerInstances()[$handler['controller']];
 				return call_user_func_array([$controller, $handler['action']], [$request, ...array_values($vars)]);
 		}
 
