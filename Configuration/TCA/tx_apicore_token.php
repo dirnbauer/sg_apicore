@@ -16,8 +16,14 @@ return [
 			'ignorePageTypeRestriction' => TRUE,
 		],
 	],
+	'palettes' => [
+		'management' => [
+			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.palette.management',
+			'showitem' => 'user_id, is_refresh_token, --break--, expires_at, revoked_at, last_used_at'
+		],
+	],
 	'types' => [
-		'0' => ['showitem' => 'label, tenant_id, api_id, token_hash, user_id, is_refresh_token, scopes, expires_at, revoked_at, last_used_at'],
+		'0' => ['showitem' => 'label, tenant_id, api_id, token_hash, scopes, --palette--;;management'],
 	],
 	'columns' => [
 		'crdate' => [
@@ -50,6 +56,7 @@ return [
 		],
 		'tenant_id' => [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.tenant_id',
+			'description' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.tenant_id.description',
 			'config' => [
 				'type' => 'input',
 				'size' => 30,
@@ -58,6 +65,7 @@ return [
 		],
 		'api_id' => [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.api_id',
+			'description' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.api_id.description',
 			'config' => [
 				'type' => 'input',
 				'size' => 30,
