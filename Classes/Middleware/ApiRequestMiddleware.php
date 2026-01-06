@@ -196,9 +196,11 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 						$activeProviders
 					);
 
+					// Documentation endpoints should always be accessible without authentication
+					$isDocsPath = $remainingPath === '/docs.json' || str_starts_with($remainingPath, '/docs/ui');
 					if ($authContext !== NULL) {
 						$request = $request->withAttribute('api.auth', $authContext);
-					} elseif ($authMode !== 'public') {
+					} elseif ($authMode !== 'public' && !$isDocsPath) {
 						return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
 					}
 

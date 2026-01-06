@@ -361,4 +361,88 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$this->assertEquals(400, $response->getStatusCode());
 		$this->assertStringContainsString('Tenant Resolution Failed', (string) $response->getBody());
 	}
+
+	public function testProcessAllowsDocsJsonWithoutAuth(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/partner/v1/docs.json');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('partner')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('partner')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
+
+		$tenantResolver = $this->createStub(TenantResolverInterface::class);
+		$tenantResolver->method('resolve')->willReturn(
+			TenantContextResult::success(new TenantContext('test-tenant'))
+		);
+
+		$responseMock = new JsonResponse(['openapi' => '3.0.0'], 200);
+		$router = $this->createMock(Router::class);
+		$router->expects($this->once())
+			->method('dispatch')
+			->willReturn($responseMock);
+
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
+		);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertEquals(200, $response->getStatusCode());
+	}
+
+	public function testProcessAllowsDocsUiWithoutAuth(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/partner/v1/docs/ui');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturn(NULL);
+		$request->method('withAttribute')->willReturn($request);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('hasApi')->with('partner')->willReturn(TRUE);
+		$apiRegistry->method('getApi')->with('partner')->willReturn(['versions' => ['1']]);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
+
+		$tenantResolver = $this->createStub(TenantResolverInterface::class);
+		$tenantResolver->method('resolve')->willReturn(
+			TenantContextResult::success(new TenantContext('test-tenant'))
+		);
+
+		$responseMock = new JsonResponse(['html' => '...'], 200);
+		$router = $this->createMock(Router::class);
+		$router->expects($this->once())
+			->method('dispatch')
+			->willReturn($responseMock);
+
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$apiRegistry,
+			$router,
+			$tenantResolver,
+			$this->createStub(LoginProviderInterface::class),
+			$this->createStub(LogService::class)
+		);
+		$response = $middleware->process($request, $handler);
+
+		$this->assertEquals(200, $response->getStatusCode());
+	}
 }
