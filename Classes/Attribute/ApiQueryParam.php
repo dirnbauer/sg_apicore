@@ -38,12 +38,14 @@ final readonly class ApiQueryParam {
 	 * @param string $type The data type (e.g., string, integer, boolean)
 	 * @param bool $required Whether the parameter is mandatory
 	 * @param string|null $description A description of the parameter
+	 * @param string|null $pattern Optional regex pattern for validation
 	 */
 	public function __construct(
 		public string $name,
 		public string $type = 'string',
 		public bool $required = FALSE,
-		public ?string $description = NULL
+		public ?string $description = NULL,
+		public ?string $pattern = NULL
 	) {
 	}
 }

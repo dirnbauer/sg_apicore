@@ -54,7 +54,8 @@ class RouterTest extends UnitTestCase {
 		}
 		$controllersIterator = new \ArrayIterator($instances);
 		$discoveryService = new EndpointDiscoveryService($controllersIterator);
-		return new Router($controllersIterator, $discoveryService);
+		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
+		return new Router($controllersIterator, $discoveryService, $validator);
 	}
 
 	public function testDispatchMatchesRouteAndCallsController(): void {

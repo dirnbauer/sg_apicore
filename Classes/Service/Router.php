@@ -53,6 +53,11 @@ class Router implements SingletonInterface {
 	protected EndpointDiscoveryService $endpointDiscoveryService;
 
 	/**
+	 * @var RequestValidator
+	 */
+	protected RequestValidator $requestValidator;
+
+	/**
 	 * @var array|null
 	 */
 	protected ?array $controllerInstances = NULL;
@@ -60,10 +65,16 @@ class Router implements SingletonInterface {
 	/**
 	 * @param iterable $controllers
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
+	 * @param RequestValidator $requestValidator
 	 */
-	public function __construct(iterable $controllers, EndpointDiscoveryService $endpointDiscoveryService) {
+	public function __construct(
+		iterable $controllers,
+		EndpointDiscoveryService $endpointDiscoveryService,
+		RequestValidator $requestValidator
+	) {
 		$this->controllers = $controllers;
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
+		$this->requestValidator = $requestValidator;
 	}
 
 	/**
@@ -143,7 +154,8 @@ class Router implements SingletonInterface {
 				$r->addRoute($endpoint['methods'], $endpoint['path'], [
 					'controller' => $endpoint['controller'],
 					'action' => $endpoint['action'],
-					'authMode' => $endpoint['authMode']
+					'authMode' => $endpoint['authMode'],
+					'endpoint' => $endpoint
 				]);
 			}
 		});
@@ -164,7 +176,20 @@ class Router implements SingletonInterface {
 				/** @noinspection MultiAssignmentUsageInspection */
 				$vars = $routeInfo[2];
 
-				// Authentication Enforcement
+				// 1. Validation Enforcement
+				if (isset($handler['endpoint'])) {
+					$validationErrors = $this->requestValidator->validate($request, $handler['endpoint'], $vars);
+					if ($validationErrors !== NULL) {
+						return $this->createErrorResponse(
+							'Validation Failed',
+							'The request parameters are invalid.',
+							400,
+							['errors' => $validationErrors]
+						);
+					}
+				}
+
+				// 2. Authentication Enforcement
 				$reflectionClass = new \ReflectionClass($handler['controller']);
 				$reflectionMethod = $reflectionClass->getMethod($handler['action']);
 
@@ -181,7 +206,7 @@ class Router implements SingletonInterface {
 					return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
 				}
 
-				// Scope Enforcement
+				// 3. Scope Enforcement
 				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
 				if (count($scopeAttributes) > 0) {
 					/** @var RequireScopes $requireScopes */
@@ -222,14 +247,26 @@ class Router implements SingletonInterface {
 	 * @param string $title
 	 * @param string $detail
 	 * @param int $status
+	 * @param array $additionalData
 	 * @return ResponseInterface
 	 */
-	protected function createErrorResponse(string $title, string $detail, int $status): ResponseInterface {
-		return new JsonResponse([
+	protected function createErrorResponse(
+		string $title,
+		string $detail,
+		int $status,
+		array $additionalData = []
+	): ResponseInterface {
+		$response = [
 			'title' => $title,
 			'detail' => $detail,
 			'status' => $status,
 			'type' => 'about:blank'
-		], $status, ['Content-Type' => 'application/problem+json']);
+		];
+
+		if (!empty($additionalData)) {
+			$response = array_merge($response, $additionalData);
+		}
+
+		return new JsonResponse($response, $status, ['Content-Type' => 'application/problem+json']);
 	}
 }

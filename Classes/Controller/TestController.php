@@ -96,10 +96,14 @@ class TestController {
 	 */
 	#[ApiRoute(path: '/test', methods: ['GET'], apiId: 'public', version: '1')]
 	#[ApiEndpoint(summary: 'Public API test', tags: ['Test'])]
+	#[ApiQueryParam(name: 'code', type: 'string', required: TRUE, pattern: '/^[A-Z]{3}$/')]
 	public function publicTest(ServerRequestInterface $request): ResponseInterface {
+		$params = $request->getQueryParams();
+		$code = $params['code'] ?? '';
 		return $this->responseService->createSuccessResponse([
 			'api' => 'public',
 			'version' => '1',
+			'code' => $code,
 			'message' => 'Public API test successful'
 		]);
 	}
@@ -213,8 +217,9 @@ class TestController {
 		description: 'Returns a single example item by its unique ID.',
 		tags: ['Examples']
 	)]
-	#[ApiPathParam(name: 'id', type: 'integer', description: 'The unique ID of the example')]
+	#[ApiPathParam(name: 'id', type: 'integer', description: 'The unique ID of the example', pattern: '/^\d+$/')]
 	#[ApiResponse(status: 200, description: 'Success', schema: 'ExampleItem')]
+	#[ApiResponse(status: 400, description: 'Validation failed')]
 	#[ApiResponse(status: 404, description: 'Example not found')]
 	public function getAction(ServerRequestInterface $request, string $id): ResponseInterface {
 		if ($id === '1') {

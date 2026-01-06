@@ -70,11 +70,33 @@ $myModel = $this->propertyMapper->convert($data, MyModel::class);
 $results = $this->validatorResolver->getBaseValidatorConjunction(MyModel::class)->validate($myModel);
 ```
 
-## Parameter Types
+## Parameter Types & Validation
 
-* **Path Parameters**: Passed directly as arguments to the method (e.g., `$id`).
-* **Query Parameters**: Via `$request->getQueryParams()`.
-* **Body Parameters**: Via `$request->getParsedBody()` (JSON bodies are automatically parsed by the middleware).
+The extension supports automatic validation of parameters based on the attributes used in your controller.
+
+* **Path Parameters**: Defined via `#[ApiPathParam]`. Passed directly as arguments to the method (e.g., `$id`).
+* **Query Parameters**: Defined via `#[ApiQueryParam]`. Access via `$request->getQueryParams()`.
+* **Body Parameters**: Defined via `#[ApiBodyParam]`. Access via `$request->getParsedBody()` (JSON bodies are
+  automatically parsed by the middleware).
+
+### Validation Constraints
+
+You can add validation constraints to these attributes:
+
+* `type`: The expected data type (`string`, `integer`, `float`, `boolean`).
+* `required`: Whether the parameter must be present (default: `true` for body, `false` for query).
+* `pattern`: An optional regular expression (PCRE) the value must match.
+
+Example:
+
+```php
+#[ApiRoute(path: '/search', methods: ['GET'])]
+#[ApiQueryParam(name: 'query', type: 'string', required: true, pattern: '/^[a-z0-9 ]+$/i')]
+#[ApiQueryParam(name: 'page', type: 'integer', description: 'Page number')]
+public function searchAction(ServerRequestInterface $request): ResponseInterface {
+    // If validation fails, the router returns a 400 Bad Request before this method is called.
+}
+```
 
 ## Standardized Responses
 
