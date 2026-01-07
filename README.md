@@ -100,6 +100,11 @@ missing).
 The `TcaMapper` service allows you to map TYPO3 database records to API response arrays based on the TCA.
 See [TCA Mapper Documentation](docs/TcaMapper.md).
 
+## Auto-CRUD Resources
+
+You can expose TYPO3 tables as API resources with full CRUD support.
+See [Auto-CRUD Resources Documentation](docs/Resources.md).
+
 ## OpenAPI Documentation
 
 The extension automatically generates OpenAPI 3.0 specifications. You can access Swagger UI at
@@ -132,4 +137,4 @@ See [Authentication & Scopes](docs/AuthScopes.md).
 
 ## Architectural Decisions
 
-For information on why we chose certain technologies and patterns, see our [Architectural Decision Records](docs/adr/).
+For information on why we chose certain technologies and patterns, see our Architectural Decision Records at docs/adr/.

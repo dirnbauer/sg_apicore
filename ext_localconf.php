@@ -20,6 +20,28 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 		'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider']
 	]);
 
+	$resourceRegistry = GeneralUtility::makeInstance(\SGalinski\SgApiCore\Service\ResourceRegistry::class);
+	$resourceRegistry->registerResource('public', 'tt_content', '/contents', [
+		'allowedOperations' => ['list', 'get'],
+		'readFields' => ['uid', 'pid', 'header', 'bodytext', 'CType']
+	]);
+	$resourceRegistry->registerResource('partner', 'tt_content', '/contents', [
+		'allowedOperations' => ['list', 'get', 'create', 'update', 'delete'],
+		'writeFields' => ['header', 'bodytext', 'pid'],
+		'requiredScopes' => [
+			'list' => ['partner:read'],
+			'get' => ['partner:read'],
+			'create' => ['partner:write'],
+			'update' => ['partner:write'],
+			'delete' => ['partner:write'],
+		]
+	]);
+
+	$resourceRegistry->registerResource('public', 'pages', '/pages', [
+		'allowedOperations' => ['list', 'get'],
+		'readFields' => ['uid', 'pid', 'title', 'doktype', 'slug']
+	]);
+
 	// Default Log Configuration
 	$GLOBALS['TYPO3_CONF_VARS']['LOG']['SGalinski']['SgApiCore']['Service']['LogService']['writerConfiguration'] = [
 		LogLevel::INFO => [

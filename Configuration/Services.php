@@ -37,6 +37,9 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 	$services->set(SGalinski\SgApiCore\Controller\UserAuthController::class)
 		->tag('sg_apicore.router');
 
+	$services->set(SGalinski\SgApiCore\Controller\ResourceController::class)
+		->tag('sg_apicore.router');
+
 	$services->set(SGalinski\SgApiCore\Command\GenerateOpenApiCommand::class)
 		->tag('console.command', ['command' => 'api:openapi:generate']);
 

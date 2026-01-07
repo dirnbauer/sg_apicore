@@ -28,6 +28,7 @@ namespace SGalinski\SgApiCore\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Service\OpenApiService;
 use TYPO3\CMS\Core\Http\HtmlResponse;
@@ -57,6 +58,7 @@ class OpenApiController {
 	 * @throws \ReflectionException
 	 */
 	#[ApiRoute(path: '/docs.json', methods: ['GET'], authMode: 'public')]
+	#[ApiEndpoint(summary: 'openAPI Docs', tags: ['OpenAPI'])]
 	public function jsonAction(ServerRequestInterface $request): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
@@ -72,6 +74,7 @@ class OpenApiController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/docs/ui', methods: ['GET'], authMode: 'public')]
+	#[ApiEndpoint(summary: 'openAPI Docs UI', tags: ['OpenAPI'])]
 	public function uiAction(ServerRequestInterface $request): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');

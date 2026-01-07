@@ -44,15 +44,20 @@ class PaginationService implements SingletonInterface {
 	 */
 	public function getPaginationParams(ServerRequestInterface $request): array {
 		$queryParams = $request->getQueryParams();
-		$offset = max(0, (int) ($queryParams['offset'] ?? 0));
-		$limit = (int) ($queryParams['limit'] ?? self::DEFAULT_LIMIT);
 
+		$limit = (int) ($queryParams['perPage'] ?? $queryParams['limit'] ?? self::DEFAULT_LIMIT);
 		if ($limit <= 0) {
 			$limit = self::DEFAULT_LIMIT;
 		}
-
 		if ($limit > self::MAX_LIMIT) {
 			$limit = self::MAX_LIMIT;
+		}
+
+		if (isset($queryParams['page'])) {
+			$page = max(1, (int) $queryParams['page']);
+			$offset = ($page - 1) * $limit;
+		} else {
+			$offset = max(0, (int) ($queryParams['offset'] ?? 0));
 		}
 
 		return [
@@ -70,11 +75,16 @@ class PaginationService implements SingletonInterface {
 	 * @return array
 	 */
 	public function buildPaginationMeta(int $total, int $offset, int $limit): array {
+		$page = (int) floor($offset / $limit) + 1;
+		$pages = (int) ceil($total / $limit);
+
 		return [
 			'total' => $total,
 			'offset' => $offset,
 			'limit' => $limit,
-			'count' => min($limit, max(0, $total - $offset))
+			'count' => min($limit, max(0, $total - $offset)),
+			'page' => $page,
+			'pages' => $pages
 		];
 	}
 }

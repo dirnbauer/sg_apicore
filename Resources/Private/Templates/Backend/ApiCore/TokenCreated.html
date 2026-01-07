@@ -1,4 +1,4 @@
-<f:layout name="Backend/Default" />
+<f:layout name="Backend/Default"/>
 
 <f:section name="Content">
 	<f:if condition="{isRegenerated}">
@@ -10,7 +10,8 @@
 			<f:then><h4 class="alert-heading">Copy your new token key now!</h4></f:then>
 			<f:else><h4 class="alert-heading">Copy your token key now!</h4></f:else>
 		</f:if>
-		<p>For security reasons, this token will only be shown <strong>once</strong>. We store only a SHA-256 hash of it.</p>
+		<p>For security reasons, this token will only be shown <strong>once</strong>. We store only a SHA-256 hash of
+			it.</p>
 		<hr>
 		<div class="input-group">
 			<input type="text" class="form-control form-control-lg" value="{tokenKey}" readonly id="tokenKey">
@@ -34,7 +35,8 @@
 		</table>
 	</f:if>
 
-	<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'tokens'})}" class="btn btn-primary">Back to Token Management</a>
+	<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'tokens'})}" class="btn btn-primary">Back to
+		Token Management</a>
 
 	<script>
 		function copyToClipboard() {

@@ -27,12 +27,9 @@
 namespace SGalinski\SgApiCore\Service;
 
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
-use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
-use SGalinski\SgApiCore\Attribute\ApiRoute;
-use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 
@@ -104,7 +101,8 @@ class OpenApiService implements SingletonInterface {
 						'type' => 'http',
 						'scheme' => 'bearer'
 					]
-				]
+				],
+				'schemas' => []
 			]
 		];
 
@@ -112,17 +110,14 @@ class OpenApiService implements SingletonInterface {
 			$spec['security'] = [['bearerAuth' => []]];
 		}
 
-		foreach ($this->endpointDiscoveryService->getAllEndpoints() as $endpoint) {
+		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+		foreach ($endpoints as $endpoint) {
 			// Filter by API ID, version and auth mode if specified
-			if (!empty($endpoint['apiId'])) {
-				if (!in_array($apiId, $endpoint['apiId'], TRUE)) {
-					continue;
-				}
+			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+				continue;
 			}
-			if (!empty($endpoint['version'])) {
-				if (!in_array($version, $endpoint['version'], TRUE)) {
-					continue;
-				}
+			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+				continue;
 			}
 			if (!empty($endpoint['authMode'])) {
 				// Visibility logic
@@ -133,6 +128,14 @@ class OpenApiService implements SingletonInterface {
 					}
 				} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
 					continue;
+				}
+			}
+
+			// Collect schemas for resources
+			if (isset($endpoint['resource'])) {
+				$tableName = $endpoint['resource']['table'];
+				if (!isset($spec['components']['schemas'][$tableName])) {
+					$spec['components']['schemas'][$tableName] = $this->generateResourceSchema($endpoint);
 				}
 			}
 
@@ -168,16 +171,35 @@ class OpenApiService implements SingletonInterface {
 
 		// Request Body (JSON)
 		if (count($endpoint['bodyParams']) > 0) {
-			$properties = [];
-			$required = [];
-			/** @var ApiBodyParam $param */
-			foreach ($endpoint['bodyParams'] as $param) {
-				$properties[$param->name] = [
-					'type' => $this->mapPhpTypeToOpenApi($param->type),
-					'description' => $param->description
+			$schema = [];
+			if (isset($endpoint['resource']) && str_contains($endpoint['action'], 'create')) {
+				// Use the resource schema for creation
+				$schema = ['$ref' => '#/components/schemas/' . $endpoint['resource']['table']];
+			} elseif (isset($endpoint['resource']) && str_contains($endpoint['action'], 'update')) {
+				// PATCH is a partial update, so we can't strictly use the full required schema,
+				// But for the UI, showing the resource schema is helpful.
+				$schema = ['$ref' => '#/components/schemas/' . $endpoint['resource']['table']];
+			} else {
+				$properties = [];
+				$required = [];
+				/** @var ApiBodyParam $param */
+				foreach ($endpoint['bodyParams'] as $param) {
+					$properties[$param->name] = [
+						'type' => $this->mapPhpTypeToOpenApi($param->type),
+						'description' => $param->description
+					];
+					if ($param->required) {
+						$required[] = $param->name;
+					}
+				}
+
+				$schema = [
+					'type' => 'object',
+					'properties' => $properties
 				];
-				if ($param->required) {
-					$required[] = $param->name;
+
+				if (!empty($required)) {
+					$schema['required'] = $required;
 				}
 			}
 
@@ -185,17 +207,10 @@ class OpenApiService implements SingletonInterface {
 				'required' => TRUE,
 				'content' => [
 					'application/json' => [
-						'schema' => [
-							'type' => 'object',
-							'properties' => $properties
-						]
+						'schema' => $schema
 					]
 				]
 			];
-
-			if (!empty($required)) {
-				$operation['requestBody']['content']['application/json']['schema']['required'] = $required;
-			}
 		}
 
 		// Parameters (Query, Path)
@@ -230,7 +245,7 @@ class OpenApiService implements SingletonInterface {
 			if ($response->schema) {
 				$resp['content'] = [
 					'application/json' => [
-						'schema' => $this->parseSchema($response->schema)
+						'schema' => $this->parseSchema($response->schema, array_keys($spec['components']['schemas'] ?? []))
 					]
 				];
 			}
@@ -245,6 +260,51 @@ class OpenApiService implements SingletonInterface {
 		foreach ($endpoint['methods'] as $httpMethod) {
 			$spec['paths'][$path][strtolower($httpMethod)] = $operation;
 		}
+	}
+
+	/**
+	 * Generates an OpenAPI schema for a resource based on the endpoint metadata
+	 *
+	 * @param array $endpoint
+	 * @return array
+	 */
+	protected function generateResourceSchema(array $endpoint): array {
+		$properties = [];
+		$required = [];
+
+		if (isset($endpoint['resource']['fieldMetadata'])) {
+			foreach ($endpoint['resource']['fieldMetadata'] as $fieldName => $meta) {
+				$properties[$fieldName] = [
+					'type' => $this->mapPhpTypeToOpenApi($meta['type']),
+					'description' => $meta['description']
+				];
+			}
+		}
+
+		// Also check bodyParams for required flags or additional info
+		/** @var ApiBodyParam $param */
+		foreach ($endpoint['bodyParams'] as $param) {
+			if (!isset($properties[$param->name])) {
+				$properties[$param->name] = [
+					'type' => $this->mapPhpTypeToOpenApi($param->type),
+					'description' => $param->description
+				];
+			}
+			if ($param->required) {
+				$required[] = $param->name;
+			}
+		}
+
+		$schema = [
+			'type' => 'object',
+			'properties' => $properties
+		];
+
+		if (!empty($required)) {
+			$schema['required'] = array_unique($required);
+		}
+
+		return $schema;
 	}
 
 	/**
@@ -267,15 +327,29 @@ class OpenApiService implements SingletonInterface {
 	 * Very basic schema parser (handles primitives and "Item[]" for arrays)
 	 *
 	 * @param string $schemaStr
+	 * @param array $knownSchemas
 	 * @return array
 	 */
-	protected function parseSchema(string $schemaStr): array {
+	protected function parseSchema(string $schemaStr, array $knownSchemas = []): array {
 		if (str_ends_with($schemaStr, '[]')) {
+			$baseSchema = substr($schemaStr, 0, -2);
+			if (in_array($baseSchema, $knownSchemas, TRUE)) {
+				return [
+					'type' => 'array',
+					'items' => ['$ref' => '#/components/schemas/' . $baseSchema]
+				];
+			}
+
 			return [
 				'type' => 'array',
-				'items' => ['type' => 'object', 'description' => substr($schemaStr, 0, -2)]
+				'items' => ['type' => 'object', 'description' => $baseSchema]
 			];
 		}
+
+		if (in_array($schemaStr, $knownSchemas, TRUE)) {
+			return ['$ref' => '#/components/schemas/' . $schemaStr];
+		}
+
 		return ['type' => 'object', 'description' => $schemaStr];
 	}
 }

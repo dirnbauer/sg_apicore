@@ -1,4 +1,4 @@
-<f:layout name="Backend/Default" />
+<f:layout name="Backend/Default"/>
 
 <f:section name="Content">
 	<h1>API Endpoints Overview</h1>
@@ -6,94 +6,98 @@
 
 	<table class="table table-striped table-hover">
 		<thead>
-			<tr>
-				<th>Method</th>
-				<th>Path</th>
-				<th>API / Version</th>
-				<th>Summary / Auth</th>
-				<th>Scopes</th>
-				<th>Actions</th>
-			</tr>
+		<tr>
+			<th>Method</th>
+			<th>Path</th>
+			<th>API / Version</th>
+			<th>Summary / Auth</th>
+			<th>Scopes</th>
+			<th>Actions</th>
+		</tr>
 		</thead>
 		<tbody>
-			<f:for each="{endpoints}" as="endpoint">
-				<tr>
-					<td>
-						<f:for each="{endpoint.methods}" as="method">
-							<span class="badge {f:if(condition: '{method} == \'GET\'', then: 'badge-success', else: '{f:if(condition: \'{method} == \\\'POST\\\'\', then: \'badge-primary\', else: \'badge-warning\')}')}">{method}</span>
-						</f:for>
-					</td>
-					<td><code>{endpoint.path}</code></td>
-					<td>
-						<f:if condition="{endpoint.apiId}">
-							<f:then>
-								<f:for each="{endpoint.apiId}" as="apiId" iteration="it">
-									<span class="badge badge-info">{apiId}</span>{f:if(condition: it.isLast, else: ' ')}
-								</f:for>
-							</f:then>
-							<f:else>
-								<span class="badge badge-info">global</span>
-							</f:else>
-						</f:if>
-						<br />
-						<f:if condition="{endpoint.version}">
-							<f:then>
-								<f:for each="{endpoint.version}" as="version" iteration="it">
-									<span class="badge badge-secondary">v{version}</span>{f:if(condition: it.isLast, else: ' ')}
-								</f:for>
-							</f:then>
-							<f:else>
-								<span class="badge badge-secondary">v1</span>
-							</f:else>
-						</f:if>
-					</td>
-					<td>
-						<strong>{endpoint.summary}</strong>
-						<br /><small class="text-muted">Auth: <code>
-							<f:if condition="{endpoint.authMode}">
-								<f:then>
-									<f:for each="{endpoint.authMode}" as="mode" iteration="it">
-										{mode}{f:if(condition: it.isLast, else: ', ')}
-									</f:for>
-								</f:then>
-								<f:else>
-									default
-								</f:else>
-							</f:if>
-						</code></small>
-					</td>
-					<td>
-						<f:if condition="{endpoint.scopes}">
-							<f:then>
-								<f:for each="{endpoint.scopes}" as="scope">
-									<span class="badge badge-outline-dark">{scope}</span>
-								</f:for>
-							</f:then>
-							<f:else>-</f:else>
-						</f:if>
-					</td>
-					<td>
-						<f:if condition="{endpoint.apiId -> f:count()} == 1">
-							<f:then>
-								<f:for each="{endpoint.apiId}" as="apiId">
-									<f:if condition="{endpoint.version -> f:count()} == 1">
-										<f:then>
-											<f:for each="{endpoint.version}" as="version">
-												<a href="/api/{apiId}/v{version}/docs/ui" target="_blank" class="btn btn-default btn-sm" title="View in Swagger UI">
-													<core:icon identifier="actions-document-view" size="small" /> Docs
-												</a>
-											</f:for>
-										</f:then>
-										<f:else>
-											<!-- Multiple versions, docs link might be ambiguous here if we want a single button -->
-										</f:else>
-									</f:if>
-								</f:for>
-							</f:then>
-						</f:if>
-					</td>
-				</tr>
-			</f:for>
+		<f:for each="{endpoints}" as="endpoint">
+			<tr>
+				<td>
+					<f:for each="{endpoint.methods}" as="method">
+						<span
+							class="badge {f:if(condition: '{method} == \'GET\'', then: 'badge-success', else: '{f:if(condition: \'{method} == \\\'POST\\\'\', then: \'badge-primary\', else: \'badge-warning\')}')}">{method}</span>
+					</f:for>
+				</td>
+				<td><code>{endpoint.path}</code></td>
+				<td>
+					<f:if condition="{endpoint.apiId}">
+						<f:then>
+							<f:for each="{endpoint.apiId}" as="apiId" iteration="it">
+								<span class="badge badge-info">{apiId}</span>{f:if(condition: it.isLast, else: ' ')}
+							</f:for>
+						</f:then>
+						<f:else>
+							<span class="badge badge-info">global</span>
+						</f:else>
+					</f:if>
+					<br/>
+					<f:if condition="{endpoint.version}">
+						<f:then>
+							<f:for each="{endpoint.version}" as="version" iteration="it">
+								<span class="badge badge-secondary">v{version}</span>{f:if(condition: it.isLast, else: '
+								')}
+							</f:for>
+						</f:then>
+						<f:else>
+							<span class="badge badge-secondary">v1</span>
+						</f:else>
+					</f:if>
+				</td>
+				<td>
+					<strong>{endpoint.summary}</strong>
+					<br/><small class="text-muted">Auth: <code>
+					<f:if condition="{endpoint.authMode}">
+						<f:then>
+							<f:for each="{endpoint.authMode}" as="mode" iteration="it">
+								{mode}{f:if(condition: it.isLast, else: ', ')}
+							</f:for>
+						</f:then>
+						<f:else>
+							default
+						</f:else>
+					</f:if>
+				</code></small>
+				</td>
+				<td>
+					<f:if condition="{endpoint.scopes}">
+						<f:then>
+							<f:for each="{endpoint.scopes}" as="scope">
+								<span class="badge badge-outline-dark">{scope}</span>
+							</f:for>
+						</f:then>
+						<f:else>-</f:else>
+					</f:if>
+				</td>
+				<td>
+					<f:if condition="{endpoint.apiId -> f:count()} == 1">
+						<f:then>
+							<f:for each="{endpoint.apiId}" as="apiId">
+								<f:if condition="{endpoint.version -> f:count()} == 1">
+									<f:then>
+										<f:for each="{endpoint.version}" as="version">
+											<a href="/api/{apiId}/v{version}/docs/ui" target="_blank"
+											   class="btn btn-default btn-sm" title="View in Swagger UI">
+												<core:icon identifier="actions-document-view" size="small"/>
+												Docs
+											</a>
+										</f:for>
+									</f:then>
+									<f:else>
+										<!-- Multiple versions, docs link might be ambiguous here if we want a single button -->
+									</f:else>
+								</f:if>
+							</f:for>
+						</f:then>
+					</f:if>
+				</td>
+			</tr>
+		</f:for>
 		</tbody>
 	</table>
 </f:section>

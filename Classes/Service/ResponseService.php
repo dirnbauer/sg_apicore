@@ -56,7 +56,7 @@ class ResponseService implements SingletonInterface {
 	 * @return ResponseInterface
 	 */
 	public function createSuccessResponse(mixed $data, array $meta = [], int $status = 200): ResponseInterface {
-		if ($this->extensionConfiguration->isResponseEnvelopeEnabled()) {
+		if ($this->extensionConfiguration->isResponseEnvelopeEnabled() || count($meta) > 0) {
 			$response = [
 				'data' => $data
 			];

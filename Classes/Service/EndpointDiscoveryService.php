@@ -33,6 +33,7 @@ use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
+use SGalinski\SgApiCore\Controller\ResourceController;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
@@ -51,8 +52,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 	/**
 	 * @param iterable $controllers
+	 * @param ResourceRegistry $resourceRegistry
 	 */
-	public function __construct(iterable $controllers) {
+	public function __construct(
+		iterable $controllers,
+		protected ResourceRegistry $resourceRegistry
+	) {
 		$this->controllers = $controllers;
 	}
 
@@ -101,11 +106,14 @@ class EndpointDiscoveryService implements SingletonInterface {
 					}
 
 					$endpoints[] = [
-						'apiId' => is_array($route->apiId) ? $route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
-						'version' => is_array($route->version) ? $route->version : ($route->version !== NULL ? [$route->version] : []),
+						'apiId' => is_array($route->apiId) ?
+							$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
+						'version' => is_array($route->version) ?
+							$route->version : ($route->version !== NULL ? [$route->version] : []),
 						'path' => $route->path,
 						'methods' => $route->methods,
-						'authMode' => is_array($route->authMode) ? $route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
+						'authMode' => is_array($route->authMode) ?
+							$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
 						'summary' => $endpoint?->summary ?? $method->getName(),
 						'description' => $endpoint?->description ?? '',
 						'tags' => $endpoint?->tags ?? [],
@@ -121,6 +129,238 @@ class EndpointDiscoveryService implements SingletonInterface {
 			}
 		}
 
+		// Add resource-based endpoints
+		foreach ($this->resourceRegistry->getResources() as $apiId => $resources) {
+			foreach ($resources as $config) {
+				/** @noinspection SlowArrayOperationsInLoopInspection */
+				$endpoints = array_merge($endpoints, $this->generateResourceEndpoints((string) $apiId, $config));
+			}
+		}
+
+		return $endpoints;
+	}
+
+	/**
+	 * Generates CRUD endpoints for a resource
+	 *
+	 * @param string $apiId
+	 * @param array $config
+	 * @return array
+	 */
+	protected function generateResourceEndpoints(string $apiId, array $config): array {
+		$endpoints = [];
+		$basePath = '/' . ltrim($config['basePath'], '/');
+		$tableName = $config['table'];
+		$allowedOps = $config['allowedOperations'];
+		$scopes = $config['requiredScopes'] ?? [];
+		$writeFields = $config['writeFields'] ?? [];
+		$readFields = $config['readFields'] ?? [];
+		$allFields = array_unique(array_merge($readFields, $writeFields));
+
+		// Determine field metadata from TCA
+		$fieldMetadata = [];
+		$tca = $GLOBALS['TCA'][$tableName] ?? [];
+		foreach ($allFields as $fieldName) {
+			$type = 'string';
+			$description = 'Field: ' . $fieldName;
+			if (isset($tca['columns'][$fieldName]['config'])) {
+				$colConfig = $tca['columns'][$fieldName]['config'];
+				$tcaType = $colConfig['type'] ?? '';
+				switch ($tcaType) {
+					case 'check':
+						$type = 'boolean';
+						break;
+					case 'number':
+						$type = str_contains($colConfig['format'] ?? '', 'decimal') ? 'float' : 'integer';
+						break;
+					case 'input':
+						if (isset($colConfig['eval']) && str_contains($colConfig['eval'], 'int')) {
+							$type = 'integer';
+						}
+						break;
+				}
+				if (isset($tca['columns'][$fieldName]['label'])) {
+					$description = $tca['columns'][$fieldName]['label'];
+				}
+			}
+			$fieldMetadata[$fieldName] = [
+				'name' => $fieldName,
+				'type' => $type,
+				'description' => $description
+			];
+		}
+
+		// Body params for write operations
+		$bodyParams = [];
+		foreach ($writeFields as $fieldName) {
+			if (isset($fieldMetadata[$fieldName])) {
+				$meta = $fieldMetadata[$fieldName];
+				$bodyParams[] = new ApiBodyParam(
+					name: $meta['name'],
+					type: $meta['type'],
+					required: FALSE,
+					description: $meta['description']
+				);
+			}
+		}
+
+		$resourceInfo = $config;
+		$resourceInfo['fieldMetadata'] = $fieldMetadata;
+
+		// List
+		if (in_array('list', $allowedOps, TRUE)) {
+			$endpoints[] = [
+				'apiId' => [$apiId],
+				'version' => [], // All versions of this API
+				'path' => $basePath,
+				'methods' => ['GET'],
+				'authMode' => [], // Default
+				'summary' => 'List ' . $tableName,
+				'description' => 'Returns a paginated list of ' . $tableName . ' resources.',
+				'tags' => [$tableName],
+				'scopes' => $scopes['list'] ?? [],
+				'bodyParams' => [],
+				'queryParams' => [
+					new ApiQueryParam(
+						name: 'page',
+						type: 'integer',
+						required: FALSE,
+						description: 'Page number (1-based)'
+					),
+					new ApiQueryParam(
+						name: 'perPage',
+						type: 'integer',
+						required: FALSE,
+						description: 'Items per page'
+					),
+					new ApiQueryParam(
+						name: 'sort',
+						type: 'string',
+						required: FALSE,
+						description: 'Sort field (prefix with - for DESC)'
+					),
+					new ApiQueryParam(
+						name: 'filter',
+						type: 'array',
+						required: FALSE,
+						description: 'Filter by fields: filter[field]=value'
+					),
+				],
+				'pathParams' => [],
+				'responses' => [
+					new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')
+				],
+				'controller' => ResourceController::class,
+				'action' => 'listAction',
+				'resource' => $resourceInfo
+			];
+		}
+
+		// Get
+		if (in_array('get', $allowedOps, TRUE)) {
+			$endpoints[] = [
+				'apiId' => [$apiId],
+				'version' => [],
+				'path' => $basePath . '/{id}',
+				'methods' => ['GET'],
+				'authMode' => [],
+				'summary' => 'Get ' . $tableName,
+				'description' => 'Returns a single ' . $tableName . ' resource by ID.',
+				'tags' => [$tableName],
+				'scopes' => $scopes['get'] ?? [],
+				'bodyParams' => [],
+				'queryParams' => [],
+				'pathParams' => [
+					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
+				],
+				'responses' => [
+					new ApiResponse(status: 200, description: 'Success', schema: $tableName),
+					new ApiResponse(status: 404, description: 'Not Found')
+				],
+				'controller' => ResourceController::class,
+				'action' => 'getAction',
+				'resource' => $resourceInfo
+			];
+		}
+
+		// Create (POST)
+		if (in_array('create', $allowedOps, TRUE)) {
+			$endpoints[] = [
+				'apiId' => [$apiId],
+				'version' => [],
+				'path' => $basePath,
+				'methods' => ['POST'],
+				'authMode' => [],
+				'summary' => 'Create ' . $tableName,
+				'description' => 'Creates a new ' . $tableName . ' resource.',
+				'tags' => [$tableName],
+				'scopes' => $scopes['create'] ?? [],
+				'bodyParams' => $bodyParams,
+				'queryParams' => [],
+				'pathParams' => [],
+				'responses' => [
+					new ApiResponse(status: 201, description: 'Created', schema: $tableName)
+				],
+				'controller' => ResourceController::class,
+				'action' => 'createAction',
+				'resource' => $resourceInfo
+			];
+		}
+
+		// Update (PATCH)
+		if (in_array('update', $allowedOps, TRUE)) {
+			$endpoints[] = [
+				'apiId' => [$apiId],
+				'version' => [],
+				'path' => $basePath . '/{id}',
+				'methods' => ['PATCH'],
+				'authMode' => [],
+				'summary' => 'Update ' . $tableName,
+				'description' => 'Updates an existing ' . $tableName . ' resource.',
+				'tags' => [$tableName],
+				'scopes' => $scopes['update'] ?? [],
+				'bodyParams' => $bodyParams,
+				'queryParams' => [],
+				'pathParams' => [
+					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
+				],
+				'responses' => [
+					new ApiResponse(status: 200, description: 'Updated', schema: $tableName),
+					new ApiResponse(status: 404, description: 'Not Found')
+				],
+				'controller' => ResourceController::class,
+				'action' => 'updateAction',
+				'resource' => $resourceInfo
+			];
+		}
+
+		// Delete
+		if (in_array('delete', $allowedOps, TRUE)) {
+			$endpoints[] = [
+				'apiId' => [$apiId],
+				'version' => [],
+				'path' => $basePath . '/{id}',
+				'methods' => ['DELETE'],
+				'authMode' => [],
+				'summary' => 'Delete ' . $tableName,
+				'description' => 'Deletes a ' . $tableName . ' resource.',
+				'tags' => [$tableName],
+				'scopes' => $scopes['delete'] ?? [],
+				'bodyParams' => [],
+				'queryParams' => [],
+				'pathParams' => [
+					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
+				],
+				'responses' => [
+					new ApiResponse(status: 204, description: 'Deleted'),
+					new ApiResponse(status: 404, description: 'Not Found')
+				],
+				'controller' => ResourceController::class,
+				'action' => 'deleteAction',
+				'resource' => $resourceInfo
+			];
+		}
+
 		return $endpoints;
 	}
 
@@ -128,6 +368,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * Returns the class names of all registered controllers
 	 *
 	 * @return array
+	 * @throws \ReflectionException
 	 */
 	protected function getControllerClasses(): array {
 		if ($this->controllerClasses === NULL) {

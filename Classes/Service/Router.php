@@ -30,7 +30,6 @@ use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -155,7 +154,8 @@ class Router implements SingletonInterface {
 					'controller' => $endpoint['controller'],
 					'action' => $endpoint['action'],
 					'authMode' => $endpoint['authMode'],
-					'endpoint' => $endpoint
+					'endpoint' => $endpoint,
+					'resource' => $endpoint['resource'] ?? NULL
 				]);
 			}
 		});
@@ -175,6 +175,10 @@ class Router implements SingletonInterface {
 				$handler = $routeInfo[1];
 				/** @noinspection MultiAssignmentUsageInspection */
 				$vars = $routeInfo[2];
+
+				if (isset($handler['resource'])) {
+					$request = $request->withAttribute('api.resource', $handler['resource']);
+				}
 
 				// 1. Validation Enforcement
 				if (isset($handler['endpoint'])) {

@@ -160,7 +160,7 @@ class TestController {
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
 	 */
-	#[ApiRoute(path: '/admin-test', methods: ['GET'], version: '1')]
+	#[ApiRoute(path: '/admin-test', methods: ['GET'], apiId: ['partner', 'user'], version: '1')]
 	#[ApiEndpoint(summary: 'Admin test', tags: ['Test'])]
 	#[RequireScopes(['admin', 'super-admin'])]
 	public function adminTest(ServerRequestInterface $request): ResponseInterface {
@@ -227,46 +227,5 @@ class TestController {
 		}
 
 		return $this->responseService->createErrorResponse('Not Found', 'The requested example was not found.', 404);
-	}
-
-	/**
-	 * Demonstration of TcaMapper with tt_content
-	 *
-	 * @param ServerRequestInterface $request
-	 * @return ResponseInterface
-	 */
-	#[ApiRoute(path: '/tca-test', methods: ['GET'], apiId: 'public', version: '1')]
-	#[ApiEndpoint(summary: 'TCA Mapper test', tags: ['Test'])]
-	public function tcaTest(ServerRequestInterface $request): ResponseInterface {
-		// Mock record for demonstration (as we might not have real DB access/records here)
-		$record = [
-			'uid' => 42,
-			'pid' => 1,
-			'header' => 'Example Header',
-			'bodytext' => '<p>Example bodytext</p>',
-			'hidden' => 0,
-			'tstamp' => time(),
-			'crdate' => time(),
-			'CType' => 'text',
-		];
-
-		// We need to ensure TCA is loaded for the mapper to work properly
-		// In a real TYPO3 context, $GLOBALS['TCA'] would be populated.
-		if (!isset($GLOBALS['TCA']['tt_content'])) {
-			$GLOBALS['TCA']['tt_content'] = [
-				'columns' => [
-					'uid' => ['config' => ['type' => 'number']],
-					'pid' => ['config' => ['type' => 'number']],
-					'header' => ['config' => ['type' => 'input']],
-					'bodytext' => ['config' => ['type' => 'text']],
-					'CType' => ['config' => ['type' => 'select']],
-					'hidden' => ['config' => ['type' => 'check']],
-				]
-			];
-		}
-
-		$mappedRecord = $this->tcaMapper->mapRecord('tt_content', $record);
-
-		return $this->responseService->createSuccessResponse($mappedRecord);
 	}
 }

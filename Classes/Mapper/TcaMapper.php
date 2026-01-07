@@ -153,7 +153,9 @@ class TcaMapper implements SingletonInterface {
 				if (isset($config['eval']) && str_contains($config['eval'], 'int')) {
 					return (int) $value;
 				}
-				if (($config['renderType'] ?? '') === 'inputDateTime' || (isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))) {
+				if (($config['renderType'] ?? '') === 'inputDateTime' ||
+					(isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))
+				) {
 					if (is_numeric($value)) {
 						return date(\DateTimeInterface::ATOM, (int) $value);
 					}
@@ -190,7 +192,9 @@ class TcaMapper implements SingletonInterface {
 				if (isset($config['eval']) && str_contains($config['eval'], 'int')) {
 					return (int) $value;
 				}
-				if (($config['renderType'] ?? '') === 'inputDateTime' || (isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))) {
+				if (($config['renderType'] ?? '') === 'inputDateTime' || (isset($config['dbType']) &&
+						($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))
+				) {
 					if (is_string($value)) {
 						$timestamp = strtotime($value);
 						return $timestamp !== FALSE ? $timestamp : (int) $value;

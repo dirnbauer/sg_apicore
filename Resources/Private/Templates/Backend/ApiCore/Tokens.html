@@ -1,4 +1,4 @@
-<f:layout name="Backend/Default" />
+<f:layout name="Backend/Default"/>
 {namespace sg=SGalinski\SgApiCore\ViewHelpers}
 
 <f:section name="Content">
@@ -8,84 +8,101 @@
 		<div class="col-md-8">
 			<h3>Existing Tokens</h3>
 			<f:form action="tokens" name="filters" object="{filters}" method="POST" class="form-inline mb-3">
-				<f:form.select name="filters[apiId]" options="{apis}" prependOptionLabel="-- All APIs --" class="form-control mr-2" value="{filters.apiId}" />
-				<f:form.textfield name="filters[tenantId]" placeholder="Tenant ID" class="form-control mr-2" value="{filters.tenantId}" />
-				<f:form.select name="filters[status]" options="{active: 'Active', expired: 'Expired', revoked: 'Revoked'}" prependOptionLabel="-- All Status --" class="form-control mr-2" value="{filters.status}" />
-				<f:form.select name="filters[isUserToken]" options="{0: 'System/M2M Tokens', 1: 'User Tokens'}" class="form-control mr-2" value="{filters.isUserToken}" />
-				<f:form.submit value="Filter" class="btn btn-default" />
+				<f:form.select name="filters[apiId]" options="{apis}" prependOptionLabel="-- All APIs --"
+							   class="form-control mr-2" value="{filters.apiId}"/>
+				<f:form.textfield name="filters[tenantId]" placeholder="Tenant ID" class="form-control mr-2"
+								  value="{filters.tenantId}"/>
+				<f:form.select name="filters[status]"
+							   options="{active: 'Active', expired: 'Expired', revoked: 'Revoked'}"
+							   prependOptionLabel="-- All Status --" class="form-control mr-2"
+							   value="{filters.status}"/>
+				<f:form.select name="filters[isUserToken]" options="{0: 'System/M2M Tokens', 1: 'User Tokens'}"
+							   class="form-control mr-2" value="{filters.isUserToken}"/>
+				<f:form.submit value="Filter" class="btn btn-default"/>
 			</f:form>
 
 			<table class="table table-striped table-hover">
 				<thead>
-					<tr>
-						<th>UID</th>
-						<th>Label</th>
-						<th>API / Tenant</th>
-						<th>Type</th>
-						<th>Status</th>
-						<th>Expires</th>
-						<th>Last Used</th>
-						<th>Actions</th>
-					</tr>
+				<tr>
+					<th>UID</th>
+					<th>Label</th>
+					<th>API / Tenant</th>
+					<th>Type</th>
+					<th>Status</th>
+					<th>Expires</th>
+					<th>Last Used</th>
+					<th>Actions</th>
+				</tr>
 				</thead>
 				<tbody>
-					<f:for each="{tokens}" as="token">
-						<tr class="{f:if(condition: token.revoked_at, then: 'text-muted')}">
-							<td>{token.uid}</td>
-							<td>
-								<strong>{token.label}</strong>
-								<br /><small class="text-muted">Scopes: {token.scopes}</small>
-							</td>
-							<td>
-								<span class="badge badge-info">{token.api_id}</span>
-								<br /><span class="badge badge-secondary">{token.tenant_id}</span>
-							</td>
-							<td>
-								{f:if(condition: token.is_refresh_token, then: 'Refresh', else: 'Access')}
-							</td>
-							<td>
-								<f:if condition="{token.revoked_at}">
-									<f:then><span class="badge badge-danger">Revoked</span></f:then>
-									<f:else>
-										<f:if condition="{token.expires_at} > 0">
-											<f:then>
-												<f:if condition="{token.expires_at} < {f:format.date(date: 'now', format: 'U')}">
-													<f:then><span class="badge badge-warning">Expired</span></f:then>
-													<f:else><span class="badge badge-success">Active</span></f:else>
-												</f:if>
-											</f:then>
-											<f:else><span class="badge badge-success">Active</span></f:else>
-										</f:if>
-									</f:else>
-								</f:if>
-							</td>
-							<td>
-								<f:if condition="{token.expires_at}">
-									<f:then>{f:format.date(date: token.expires_at, format: 'Y-m-d H:i')}</f:then>
-									<f:else>Never</f:else>
-								</f:if>
-							</td>
-							<td>
-								<f:if condition="{token.last_used_at}">
-									<f:then>{f:format.date(date: token.last_used_at, format: 'Y-m-d H:i')}</f:then>
-									<f:else>-</f:else>
-								</f:if>
-							</td>
-							<td>
-								<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: '{f:be.uri(route: \'system_SgApiCore\', parameters: {action: \'tokens\', filters: filters})}')}" class="btn btn-default btn-sm" title="Edit Scopes/Metadata">
-									<core:icon identifier="actions-open" size="small" /> Edit
+				<f:for each="{tokens}" as="token">
+					<tr class="{f:if(condition: token.revoked_at, then: 'text-muted')}">
+						<td>{token.uid}</td>
+						<td>
+							<strong>{token.label}</strong>
+							<br/><small class="text-muted">Scopes: {token.scopes}</small>
+						</td>
+						<td>
+							<span class="badge badge-info">{token.api_id}</span>
+							<br/><span class="badge badge-secondary">{token.tenant_id}</span>
+						</td>
+						<td>
+							{f:if(condition: token.is_refresh_token, then: 'Refresh', else: 'Access')}
+						</td>
+						<td>
+							<f:if condition="{token.revoked_at}">
+								<f:then><span class="badge badge-danger">Revoked</span></f:then>
+								<f:else>
+									<f:if condition="{token.expires_at} > 0">
+										<f:then>
+											<f:if
+												condition="{token.expires_at} < {f:format.date(date: 'now', format: 'U')}">
+												<f:then><span class="badge badge-warning">Expired</span></f:then>
+												<f:else><span class="badge badge-success">Active</span></f:else>
+											</f:if>
+										</f:then>
+										<f:else><span class="badge badge-success">Active</span></f:else>
+									</f:if>
+								</f:else>
+							</f:if>
+						</td>
+						<td>
+							<f:if condition="{token.expires_at}">
+								<f:then>{f:format.date(date: token.expires_at, format: 'Y-m-d H:i')}</f:then>
+								<f:else>Never</f:else>
+							</f:if>
+						</td>
+						<td>
+							<f:if condition="{token.last_used_at}">
+								<f:then>{f:format.date(date: token.last_used_at, format: 'Y-m-d H:i')}</f:then>
+								<f:else>-</f:else>
+							</f:if>
+						</td>
+						<td>
+							<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: '{f:be.uri(route: \'system_SgApiCore\', parameters: {action: \'tokens\', filters: filters})}')}"
+							   class="btn btn-default btn-sm" title="Edit Scopes/Metadata">
+								<core:icon identifier="actions-open" size="small"/>
+								Edit
+							</a>
+							<f:if condition="!{token.revoked_at}">
+								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'regenerateToken', uid: token.uid})}"
+								   class="btn btn-primary btn-sm"
+								   onclick="return confirm('Are you sure you want to regenerate the key? The old key will stop working immediately!')"
+								   title="Generate new plaintext key">
+									<core:icon identifier="actions-refresh" size="small"/>
+									Re-generate
 								</a>
-								<f:if condition="!{token.revoked_at}">
-									<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'regenerateToken', uid: token.uid})}" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to regenerate the key? The old key will stop working immediately!')" title="Generate new plaintext key">
-										<core:icon identifier="actions-refresh" size="small" /> Re-generate
-									</a>
-									<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'revokeToken', uid: token.uid})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to revoke this token?')" title="Deactivate token">
-										<core:icon identifier="actions-edit-delete" size="small" /> Revoke
-									</a>
-								</f:if>
-							</td>
-						</tr>
-					</f:for>
+								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'revokeToken', uid: token.uid})}"
+								   class="btn btn-danger btn-sm"
+								   onclick="return confirm('Are you sure you want to revoke this token?')"
+								   title="Deactivate token">
+									<core:icon identifier="actions-edit-delete" size="small"/>
+									Revoke
+								</a>
+							</f:if>
+						</td>
+					</tr>
+				</f:for>
 				</tbody>
 			</table>
 		</div>
@@ -96,25 +113,26 @@
 					<f:form action="createToken" name="newToken" method="POST">
 						<div class="form-group">
 							<label for="apiId">API ID</label>
-							<f:form.select name="apiId" options="{apis}" class="form-control" />
+							<f:form.select name="apiId" options="{apis}" class="form-control"/>
 						</div>
 						<div class="form-group">
 							<label for="tenantId">Tenant ID</label>
-							<f:form.textfield name="tenantId" value="default" class="form-control" required="true" />
+							<f:form.textfield name="tenantId" value="default" class="form-control" required="true"/>
 						</div>
 						<div class="form-group">
 							<label for="label">Label</label>
-							<f:form.textfield name="label" placeholder="e.g. My Integration" class="form-control" required="true" />
+							<f:form.textfield name="label" placeholder="e.g. My Integration" class="form-control"
+											  required="true"/>
 						</div>
 						<div class="form-group">
 							<label for="scopes">Scopes (comma-separated)</label>
-							<f:form.textfield name="scopes" placeholder="e.g. read,write" class="form-control" />
+							<f:form.textfield name="scopes" placeholder="e.g. read,write" class="form-control"/>
 						</div>
 						<div class="form-group">
 							<label for="expiresDays">Expires in (days, 0 = never)</label>
-							<f:form.textfield name="expiresDays" value="0" type="number" class="form-control" />
+							<f:form.textfield name="expiresDays" value="0" type="number" class="form-control"/>
 						</div>
-						<f:form.submit value="Create Token" class="btn btn-primary" />
+						<f:form.submit value="Create Token" class="btn btn-primary"/>
 					</f:form>
 				</div>
 			</div>

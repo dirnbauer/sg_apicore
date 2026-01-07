@@ -75,7 +75,10 @@ class TokenRepository implements SingletonInterface {
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->or(
-				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)),
+				$queryBuilder->expr()->eq(
+					'pid',
+					$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
+				),
 				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
 			);
 		}
@@ -109,7 +112,10 @@ class TokenRepository implements SingletonInterface {
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->or(
-				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)),
+				$queryBuilder->expr()->eq(
+					'pid',
+					$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
+				),
 				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
 			);
 		}
@@ -138,7 +144,9 @@ class TokenRepository implements SingletonInterface {
 			->from(self::TABLE_NAME);
 
 		if (isset($filters['apiId']) && $filters['apiId'] !== '') {
-			$query->andWhere($queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($filters['apiId'])));
+			$query->andWhere(
+				$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($filters['apiId']))
+			);
 		}
 		if (isset($filters['tenantId']) && $filters['tenantId'] !== '') {
 			$query->andWhere(

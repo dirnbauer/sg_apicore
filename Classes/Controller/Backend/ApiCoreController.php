@@ -27,6 +27,7 @@
 namespace SGalinski\SgApiCore\Controller\Backend;
 
 use Psr\Http\Message\ResponseInterface;
+use Random\RandomException;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
@@ -143,7 +144,7 @@ class ApiCoreController extends ActionController {
 	 * @param int $expiresDays
 	 * @return ResponseInterface
 	 * @throws \JsonException
-	 * @throws \Random\RandomException
+	 * @throws RandomException
 	 */
 	public function createTokenAction(
 		string $apiId,
@@ -201,8 +202,7 @@ class ApiCoreController extends ActionController {
 	 *
 	 * @param int $uid
 	 * @return ResponseInterface
-	 * @throws \Doctrine\DBAL\Exception
-	 * @throws \Random\RandomException
+	 * @throws RandomException
 	 */
 	public function regenerateTokenAction(int $uid): ResponseInterface {
 		$newTokenKey = $this->tokenService->generateRandomToken();

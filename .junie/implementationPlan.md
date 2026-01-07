@@ -570,8 +570,6 @@ DataHandler).
 - Workspaces/Translation-Fallstricke vollständig abdecken
 - Query-DSL wie API Platform
 
----
-
 ### Phase L – sg_rest Drop-In Replacement & Migrationspfad (kurz)
 
 **Ziel**

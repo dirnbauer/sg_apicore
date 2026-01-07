@@ -33,6 +33,7 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\OpenApiService;
+use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -47,7 +48,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
-		$discoveryService = new EndpointDiscoveryService($controllers);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+		$discoveryService = new EndpointDiscoveryService($controllers, $resourceRegistry);
 		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 
@@ -64,7 +67,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
-		$discoveryService = new EndpointDiscoveryService($controllers);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+		$discoveryService = new EndpointDiscoveryService($controllers, $resourceRegistry);
 		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
 		// 'public' api should have /test but not /partner-only
@@ -87,7 +92,9 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockHybridController()]);
-		$discoveryService = new EndpointDiscoveryService($controllers);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+		$discoveryService = new EndpointDiscoveryService($controllers, $resourceRegistry);
 
 		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
@@ -108,7 +115,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockBodyParamController()]);
-		$discoveryService = new EndpointDiscoveryService($controllers);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+		$discoveryService = new EndpointDiscoveryService($controllers, $resourceRegistry);
 
 		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');

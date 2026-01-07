@@ -1,11 +1,11 @@
 .badge-outline-dark {
-	color: #343a40;
-	border: 1px solid #343a40;
+	color: #343A40;
+	border: 1px solid #343A40;
 	background-color: transparent;
 }
 
 .nav-tabs .nav-link.active {
-	border-bottom-color: #fff;
+	border-bottom-color: #FFF;
 	font-weight: bold;
 }
 

@@ -34,6 +34,7 @@ use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -42,7 +43,9 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 class EndpointDiscoveryServiceTest extends UnitTestCase {
 	public function testGetAllEndpointsReturnsCompleteData(): void {
 		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
-		$service = new EndpointDiscoveryService($controllers);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+		$service = new EndpointDiscoveryService($controllers, $resourceRegistry);
 		$endpoints = $service->getAllEndpoints();
 
 		$this->assertCount(1, $endpoints);
