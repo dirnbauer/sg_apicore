@@ -39,13 +39,15 @@ class ApiBodyParam {
 	 * @param bool $required Whether the parameter is required
 	 * @param string $description A short description of the parameter
 	 * @param string|null $pattern Optional regex pattern for validation
+	 * @param mixed|null $example An example value for the parameter
 	 */
 	public function __construct(
 		public string $name,
 		public string $type = 'string',
 		public bool $required = TRUE,
 		public string $description = '',
-		public ?string $pattern = NULL
+		public ?string $pattern = NULL,
+		public mixed $example = NULL
 	) {
 	}
 }

@@ -175,10 +175,14 @@ class OpenApiService implements SingletonInterface {
 			$required = [];
 			/** @var ApiBodyParam $param */
 			foreach ($endpoint['bodyParams'] as $param) {
-				$properties[$param->name] = [
+				$propertySpec = [
 					'type' => $this->mapPhpTypeToOpenApi($param->type),
 					'description' => $param->description
 				];
+				if ($param->example !== NULL) {
+					$propertySpec['example'] = $param->example;
+				}
+				$properties[$param->name] = $propertySpec;
 				if ($param->required) {
 					$required[] = $param->name;
 				}
@@ -207,23 +211,31 @@ class OpenApiService implements SingletonInterface {
 		$operation['parameters'] = [];
 		/** @var ApiQueryParam $param */
 		foreach ($endpoint['queryParams'] as $param) {
-			$operation['parameters'][] = [
+			$parameterSpec = [
 				'name' => $param->name,
 				'in' => 'query',
 				'required' => $param->required,
 				'description' => $param->description,
 				'schema' => ['type' => $this->mapPhpTypeToOpenApi($param->type)]
 			];
+			if ($param->example !== NULL) {
+				$parameterSpec['schema']['example'] = $param->example;
+			}
+			$operation['parameters'][] = $parameterSpec;
 		}
 		/** @var ApiPathParam $param */
 		foreach ($endpoint['pathParams'] as $param) {
-			$operation['parameters'][] = [
+			$parameterSpec = [
 				'name' => $param->name,
 				'in' => 'path',
 				'required' => TRUE,
 				'description' => $param->description,
 				'schema' => ['type' => $this->mapPhpTypeToOpenApi($param->type)]
 			];
+			if ($param->example !== NULL) {
+				$parameterSpec['schema']['example'] = $param->example;
+			}
+			$operation['parameters'][] = $parameterSpec;
 		}
 
 		// Responses
@@ -232,7 +244,7 @@ class OpenApiService implements SingletonInterface {
 			$resp = [
 				'description' => $response->description
 			];
-			if ($response->schema) {
+			if ($response->schema || $response->example !== NULL) {
 				$resp['content'] = [
 					'application/json' => [
 						'schema' => $this->parseSchema(
@@ -241,6 +253,9 @@ class OpenApiService implements SingletonInterface {
 						)
 					]
 				];
+				if ($response->example !== NULL) {
+					$resp['content']['application/json']['example'] = $response->example;
+				}
 			}
 			$operation['responses'][(string) $response->status] = $resp;
 		}
@@ -319,11 +334,14 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Very basic schema parser (handles primitives and "Item[]" for arrays)
 	 *
-	 * @param string $schemaStr
+	 * @param string|null $schemaStr
 	 * @param array $knownSchemas
 	 * @return array
 	 */
-	protected function parseSchema(string $schemaStr, array $knownSchemas = []): array {
+	protected function parseSchema(?string $schemaStr, array $knownSchemas = []): array {
+		if ($schemaStr === NULL) {
+			return ['type' => 'object'];
+		}
 		if (str_ends_with($schemaStr, '[]')) {
 			$baseSchema = substr($schemaStr, 0, -2);
 			if (in_array($baseSchema, $knownSchemas, TRUE)) {

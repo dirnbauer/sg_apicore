@@ -38,12 +38,14 @@ final readonly class ApiPathParam {
 	 * @param string $type The data type (e.g., string, integer)
 	 * @param string|null $description A description of the parameter
 	 * @param string|null $pattern Optional regex pattern for validation
+	 * @param mixed|null $example An example value for the parameter
 	 */
 	public function __construct(
 		public string $name,
 		public string $type = 'string',
 		public ?string $description = NULL,
-		public ?string $pattern = NULL
+		public ?string $pattern = NULL,
+		public mixed $example = NULL
 	) {
 	}
 }

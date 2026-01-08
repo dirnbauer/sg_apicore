@@ -83,7 +83,7 @@ class TestController {
 	 */
 	#[ApiRoute(path: '/health', methods: ['GET'])]
 	#[ApiEndpoint(summary: 'Global health check', tags: ['Health'])]
-	#[ApiResponse(status: 200, description: 'API is healthy')]
+	#[ApiResponse(status: 200, description: 'API is healthy', example: ['status' => 'ok'])]
 	public function health(ServerRequestInterface $request): ResponseInterface {
 		return $this->responseService->createSuccessResponse(['status' => 'ok']);
 	}
@@ -96,7 +96,8 @@ class TestController {
 	 */
 	#[ApiRoute(path: '/test', methods: ['GET'], apiId: 'public', version: '1')]
 	#[ApiEndpoint(summary: 'Public API test', tags: ['Test'])]
-	#[ApiQueryParam(name: 'code', type: 'string', required: TRUE, pattern: '/^[A-Z]{3}$/')]
+	#[ApiQueryParam(name: 'code', type: 'string', required: TRUE, pattern: '/^[A-Z]{3}$/', example: 'ABC')]
+	#[ApiResponse(status: 200, description: 'Test successful', example: ['api' => 'public', 'version' => '1', 'code' => 'ABC', 'message' => 'Public API test successful'])]
 	public function publicTest(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getQueryParams();
 		$code = $params['code'] ?? '';

@@ -37,11 +37,13 @@ final readonly class ApiResponse {
 	 * @param int $status The HTTP status code (e.g., 200, 201, 400, 404)
 	 * @param string|null $description A description of the response
 	 * @param string|null $schema Reference to a response schema (e.g., DTO class or JSON schema)
+	 * @param mixed|null $example An example response body
 	 */
 	public function __construct(
 		public int $status = 200,
 		public ?string $description = NULL,
-		public ?string $schema = NULL
+		public ?string $schema = NULL,
+		public mixed $example = NULL
 	) {
 	}
 }

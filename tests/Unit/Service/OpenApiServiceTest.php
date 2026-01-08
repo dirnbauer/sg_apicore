@@ -28,6 +28,9 @@ namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiPathParam;
+use SGalinski\SgApiCore\Attribute\ApiQueryParam;
+use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
@@ -131,7 +134,37 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertEquals('object', $schema['type']);
 		$this->assertArrayHasKey('username', $schema['properties']);
 		$this->assertEquals('string', $schema['properties']['username']['type']);
+		$this->assertEquals('john_doe', $schema['properties']['username']['example']);
 		$this->assertContains('username', $schema['required']);
+	}
+
+	public function testGenerateSpecContainsExamples(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$controllers = new \ArrayIterator([new MockExampleController()]);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+		$discoveryService = new EndpointDiscoveryService($controllers, $resourceRegistry);
+
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+		$operation = $spec['paths']['/example/{id}']['get'];
+
+		// Query Param Example (Index 0 in OpenApiService)
+		$this->assertEquals('q', $operation['parameters'][0]['name']);
+		$this->assertEquals('search-term', $operation['parameters'][0]['schema']['example']);
+
+		// Path Param Example (Index 1 in OpenApiService)
+		$this->assertEquals('id', $operation['parameters'][1]['name']);
+		$this->assertEquals(123, $operation['parameters'][1]['schema']['example']);
+
+		// Response Example
+		$this->assertArrayHasKey('200', $operation['responses']);
+		$this->assertEquals(['foo' => 'bar'], $operation['responses']['200']['content']['application/json']['example']);
 	}
 }
 
@@ -163,7 +196,19 @@ class MockHybridController {
  */
 class MockBodyParamController {
 	#[ApiRoute(path: '/post-test', methods: ['POST'])]
-	#[ApiBodyParam(name: 'username', required: TRUE)]
+	#[ApiBodyParam(name: 'username', required: TRUE, example: 'john_doe')]
 	public function postAction(): void {
+	}
+}
+
+/**
+ * Mock controller for examples
+ */
+class MockExampleController {
+	#[ApiRoute(path: '/example/{id}', methods: ['GET'])]
+	#[ApiPathParam(name: 'id', type: 'integer', example: 123)]
+	#[ApiQueryParam(name: 'q', example: 'search-term')]
+	#[ApiResponse(status: 200, schema: 'object', example: ['foo' => 'bar'])]
+	public function exampleAction(): void {
 	}
 }
