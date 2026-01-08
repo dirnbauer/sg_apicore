@@ -57,6 +57,49 @@ class LogService implements SingletonInterface {
 	}
 
 	/**
+	 * Logs an error message
+	 *
+	 * @param string $message
+	 * @param array $context
+	 * @return void
+	 */
+	public function logError(string $message, array $context = []): void {
+		if (!$this->extensionConfiguration->isLoggingEnabled()) {
+			return;
+		}
+
+		$this->logger->error($message, $context);
+	}
+
+	/**
+	 * Logs an exception
+	 *
+	 * @param \Throwable $exception
+	 * @param ServerRequestInterface|null $request
+	 * @return void
+	 */
+	public function logException(\Throwable $exception, ?ServerRequestInterface $request = NULL): void {
+		if (!$this->extensionConfiguration->isLoggingEnabled()) {
+			return;
+		}
+
+		$context = [
+			'exception' => $exception->getMessage(),
+			'file' => $exception->getFile(),
+			'line' => $exception->getLine(),
+			'trace' => $exception->getTraceAsString(),
+		];
+
+		if ($request) {
+			$context['requestId'] = (string) $request->getAttribute('api.requestId', '');
+			$context['method'] = $request->getMethod();
+			$context['path'] = $request->getUri()->getPath();
+		}
+
+		$this->logger->critical($exception->getMessage(), $context);
+	}
+
+	/**
 	 * Logs an API request and response
 	 *
 	 * @param ServerRequestInterface $request

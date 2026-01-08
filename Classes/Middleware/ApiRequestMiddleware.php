@@ -140,7 +140,17 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		}
 
 		$startTime = microtime(TRUE);
-		$response = $this->handleApiRequest($request, $handler);
+		try {
+			$response = $this->handleApiRequest($request, $handler);
+		} catch (\Throwable $e) {
+			$this->logService->logException($e, $request);
+			$response = $this->createErrorResponse(
+				'Internal Server Error',
+				'An unexpected error occurred during API request processing.',
+				500,
+				$request
+			);
+		}
 		$duration = microtime(TRUE) - $startTime;
 
 		$this->logService->logRequestResponse($request, $response, $duration);
