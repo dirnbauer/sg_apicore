@@ -39,6 +39,10 @@ use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\TypoScript\TypoScriptService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Utility\RootlineUtility;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
  * Middleware to handle API requests
@@ -171,6 +175,29 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		}
 		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
 
+		// Mock PageInformation for extensions like gridelements that expect it in TYPO3 13 frontend context
+		$siteRootPageId = $tenantResult->getContext()?->getSiteRootPageId();
+		if ($siteRootPageId > 0 && !$request->getAttribute('frontend.page.information')) {
+			$pageInformation = new PageInformation();
+			$pageInformation->setId($siteRootPageId);
+
+			// GridElements also needs the rootline for PageTsConfig calculation
+			$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
+			try {
+				$rootline = $rootlineUtility->get();
+				$pageInformation->setRootLine($rootline);
+			} catch (\Exception $e) {
+				// Fallback or ignore if rootline cannot be resolved
+			}
+
+			$request = $request->withAttribute('frontend.page.information', $pageInformation);
+
+			// Synchronize global TYPO3_REQUEST if it exists, as some hooks/legacy code still use it
+			if (isset($GLOBALS['TYPO3_REQUEST'])) {
+				$GLOBALS['TYPO3_REQUEST'] = $request;
+			}
+		}
+
 		// Normalize a path for internal processing: remove trailing slash if it's not just '/'
 		$normalizedPath = $path !== '/' ? rtrim($path, '/') : $path;
 
@@ -222,6 +249,11 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 					// Documentation endpoints should always be accessible without authentication
 					if ($authContext !== NULL) {
 						$request = $request->withAttribute('api.auth', $authContext);
+					}
+
+					// Synchronize global TYPO3_REQUEST again after all attributes are set
+					if (isset($GLOBALS['TYPO3_REQUEST'])) {
+						$GLOBALS['TYPO3_REQUEST'] = $request;
 					}
 
 					// Redirect to documentation if the base API URL is called

@@ -32,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -182,6 +183,16 @@ class ResourceController {
 		// Filter allowed write fields
 		$filteredData = $this->tcaMapper->mapDataForDatabase($tableName, $data, $resourceConfig['writeFields']);
 
+		// Handle PID for new records
+		if (!isset($filteredData['pid'])) {
+			$pid = (int) ($data['pid'] ?? 0);
+			if ($pid <= 0) {
+				$tenantContext = $request->getAttribute('api.tenant');
+				$pid = $tenantContext ? $tenantContext->getSite()->getRootPageId() : 0;
+			}
+			$filteredData['pid'] = $pid;
+		}
+
 		// Persistent via DataHandler
 		$dataMap = [
 			$tableName => [
@@ -189,7 +200,10 @@ class ResourceController {
 			]
 		];
 
+		$this->initializeBackendUser();
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+		$dataHandler->admin = TRUE;
+		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
 
@@ -201,7 +215,7 @@ class ResourceController {
 			);
 		}
 
-		$newUid = $dataHandler->substNEWwithIDs['NEW1'];
+		$newUid = $dataHandler->substNEWwithIDs['NEW1'] ?? 0;
 		return $this->getAction($request, (string) $newUid);
 	}
 
@@ -225,18 +239,22 @@ class ResourceController {
 
 		// Check if a record exists
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
-		$uid = $queryBuilder->select('uid')
+		$uid = (int) $queryBuilder->select('uid')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
 			->executeQuery()
 			->fetchOne();
 
-		if (!$uid) {
+		if ($uid <= 0) {
 			return $this->responseService->createErrorResponse('Not Found', 'Resource not found.', 404);
 		}
 
 		// Filter allowed writing fields
 		$filteredData = $this->tcaMapper->mapDataForDatabase($tableName, $data, $resourceConfig['writeFields']);
+
+		if (empty($filteredData)) {
+			return $this->getAction($request, (string) $uid);
+		}
 
 		$dataMap = [
 			$tableName => [
@@ -244,7 +262,10 @@ class ResourceController {
 			]
 		];
 
+		$this->initializeBackendUser();
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+		$dataHandler->admin = TRUE;
+		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
 
@@ -256,7 +277,7 @@ class ResourceController {
 			);
 		}
 
-		return $this->getAction($request, $id);
+		return $this->getAction($request, (string) $uid);
 	}
 
 	/**
@@ -274,13 +295,13 @@ class ResourceController {
 
 		// Check if a record exists
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
-		$uid = $queryBuilder->select('uid')
+		$uid = (int) $queryBuilder->select('uid')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
 			->executeQuery()
 			->fetchOne();
 
-		if (!$uid) {
+		if ($uid <= 0) {
 			return $this->responseService->createErrorResponse('Not Found', 'Resource not found.', 404);
 		}
 
@@ -290,7 +311,10 @@ class ResourceController {
 			]
 		];
 
+		$this->initializeBackendUser();
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+		$dataHandler->admin = TRUE;
+		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start([], $cmdMap);
 		$dataHandler->process_cmdmap();
 
@@ -303,5 +327,19 @@ class ResourceController {
 		}
 
 		return $this->responseService->createSuccessResponse(['success' => TRUE], [], 204);
+	}
+
+	/**
+	 * Initializes a dummy backend user if none exists
+	 *
+	 * @return void
+	 */
+	protected function initializeBackendUser(): void {
+		if (($GLOBALS['BE_USER'] ?? NULL) instanceof BackendUserAuthentication) {
+			return;
+		}
+
+		$GLOBALS['BE_USER'] = GeneralUtility::makeInstance(BackendUserAuthentication::class);
+		$GLOBALS['BE_USER']->user['admin'] = 1;
 	}
 }

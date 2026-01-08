@@ -217,7 +217,6 @@ class Router implements SingletonInterface {
 					$legacyModeAttributes = $reflectionClass->getAttributes(ApiLegacyMode::class);
 				}
 
-				$legacyMode = NULL;
 				if (count($legacyModeAttributes) > 0) {
 					$legacyMode = $legacyModeAttributes[0]->newInstance();
 					$request = $request->withAttribute('api.legacyMode', $legacyMode);

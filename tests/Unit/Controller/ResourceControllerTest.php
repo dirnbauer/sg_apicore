@@ -29,14 +29,20 @@ namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 use Doctrine\DBAL\Result;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\ResourceController;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Log\LogManager;
+use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -51,10 +57,18 @@ class ResourceControllerTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
+		$this->resetSingletonInstances = TRUE;
 		$this->connectionPool = $this->createStub(ConnectionPool::class);
 		$this->tcaMapper = $this->createStub(TcaMapper::class);
 		$this->responseService = $this->createStub(ResponseService::class);
 		$this->paginationService = $this->createStub(PaginationService::class);
+
+		// Mock LogManager to avoid singleton issues in tests
+		$logManager = $this->createStub(LogManager::class);
+		GeneralUtility::setSingletonInstance(LogManager::class, $logManager);
+
+		// Mock BE_USER
+		$GLOBALS['BE_USER'] = $this->createStub(BackendUserAuthentication::class);
 
 		$this->controller = new ResourceController(
 			$this->connectionPool,
@@ -62,6 +76,11 @@ class ResourceControllerTest extends UnitTestCase {
 			$this->responseService,
 			$this->paginationService
 		);
+	}
+
+	protected function tearDown(): void {
+		unset($GLOBALS['BE_USER']);
+		parent::tearDown();
 	}
 
 	public function testListActionReturnsMappedRecords(): void {
@@ -129,5 +148,115 @@ class ResourceControllerTest extends UnitTestCase {
 		$response = $this->controller->getAction($request, '999');
 
 		$this->assertEquals(404, $response->getStatusCode());
+	}
+
+	public function testCreateActionUsesProvidedPid(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$resourceConfig = [
+			'table' => 'tt_content',
+			'writeFields' => ['header']
+		];
+		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
+		$request->method('getParsedBody')->willReturn(['header' => 'New', 'pid' => 123]);
+
+		$this->tcaMapper->method('mapDataForDatabase')->willReturn(['header' => 'New']);
+
+		$dataHandler = $this->createMock(DataHandler::class);
+		GeneralUtility::addInstance(DataHandler::class, $dataHandler);
+
+		$dataHandler->expects($this->once())
+			->method('start')
+			->with($this->callback(function ($dataMap) {
+				return isset($dataMap['tt_content']['NEW1']['pid']) && $dataMap['tt_content']['NEW1']['pid'] === 123;
+			}), []);
+
+		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));
+
+		$this->controller->createAction($request);
+	}
+
+	public function testCreateActionUsesTenantRootPageIdIfPidMissing(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$resourceConfig = [
+			'table' => 'tt_content',
+			'writeFields' => ['header']
+		];
+
+		$site = $this->createStub(Site::class);
+		$site->method('getRootPageId')->willReturn(456);
+		$tenantContext = new TenantContext('test-tenant', NULL, NULL, $site);
+
+		$request->method('getAttribute')->willReturnMap([
+			['api.resource', $resourceConfig],
+			['api.tenant', $tenantContext]
+		]);
+		$request->method('getParsedBody')->willReturn(['header' => 'New']);
+
+		$this->tcaMapper->method('mapDataForDatabase')->willReturn(['header' => 'New']);
+
+		$dataHandler = $this->createMock(DataHandler::class);
+		GeneralUtility::addInstance(DataHandler::class, $dataHandler);
+
+		$dataHandler->expects($this->once())
+			->method('start')
+			->with($this->callback(function ($dataMap) {
+				return isset($dataMap['tt_content']['NEW1']['pid']) && $dataMap['tt_content']['NEW1']['pid'] === 456;
+			}), []);
+
+		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));
+
+		$this->controller->createAction($request);
+	}
+
+	public function testUpdateActionUpdatesCorrectRecord(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$resourceConfig = [
+			'table' => 'tt_content',
+			'idField' => 'uid',
+			'readFields' => ['header'],
+			'writeFields' => ['header']
+		];
+		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
+		$request->method('getParsedBody')->willReturn(['header' => 'Updated Header']);
+
+		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('where')->willReturn($queryBuilder);
+		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$result->method('fetchOne')->willReturn(4471);
+
+		$this->tcaMapper->method('mapDataForDatabase')->willReturn(['header' => 'Updated Header']);
+
+		$dataHandler = $this->createMock(DataHandler::class);
+		GeneralUtility::addInstance(DataHandler::class, $dataHandler);
+
+		$dataHandler->expects($this->once())
+			->method('start')
+			->with($this->callback(function ($dataMap) {
+				return isset($dataMap['tt_content'][4471]['header']) && $dataMap['tt_content'][4471]['header'] === 'Updated Header';
+			}), []);
+
+		// Since updateAction calls getAction, we need to mock that too or its dependencies
+		$result->method('fetchAssociative')->willReturn(['uid' => 4471, 'header' => 'Updated Header']);
+		$this->tcaMapper->method('mapRecord')->with(
+			$this->equalTo('tt_content'),
+			$this->anything(),
+			$this->equalTo(['header'])
+		)->willReturn(['uid' => 4471, 'header' => 'Updated Header']);
+		$this->responseService->method('createSuccessResponse')->willReturnCallback(
+			fn ($data) => new JsonResponse($data)
+		);
+
+		$response = $this->controller->updateAction($request, '4471');
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+		$data = json_decode((string) $response->getBody(), TRUE);
+		$this->assertEquals('Updated Header', $data['header']);
 	}
 }
