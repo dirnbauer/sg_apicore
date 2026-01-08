@@ -94,6 +94,10 @@ class LogService implements SingletonInterface {
 			$context['requestId'] = (string) $request->getAttribute('api.requestId', '');
 			$context['method'] = $request->getMethod();
 			$context['path'] = $request->getUri()->getPath();
+			$language = $request->getAttribute('language');
+			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+				$context['languageId'] = $language->getLanguageId();
+			}
 		}
 
 		$this->logger->critical($exception->getMessage(), $context);
@@ -131,6 +135,11 @@ class LogService implements SingletonInterface {
 			'status' => $response->getStatusCode(),
 			'duration' => round($duration * 1000, 2) . 'ms',
 		];
+
+		$language = $request->getAttribute('language');
+		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+			$context['languageId'] = $language->getLanguageId();
+		}
 
 		if ($this->extensionConfiguration->isLogHeadersEnabled()) {
 			$context['requestHeaders'] = $this->redact($request->getHeaders(), $redactKeys);

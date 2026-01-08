@@ -29,7 +29,10 @@ namespace SGalinski\SgApiCore\Service;
 use Psr\Http\Message\ResponseInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Service for creating standardized API responses
@@ -82,6 +85,51 @@ class ResponseService implements SingletonInterface {
 			'X-Content-Type-Options' => 'nosniff',
 			'X-Frame-Options' => 'DENY',
 		]);
+	}
+
+	/**
+	 * Creates a Problem JSON error response (RFC 7807) with localized title and detail
+	 *
+	 * @param string $title LLL key or raw string
+	 * @param string $detail LLL key or raw string
+	 * @param int $status
+	 * @param string $type
+	 * @param array $additionalData
+	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
+	 * @return ResponseInterface
+	 */
+	public function createLocalizedErrorResponse(
+		string $title,
+		string $detail,
+		int $status,
+		string $type = 'about:blank',
+		array $additionalData = [],
+		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+	): ResponseInterface {
+		/** @var LanguageService|null $languageService */
+		$languageService = $GLOBALS['LANG'] ?? NULL;
+		if ($languageService === NULL) {
+			/** @var LanguageServiceFactory $languageServiceFactory */
+			$languageServiceFactory = GeneralUtility::makeInstance(LanguageServiceFactory::class);
+			$language = $GLOBALS['TYPO3_REQUEST']?->getAttribute('language');
+			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+				$languageService = $languageServiceFactory->createFromSiteLanguage($language);
+			} else {
+				$languageService = $languageServiceFactory->create('default');
+			}
+		}
+
+		$translatedTitle = $languageService->sL($title);
+		$translatedDetail = $languageService->sL($detail);
+
+		return $this->createErrorResponse(
+			$translatedTitle ?: $title,
+			$translatedDetail ?: $detail,
+			$status,
+			$type,
+			$additionalData,
+			$legacyMode
+		);
 	}
 
 	/**

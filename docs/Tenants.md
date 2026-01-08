@@ -40,6 +40,19 @@ public function myAction(ServerRequestInterface $request): ResponseInterface {
 }
 ```
 
+## Multi-Language Handling
+
+The `TenantContext` also captures the current language. By default, `sg_apicore` is fully language-aware:
+
+1. **Language Resolution**: The language is automatically detected via the TYPO3 Site configuration (e.g., via URL
+   prefixes like `/en/api/...`).
+2. **Context Initialization**: The extension automatically initializes the TYPO3 `LanguageAspect` in the global
+   `Context`. This ensures that Repositories and the `TcaMapper` automatically return translated content.
+3. **Usage**:
+   ```php
+   $languageId = $tenantContext->getLanguageId();
+   ```
+
 ## Custom Resolvers
 
 You can implement your own resolvers by implementing the `TenantResolverInterface` and registering the service with the

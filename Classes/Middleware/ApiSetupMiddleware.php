@@ -122,7 +122,8 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 
 		// Analyze Path
 		$analysis = $this->pathAnalysisService->analyze(
-			$path, $languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL
+			$path,
+			$languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL
 		);
 		if ($analysis) {
 			$request = $request->withAttribute('api.id', $analysis['apiId']);

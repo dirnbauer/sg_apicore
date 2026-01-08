@@ -43,6 +43,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for ApiSetupMiddleware
  */
 class ApiSetupMiddlewareTest extends UnitTestCase {
+	protected bool $resetSingletonInstances = TRUE;
 	protected $extensionConfiguration;
 	protected $tenantResolver;
 	protected $pathAnalysisService;
