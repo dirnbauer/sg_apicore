@@ -14,24 +14,66 @@ architecture.
 
 ## 2. Backward Compatibility (Legacy Mode)
 
-`sg_apicore` provides a bridge to continue serving old clients without URL changes.
+`sg_apicore` provides a bridge to continue serving old clients with minimal changes.
 
-### URLs
+### URLs & Routing
 
-The `LegacyRoutingMiddleware` detects paths in the format `/{apiKey}/{entity}/{identifier}/{verb}` and internally
-redirects them to the new structure `/api/{apiId}/v1/{entity}/...`. By default, the `apiKey` is used as the `apiId`.
+The `LegacyRoutingMiddleware` automatically handles old `sg_rest` style requests. It supports two formats:
 
-### Authentication
+1. **Query-based**: `/?type=1595576052&tx_sgrest[request]=apiKey/entity/identifier`
+2. **Path-based**: `/apiKey/entity/identifier` (Requires `type=1595576052` parameter for precision)
 
-Add the `LegacyTokenProvider` to your API configuration to continue accepting tokens from the `fe_users` table:
+These requests are internally mapped to the new structure:
+`/api/legacy/v1/{apiKey}/{entity}/{identifier}`
+
+> **Important**: You must register a `legacy` API in your `ext_localconf.php` to handle these requests. By default, the
+`sg_apicore` demo configuration already includes this.
+
+### Token Authentication (Bearer Token)
+
+The old `sg_rest` authentication via `authentication/authentication/getBearerToken` is supported through a special
+mapping to `/api/legacy/v1/auth/login`.
+
+**Response Format**: It returns the expected `{"bearerToken": "..."}` format.
+
+### Manual Endpoint Mapping
+
+Since `sg_apicore` uses declarative routing, you must manually map your old endpoints in your controllers.
+
+1. Register the `legacy` API.
+2. Create or update your controllers.
+3. Add `#[ApiRoute]` with the path matching your old structure *including* the `apiKey`.
+
+**Example**:
+Old endpoint: `apiKey/news/list`
+New mapping:
+
+```php
+#[ApiRoute(path: '/apiKey/news/list', methods: ['GET'])]
+public function listAction(...)
+```
+
+### User Token Migration
+
+The old `tx_sgrest_auth_token` in `fe_users` is deprecated. While the `LegacyTokenProvider` can read them, it is
+recommended to transition to the new token system:
+
+1. Users should authenticate via the new `/api/legacy/v1/auth/login` endpoint.
+2. This will issue a new token (Opaque or JWT) stored in the `tx_apicore_token` table.
+3. Once all clients are migrated, the `tx_sgrest_auth_token` column can be removed.
+
+### Legacy Bridge (Optional)
+
+If you still need to accept old tokens from the `fe_users` table for some time, use the `LegacyTokenProvider`:
 
 ```php
 // ext_localconf.php
-$apiRegistry->registerApi('my-legacy-api', [
+$apiRegistry->registerApi('legacy', [
     'versions' => ['1'],
     'security' => [
         'authProviders' => [
-            \SGalinski\SgApiCore\Security\LegacyTokenProvider::class
+            \SGalinski\SgApiCore\Security\LegacyTokenProvider::class,
+            \SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider::class
         ]
     ]
 ]);
@@ -39,8 +81,8 @@ $apiRegistry->registerApi('my-legacy-api', [
 
 ### Response Format
 
-Use the `#[ApiLegacyMode]` attribute on your controller or action to emulate the old JSON format (
-data wrapping, legacy error format):
+Use the `#[ApiLegacyMode]` attribute on your controller or action to emulate the old JSON format
+(data wrapping, legacy error format):
 
 ```php
 #[ApiLegacyMode(source: 'sg_rest', wrapData: true, legacyErrorFormat: true)]
@@ -58,27 +100,37 @@ class MyLegacyController {
     - For complex logic, inject your repositories or services into the controller.
 4. **Auth**: If you don't want to issue new tokens, use the `LegacyTokenProvider`.
 
-## 4. Example: News API Migration
+## 4. Example: News API Migration (EXT:sg_demo)
 
-**Old (sg_rest):**
-URL: `/api-key-123/news/list`
+In the `sg_demo` extension, a legacy news API was migrated.
 
-**New (sg_apicore):**
+**Old Controller (sg_rest):**
+- Path: `news/news/list`
+- Authenticated via `AuthenticationServiceInterface`.
+
+**Migrated Controller (sg_apicore):**
 
 ```php
-namespace MyVendor\MyExt\Controller;
+namespace SGalinski\SgDemo\Controller\Rest\News;
 
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
+use SGalinski\SgApiCore\Attribute\RequireUser;
 
-#[ApiLegacyMode]
 class NewsController {
-    #[ApiRoute(path: '/news/list', methods: ['GET'])]
-    public function listAction($request) {
-        // Logic here
+    #[ApiRoute(path: '/news/news/list', methods: ['GET'], apiId: 'legacy')]
+    #[ApiLegacyMode]
+    #[RequireUser]
+    public function getListAction($request) {
+        // ... (use NewsRepository to fetch data)
+        return $this->responseService->createSuccessResponse($response);
     }
 }
 ```
 
-The middleware ensures that a call to `/api-key-123/news/list` is internally mapped to this controller (
-provided the API `api-key-123` is registered).
+The `LegacyRoutingMiddleware` handles the incoming request:
+1. Client calls `/?type=1595576052&tx_sgrest[request]=news/news/list`.
+2. Middleware maps this to `/api/legacy/v1/news/news/list`.
+3. Router matches the route `/news/news/list` for the `legacy` API.
+4. `#[ApiLegacyMode]` ensures the response format matches what the client expects.
+5. `#[RequireUser]` ensures the client must provide a valid (legacy) token.

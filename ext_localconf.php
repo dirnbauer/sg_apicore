@@ -22,6 +22,10 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 	if ($extensionConfiguration->isActivateDemoApis()) {
 		// DEMO API ENTRIES
 		$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
+		$apiRegistry->registerApi('legacy', ['1'], [
+			'authMode' => 'user',
+			'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider']
+		]);
 		$apiRegistry->registerApi('public', ['1'], [
 			'authMode' => 'public'
 		]);

@@ -39,7 +39,6 @@ use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
-use TYPO3\CMS\Core\TypoScript\TypoScriptService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Frontend\Page\PageInformation;

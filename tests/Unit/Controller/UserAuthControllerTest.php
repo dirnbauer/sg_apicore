@@ -214,4 +214,115 @@ class UserAuthControllerTest extends UnitTestCase {
 		$data = json_decode((string) $response->getBody(), TRUE);
 		$this->assertEquals('new-access-token', $data['access_token']);
 	}
+
+	public function testLegacyLoginSuccessful(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
+		$tenantContext = new TenantContext('test-tenant');
+		$request->method('getAttribute')->willReturnMap([
+			['api.tenant', NULL, $tenantContext],
+			['api.id', NULL, 'legacy'],
+			['api.version', NULL, '1']
+		]);
+
+		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('where')->willReturn($queryBuilder);
+		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$result->method('fetchAssociative')->willReturn([
+			'uid' => 123,
+			'username' => 'testuser',
+			'password' => 'hashed-password'
+		]);
+
+		$hashInstance = $this->createStub(PasswordHashInterface::class);
+		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
+		$hashInstance->method('checkPassword')->willReturn(TRUE);
+
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
+
+		$this->tokenService->method('generateRandomToken')->willReturn('random-token');
+
+		$this->responseService->method('createSuccessResponse')->willReturnCallback(
+			function ($data, $meta, $status, $legacyMode) {
+				if ($legacyMode && $legacyMode->wrapData === FALSE && isset($data['bearerToken'])) {
+					return new JsonResponse($data, $status);
+				}
+				return new JsonResponse($data, $status);
+			}
+		);
+
+		$response = $this->controller->legacyLogin($request);
+
+		$this->assertInstanceOf(JsonResponse::class, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+		$data = json_decode((string) $response->getBody(), TRUE);
+		$this->assertEquals('random-token', $data['bearerToken']);
+		$this->assertArrayNotHasKey('access_token', $data);
+	}
+
+	public function testLegacyLoginWithUserAndPassParameters(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getParsedBody')->willReturn(['user' => 'testuser', 'pass' => 'testpass']);
+		$tenantContext = new TenantContext('test-tenant');
+		$request->method('getAttribute')->willReturnMap([
+			['api.tenant', NULL, $tenantContext],
+			['api.id', NULL, 'legacy'],
+			['api.version', NULL, '1']
+		]);
+
+		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('where')->willReturn($queryBuilder);
+		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$result->method('fetchAssociative')->willReturn([
+			'uid' => 123,
+			'username' => 'testuser',
+			'password' => 'hashed-password'
+		]);
+
+		$hashInstance = $this->createStub(PasswordHashInterface::class);
+		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
+		$hashInstance->method('checkPassword')->willReturn(TRUE);
+
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
+		$this->tokenService->method('generateRandomToken')->willReturn('random-token');
+		$this->responseService->method('createSuccessResponse')->willReturnCallback(
+			fn ($data) => new JsonResponse($data)
+		);
+
+		$response = $this->controller->legacyLogin($request);
+		$this->assertEquals(200, $response->getStatusCode());
+	}
+
+	public function testLegacyLoginFailsWithAuthenticatedFrontendUserSession(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$feUser = $this->createMock(\TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication::class);
+		$feUser->user = ['uid' => 123, 'username' => 'testuser'];
+
+		$tenantContext = new TenantContext('test-tenant');
+		$request->method('getAttribute')->willReturnMap([
+			['api.tenant', NULL, $tenantContext],
+			['api.id', NULL, 'legacy'],
+			['api.version', NULL, '1'],
+			['frontend.user', NULL, $feUser]
+		]);
+
+		$this->responseService->method('createErrorResponse')->willReturnCallback(
+			fn ($title, $detail, $status) => new JsonResponse(['title' => $title], $status)
+		);
+
+		$response = $this->controller->legacyLogin($request);
+		$this->assertEquals(400, $response->getStatusCode());
+	}
 }

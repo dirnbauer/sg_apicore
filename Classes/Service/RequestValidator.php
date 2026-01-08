@@ -69,6 +69,17 @@ class RequestValidator implements SingletonInterface {
 		// 3. Validate Body Parameters (JSON)
 		if (!empty($endpoint['bodyParams'])) {
 			$body = $request->getParsedBody();
+
+			// Legacy parameter mapping (user -> username, pass -> password)
+			if ($request->getAttribute('api.isLegacy') && is_array($body)) {
+				if (isset($body['user']) && !isset($body['username'])) {
+					$body['username'] = $body['user'];
+				}
+				if (isset($body['pass']) && !isset($body['password'])) {
+					$body['password'] = $body['pass'];
+				}
+			}
+
 			if (!is_array($body) && $request->getMethod() !== 'GET') {
 				// If body params are expected but the body is not an array, check if any are required
 				foreach ($endpoint['bodyParams'] as $param) {

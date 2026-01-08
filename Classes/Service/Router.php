@@ -127,7 +127,30 @@ class Router implements SingletonInterface {
 		?string $authMode = NULL
 	): ResponseInterface {
 		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version, $authMode) {
-			foreach ($this->endpointDiscoveryService->getAllEndpoints() as $endpoint) {
+			$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+
+			// Sort endpoints to ensure static routes are registered before variable routes.
+			// This prevents "shadowing" errors in fast-route.
+			usort($endpoints, static function ($a, $b) {
+				$pathA = $a['path'];
+				$pathB = $b['path'];
+
+				$isStaticA = !str_contains($pathA, '{');
+				$isStaticB = !str_contains($pathB, '{');
+
+				if ($isStaticA && !$isStaticB) {
+					return -1;
+				}
+				if (!$isStaticA && $isStaticB) {
+					return 1;
+				}
+
+				// If both are static or both are variable, sort by path length (descending)
+				// to ensure more specific routes are matched first.
+				return strlen($pathB) <=> strlen($pathA);
+			});
+
+			foreach ($endpoints as $endpoint) {
 				// Filter by API ID, version and auth mode if specified
 				if (!empty($endpoint['apiId'])) {
 					if (!in_array($apiId, $endpoint['apiId'], TRUE)) {
@@ -154,7 +177,7 @@ class Router implements SingletonInterface {
 				$r->addRoute($endpoint['methods'], $endpoint['path'], [
 					'controller' => $endpoint['controller'],
 					'action' => $endpoint['action'],
-					'authMode' => $endpoint['authMode'],
+					'authMode' => $endpoint['authMode'] ?? NULL,
 					'endpoint' => $endpoint,
 					'resource' => $endpoint['resource'] ?? NULL
 				]);

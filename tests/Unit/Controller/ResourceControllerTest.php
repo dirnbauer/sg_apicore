@@ -166,9 +166,12 @@ class ResourceControllerTest extends UnitTestCase {
 
 		$dataHandler->expects($this->once())
 			->method('start')
-			->with($this->callback(function ($dataMap) {
-				return isset($dataMap['tt_content']['NEW1']['pid']) && $dataMap['tt_content']['NEW1']['pid'] === 123;
-			}), []);
+			->with(
+				$this->callback(function ($dataMap) {
+					return isset($dataMap['tt_content']['NEW1']['pid']) && $dataMap['tt_content']['NEW1']['pid'] === 123;
+				}),
+				[]
+			);
 
 		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));
 
@@ -199,9 +202,12 @@ class ResourceControllerTest extends UnitTestCase {
 
 		$dataHandler->expects($this->once())
 			->method('start')
-			->with($this->callback(function ($dataMap) {
-				return isset($dataMap['tt_content']['NEW1']['pid']) && $dataMap['tt_content']['NEW1']['pid'] === 456;
-			}), []);
+			->with(
+				$this->callback(function ($dataMap) {
+					return isset($dataMap['tt_content']['NEW1']['pid']) && $dataMap['tt_content']['NEW1']['pid'] === 456;
+				}),
+				[]
+			);
 
 		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));
 
@@ -237,9 +243,12 @@ class ResourceControllerTest extends UnitTestCase {
 
 		$dataHandler->expects($this->once())
 			->method('start')
-			->with($this->callback(function ($dataMap) {
-				return isset($dataMap['tt_content'][4471]['header']) && $dataMap['tt_content'][4471]['header'] === 'Updated Header';
-			}), []);
+			->with(
+				$this->callback(function ($dataMap) {
+					return isset($dataMap['tt_content'][4471]['header']) && $dataMap['tt_content'][4471]['header'] === 'Updated Header';
+				}),
+				[]
+			);
 
 		// Since updateAction calls getAction, we need to mock that too or its dependencies
 		$result->method('fetchAssociative')->willReturn(['uid' => 4471, 'header' => 'Updated Header']);

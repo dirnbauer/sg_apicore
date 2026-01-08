@@ -31,7 +31,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Http\Uri;
 
 /**
  * Middleware to handle legacy sg_rest URLs and map them to sg_apicore
@@ -57,7 +56,8 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 	 * @return ResponseInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
-		$path = $request->getUri()->getPath();
+		$uri = $request->getUri();
+		$path = $uri->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
 		// If it's already a new API request, skip
@@ -65,37 +65,76 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			return $handler->handle($request);
 		}
 
+		$queryParams = $request->getQueryParams();
+		$isLegacyRequest = FALSE;
+		$apiKey = '';
+		$entity = '';
+		$identifier = NULL;
+		$verb = NULL;
+
+		// 1. Check for query parameter based legacy requests
+		// Example: /?type=1595576052&tx_sgrest[request]=authentication/authentication/getBearerToken
+		if (isset($queryParams['tx_sgrest']['request']) || isset($queryParams['tx_sgrest_request'])) {
+			$isLegacyRequest = TRUE;
+			$legacyRequest = $queryParams['tx_sgrest']['request'] ?? $queryParams['tx_sgrest_request'];
+			$requestSegments = explode('/', trim($legacyRequest, '/'));
+			if (count($requestSegments) >= 2) {
+				$apiKey = $requestSegments[0];
+				/** @noinspection MultiAssignmentUsageInspection */
+				$entity = $requestSegments[1];
+				$identifier = $requestSegments[2] ?? NULL;
+				// In query mode, usually the path contains more segments if needed
+				if (count($requestSegments) > 3) {
+					$verb = implode('/', array_slice($requestSegments, 3));
+				}
+			}
+		}
+
+		// 2. Check for path-based legacy requests (only if not already identified)
 		// Pattern: /{apiKey}/{entity}/{identifier}/{verb}
 		// Example: /my-key/news/1/get
-		$pathSegments = explode('/', trim($path, '/'));
-
-		// We expect at least apiKey and entity (2 segments)
-		// We filter out common TYPO3 entry points or typical folders to avoid false positives
-		if (count($pathSegments) >= 2 && !$this->isReservedPath($pathSegments[0])) {
-			$apiKey = $pathSegments[0];
-			$entity = $pathSegments[1];
-			$identifier = $pathSegments[2] ?? NULL;
-			$verb = $pathSegments[3] ?? NULL;
-
-			// Map to /api/{apiId}/v1/{entity}/{identifier}
-			// We use the apiKey as apiId by default in legacy mode, or map it if needed.
-			// Most sg_rest setups used the apiKey for authentication AND to identify the API.
-			$newPath = rtrim($apiPathPrefix, '/') . '/' . $apiKey . '/v1/' . $entity;
-			if ($identifier !== NULL) {
-				$newPath .= '/' . $identifier;
+		if (!$isLegacyRequest && $path !== '/' && $path !== '') {
+			$pathSegments = explode('/', trim($path, '/'));
+			// We only consider it a legacy API call if it has at least 2 segments,
+			// doesn't look like a file (no dot in the last segment),
+			// and doesn't start with a reserved TYPO3 path.
+			// ALSO: We check if the type parameter is set to the typical sg_rest type
+			// or if we are sure it's a legacy request.
+			$isRestType = (isset($queryParams['type']) && (int) $queryParams['type'] === 1595576052);
+			if ($isRestType && count($pathSegments) >= 2 && !str_contains(
+				end($pathSegments),
+				'.'
+			) && !$this->isReservedPath($pathSegments[0])) {
+				$isLegacyRequest = TRUE;
+				$apiKey = $pathSegments[0];
+				/** @noinspection MultiAssignmentUsageInspection */
+				$entity = $pathSegments[1];
+				$identifier = $pathSegments[2] ?? NULL;
+				$verb = $pathSegments[3] ?? NULL;
 			}
-			// Note: sg_rest 'verb' is often redundant with HTTP methods or mapped to sub-paths.
-			// If a verb exists, we might need special handling.
-			if ($verb !== NULL) {
-				$newPath .= '/' . $verb;
+		}
+
+		if ($isLegacyRequest && $apiKey !== '' && $entity !== '') {
+			// Refined mapping strategy:
+			// If it's a bearer token request, map to /api/legacy/v1/auth/login
+			if ($apiKey === 'authentication' && $entity === 'authentication' && $identifier === 'getBearerToken') {
+				$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1/auth/legacyLogin';
+			} else {
+				// Map other legacy requests to /api/legacy/v1/{apiKey}/{entity}/{identifier}
+				$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1/' . $apiKey . '/' . $entity;
+				if ($identifier !== NULL) {
+					$newPath .= '/' . $identifier;
+				}
+				if ($verb !== NULL) {
+					$newPath .= '/' . $verb;
+				}
 			}
 
-			$request = $request->withUri(new Uri($newPath));
+			$request = $request->withUri($uri->withPath($newPath));
 			// Tag the request as legacy
 			$request = $request->withAttribute('api.isLegacy', TRUE);
-
-			// Also ensure the bearertoken is passed if it's in the apiKey segment (common in some sg_rest versions)
-			if (!$request->hasHeader('Authorization') && !$request->hasHeader('bearertoken')) {
+			// Also ensure the legacyApiKey is passed for authentication bridge
+			if (!$request->hasHeader('Authorization')) {
 				$request = $request->withAttribute('api.legacyApiKey', $apiKey);
 			}
 		}

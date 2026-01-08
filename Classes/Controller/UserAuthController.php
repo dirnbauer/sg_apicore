@@ -34,6 +34,7 @@ use Random\RandomException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
@@ -121,9 +122,60 @@ class UserAuthController {
 	#[ApiResponse(status: 400, description: 'Missing username or password')]
 	#[ApiResponse(status: 401, description: 'Invalid credentials')]
 	public function login(ServerRequestInterface $request): ResponseInterface {
+		return $this->handleLogin($request);
+	}
+
+	/**
+	 * Legacy login action for sg_rest compatibility
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws Exception
+	 * @throws RandomException
+	 * @throws \JsonException
+	 * @throws InvalidPasswordHashException
+	 */
+	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: ['user', 'public'])]
+	#[ApiEndpoint(summary: 'Legacy User login', description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.', tags: ['Legacy'])]
+	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user')]
+	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user')]
+	#[ApiResponse(status: 200, description: 'Login successful, returns bearerToken')]
+	#[ApiLegacyMode(wrapData: FALSE)]
+	public function legacyLogin(ServerRequestInterface $request): ResponseInterface {
+		// Ensure we are in the legacy API context
+		if ($request->getAttribute('api.id') !== 'legacy') {
+			return $this->responseService->createErrorResponse(
+				'Forbidden',
+				'This endpoint is only available for the legacy API.',
+				403
+			);
+		}
+
+		$response = $this->handleLogin($request);
+		if ($response->getStatusCode() === 200) {
+			$data = json_decode((string) $response->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
+			return $this->responseService->createSuccessResponse([
+				'bearerToken' => $data['access_token'] ?? ''
+			], [], 200, new ApiLegacyMode(wrapData: FALSE));
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Shared login logic
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws Exception
+	 * @throws InvalidPasswordHashException
+	 * @throws RandomException
+	 * @throws \JsonException
+	 */
+	protected function handleLogin(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
-		$username = $params['username'] ?? '';
-		$password = $params['password'] ?? '';
+		$username = $params['username'] ?? $params['user'] ?? '';
+		$password = $params['password'] ?? $params['pass'] ?? '';
 
 		if ($username === '' || $password === '') {
 			return $this->responseService->createErrorResponse('Bad Request', 'Missing username or password.', 400);
@@ -192,7 +244,6 @@ class UserAuthController {
 		}
 
 		$user = $queryBuilder->executeQuery()->fetchAssociative();
-
 		if (!$user) {
 			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
