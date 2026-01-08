@@ -33,6 +33,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		parent::setUp();
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$this->extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+		$this->extensionConfiguration->method('isActivateLegacySupport')->willReturn(TRUE);
 		$this->handler = $this->createMock(RequestHandlerInterface::class);
 		$this->middleware = new LegacyRoutingMiddleware($this->extensionConfiguration);
 	}
@@ -124,5 +125,22 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 			->willReturn($this->createStub(ResponseInterface::class));
 
 		$this->middleware->process($request, $this->handler);
+	}
+
+	public function testProcessDoesNothingWhenLegacySupportIsDisabled(): void {
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isActivateLegacySupport')->willReturn(FALSE);
+		$middleware = new LegacyRoutingMiddleware($extensionConfiguration);
+
+		$request = $this->createMock(ServerRequestInterface::class);
+		// If legacy support is disabled, it shouldn't even check the URI or query params
+		$request->expects($this->never())->method('getUri');
+
+		$this->handler->expects($this->once())
+			->method('handle')
+			->with($request)
+			->willReturn($this->createStub(ResponseInterface::class));
+
+		$middleware->process($request, $this->handler);
 	}
 }

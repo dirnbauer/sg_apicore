@@ -27,6 +27,7 @@
 namespace SGalinski\SgApiCore\Security;
 
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
 /**
@@ -42,10 +43,17 @@ class LegacyTokenProvider implements LoginProviderInterface {
 	protected ConnectionPool $connectionPool;
 
 	/**
-	 * @param ConnectionPool $connectionPool
+	 * @var ExtensionConfiguration
 	 */
-	public function __construct(ConnectionPool $connectionPool) {
+	protected ExtensionConfiguration $extensionConfiguration;
+
+	/**
+	 * @param ConnectionPool $connectionPool
+	 * @param ExtensionConfiguration $extensionConfiguration
+	 */
+	public function __construct(ConnectionPool $connectionPool, ExtensionConfiguration $extensionConfiguration) {
 		$this->connectionPool = $connectionPool;
+		$this->extensionConfiguration = $extensionConfiguration;
 	}
 
 	/**
@@ -63,6 +71,10 @@ class LegacyTokenProvider implements LoginProviderInterface {
 		string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
+		if (!$this->extensionConfiguration->isActivateLegacySupport()) {
+			return NULL;
+		}
+
 		// Support both standard Bearer and legacy 'bearertoken' header or query param
 		$token = $this->extractToken($request);
 		if ($token === '') {

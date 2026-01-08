@@ -135,6 +135,17 @@ See [Tenants Documentation](docs/Tenants.md).
 Supports multiple auth modes (public, token, user) and scope-based authorization.
 See [Authentication & Scopes](docs/AuthScopes.md).
 
+## Legacy Support (Migration from sg_rest)
+
+The extension provides a bridge to support legacy `sg_rest` clients. This includes:
+
+- Middleware for mapping old URL patterns.
+- Support for `fe_users` authentication tokens.
+- Emulation of the old response format.
+
+**Note**: Legacy support is **disabled by default**. See the [Migration Guide](docs/Migration.md) for details on how to
+enable and use it.
+
 ## Architectural Decisions
 
 For information on why we chose certain technologies and patterns, see our Architectural Decision Records at docs/adr/.

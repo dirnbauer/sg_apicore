@@ -3,6 +3,16 @@
 This document describes how to migrate existing APIs from the deprecated `sg_rest` extension to the new `sg_apicore`
 architecture.
 
+## 0. Preparation
+
+To enable the backward compatibility features, you must first activate the legacy support in the extension configuration
+of `sg_apicore`:
+
+1. Go to **Admin Tools > Extension Configuration**.
+2. Select `sg_apicore`.
+3. Enable the checkbox **Activate Legacy Support**.
+4. Clear all caches.
+
 ## 1. Concept Comparison
 
 | Feature  | sg_rest                             | sg_apicore                                 |

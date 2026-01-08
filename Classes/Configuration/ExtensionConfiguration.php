@@ -162,4 +162,13 @@ class ExtensionConfiguration implements SingletonInterface {
 	public function isActivateDemoApis(): bool {
 		return (bool) $this->get('activateDemoApis', TRUE);
 	}
+
+	/**
+	 * Returns whether legacy support for sg_rest should be activated
+	 *
+	 * @return bool
+	 */
+	public function isActivateLegacySupport(): bool {
+		return (bool) $this->get('activateLegacySupport', FALSE);
+	}
 }

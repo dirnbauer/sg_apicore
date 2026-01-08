@@ -4,6 +4,9 @@ enableLogging = 0
 # cat=basic/enable; type=boolean; label=Activate Demo APIs:Register example APIs and resources
 activateDemoApis = 1
 
+# cat=basic/enable; type=boolean; label=Activate Legacy Support:Enable support for sg_rest legacy calls and tokens
+activateLegacySupport = 0
+
 # cat=basic/logging; type=boolean; label=Log request headers
 logHeaders = 0
 

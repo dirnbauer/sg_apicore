@@ -56,6 +56,10 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 	 * @return ResponseInterface
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+		if (!$this->extensionConfiguration->isActivateLegacySupport()) {
+			return $handler->handle($request);
+		}
+
 		$uri = $request->getUri();
 		$path = $uri->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
