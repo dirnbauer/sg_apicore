@@ -26,10 +26,12 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
+use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Random\RandomException;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
@@ -39,8 +41,11 @@ use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
+use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
@@ -107,8 +112,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
-	 * @throws \Exception
+	 * @throws RandomException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
@@ -140,7 +144,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 		$startTime = microtime(TRUE);
 		try {
-			$response = $this->handleApiRequest($request, $handler);
+			$response = $this->handleApiRequest($request);
 		} catch (\Throwable $e) {
 			$this->logService->logException($e, $request);
 			$response = $this->createErrorResponse(
@@ -161,14 +165,11 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * Core API request handling logic
 	 *
 	 * @param ServerRequestInterface $request
-	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
+	 * @throws Exception
 	 * @throws \ReflectionException
 	 */
-	protected function handleApiRequest(
-		ServerRequestInterface $request,
-		RequestHandlerInterface $handler
-	): ResponseInterface {
+	protected function handleApiRequest(ServerRequestInterface $request): ResponseInterface {
 		$path = $request->getUri()->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
@@ -195,11 +196,50 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			try {
 				$rootline = $rootlineUtility->get();
 				$pageInformation->setRootLine($rootline);
-			} catch (\Exception $e) {
-				// Fallback or ignore if rootline cannot be resolved
+			} catch (\Exception) {
+				// Fallback or ignore if the rootline cannot be resolved
 			}
 
 			$request = $request->withAttribute('frontend.page.information', $pageInformation);
+
+			// Mock TSFE for Extbase ConfigurationManager in TYPO3 13
+			if (!isset($GLOBALS['TSFE'])) {
+				$site = $request->getAttribute('site');
+				$language = $request->getAttribute('language');
+				if ($site && $language) {
+					/** @noinspection PhpDeprecationInspection */
+					$tsfe = GeneralUtility::makeInstance(
+						TypoScriptFrontendController::class,
+						$GLOBALS['TYPO3_CONF_VARS'],
+						$site,
+						$language,
+						$pageInformation,
+						$request->getAttribute('frontend.user')
+					);
+
+					$setupArray = [
+						'config.' => [
+							'tx_sgapicore.' => [
+								'persistence.' => [
+									'storagePid' => $siteRootPageId
+								]
+							]
+						]
+					];
+
+					// Satisfy Extbase ConfigurationManager in TYPO3 13
+					$frontendTypoScript = new FrontendTypoScript(
+						new RootNode(),
+						[],
+						[],
+						[]
+					);
+					$frontendTypoScript->setSetupArray($setupArray);
+					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
+
+					$GLOBALS['TSFE'] = $tsfe;
+				}
+			}
 
 			// Synchronize global TYPO3_REQUEST if it exists, as some hooks/legacy code still use it
 			if (isset($GLOBALS['TYPO3_REQUEST'])) {
