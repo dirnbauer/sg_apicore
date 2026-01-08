@@ -73,24 +73,32 @@ class ApiCoreController extends ActionController {
 	protected ModuleTemplateFactory $moduleTemplateFactory;
 
 	/**
+	 * @var IconFactory
+	 */
+	protected IconFactory $iconFactory;
+
+	/**
 	 * @param ApiRegistry $apiRegistry
 	 * @param TokenRepository $tokenRepository
 	 * @param TokenService $tokenService
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param ModuleTemplateFactory $moduleTemplateFactory
+	 * @param IconFactory $iconFactory
 	 */
 	public function __construct(
 		ApiRegistry $apiRegistry,
 		TokenRepository $tokenRepository,
 		TokenService $tokenService,
 		EndpointDiscoveryService $endpointDiscoveryService,
-		ModuleTemplateFactory $moduleTemplateFactory
+		ModuleTemplateFactory $moduleTemplateFactory,
+		IconFactory $iconFactory
 	) {
 		$this->apiRegistry = $apiRegistry;
 		$this->tokenRepository = $tokenRepository;
 		$this->tokenService = $tokenService;
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->moduleTemplateFactory = $moduleTemplateFactory;
+		$this->iconFactory = $iconFactory;
 	}
 
 	/**
@@ -264,11 +272,10 @@ class ApiCoreController extends ActionController {
 		// Refresh button using core translation
 		$buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
 		$refreshTitle = LocalizationUtility::translate('labels.reload', 'core') ?? 'Reload';
-		$iconFactory = GeneralUtility::makeInstance(IconFactory::class);
 		$refreshButton = $buttonBar->makeLinkButton()
 			->setHref(GeneralUtility::getIndpEnv('REQUEST_URI'))
 			->setTitle($refreshTitle)
-			->setIcon($iconFactory->getIcon('actions-refresh', \TYPO3\CMS\Core\Imaging\IconSize::SMALL));
+			->setIcon($this->iconFactory->getIcon('actions-refresh', \TYPO3\CMS\Core\Imaging\IconSize::SMALL));
 		$buttonBar->addButton($refreshButton, ButtonBar::BUTTON_POSITION_RIGHT);
 		$shortcutButton = $buttonBar->makeShortcutButton()
 			->setDisplayName('Shortcut')

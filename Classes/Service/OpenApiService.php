@@ -171,36 +171,26 @@ class OpenApiService implements SingletonInterface {
 
 		// Request Body (JSON)
 		if (count($endpoint['bodyParams']) > 0) {
-			$schema = [];
-			if (isset($endpoint['resource']) && str_contains($endpoint['action'], 'create')) {
-				// Use the resource schema for creation
-				$schema = ['$ref' => '#/components/schemas/' . $endpoint['resource']['table']];
-			} elseif (isset($endpoint['resource']) && str_contains($endpoint['action'], 'update')) {
-				// PATCH is a partial update, so we can't strictly use the full required schema,
-				// But for the UI, showing the resource schema is helpful.
-				$schema = ['$ref' => '#/components/schemas/' . $endpoint['resource']['table']];
-			} else {
-				$properties = [];
-				$required = [];
-				/** @var ApiBodyParam $param */
-				foreach ($endpoint['bodyParams'] as $param) {
-					$properties[$param->name] = [
-						'type' => $this->mapPhpTypeToOpenApi($param->type),
-						'description' => $param->description
-					];
-					if ($param->required) {
-						$required[] = $param->name;
-					}
-				}
-
-				$schema = [
-					'type' => 'object',
-					'properties' => $properties
+			$properties = [];
+			$required = [];
+			/** @var ApiBodyParam $param */
+			foreach ($endpoint['bodyParams'] as $param) {
+				$properties[$param->name] = [
+					'type' => $this->mapPhpTypeToOpenApi($param->type),
+					'description' => $param->description
 				];
-
-				if (!empty($required)) {
-					$schema['required'] = $required;
+				if ($param->required) {
+					$required[] = $param->name;
 				}
+			}
+
+			$schema = [
+				'type' => 'object',
+				'properties' => $properties
+			];
+
+			if (!empty($required)) {
+				$schema['required'] = $required;
 			}
 
 			$operation['requestBody'] = [
@@ -245,7 +235,10 @@ class OpenApiService implements SingletonInterface {
 			if ($response->schema) {
 				$resp['content'] = [
 					'application/json' => [
-						'schema' => $this->parseSchema($response->schema, array_keys($spec['components']['schemas'] ?? []))
+						'schema' => $this->parseSchema(
+							$response->schema,
+							array_keys($spec['components']['schemas'] ?? [])
+						)
 					]
 				];
 			}
