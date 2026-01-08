@@ -570,96 +570,82 @@ DataHandler).
 - Workspaces/Translation-Fallstricke vollständig abdecken
 - Query-DSL wie API Platform
 
-### Phase L – sg_rest Drop-In Replacement & Migrationspfad (kurz)
+### Phase L – sg_rest Migration & Legacy Support
 
 **Ziel**
-`sg_apicore` so erweitern, dass bestehende Installationen mit `sg_rest` **schrittweise*- migriert werden können –
-idealerweise als **Drop-In Replacement*- für einen definierten Teilumfang (v1), ohne die alte Extension sofort zu
-entfernen.
+`sg_apicore` so erweitern, dass bestehende Installationen mit `sg_rest` schrittweise migriert werden können. Das Ziel
+ist kein 100% Drop-In Replacement aller Extbase-Logiken, sondern die Bereitstellung der Infrastruktur (Routing & Auth),
+um bestehende Endpunkte mit minimalem Aufwand in `sg_apicore` neu zu implementieren oder umzuleiten.
 
-## Scope (MVP / v1 Drop-In)
+## Scope
 
-### 1) Kompatibilitätsmodus aktivierbar
+### 1) Legacy Routing Adapter (The "Bridge")
 
-- Konfig-Flag: `compat.sg_rest.enabled = true`
-- Optional: `compat.sg_rest.basePath = /rest` (oder was bei sg_rest genutzt wurde)
+`sg_rest` nutzt das Schema `/{apiKey}/{entity}/{identifier}/{verb}`.
+In `sg_apicore` wird eine optionale Middleware oder ein spezieller Router-Zweig eingeführt, der dieses Muster erkennt.
 
-**DoD:*- Bei aktivem Flag werden Requests unter dem alten sg_rest Pfad von `sg_apicore` übernommen.
+- **Legacy Route Resolver**:
+    - Erkennt Requests, die dem alten Muster entsprechen.
+    - Mappt `apiKey` auf einen neuen `Tenant` oder eine `apiId`.
+    - Erlaubt das Mapping von `{entity}` auf neue `ResourceControllers` oder dedizierte Actions.
+- **Identifier Handling**:
+    - Stellt sicher, dass `{identifier}` korrekt an die neue Logik übergeben wird (analog zu `#[ApiPathParam]`).
 
----
-
-### 2) Routing-/Endpoint-Kompatibilität
-
-- Mapping alter sg_rest URLs → neue Endpoint-Definitionen
-
-    - 1:1 Route-Mapping (Preferred)
-    - oder Rewrite/Alias-Mechanismus (Fallback)
-- Unterstützung für alte Versionierung/Prefix-Logik (sofern vorhanden)
-
-**DoD:*- Ein definierter Satz “Legacy Routes” liefert identische Responses (Status + JSON Struktur) wie vorher.
+**DoD**: Ein Request an `/v0/my-key/news/1` wird intern auf einen `sg_apicore` Endpunkt gemappt, ohne dass der Client
+die URL ändern muss.
 
 ---
 
-### 3) Auth-Kompatibilität (minimal)
+### 2) Auth-Kompatibilität (Legacy Token Bridge)
 
-- Support für bisherigen sg_rest Auth-Modus:
+`sg_rest` nutzt oft `authtoken` Felder in der `fe_users` Tabelle oder einfache JWTs, die auf `fe_users` basieren.
 
-    - Opaque Token / API-Key (wie in sg_rest)
-    - Optional: JWT, falls sg_rest das genutzt hat
-- Optional: Import/Bridge für bestehende Token-Daten (wenn DB-Schema abweicht)
+- **LegacyTokenProvider**:
+    - Neuer Auth-Provider in `sg_apicore`, der gegen die `fe_users.tx_sgrest_auth_token` prüft.
+    - Optional: Unterstützung des alten `bearertoken` Headers.
+- **Context Mapping**:
+    - Der `LegacyTokenProvider` liefert einen regulären `AuthContext`, sodass Endpunkte keinen Unterschied zwischen "
+      neuem" und "altem" Token merken.
 
-**DoD:*- Bestehende Clients können weiterhin authentifizieren, ohne Token-Rollout (oder mit minimaler Umstellung).
-
----
-
-### 4) Response-Kompatibilität
-
-- Response Envelope kompatibel schaltbar:
-
-    - Felder/Keys (z. B. `data`, `meta`, `errors`)
-    - Pagination-Format wie bisher
-- Error-Format kompatibel schaltbar (sofern sg_rest abweicht)
-
-**DoD:*- Clients/Integrationen brechen nicht wegen anderer JSON-Struktur.
+**DoD**: Ein alter Client kann sich weiterhin mit seinem bestehenden Token authentifizieren.
 
 ---
 
-### 5) Logging & Behavior Parity (nur wo relevant)
+### 3) Response Envelope (Compatibility Mode)
 
-- Optional: gleiche Log-Felder wie sg_rest (Request/Response/Params)
-- Performance: keine “Legacy-Shims”, die pro Request massiv overhead erzeugen
+`sg_rest` liefert Daten standardmäßig im Format `{"data": ...}`. `sg_apicore` nutzt dies zwar auch oft, aber die
+Struktur von Fehlern und Metadaten (Pagination) weicht ab.
 
-**DoD:*- Legacy Verhalten ist ausreichend gleich, ohne neue Bottlenecks.
+- **LegacyResponseDecorator**:
+    - Optionaler Flag pro API/Endpoint: `#[ApiLegacyMode(source: 'sg_rest')]`.
+    - Transformiert die `sg_apicore` Response (RFC 7807 Errors, Pagination) in das alte Format.
 
----
-
-## Vorgehen / Migrationsstrategie
-
-1. **Inventory**: Liste aller sg_rest Endpunkte + Auth + Response-Formate
-2. **Priorisieren**: Top 20 Endpunkte zuerst (nach Traffic/Business)
-3. **Dual-Run**: sg_rest bleibt installiert, `sg_apicore` übernimmt nur den Legacy-Prefix (oder nur einzelne Routen)
-4. **Cutover**: wenn parity erreicht, sg_rest Routen deaktivieren / entfernen
+**DoD**: Die JSON-Struktur der Response bleibt für den Client identisch.
 
 ---
 
-## Non-Goals (für v1)
+### 4) Migrations-Pfad Dokumentation
 
-- 100% sg_rest Feature-Clone
-- automatische Migration aller Custom-Endpunkte ohne Mapping
-- vollständige Kompatibilität, wenn sg_rest “Magic”/Typoscript-Routing hatte (nur explizit gemappte Fälle)
+Anstatt Code zu migrieren, wird ein Guide erstellt:
 
----
-
-## Tests & DoD global
-
-- Golden-Master Tests: legacy request → response JSON exakt gleich (oder definierte tolerierte Unterschiede)
-- Dokumentation: “Welche Endpunkte sind drop-in-kompatibel, welche nicht” + Migrations-Checkliste
+1. **API Key -> Tenant**: Wie man die alten Keys in die neue Tenant-Struktur überführt.
+2. **Extbase -> sg_apicore**: Wie man ein altes Model/Repository-Paar mittels `TcaMapper` (Phase H) und
+   `ResourceController` (Phase K) in 5 Minuten als neuen Endpunkt bereitstellt.
+3. **Custom Actions**: Anleitung zum Umzug von komplexer Business-Logik aus `AbstractRestController` in neue
+   `#[ApiRoute]` Controller.
 
 ---
 
-**Hinweis (wichtig):*- Ob “Drop-In” wirklich möglich ist, hängt fast komplett davon ab, wie stark `sg_rest` bei euch *
-*Response-Formate, Routing-Magic, Token-Handling*- und **TCA/Entity-Mapping*- verzahnt hat. Für einen Teilumfang ist es
-meist gut machbar; als vollständiger Ersatz eher nur mit klarer Endpunktliste und Golden-Master-Tests.
+## Non-Goals
 
-Wenn du mir sagst, wie sg_rest aktuell routet (Prefix, Versioning, Response Envelope, Auth), kann ich Phase Y noch enger
-auf eure Realität zuschneiden (inkl. “Minimum viable drop-in” Liste).
+- Automatischer Import aller `sg_rest` Registrierungen (zu fehleranfällig).
+- Volle Unterstützung von Extbase-Features wie `LazyLoading` oder `ObjectStorage` im Legacy-Mode (stattdessen:
+  Umstellung auf `TcaMapper`).
+
+---
+
+## Tests & DoD
+
+- **Integration Test**: Ein simulierter `sg_rest` Request (alter Pfad + alter Header) wird von `sg_apicore` erfolgreich
+  verarbeitet und liefert das alte Format zurück.
+- **Doku**: Vollständiges Beispiel einer Migration eines "News"-Endpunkts von `sg_rest` zu `sg_apicore`.
