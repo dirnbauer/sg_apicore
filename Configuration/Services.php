@@ -2,6 +2,7 @@
 
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
 use SGalinski\SgApiCore\Security\JwtAccessTokenProvider;
+use SGalinski\SgApiCore\Security\LegacyTokenProvider;
 use SGalinski\SgApiCore\Security\LoginProviderChain;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\Tenant\HeaderTenantResolver;
@@ -59,6 +60,9 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 		->tag('sg_apicore.login_provider');
 
 	$services->set(JwtAccessTokenProvider::class)
+		->tag('sg_apicore.login_provider');
+
+	$services->set(LegacyTokenProvider::class)
 		->tag('sg_apicore.login_provider');
 
 	$services->alias(TenantResolverInterface::class, TenantResolverChain::class);

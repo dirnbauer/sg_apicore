@@ -30,6 +30,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
@@ -164,7 +165,8 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			return $this->createErrorResponse(
 				'Tenant Resolution Failed',
 				'Could not resolve a valid tenant for this request. Reason: ' . $tenantResult->getError(),
-				$this->extensionConfiguration->getOnMissingTenantStatusCode()
+				$this->extensionConfiguration->getOnMissingTenantStatusCode(),
+				$request
 			);
 		}
 		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
@@ -233,7 +235,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		return $this->createErrorResponse('Not Found', 'The requested API or version does not exist.', 404);
+		return $this->createErrorResponse('Not Found', 'The requested API or version does not exist.', 404, $request);
 	}
 
 	/**
@@ -242,9 +244,24 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @param string $title
 	 * @param string $detail
 	 * @param int $status
+	 * @param ServerRequestInterface|null $request
 	 * @return ResponseInterface
 	 */
-	protected function createErrorResponse(string $title, string $detail, int $status): ResponseInterface {
+	protected function createErrorResponse(
+		string $title,
+		string $detail,
+		int $status,
+		?ServerRequestInterface $request = NULL
+	): ResponseInterface {
+		$legacyMode = $request?->getAttribute('api.legacyMode');
+		if ($legacyMode instanceof ApiLegacyMode && $legacyMode->legacyErrorFormat) {
+			return new JsonResponse([
+				'error' => $title,
+				'message' => $detail,
+				'code' => $status
+			], $status);
+		}
+
 		return new JsonResponse([
 			'title' => $title,
 			'detail' => $detail,

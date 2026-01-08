@@ -53,10 +53,21 @@ class ResponseService implements SingletonInterface {
 	 * @param mixed $data The data to return
 	 * @param array $meta Optional metadata
 	 * @param int $status HTTP status code
+	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
 	 * @return ResponseInterface
 	 */
-	public function createSuccessResponse(mixed $data, array $meta = [], int $status = 200): ResponseInterface {
-		if ($this->extensionConfiguration->isResponseEnvelopeEnabled() || count($meta) > 0) {
+	public function createSuccessResponse(
+		mixed $data,
+		array $meta = [],
+		int $status = 200,
+		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+	): ResponseInterface {
+		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || count($meta) > 0;
+		if ($legacyMode !== NULL) {
+			$wrapData = $legacyMode->wrapData;
+		}
+
+		if ($wrapData) {
 			$response = [
 				'data' => $data
 			];
@@ -78,6 +89,7 @@ class ResponseService implements SingletonInterface {
 	 * @param int $status
 	 * @param string $type
 	 * @param array $additionalData
+	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
 	 * @return ResponseInterface
 	 */
 	public function createErrorResponse(
@@ -85,14 +97,23 @@ class ResponseService implements SingletonInterface {
 		string $detail,
 		int $status,
 		string $type = 'about:blank',
-		array $additionalData = []
+		array $additionalData = [],
+		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
-		$response = [
-			'title' => $title,
-			'detail' => $detail,
-			'status' => $status,
-			'type' => $type
-		];
+		if ($legacyMode?->legacyErrorFormat) {
+			$response = [
+				'error' => $title,
+				'message' => $detail,
+				'code' => $status
+			];
+		} else {
+			$response = [
+				'title' => $title,
+				'detail' => $detail,
+				'status' => $status,
+				'type' => $type
+			];
+		}
 
 		if (count($additionalData) > 0) {
 			$response = array_merge($response, $additionalData);

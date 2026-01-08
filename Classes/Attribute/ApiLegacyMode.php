@@ -24,31 +24,24 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
-use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
+namespace SGalinski\SgApiCore\Attribute;
 
-return [
-	'frontend' => [
-		'sgalinski/sg-apicore/legacy-routing' => [
-			'target' => LegacyRoutingMiddleware::class,
-			'description' => 'Maps legacy sg_rest URLs to the new API structure',
-			'after' => [
-				'typo3/cms-frontend/site'
-			],
-			'before' => [
-				'sgalinski/sg-apicore/api-request'
-			]
-		],
-		'sgalinski/sg-apicore/api-request' => [
-			'target' => ApiRequestMiddleware::class,
-			'description' => 'Dispatches an API request',
-			'after' => [
-				'typo3/cms-frontend/site',
-				'sgalinski/sg-apicore/legacy-routing'
-			],
-			'before' => [
-				'typo3/cms-frontend/base-redirect-resolver',
-			]
-		],
-	]
-];
+use Attribute;
+
+/**
+ * Attribute to enable legacy compatibility mode for an endpoint
+ */
+#[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
+class ApiLegacyMode {
+	/**
+	 * @param string $source The legacy system to emulate (e.g., 'sg_rest')
+	 * @param bool $wrapData Whether to always wrap the response in a 'data' property
+	 * @param bool $legacyErrorFormat Whether to use the legacy error format instead of RFC 7807
+	 */
+	public function __construct(
+		public string $source = 'sg_rest',
+		public bool $wrapData = TRUE,
+		public bool $legacyErrorFormat = TRUE
+	) {
+	}
+}

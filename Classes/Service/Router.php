@@ -30,6 +30,7 @@ use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -211,6 +212,17 @@ class Router implements SingletonInterface {
 				}
 
 				// 3. Scope Enforcement
+				$legacyModeAttributes = $reflectionMethod->getAttributes(ApiLegacyMode::class);
+				if (count($legacyModeAttributes) === 0) {
+					$legacyModeAttributes = $reflectionClass->getAttributes(ApiLegacyMode::class);
+				}
+
+				$legacyMode = NULL;
+				if (count($legacyModeAttributes) > 0) {
+					$legacyMode = $legacyModeAttributes[0]->newInstance();
+					$request = $request->withAttribute('api.legacyMode', $legacyMode);
+				}
+
 				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
 				if (count($scopeAttributes) > 0) {
 					/** @var RequireScopes $requireScopes */
