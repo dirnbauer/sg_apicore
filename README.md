@@ -45,6 +45,32 @@ The extension follows a standard TYPO3 extension structure with a focus on clean
 
 2. Activate the extension in the TYPO3 Extension Manager.
 
+## Quick Start (3 Steps)
+
+### 1. Register your Controller
+
+Add your controller to `Configuration/Services.php` and tag it with `sg_apicore.router`:
+
+```php
+$services->set(MyController::class)
+    ->tag('sg_apicore.router');
+```
+
+### 2. Define an Endpoint
+
+Use the `#[ApiRoute]` attribute in your controller action:
+
+```php
+#[ApiRoute(path: '/hello', methods: ['GET'])]
+public function helloAction(ServerRequestInterface $request): ResponseInterface {
+    return $this->responseService->createSuccessResponse(['message' => 'Hello!']);
+}
+```
+
+### 3. Access the API
+
+Open your browser at `https://your-domain.local/api/docs/ui/` to see the generated Swagger UI and test your new endpoint!
+
 ## Testing
 
 You can test the API by calling the health endpoint:

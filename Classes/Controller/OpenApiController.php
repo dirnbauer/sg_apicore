@@ -88,46 +88,46 @@ class OpenApiController {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Swagger UI - {$apiId} (v{$version})</title>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" >
-    <style>
-        html { box-sizing: border-box; overflow-y: scroll; }
-        *, *:before, *:after { box-sizing: inherit; }
-        body { margin:0; background: #fafafa; }
-    </style>
+	<meta charset="UTF-8">
+	<title>Swagger UI - {$apiId} (v{$version})</title>
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" >
+	<style>
+		html { box-sizing: border-box; overflow-y: scroll; }
+		*, *:before, *:after { box-sizing: inherit; }
+		body { margin:0; background: #fafafa; }
+	</style>
 </head>
 <body>
-    <div id="swagger-ui"></div>
-    <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"> </script>
-    <script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-standalone-preset.js"> </script>
-    <script>
-    window.onload = function() {
-        // Calculate the path to docs.json relative to docs/ui
-        let pathParts = window.location.pathname.split('/');
-        if (pathParts[pathParts.length - 1] === '') {
-            pathParts.pop(); // remove trailing slash part
-        }
-        pathParts.pop(); // remove 'ui'
-        pathParts.pop(); // remove 'docs'
-        let docsUrl = pathParts.join('/') + '/docs.json';
+	<div id="swagger-ui"></div>
+	<script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"> </script>
+	<script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-standalone-preset.js"> </script>
+	<script>
+	window.onload = function() {
+		// Calculate the path to docs.json relative to docs/ui
+		let pathParts = window.location.pathname.split('/');
+		if (pathParts[pathParts.length - 1] === '') {
+			pathParts.pop(); // remove trailing slash part
+		}
+		pathParts.pop(); // remove 'ui'
+		pathParts.pop(); // remove 'docs'
+		let docsUrl = pathParts.join('/') + '/docs.json';
 
-        const ui = SwaggerUIBundle({
-            url: docsUrl,
-            dom_id: '#swagger-ui',
-            deepLinking: true,
-            presets: [
-                SwaggerUIBundle.presets.apis,
-                SwaggerUIStandalonePreset
-            ],
-            plugins: [
-                SwaggerUIBundle.plugins.DownloadUrl
-            ],
-            layout: "StandaloneLayout"
-        })
-        window.ui = ui
-    }
-    </script>
+		const ui = SwaggerUIBundle({
+			url: docsUrl,
+			dom_id: '#swagger-ui',
+			deepLinking: true,
+			presets: [
+				SwaggerUIBundle.presets.apis,
+				SwaggerUIStandalonePreset
+			],
+			plugins: [
+				SwaggerUIBundle.plugins.DownloadUrl
+			],
+			layout: "StandaloneLayout"
+		})
+		window.ui = ui
+	}
+	</script>
 </body>
 </html>
 HTML;

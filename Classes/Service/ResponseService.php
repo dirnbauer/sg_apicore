@@ -78,7 +78,10 @@ class ResponseService implements SingletonInterface {
 			$response = $data;
 		}
 
-		return new JsonResponse($response, $status);
+		return new JsonResponse($response, $status, [
+			'X-Content-Type-Options' => 'nosniff',
+			'X-Frame-Options' => 'DENY',
+		]);
 	}
 
 	/**
@@ -119,6 +122,10 @@ class ResponseService implements SingletonInterface {
 			$response = array_merge($response, $additionalData);
 		}
 
-		return new JsonResponse($response, $status, ['Content-Type' => 'application/problem+json']);
+		return new JsonResponse($response, $status, [
+			'Content-Type' => 'application/problem+json',
+			'X-Content-Type-Options' => 'nosniff',
+			'X-Frame-Options' => 'DENY',
+		]);
 	}
 }

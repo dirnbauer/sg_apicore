@@ -36,34 +36,15 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Service for managing API tokens
  */
 class TokenService implements SingletonInterface {
-	/**
-	 * @var TokenRepository
-	 */
-	protected TokenRepository $tokenRepository;
+	protected ConnectionPool $connectionPool;
 
-	/**
-	 * @var JwtService
-	 */
-	protected JwtService $jwtService;
-
-	/**
-	 * @var ExtensionConfiguration
-	 */
-	protected ExtensionConfiguration $extensionConfiguration;
-
-	/**
-	 * @param TokenRepository $tokenRepository
-	 * @param JwtService $jwtService
-	 * @param ExtensionConfiguration $extensionConfiguration
-	 */
 	public function __construct(
-		TokenRepository $tokenRepository,
-		JwtService $jwtService,
-		ExtensionConfiguration $extensionConfiguration
+		protected TokenRepository $tokenRepository,
+		protected JwtService $jwtService,
+		protected ExtensionConfiguration $extensionConfiguration,
+		ConnectionPool $connectionPool
 	) {
-		$this->tokenRepository = $tokenRepository;
-		$this->jwtService = $jwtService;
-		$this->extensionConfiguration = $extensionConfiguration;
+		$this->connectionPool = $connectionPool;
 	}
 
 	/**
@@ -103,8 +84,7 @@ class TokenService implements SingletonInterface {
 		string $label = ''
 	): int {
 		$tokenHash = hash('sha256', $token);
-		$connection = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getConnectionForTable('tx_apicore_token');
+		$connection = $this->connectionPool->getConnectionForTable('tx_apicore_token');
 
 		$connection->insert('tx_apicore_token', [
 			'pid' => $pid,

@@ -62,15 +62,17 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	/**
 	 * @param EndpointDiscoveryService $discoveryService
 	 * @param PathAnalysisService $pathAnalysisService
+	 * @param CacheManager $cacheManager
 	 * @throws NoSuchCacheException
 	 */
 	public function __construct(
 		EndpointDiscoveryService $discoveryService,
-		PathAnalysisService $pathAnalysisService
+		PathAnalysisService $pathAnalysisService,
+		CacheManager $cacheManager
 	) {
 		$this->discoveryService = $discoveryService;
 		$this->pathAnalysisService = $pathAnalysisService;
-		$this->cache = GeneralUtility::makeInstance(CacheManager::class)?->getCache('sg_apicore_responses');
+		$this->cache = $cacheManager->getCache('sg_apicore_responses');
 	}
 
 	/**

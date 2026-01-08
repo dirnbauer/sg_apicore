@@ -101,17 +101,19 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		}
 
 		// Mock PageInformation for extensions like gridelements that expect it in TYPO3 13 frontend context
-		$siteRootPageId = $tenantResult->getContext()?->getSiteRootPageId();
+		$siteRootPageId = $tenantResult->getContext()?->getSiteRootPageId() ?? 0;
 		if ($siteRootPageId > 0 && !$request->getAttribute('frontend.page.information')) {
 			$pageInformation = new PageInformation();
 			$pageInformation->setId($siteRootPageId);
 
-			$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
+			$rootline = [];
 			try {
+				$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
 				$rootline = $rootlineUtility->get();
-				$pageInformation->setRootLine($rootline);
-			} catch (\Exception) {
+			} catch (\Throwable) {
+				// Fallback if rootline cannot be generated
 			}
+			$pageInformation->setRootLine($rootline);
 
 			$request = $request->withAttribute('frontend.page.information', $pageInformation);
 

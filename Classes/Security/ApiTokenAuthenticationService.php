@@ -41,6 +41,23 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 	use TokenExtractionTrait;
 
 	/**
+	 * ApiTokenAuthenticationService constructor.
+	 *
+	 * @param JwtService|null $jwtService
+	 * @param TokenRepository|null $tokenRepository
+	 * @param ConnectionPool|null $connectionPool
+	 */
+	public function __construct(
+		protected ?JwtService $jwtService = NULL,
+		protected ?TokenRepository $tokenRepository = NULL,
+		protected ?ConnectionPool $connectionPool = NULL
+	) {
+		$this->jwtService ??= GeneralUtility::makeInstance(JwtService::class);
+		$this->tokenRepository ??= GeneralUtility::makeInstance(TokenRepository::class);
+		$this->connectionPool ??= GeneralUtility::makeInstance(ConnectionPool::class);
+	}
+
+	/**
 	 * @return array|null
 	 * @throws Exception
 	 * @throws \JsonException
@@ -63,17 +80,15 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 
 		// 1. Check JWT
 		if (count(explode('.', $token)) === 3) {
-			$jwtService = GeneralUtility::makeInstance(JwtService::class);
-			$payload = $jwtService->decode($token);
+			$payload = $this->jwtService->decode($token);
 			if ($payload && isset($payload['userId'])) {
 				return $this->fetchUserRecordById((int) $payload['userId']);
 			}
 		}
 
 		// 2. Check Opaque Tokens
-		$tokenRepository = GeneralUtility::makeInstance(TokenRepository::class);
 		$tokenHash = hash('sha256', $token);
-		$tokenRecord = $tokenRepository->findByHashGlobally($tokenHash);
+		$tokenRecord = $this->tokenRepository->findByHashGlobally($tokenHash);
 		if ($tokenRecord && isset($tokenRecord['user_id']) && (int) $tokenRecord['user_id'] > 0) {
 			// Check expiry
 			if ((int) $tokenRecord['expires_at'] > 0 && (int) $tokenRecord['expires_at'] < time()) {
@@ -83,8 +98,7 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 		}
 
 		// 3. Check Legacy Tokens (stored in the fe_users table directly)
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable('fe_users');
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
 		$userRecord = $queryBuilder->select('*')
 			->from('fe_users')
 			->where(
@@ -134,8 +148,7 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 			return NULL;
 		}
 
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable('fe_users');
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
 		$user = $queryBuilder->select('*')
 			->from('fe_users')
 			->where(

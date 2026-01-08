@@ -38,6 +38,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 class TokenRepository implements SingletonInterface {
 	private const string TABLE_NAME = 'tx_apicore_token';
 
+	protected ConnectionPool $connectionPool;
+
+	public function __construct(ConnectionPool $connectionPool) {
+		$this->connectionPool = $connectionPool;
+	}
+
 	/**
 	 * Finds a token by hash, apiId, and tenantId
 	 *
@@ -56,8 +62,7 @@ class TokenRepository implements SingletonInterface {
 		?int $siteRootPageId = NULL,
 		bool $includeRefreshTokens = FALSE
 	): ?array {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$constraints = [
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
@@ -99,8 +104,7 @@ class TokenRepository implements SingletonInterface {
 	 * @throws Exception
 	 */
 	public function findByHashGlobally(string $tokenHash): ?array {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		return $queryBuilder
 			->select('*')
@@ -123,8 +127,7 @@ class TokenRepository implements SingletonInterface {
 	 * @throws Exception
 	 */
 	public function findByApiAndTenant(string $apiId, string $tenantId, ?int $siteRootPageId = NULL): array {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$constraints = [
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
@@ -158,8 +161,7 @@ class TokenRepository implements SingletonInterface {
 	 * @throws Exception
 	 */
 	public function findAllWithFilters(array $filters = []): array {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$query = $queryBuilder
 			->select('*')
@@ -217,8 +219,7 @@ class TokenRepository implements SingletonInterface {
 	 * @return void
 	 */
 	public function revoke(int $uid): void {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$queryBuilder
 			->update(self::TABLE_NAME)
@@ -235,8 +236,7 @@ class TokenRepository implements SingletonInterface {
 	 * @return void
 	 */
 	public function updateTokenHash(int $uid, string $tokenHash): void {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$queryBuilder
 			->update(self::TABLE_NAME)
@@ -253,8 +253,7 @@ class TokenRepository implements SingletonInterface {
 	 * @return void
 	 */
 	public function updateLastUsed(int $uid): void {
-		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
-			?->getQueryBuilderForTable(self::TABLE_NAME);
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$queryBuilder
 			->update(self::TABLE_NAME)

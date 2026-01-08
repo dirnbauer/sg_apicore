@@ -77,9 +77,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 	protected function createMiddlewareWithCache(FrontendInterface $cache): ApiCacheMiddleware {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
-		GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManager);
 
-		return new ApiCacheMiddleware($this->discoveryService, $this->pathAnalysisService);
+		return new ApiCacheMiddleware($this->discoveryService, $this->pathAnalysisService, $cacheManager);
 	}
 
 	/**

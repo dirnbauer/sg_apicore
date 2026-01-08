@@ -41,10 +41,13 @@ class ExtensionConfiguration implements SingletonInterface {
 
 	/**
 	 * ExtensionConfiguration constructor.
+	 *
+	 * @param Typo3ExtensionConfiguration|null $extensionConfiguration
 	 */
-	public function __construct() {
+	public function __construct(?Typo3ExtensionConfiguration $extensionConfiguration = NULL) {
+		$extensionConfiguration ??= GeneralUtility::makeInstance(Typo3ExtensionConfiguration::class);
 		try {
-			$this->configuration = GeneralUtility::makeInstance(Typo3ExtensionConfiguration::class)?->get('sg_apicore');
+			$this->configuration = $extensionConfiguration->get('sg_apicore');
 		} catch (\Exception) {
 			// Fallback to empty configuration
 			$this->configuration = [];
