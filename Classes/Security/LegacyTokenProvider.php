@@ -26,8 +26,10 @@
 
 namespace SGalinski\SgApiCore\Security;
 
+use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
 /**
@@ -64,6 +66,7 @@ class LegacyTokenProvider implements LoginProviderInterface {
 	 * @param string $tenantId
 	 * @param array $activeProviders
 	 * @return AuthContext|null
+	 * @throws Exception
 	 */
 	public function authenticate(
 		ServerRequestInterface $request,
@@ -86,8 +89,8 @@ class LegacyTokenProvider implements LoginProviderInterface {
 			->from('fe_users')
 			->where(
 				$queryBuilder->expr()->eq('tx_sgrest_auth_token', $queryBuilder->createNamedParameter($token)),
-				$queryBuilder->expr()->eq('disable', $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT)),
-				$queryBuilder->expr()->eq('deleted', $queryBuilder->createNamedParameter(0, \PDO::PARAM_INT))
+				$queryBuilder->expr()->eq('disable', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
+				$queryBuilder->expr()->eq('deleted', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 			)
 			->executeQuery()
 			->fetchAssociative();

@@ -115,6 +115,7 @@ class MyLegacyController {
 In the `sg_demo` extension, a legacy news API was migrated.
 
 **Old Controller (sg_rest):**
+
 - Path: `news/news/list`
 - Authenticated via `AuthenticationServiceInterface`.
 
@@ -139,6 +140,7 @@ class NewsController {
 ```
 
 The `LegacyRoutingMiddleware` handles the incoming request:
+
 1. Client calls `/?type=1595576052&tx_sgrest[request]=news/news/list`.
 2. Middleware maps this to `/api/legacy/v1/news/news/list`.
 3. Router matches the route `/news/news/list` for the `legacy` API.

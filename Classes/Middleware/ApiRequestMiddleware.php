@@ -26,84 +26,37 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
-use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Random\RandomException;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
-use SGalinski\SgApiCore\Service\LogService;
+use SGalinski\SgApiCore\Service\PathAnalysisService;
 use SGalinski\SgApiCore\Service\Router;
-use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
-use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
-use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\RootlineUtility;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
-use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
- * Middleware to handle API requests
+ * Middleware to handle API request dispatching
  */
 class ApiRequestMiddleware implements MiddlewareInterface {
-	/**
-	 * @var ExtensionConfiguration
-	 */
 	protected ExtensionConfiguration $extensionConfiguration;
-
-	/**
-	 * @var ApiRegistry
-	 */
 	protected ApiRegistry $apiRegistry;
-
-	/**
-	 * @var Router
-	 */
 	protected Router $router;
+	protected PathAnalysisService $pathAnalysisService;
 
-	/**
-	 * @var TenantResolverInterface
-	 */
-	protected TenantResolverInterface $tenantResolver;
-
-	/**
-	 * @var LoginProviderInterface
-	 */
-	protected LoginProviderInterface $loginProvider;
-
-	/**
-	 * @var LogService
-	 */
-	protected LogService $logService;
-
-	/**
-	 * @param ExtensionConfiguration $extensionConfiguration
-	 * @param ApiRegistry $apiRegistry
-	 * @param Router $router
-	 * @param TenantResolverInterface $tenantResolver
-	 * @param LoginProviderInterface $loginProvider
-	 * @param LogService $logService
-	 */
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		ApiRegistry $apiRegistry,
 		Router $router,
-		TenantResolverInterface $tenantResolver,
-		LoginProviderInterface $loginProvider,
-		LogService $logService
+		PathAnalysisService $pathAnalysisService
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->apiRegistry = $apiRegistry;
 		$this->router = $router;
-		$this->tenantResolver = $tenantResolver;
-		$this->loginProvider = $loginProvider;
-		$this->logService = $logService;
+		$this->pathAnalysisService = $pathAnalysisService;
 	}
 
 	/**
@@ -112,7 +65,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
-	 * @throws RandomException
+	 * @throws \ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
@@ -122,132 +75,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			return $handler->handle($request);
 		}
 
-		// Add Request ID
-		$requestId = bin2hex(random_bytes(8));
-		$request = $request->withAttribute('api.requestId', $requestId);
-
-		// Parse JSON Body if applicable
-		if (str_contains($request->getHeaderLine('Content-Type'), 'application/json')) {
-			$body = (string) $request->getBody();
-			if ($body !== '') {
-				try {
-					$parsedBody = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-					if (is_array($parsedBody)) {
-						$request = $request->withParsedBody($parsedBody);
-					}
-				} catch (\JsonException) {
-					// Invalid JSON, we keep the original request and let the controller handle it
-					// or return a 400 error later if needed.
-				}
-			}
-		}
-
-		$startTime = microtime(TRUE);
-		try {
-			$response = $this->handleApiRequest($request);
-		} catch (\Throwable $e) {
-			$this->logService->logException($e, $request);
-			$response = $this->createErrorResponse(
-				'Internal Server Error',
-				'An unexpected error occurred during API request processing.',
-				500,
-				$request
-			);
-		}
-		$duration = microtime(TRUE) - $startTime;
-
-		$this->logService->logRequestResponse($request, $response, $duration);
-
-		return $response->withHeader('X-Request-ID', $requestId);
-	}
-
-	/**
-	 * Core API request handling logic
-	 *
-	 * @param ServerRequestInterface $request
-	 * @return ResponseInterface
-	 * @throws Exception
-	 * @throws \ReflectionException
-	 */
-	protected function handleApiRequest(ServerRequestInterface $request): ResponseInterface {
-		$path = $request->getUri()->getPath();
-		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
-
-		// Resolve tenant early
-		$tenantResult = $this->tenantResolver->resolve($request);
-		if (!$tenantResult->isSuccess()) {
-			return $this->createErrorResponse(
-				'Tenant Resolution Failed',
-				'Could not resolve a valid tenant for this request. Reason: ' . $tenantResult->getError(),
-				$this->extensionConfiguration->getOnMissingTenantStatusCode(),
-				$request
-			);
-		}
-		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
-
-		// Mock PageInformation for extensions like gridelements that expect it in TYPO3 13 frontend context
-		$siteRootPageId = $tenantResult->getContext()?->getSiteRootPageId();
-		if ($siteRootPageId > 0 && !$request->getAttribute('frontend.page.information')) {
-			$pageInformation = new PageInformation();
-			$pageInformation->setId($siteRootPageId);
-
-			// GridElements also needs the rootline for PageTsConfig calculation
-			$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
-			try {
-				$rootline = $rootlineUtility->get();
-				$pageInformation->setRootLine($rootline);
-			} catch (\Exception) {
-				// Fallback or ignore if the rootline cannot be resolved
-			}
-
-			$request = $request->withAttribute('frontend.page.information', $pageInformation);
-
-			// Mock TSFE for Extbase ConfigurationManager in TYPO3 13
-			if (!isset($GLOBALS['TSFE'])) {
-				$site = $request->getAttribute('site');
-				$language = $request->getAttribute('language');
-				if ($site && $language) {
-					/** @noinspection PhpDeprecationInspection */
-					$tsfe = GeneralUtility::makeInstance(
-						TypoScriptFrontendController::class,
-						$GLOBALS['TYPO3_CONF_VARS'],
-						$site,
-						$language,
-						$pageInformation,
-						$request->getAttribute('frontend.user')
-					);
-
-					$setupArray = [
-						'config.' => [
-							'tx_sgapicore.' => [
-								'persistence.' => [
-									'storagePid' => $siteRootPageId
-								]
-							]
-						]
-					];
-
-					// Satisfy Extbase ConfigurationManager in TYPO3 13
-					$frontendTypoScript = new FrontendTypoScript(
-						new RootNode(),
-						[],
-						[],
-						[]
-					);
-					$frontendTypoScript->setSetupArray($setupArray);
-					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
-
-					$GLOBALS['TSFE'] = $tsfe;
-				}
-			}
-
-			// Synchronize global TYPO3_REQUEST if it exists, as some hooks/legacy code still use it
-			if (isset($GLOBALS['TYPO3_REQUEST'])) {
-				$GLOBALS['TYPO3_REQUEST'] = $request;
-			}
-		}
-
-		// Normalize a path for internal processing: remove trailing slash if it's not just '/'
+		// Health Check
 		$normalizedPath = $path !== '/' ? rtrim($path, '/') : $path;
 
 		// basic API health check
@@ -259,64 +87,42 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			return new JsonResponse(['status' => 'ok']);
 		}
 
-		// Pattern: /api/{apiId}/v{version}/{remainingPath}
-		$relativeWeight = strlen($apiPathPrefix);
-		$relativeRequestPath = substr($path, $relativeWeight);
-		// Normalize a relative path: remove the trailing slash but keep it if it's empty to allow regex match
-		$relativeRequestPath = rtrim($relativeRequestPath, '/');
+		$apiId = $request->getAttribute('api.id');
+		$version = $request->getAttribute('api.version');
+		$remainingPath = $request->getAttribute('api.remainingPath');
 
-		// Regex to match {apiId}/v(\d+)(/.*)?
-		if (preg_match('#^([^/]+)/v(\d+)(/.*)?$#', $relativeRequestPath, $matches)) {
-			$apiId = $matches[1];
-			/** @noinspection MultiAssignmentUsageInspection */
-			$version = $matches[2];
-			$remainingPath = $matches[3] ?? '/';
-			// Normalize the remaining path for the router
-			$remainingPath = $remainingPath !== '/' ? rtrim($remainingPath, '/') : $remainingPath;
-			if ($remainingPath === '') {
-				$remainingPath = '/';
-			}
-
-			if ($this->apiRegistry->hasApi($apiId)) {
-				$request = $request->withAttribute('api.id', $apiId);
-				$apiConfig = $this->apiRegistry->getApi($apiId);
-				if (in_array($version, $apiConfig['versions'], TRUE)) {
-					$request = $request->withAttribute('api.version', $version);
-					// Get security config
-					$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
-					$authMode = $securityConfig['authMode'] ?? 'token';
-					$activeProviders = $securityConfig['authProviders'] ?? [];
-
-					// Authenticate
-					$authContext = $this->loginProvider->authenticate(
-						$request,
-						$apiId,
-						$tenantResult->getContext()?->getTenantId(),
-						$activeProviders
-					);
-
-					// Documentation endpoints should always be accessible without authentication
-					if ($authContext !== NULL) {
-						$request = $request->withAttribute('api.auth', $authContext);
-					}
-
-					// Synchronize global TYPO3_REQUEST again after all attributes are set
-					if (isset($GLOBALS['TYPO3_REQUEST'])) {
-						$GLOBALS['TYPO3_REQUEST'] = $request;
-					}
-
-					// Redirect to documentation if the base API URL is called
-					if ($remainingPath === '/' && $request->getMethod() === 'GET') {
-						$redirectPath = rtrim($path, '/') . '/docs/ui';
-						return new RedirectResponse($redirectPath);
-					}
-
-					return $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
-				}
+		// Fallback for path analysis if not already set by previous middleware
+		if (!$apiId || !$version) {
+			$analysis = $this->pathAnalysisService->analyze($path);
+			if ($analysis) {
+				$apiId = $analysis['apiId'];
+				$version = $analysis['version'];
+				$remainingPath = $analysis['remainingPath'];
 			}
 		}
 
-		return $this->createErrorResponse('Not Found', 'The requested API or version does not exist.', 404, $request);
+		if ($apiId && $version && $this->apiRegistry->hasApi($apiId)) {
+			$apiConfig = $this->apiRegistry->getApi($apiId);
+			if (in_array($version, $apiConfig['versions'], TRUE)) {
+				// Redirect to documentation if the base API URL is called
+				if ($remainingPath === '/' && $request->getMethod() === 'GET') {
+					$redirectPath = rtrim($path, '/') . '/docs/ui';
+					return new RedirectResponse($redirectPath);
+				}
+
+				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
+				$authMode = $securityConfig['authMode'] ?? 'token';
+
+				return $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
+			}
+		}
+
+		return $this->createErrorResponse(
+			'Not Found',
+			'The requested API or version does not exist.',
+			404,
+			$request
+		);
 	}
 
 	/**

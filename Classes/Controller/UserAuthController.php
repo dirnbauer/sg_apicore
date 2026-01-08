@@ -26,7 +26,6 @@
 
 namespace SGalinski\SgApiCore\Controller;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -43,6 +42,7 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
@@ -238,7 +238,7 @@ class UserAuthController {
 			$queryBuilder->andWhere(
 				$queryBuilder->expr()->in(
 					'pid',
-					$queryBuilder->createNamedParameter($storagePids, ArrayParameterType::INTEGER)
+					$queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY)
 				)
 			);
 		}

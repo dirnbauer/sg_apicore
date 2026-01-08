@@ -24,6 +24,7 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
+use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
 
@@ -36,6 +37,38 @@ return [
 				'typo3/cms-frontend/site'
 			],
 			'before' => [
+				'typo3/cms-frontend/frontend-user-authenticator'
+			]
+		],
+		'sgalinski/sg-apicore/api-setup' => [
+			'target' => \SGalinski\SgApiCore\Middleware\ApiSetupMiddleware::class,
+			'description' => 'Initializes the API request context',
+			'after' => [
+				'typo3/cms-frontend/site',
+				'sgalinski/sg-apicore/legacy-routing'
+			],
+			'before' => [
+				'typo3/cms-frontend/frontend-user-authenticator'
+			]
+		],
+		'sgalinski/sg-apicore/api-auth' => [
+			'target' => \SGalinski\SgApiCore\Middleware\ApiAuthMiddleware::class,
+			'description' => 'Handles API authentication and scope validation',
+			'after' => [
+				'typo3/cms-frontend/frontend-user-authenticator',
+				'sgalinski/sg-apicore/api-setup'
+			],
+			'before' => [
+				'sgalinski/sg-apicore/api-cache'
+			]
+		],
+		'sgalinski/sg-apicore/api-cache' => [
+			'target' => ApiCacheMiddleware::class,
+			'description' => 'Handles API response caching',
+			'after' => [
+				'sgalinski/sg-apicore/api-auth'
+			],
+			'before' => [
 				'sgalinski/sg-apicore/api-request'
 			]
 		],
@@ -43,8 +76,7 @@ return [
 			'target' => ApiRequestMiddleware::class,
 			'description' => 'Dispatches an API request',
 			'after' => [
-				'typo3/cms-frontend/site',
-				'sgalinski/sg-apicore/legacy-routing'
+				'sgalinski/sg-apicore/api-cache'
 			],
 			'before' => [
 				'typo3/cms-frontend/base-redirect-resolver',

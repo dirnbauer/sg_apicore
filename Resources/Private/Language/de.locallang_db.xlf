@@ -67,6 +67,14 @@
 				<source>Last Used At</source>
 				<target>Zuletzt verwendet am</target>
 			</trans-unit>
+			<trans-unit id="backend.cache_menu.title" resname="backend.cache_menu.title">
+				<source>Clear API Cache</source>
+				<target>API-Cache leeren</target>
+			</trans-unit>
+			<trans-unit id="backend.cache_menu.description" resname="backend.cache_menu.description">
+				<source>Clears the cache for all API responses.</source>
+				<target>Leert den API-Cache für alle API-Responses.</target>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

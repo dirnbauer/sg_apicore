@@ -83,4 +83,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 			'className' => \SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::class,
 		]
 	);
+	// Register cache
+	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_responses'])) {
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_responses'] = [
+			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
+			'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
+			'groups' => ['all'],
+		];
+	}
 })();

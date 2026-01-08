@@ -35,7 +35,6 @@ use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\SingletonInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use function FastRoute\simpleDispatcher;
 
 /**
@@ -75,21 +74,6 @@ class Router implements SingletonInterface {
 		$this->controllers = $controllers;
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->requestValidator = $requestValidator;
-	}
-
-	/**
-	 * @param array $controllers
-	 */
-	public function setControllers(array $controllers): void {
-		$this->controllerInstances = [];
-		foreach ($controllers as $controller) {
-			if (is_string($controller)) {
-				$controller = GeneralUtility::makeInstance($controller);
-			}
-			if ($controller) {
-				$this->controllerInstances[get_class($controller)] = $controller;
-			}
-		}
 	}
 
 	/**
@@ -152,15 +136,11 @@ class Router implements SingletonInterface {
 
 			foreach ($endpoints as $endpoint) {
 				// Filter by API ID, version and auth mode if specified
-				if (!empty($endpoint['apiId'])) {
-					if (!in_array($apiId, $endpoint['apiId'], TRUE)) {
-						continue;
-					}
+				if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+					continue;
 				}
-				if (!empty($endpoint['version'])) {
-					if (!in_array($version, $endpoint['version'], TRUE)) {
-						continue;
-					}
+				if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+					continue;
 				}
 				if (!empty($endpoint['authMode'])) {
 					// Visibility logic

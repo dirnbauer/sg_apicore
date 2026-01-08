@@ -24,18 +24,15 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-namespace SGalinski\SgApiCore\Service\Tenant;
+namespace SGalinski\SgApiCore\Service;
 
-use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Context\TenantContext;
-use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
+use TYPO3\CMS\Core\SingletonInterface;
 
 /**
- * Resolves the tenant from the TYPO3 Site
+ * Service to analyze API paths and extract apiId, version, and remainingPath
  */
-class SiteTenantResolver implements TenantResolverInterface {
+class PathAnalysisService implements SingletonInterface {
 	/**
 	 * @var ExtensionConfiguration
 	 */
@@ -49,38 +46,37 @@ class SiteTenantResolver implements TenantResolverInterface {
 	}
 
 	/**
-	 * @param ServerRequestInterface $request
-	 * @return TenantContextResult
+	 * Analyzes the given path and returns an array with apiId, version, and remainingPath if successful
+	 *
+	 * @param string $path
+	 * @return array|null
 	 */
-	public function resolve(ServerRequestInterface $request): TenantContextResult {
-		/** @var Site|null $site */
-		$site = $request->getAttribute('site');
-		if (!$site instanceof Site) {
-			return TenantContextResult::failure('site_not_found');
+	public function analyze(string $path): ?array {
+		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
+		if (!str_starts_with($path, $apiPathPrefix)) {
+			return NULL;
 		}
 
-		$source = $this->extensionConfiguration->getSiteTenantIdSource();
-		$tenantId = match ($source) {
-			'baseHost' => $site->getBase()->getHost(),
-			'rootPageId' => (string) $site->getRootPageId(),
-			default => $site->getIdentifier(),
-		};
+		$relativeWeight = strlen($apiPathPrefix);
+		$relativeRequestPath = substr($path, $relativeWeight);
+		$relativeRequestPath = rtrim($relativeRequestPath, '/');
 
-		if ($tenantId === '') {
-			return TenantContextResult::failure('tenant_id_empty');
+		// Regex to match {apiId}/v(\d+)(/.*)?
+		if (preg_match('#^([^/]+)/v(\d+)(/.*)?$#', $relativeRequestPath, $matches)) {
+			$remainingPath = $matches[3] ?? '/';
+			// Normalize the remaining path
+			$remainingPath = $remainingPath !== '/' ? rtrim($remainingPath, '/') : $remainingPath;
+			if ($remainingPath === '') {
+				$remainingPath = '/';
+			}
+
+			return [
+				'apiId' => $matches[1],
+				'version' => $matches[2],
+				'remainingPath' => $remainingPath
+			];
 		}
 
-		/** @var SiteLanguage|null $language */
-		$language = $request->getAttribute('language');
-
-		$context = new TenantContext(
-			$tenantId,
-			$site->getIdentifier(),
-			$site->getRootPageId(),
-			$site,
-			$language?->getLanguageId()
-		);
-
-		return TenantContextResult::success($context);
+		return NULL;
 	}
 }

@@ -51,6 +51,12 @@
 			<trans-unit id="tx_apicore_token.last_used_at" resname="tx_apicore_token.last_used_at">
 				<source>Last Used At</source>
 			</trans-unit>
+			<trans-unit id="backend.cache_menu.title" resname="backend.cache_menu.title">
+				<source>Clear API Cache</source>
+			</trans-unit>
+			<trans-unit id="backend.cache_menu.description" resname="backend.cache_menu.description">
+				<source>Clears the cache for all API responses.</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

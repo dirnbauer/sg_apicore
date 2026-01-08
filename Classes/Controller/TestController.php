@@ -85,9 +85,6 @@ class TestController {
 	#[ApiEndpoint(summary: 'Global health check', tags: ['Health'])]
 	#[ApiResponse(status: 200, description: 'API is healthy', example: ['status' => 'ok'])]
 	public function health(ServerRequestInterface $request): ResponseInterface {
-		$frontendUserAuthentification = $request->getAttribute('frontend.user');
-		var_dump($frontendUserAuthentification);
-
 		return $this->responseService->createSuccessResponse(['status' => 'ok']);
 	}
 

@@ -27,7 +27,7 @@
 namespace SGalinski\SgApiCore\Domain\Repository;
 
 use Doctrine\DBAL\Exception;
-use Doctrine\DBAL\ParameterType;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -63,13 +63,13 @@ class TokenRepository implements SingletonInterface {
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
 			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
 			$queryBuilder->expr()->eq('token_hash', $queryBuilder->createNamedParameter($tokenHash)),
-			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 		];
 
 		if (!$includeRefreshTokens) {
 			$constraints[] = $queryBuilder->expr()->eq(
 				'is_refresh_token',
-				$queryBuilder->createNamedParameter(0, ParameterType::INTEGER)
+				$queryBuilder->createNamedParameter(0, Connection::PARAM_INT)
 			);
 		}
 
@@ -77,9 +77,9 @@ class TokenRepository implements SingletonInterface {
 			$constraints[] = $queryBuilder->expr()->or(
 				$queryBuilder->expr()->eq(
 					'pid',
-					$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
+					$queryBuilder->createNamedParameter($siteRootPageId, Connection::PARAM_INT)
 				),
-				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 			);
 		}
 
@@ -107,7 +107,7 @@ class TokenRepository implements SingletonInterface {
 			->from(self::TABLE_NAME)
 			->where(
 				$queryBuilder->expr()->eq('token_hash', $queryBuilder->createNamedParameter($tokenHash)),
-				$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
+				$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 			)
 			->executeQuery()
 			->fetchAssociative() ?: NULL;
@@ -129,16 +129,16 @@ class TokenRepository implements SingletonInterface {
 		$constraints = [
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
 			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
-			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 		];
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->or(
 				$queryBuilder->expr()->eq(
 					'pid',
-					$queryBuilder->createNamedParameter($siteRootPageId, ParameterType::INTEGER)
+					$queryBuilder->createNamedParameter($siteRootPageId, Connection::PARAM_INT)
 				),
-				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 			);
 		}
 
@@ -179,7 +179,7 @@ class TokenRepository implements SingletonInterface {
 			$query->andWhere(
 				$queryBuilder->expr()->eq(
 					'is_refresh_token',
-					$queryBuilder->createNamedParameter((int) $filters['isRefreshToken'], ParameterType::INTEGER)
+					$queryBuilder->createNamedParameter((int) $filters['isRefreshToken'], Connection::PARAM_INT)
 				)
 			);
 		}
@@ -223,7 +223,7 @@ class TokenRepository implements SingletonInterface {
 		$queryBuilder
 			->update(self::TABLE_NAME)
 			->set('revoked_at', time())
-			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)))
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
 			->executeStatement();
 	}
 
@@ -242,7 +242,7 @@ class TokenRepository implements SingletonInterface {
 			->update(self::TABLE_NAME)
 			->set('token_hash', $tokenHash)
 			->set('tstamp', time())
-			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)))
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
 			->executeStatement();
 	}
 
@@ -259,7 +259,7 @@ class TokenRepository implements SingletonInterface {
 		$queryBuilder
 			->update(self::TABLE_NAME)
 			->set('last_used_at', time())
-			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)))
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, Connection::PARAM_INT)))
 			->executeStatement();
 	}
 }

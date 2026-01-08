@@ -15,6 +15,7 @@ class DummyController {
 	public function getAction() {
 		return new Response();
 	}
+
 	public function listAction() {
 		return new Response();
 	}

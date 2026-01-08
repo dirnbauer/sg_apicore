@@ -27,6 +27,7 @@
 namespace SGalinski\SgApiCore\Service;
 
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
+use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
@@ -105,6 +106,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$responses[] = $attr->newInstance();
 					}
 
+					$apiCache = NULL;
+					$cacheAttr = $method->getAttributes(ApiCache::class);
+					if (count($cacheAttr) > 0) {
+						$apiCache = $cacheAttr[0]->newInstance();
+					}
+
 					$endpoints[] = [
 						'apiId' => is_array($route->apiId) ?
 							$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
@@ -122,6 +129,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						'queryParams' => $queryParams,
 						'pathParams' => $pathParams,
 						'responses' => $responses,
+						'apiCache' => $apiCache,
 						'controller' => $controllerClass,
 						'action' => $method->getName()
 					];
@@ -250,6 +258,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')
 				],
+				'apiCache' => new ApiCache(tags: [$tableName]),
 				'controller' => ResourceController::class,
 				'action' => 'listAction',
 				'resource' => $resourceInfo
@@ -277,6 +286,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName),
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
+				'apiCache' => new ApiCache(tags: [$tableName]),
 				'controller' => ResourceController::class,
 				'action' => 'getAction',
 				'resource' => $resourceInfo
@@ -301,6 +311,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'responses' => [
 					new ApiResponse(status: 201, description: 'Created', schema: $tableName)
 				],
+				'apiCache' => new ApiCache(tags: [$tableName]),
 				'controller' => ResourceController::class,
 				'action' => 'createAction',
 				'resource' => $resourceInfo
@@ -328,6 +339,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 200, description: 'Updated', schema: $tableName),
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
+				'apiCache' => new ApiCache(tags: [$tableName]),
 				'controller' => ResourceController::class,
 				'action' => 'updateAction',
 				'resource' => $resourceInfo
@@ -355,6 +367,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 204, description: 'Deleted'),
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
+				'apiCache' => new ApiCache(tags: [$tableName]),
 				'controller' => ResourceController::class,
 				'action' => 'deleteAction',
 				'resource' => $resourceInfo
@@ -362,6 +375,27 @@ class EndpointDiscoveryService implements SingletonInterface {
 		}
 
 		return $endpoints;
+	}
+
+	/**
+	 * Returns discovered endpoints for a specific API and version
+	 *
+	 * @param string $apiId
+	 * @param string|null $version
+	 * @return array
+	 * @throws \ReflectionException
+	 */
+	public function getEndpointsForApi(string $apiId, ?string $version = NULL): array {
+		$endpoints = $this->getAllEndpoints();
+		return array_filter($endpoints, static function (array $endpoint) use ($apiId, $version) {
+			$apiMatch = count($endpoint['apiId']) === 0 || in_array($apiId, $endpoint['apiId'], TRUE);
+			$versionMatch = $version === NULL || count($endpoint['version']) === 0 || in_array(
+				$version,
+				$endpoint['version'],
+				TRUE
+			);
+			return $apiMatch && $versionMatch;
+		});
 	}
 
 	/**

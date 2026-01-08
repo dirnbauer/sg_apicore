@@ -4,7 +4,7 @@ In `sg_apicore`, endpoints are defined via standard PHP classes (controllers) co
 
 ## Controller Registration
 
-For your controller class to be recognized by the router, it must be registered in `Configuration/Services.php` with the
+For the router to recognize your controller class, it must be registered in `Configuration/Services.php` with the
 `sg_apicore.router` tag:
 
 ```php
@@ -141,3 +141,70 @@ class MyController {
 
 The pagination metadata will be included in the `meta` object of the response (if the envelope is enabled or if meta is
 explicitly passed).
+
+## Performance & Caching
+
+The extension includes a built-in response caching system based on the TYPO3 Caching Framework.
+
+### Default Behavior
+
+Caching is **enabled by default** for all `GET` requests. The cache key automatically varies by:
+
+- The full Request URI
+- The current Site and Language
+- The Frontend User Groups (sorted to ensure consistency)
+
+### Controlling Cache
+
+You can customize or disable caching using the `#[ApiCache]` attribute:
+
+```php
+use SGalinski\SgApiCore\Attribute\ApiCache;
+
+// Disable caching for this endpoint
+#[ApiRoute(path: '/live-data', methods: ['GET'])]
+#[ApiCache(enabled: false)]
+public function liveAction(): ResponseInterface { ... }
+
+// Customize caching
+#[ApiRoute(path: '/heavy-list', methods: ['GET'])]
+#[ApiCache(lifetime: 3600, tags: ['news', 'category_1'])]
+public function listAction(ServerRequestInterface $request): ResponseInterface {
+    // This response will be cached for 1 hour with specific tags.
+}
+```
+
+### Cache Configuration
+
+The `#[ApiCache]` attribute supports the following properties:
+
+* `enabled` (bool): Whether caching is enabled. Default is `true`.
+* `lifetime` (int): Cache lifetime in seconds. Default is `0` (system default).
+* `tags` (array): A list of cache tags. Highly recommended for selective invalidation.
+* `useUserGroups` (bool): If `true` (default), the cache key varies by the user groups of the authenticated frontend
+  user.
+* `useLanguage` (bool): If `true` (default), the cache varies by the current language.
+* `additionalVary` (array): A list of additional query parameters or header names to vary the cache key by.
+
+### Cache Invalidation
+
+The system automatically performs tag-based invalidation if a writing request (`POST`, `PATCH`, `DELETE`) is made to an
+endpoint that defines the same cache tags.
+
+For example, if a `POST` request is sent to an endpoint with `#[ApiCache(tags: ['news'])]`, all cache entries with the
+`news` tag will be flushed.
+
+**Note**: For automatic resources (CRUD), caching and invalidation are handled automatically using the table name as
+a cache tag.
+
+### Clearing Cache manually
+
+You can clear the entire API response cache in the TYPO3 Backend via the "Flush cache" menu (lightning icon) using
+the **"Clear API Cache"** entry.
+
+### Cache Status Headers
+
+You can monitor the cache status via the `X-TYPO3-API-Cache` HTTP header in the response:
+
+* `HIT`: The response was served directly from the cache.
+* `MISS`: The response was newly generated and then stored in the cache.

@@ -39,7 +39,10 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 class SiteTenantResolverTest extends UnitTestCase {
 	public function testResolveReturnsFailureWhenSiteMissing(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getAttribute')->with('site')->willReturn(NULL);
+		$request->method('getAttribute')->willReturnMap([
+			['site', NULL, NULL],
+			['language', NULL, NULL],
+		]);
 
 		$config = $this->createStub(ExtensionConfiguration::class);
 		$resolver = new SiteTenantResolver($config);
@@ -55,7 +58,10 @@ class SiteTenantResolverTest extends UnitTestCase {
 		$site->method('getIdentifier')->willReturn('main-site');
 		$site->method('getBase')->willReturn(new Uri('https://example.org/'));
 
-		$request->method('getAttribute')->with('site')->willReturn($site);
+		$request->method('getAttribute')->willReturnMap([
+			['site', NULL, $site],
+			['language', NULL, NULL],
+		]);
 
 		$config = $this->createStub(ExtensionConfiguration::class);
 		$config->method('getSiteTenantIdSource')->willReturn('identifier');

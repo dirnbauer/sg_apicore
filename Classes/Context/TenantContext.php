@@ -48,6 +48,11 @@ final readonly class TenantContext {
 	private ?int $siteRootPageId;
 
 	/**
+	 * @var int|null
+	 */
+	private ?int $languageId;
+
+	/**
 	 * @var Site|null
 	 */
 	private ?Site $site;
@@ -57,17 +62,27 @@ final readonly class TenantContext {
 	 * @param string|null $siteIdentifier
 	 * @param int|null $siteRootPageId
 	 * @param Site|null $site
+	 * @param int|null $languageId
 	 */
 	public function __construct(
 		string $tenantId,
 		?string $siteIdentifier = NULL,
 		?int $siteRootPageId = NULL,
-		?Site $site = NULL
+		?Site $site = NULL,
+		?int $languageId = NULL
 	) {
 		$this->tenantId = $tenantId;
 		$this->siteIdentifier = $siteIdentifier;
 		$this->siteRootPageId = $siteRootPageId;
 		$this->site = $site;
+		$this->languageId = $languageId;
+	}
+
+	/**
+	 * @return int|null
+	 */
+	public function getLanguageId(): ?int {
+		return $this->languageId;
 	}
 
 	/**

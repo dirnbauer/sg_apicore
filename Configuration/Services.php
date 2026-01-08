@@ -65,6 +65,14 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 	$services->set(LegacyTokenProvider::class)
 		->tag('sg_apicore.login_provider');
 
+	$services->set(SGalinski\SgApiCore\EventListener\ClearCacheEventListener::class)
+		->tag('event.listener', ['identifier' => 'sg_apicore_clear_cache']);
+
+	$services->set(SGalinski\SgApiCore\Middleware\ApiSetupMiddleware::class);
+	$services->set(SGalinski\SgApiCore\Middleware\ApiAuthMiddleware::class);
+	$services->set(SGalinski\SgApiCore\Middleware\ApiCacheMiddleware::class);
+	$services->set(SGalinski\SgApiCore\Middleware\ApiRequestMiddleware::class);
+
 	$services->alias(TenantResolverInterface::class, TenantResolverChain::class);
 	$services->alias(LoginProviderInterface::class, LoginProviderChain::class);
 };
