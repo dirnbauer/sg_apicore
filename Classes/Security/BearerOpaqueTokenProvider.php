@@ -34,6 +34,8 @@ use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
  * Bearer Token login provider
  */
 class BearerOpaqueTokenProvider implements LoginProviderInterface {
+	use TokenExtractionTrait;
+
 	/**
 	 * @var TokenRepository
 	 */
@@ -63,12 +65,7 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 		string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
-		$authorizationHeader = $request->getHeaderLine('Authorization');
-		if (!str_starts_with($authorizationHeader, 'Bearer ')) {
-			return NULL;
-		}
-
-		$token = substr($authorizationHeader, 7);
+		$token = $this->extractToken($request);
 		if ($token === '') {
 			return NULL;
 		}

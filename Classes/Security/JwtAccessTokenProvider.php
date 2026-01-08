@@ -33,6 +33,8 @@ use SGalinski\SgApiCore\Service\JwtService;
  * JWT Access Token login provider
  */
 class JwtAccessTokenProvider implements LoginProviderInterface {
+	use TokenExtractionTrait;
+
 	/**
 	 * @var JwtService
 	 */
@@ -61,12 +63,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 		string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
-		$authorizationHeader = $request->getHeaderLine('Authorization');
-		if (!str_starts_with($authorizationHeader, 'Bearer ')) {
-			return NULL;
-		}
-
-		$token = substr($authorizationHeader, 7);
+		$token = $this->extractToken($request);
 		if ($token === '' || count(explode('.', $token)) !== 3) {
 			return NULL;
 		}

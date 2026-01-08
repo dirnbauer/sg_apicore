@@ -34,6 +34,8 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
  * Checks against fe_users.tx_sgrest_auth_token
  */
 class LegacyTokenProvider implements LoginProviderInterface {
+	use TokenExtractionTrait;
+
 	/**
 	 * @var ConnectionPool
 	 */
@@ -89,27 +91,5 @@ class LegacyTokenProvider implements LoginProviderInterface {
 			scopes: ['legacy', 'read', 'write'], // Legacy tokens often had full access or implicit scopes
 			userId: (int) $user['uid']
 		);
-	}
-
-	/**
-	 * Extracts the token from various possible locations
-	 *
-	 * @param ServerRequestInterface $request
-	 * @return string
-	 */
-	protected function extractToken(ServerRequestInterface $request): string {
-		// 1. Authorization: Bearer <token>
-		$authorizationHeader = $request->getHeaderLine('Authorization');
-		if (str_starts_with($authorizationHeader, 'Bearer ')) {
-			return substr($authorizationHeader, 7);
-		}
-
-		// 2. Custom 'bearertoken' header (common in some old sg_rest setups)
-		if ($request->hasHeader('bearertoken')) {
-			return $request->getHeaderLine('bearertoken');
-		}
-
-		// 3. Query Parameter 'bearertoken'
-		return (string) ($request->getQueryParams()['bearertoken'] ?? '');
 	}
 }
