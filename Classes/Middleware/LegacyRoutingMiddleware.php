@@ -85,7 +85,7 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 				$newPath .= '/' . $identifier;
 			}
 			// Note: sg_rest 'verb' is often redundant with HTTP methods or mapped to sub-paths.
-			// If verb exists, we might need special handling.
+			// If a verb exists, we might need special handling.
 			if ($verb !== NULL) {
 				$newPath .= '/' . $verb;
 			}

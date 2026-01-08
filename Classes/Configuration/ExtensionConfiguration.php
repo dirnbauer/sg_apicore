@@ -153,4 +153,13 @@ class ExtensionConfiguration implements SingletonInterface {
 	public function isResponseEnvelopeEnabled(): bool {
 		return (bool) $this->get('responseEnvelope', FALSE);
 	}
+
+	/**
+	 * Returns whether demo APIs and resources should be activated
+	 *
+	 * @return bool
+	 */
+	public function isActivateDemoApis(): bool {
+		return (bool) $this->get('activateDemoApis', TRUE);
+	}
 }

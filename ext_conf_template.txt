@@ -1,6 +1,9 @@
 # cat=basic/enable; type=boolean; label=Enable enableLogging:Log API requests
 enableLogging = 0
 
+# cat=basic/enable; type=boolean; label=Activate Demo APIs:Register example APIs and resources
+activateDemoApis = 1
+
 # cat=basic/logging; type=boolean; label=Log request headers
 logHeaders = 0
 
