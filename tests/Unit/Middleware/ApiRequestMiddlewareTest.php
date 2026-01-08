@@ -51,7 +51,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
-		$this->extensionConfiguration->method('getApiPathPrefix')->willReturn('/api');
+		$this->extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->router = $this->createStub(Router::class);
@@ -63,6 +63,47 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$this->router,
 			$this->pathAnalysisService
 		);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessHandlesLanguagePrefix(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/en/api/test/v1/foo');
+		$request->method('getUri')->willReturn($uri);
+
+		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
+		$base = $this->createStub(\Psr\Http\Message\UriInterface::class);
+		$base->method('getPath')->willReturn('/en/');
+		$language->method('getBase')->willReturn($base);
+
+		$request->method('getAttribute')->willReturnMap([
+			['language', $language],
+			['api.id', 'test'],
+			['api.version', '1'],
+			['api.remainingPath', '/foo'],
+		]);
+
+		$this->apiRegistry->method('hasApi')->with('test')->willReturn(TRUE);
+		$this->apiRegistry->method('getApi')->with('test')->willReturn(['versions' => ['1']]);
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
+
+		$this->router = $this->createMock(Router::class);
+		$this->router->expects($this->once())
+			->method('dispatch')
+			->with($request, 'test', '1', '/foo', 'token')
+			->willReturn($this->createStub(ResponseInterface::class));
+
+		$middleware = new ApiRequestMiddleware(
+			$this->extensionConfiguration,
+			$this->apiRegistry,
+			$this->router,
+			$this->pathAnalysisService
+		);
+
+		$middleware->process($request, $this->createStub(RequestHandlerInterface::class));
 	}
 
 	/**
@@ -100,15 +141,15 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
 		$responseMock = $this->createStub(ResponseInterface::class);
-		$this->router = $this->createMock(Router::class);
-		$this->router->expects($this->once())
+		$router = $this->createMock(Router::class);
+		$router->expects($this->once())
 			->method('dispatch')
 			->willReturn($responseMock);
 
 		$middleware = new ApiRequestMiddleware(
 			$this->extensionConfiguration,
 			$this->apiRegistry,
-			$this->router,
+			$router,
 			$this->pathAnalysisService
 		);
 

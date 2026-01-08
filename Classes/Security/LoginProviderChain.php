@@ -57,9 +57,10 @@ class LoginProviderChain implements LoginProviderInterface {
 	public function authenticate(
 		ServerRequestInterface $request,
 		string $apiId,
-		string $tenantId,
+		?string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
+		$tenantId ??= '';
 		foreach ($this->providers as $provider) {
 			if (!empty($activeProviders)) {
 				$className = get_class($provider);

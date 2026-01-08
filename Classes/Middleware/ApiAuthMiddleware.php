@@ -76,7 +76,7 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 				$activeProviders = $securityConfig['authProviders'] ?? [];
 
-				$tenantId = $request->getAttribute('api.tenant')?->getTenantId();
+				$tenantId = $request->getAttribute('api.tenant')?->getTenantId() ?? '';
 
 				// Authenticate (Token validation & Scope matching)
 				$authContext = $this->loginProvider->authenticate(

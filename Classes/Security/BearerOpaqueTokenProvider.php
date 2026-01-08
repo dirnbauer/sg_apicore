@@ -62,9 +62,10 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 	public function authenticate(
 		ServerRequestInterface $request,
 		string $apiId,
-		string $tenantId,
+		?string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
+		$tenantId ??= '';
 		$token = $this->extractToken($request);
 		if ($token === '') {
 			return NULL;

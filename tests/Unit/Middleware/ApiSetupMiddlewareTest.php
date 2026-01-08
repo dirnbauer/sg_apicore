@@ -69,6 +69,38 @@ class ApiSetupMiddlewareTest extends UnitTestCase {
 	/**
 	 * @test
 	 */
+	public function testProcessHandlesLanguagePrefix(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/en/api/test/v1/foo');
+		$request->method('getUri')->willReturn($uri);
+
+		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
+		$base = $this->createStub(\Psr\Http\Message\UriInterface::class);
+		$base->method('getPath')->willReturn('/en/');
+		$language->method('getBase')->willReturn($base);
+
+		$request->method('getAttribute')->willReturnMap([
+			['language', $language],
+		]);
+
+		$tenantResult = TenantContextResult::success(new TenantContext('test'));
+		$this->tenantResolver->method('resolve')->willReturn($tenantResult);
+
+		$request->method('withAttribute')->willReturnSelf();
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+		$response = $this->createStub(ResponseInterface::class);
+		$response->method('withHeader')->willReturnSelf();
+		$handler->method('handle')->willReturn($response);
+
+		$result = $this->middleware->process($request, $handler);
+		$this->assertSame($response, $result);
+	}
+
+	/**
+	 * @test
+	 */
 	public function testProcessSetsTenantAttribute(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$uri = $this->createStub(UriInterface::class);

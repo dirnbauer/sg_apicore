@@ -114,6 +114,36 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		$this->middleware->process($request, $this->handler);
 	}
 
+	public function testProcessMapsPathBasedLegacyRequestWithLanguagePrefix(): void {
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/en/my-key/news/1/get');
+		$uri->method('withPath')->with('/en/api/legacy/v1/my-key/news/1/get')->willReturn($uri);
+
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getQueryParams')->willReturn(['type' => '1595576052']);
+		$request->method('hasHeader')->with('Authorization')->willReturn(FALSE);
+
+		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
+		$base = $this->createStub(\Psr\Http\Message\UriInterface::class);
+		$base->method('getPath')->willReturn('/en/');
+		$language->method('getBase')->willReturn($base);
+
+		$request->method('getAttribute')->willReturnMap([
+			['language', $language],
+		]);
+
+		$request->method('withUri')->willReturn($request);
+		$request->method('withAttribute')->willReturn($request);
+
+		$this->handler->expects($this->once())
+			->method('handle')
+			->with($request)
+			->willReturn($this->createStub(ResponseInterface::class));
+
+		$this->middleware->process($request, $this->handler);
+	}
+
 	public function testProcessDelegatesNormalRequest(): void {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/some/normal/page');

@@ -26,7 +26,6 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
-use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -36,6 +35,8 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
+use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\LanguageAspectFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
 use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
@@ -66,14 +67,31 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 	}
 
 	/**
+	 * @param ServerRequestInterface $request
+	 * @param RequestHandlerInterface $handler
+	 * @return ResponseInterface
 	 * @throws RandomException
-	 * @throws Exception
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
 		$path = $uri->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
-		if (!str_starts_with($path, $apiPathPrefix)) {
+
+		// Respect TYPO3 Language Prefix
+		/** @var \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language */
+		$language = $request->getAttribute('language');
+		$languagePrefix = $language?->getBase()->getPath();
+		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
+			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
+			if (str_starts_with($path, $languagePrefix)) {
+				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
+				if (!str_starts_with($pathWithoutLanguage, $apiPathPrefix)) {
+					return $handler->handle($request);
+				}
+			} elseif (!str_starts_with($path, $apiPathPrefix)) {
+				return $handler->handle($request);
+			}
+		} elseif (!str_starts_with($path, $apiPathPrefix)) {
 			return $handler->handle($request);
 		}
 
@@ -92,8 +110,20 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		}
 		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
 
+		// Initialize Language Aspect in Context
+		if ($language) {
+			$context = GeneralUtility::makeInstance(Context::class);
+			$languageAspect = LanguageAspectFactory::createFromSiteLanguage($language);
+			$context->setAspect('language', $languageAspect);
+
+			// Ensure the language aspect is also reflected in the site attribute for some core processes
+			$request = $request->withAttribute('language', $language);
+		}
+
 		// Analyze Path
-		$analysis = $this->pathAnalysisService->analyze($path);
+		$analysis = $this->pathAnalysisService->analyze(
+			$path, $languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL
+		);
 		if ($analysis) {
 			$request = $request->withAttribute('api.id', $analysis['apiId']);
 			$request = $request->withAttribute('api.version', $analysis['version']);

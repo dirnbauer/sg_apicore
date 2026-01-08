@@ -64,6 +64,19 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 		$path = $uri->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
+		// Respect TYPO3 Language Prefix
+		/** @var \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language */
+		$language = $request->getAttribute('language');
+		$languagePrefix = $language?->getBase()->getPath();
+		$hasLanguagePrefix = FALSE;
+		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
+			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
+			if (str_starts_with($path, $languagePrefix)) {
+				$path = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
+				$hasLanguagePrefix = TRUE;
+			}
+		}
+
 		// If it's already a new API request, skip
 		if (str_starts_with($path, $apiPathPrefix)) {
 			return $handler->handle($request);
@@ -132,6 +145,11 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 				if ($verb !== NULL) {
 					$newPath .= '/' . $verb;
 				}
+			}
+
+			// Prepend language prefix if it was present
+			if ($hasLanguagePrefix) {
+				$newPath = '/' . trim($languagePrefix, '/') . '/' . ltrim($newPath, '/');
 			}
 
 			$request = $request->withUri($uri->withPath($newPath));

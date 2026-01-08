@@ -71,9 +71,10 @@ class LegacyTokenProvider implements LoginProviderInterface {
 	public function authenticate(
 		ServerRequestInterface $request,
 		string $apiId,
-		string $tenantId,
+		?string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext {
+		$tenantId ??= '';
 		if (!$this->extensionConfiguration->isActivateLegacySupport()) {
 			return NULL;
 		}

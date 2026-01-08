@@ -44,7 +44,7 @@ interface LoginProviderInterface {
 	public function authenticate(
 		ServerRequestInterface $request,
 		string $apiId,
-		string $tenantId,
+		?string $tenantId,
 		array $activeProviders = []
 	): ?AuthContext;
 }

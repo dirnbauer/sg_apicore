@@ -49,16 +49,18 @@ class PathAnalysisService implements SingletonInterface {
 	 * Analyzes the given path and returns an array with apiId, version, and remainingPath if successful
 	 *
 	 * @param string $path
+	 * @param string|null $prefixOverride
 	 * @return array|null
 	 */
-	public function analyze(string $path): ?array {
-		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
-		if (!str_starts_with($path, $apiPathPrefix)) {
+	public function analyze(string $path, ?string $prefixOverride = NULL): ?array {
+		$apiPathPrefix = $prefixOverride ?? $this->extensionConfiguration->getApiPathPrefix();
+		if (!str_contains($path, $apiPathPrefix)) {
 			return NULL;
 		}
 
-		$relativeWeight = strlen($apiPathPrefix);
+		$relativeWeight = strpos($path, $apiPathPrefix) + strlen($apiPathPrefix);
 		$relativeRequestPath = substr($path, $relativeWeight);
+		$relativeRequestPath = ltrim($relativeRequestPath, '/');
 		$relativeRequestPath = rtrim($relativeRequestPath, '/');
 
 		// Regex to match {apiId}/v(\d+)(/.*)?

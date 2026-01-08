@@ -71,12 +71,25 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		$uri = $request->getUri();
 		$path = $uri->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
-		if (!str_starts_with($path, $apiPathPrefix)) {
+
+		// Respect TYPO3 Language Prefix
+		/** @var \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language */
+		$language = $request->getAttribute('language');
+		$languagePrefix = $language?->getBase()->getPath();
+		$pathWithoutLanguage = $path;
+		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
+			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
+			if (str_starts_with($path, $languagePrefix)) {
+				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
+			}
+		}
+
+		if (!str_starts_with($pathWithoutLanguage, $apiPathPrefix)) {
 			return $handler->handle($request);
 		}
 
 		// Health Check
-		$normalizedPath = $path !== '/' ? rtrim($path, '/') : $path;
+		$normalizedPath = $pathWithoutLanguage !== '/' ? rtrim($pathWithoutLanguage, '/') : $pathWithoutLanguage;
 
 		// basic API health check
 		if ($normalizedPath === rtrim($apiPathPrefix, '/')) {
@@ -93,7 +106,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 		// Fallback for path analysis if not already set by previous middleware
 		if (!$apiId || !$version) {
-			$analysis = $this->pathAnalysisService->analyze($path);
+			$analysis = $this->pathAnalysisService->analyze($path, $languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL);
 			if ($analysis) {
 				$apiId = $analysis['apiId'];
 				$version = $analysis['version'];
@@ -107,6 +120,9 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 				// Redirect to documentation if the base API URL is called
 				if ($remainingPath === '/' && $request->getMethod() === 'GET') {
 					$redirectPath = rtrim($path, '/') . '/docs/ui';
+					if (!str_ends_with($redirectPath, '/docs/ui')) {
+						$redirectPath .= '/docs/ui';
+					}
 					return new RedirectResponse($redirectPath);
 				}
 
