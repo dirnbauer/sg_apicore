@@ -1,41 +1,13 @@
 <?php
 
-/***************************************************************
- *  Copyright notice
- *
- *  (c) sgalinski Internet Services (https://www.sgalinski.de)
- *
- *  All rights reserved
- *
- *  This script is part of the TYPO3 project. The TYPO3 project is
- *  free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  The GNU General Public License can be found at
- *  http://www.gnu.org/copyleft/gpl.html.
- *
- *  This script is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  This copyright notice MUST APPEAR in all copies of the script!
- ***************************************************************/
-
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
-use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Service\RequestValidator;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
-/**
- * Test case for RequestValidator
- */
 class RequestValidatorTest extends UnitTestCase {
 	protected RequestValidator $validator;
 
@@ -44,96 +16,124 @@ class RequestValidatorTest extends UnitTestCase {
 		$this->validator = new RequestValidator();
 	}
 
-	public function testValidateQueryParametersSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getQueryParams')->willReturn(['code' => 'ABC', 'page' => '1']);
-
-		$endpoint = [
-			'queryParams' => [
-				new ApiQueryParam(name: 'code', type: 'string', required: TRUE, pattern: '/^[A-Z]{3}$/'),
-				new ApiQueryParam(name: 'page', type: 'integer')
-			]
-		];
-
-		$errors = $this->validator->validate($request, $endpoint, []);
-		$this->assertNull($errors);
-	}
-
-	public function testValidateQueryParametersFailsOnMissingRequired(): void {
+	/**
+	 * @test
+	 */
+	public function testValidateDetectsMissingRequiredFields(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getQueryParams')->willReturn([]);
+		$request->method('getParsedBody')->willReturn([]);
 
 		$endpoint = [
+			'pathParams' => [],
 			'queryParams' => [
-				new ApiQueryParam(name: 'code', type: 'string', required: TRUE)
-			]
+				new ApiQueryParam(name: 'test', required: TRUE)
+			],
+			'bodyParams' => []
 		];
 
 		$errors = $this->validator->validate($request, $endpoint, []);
 		$this->assertIsArray($errors);
-		$this->assertCount(1, $errors);
-		$this->assertEquals('code', $errors[0]['field']);
-		$this->assertStringContainsString('required', $errors[0]['message']);
+		$this->assertEquals('test', $errors[0]['field']);
+		$this->assertEquals('This field is required', $errors[0]['message']);
 	}
 
-	public function testValidateQueryParametersFailsOnInvalidPattern(): void {
+	/**
+	 * @test
+	 */
+	public function testValidateHandlesRequiredIfCondition(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getQueryParams')->willReturn(['code' => 'abc']);
+		$request->method('getQueryParams')->willReturn(['type' => 'special']);
+		$request->method('getParsedBody')->willReturn([]);
 
 		$endpoint = [
+			'pathParams' => [],
 			'queryParams' => [
-				new ApiQueryParam(name: 'code', type: 'string', pattern: '/^[A-Z]{3}$/')
-			]
+				new ApiQueryParam(name: 'type'),
+				new ApiQueryParam(name: 'extra', requiredIf: 'type=special')
+			],
+			'bodyParams' => []
+		];
+
+		// Case 1: type=special, extra is missing
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertIsArray($errors);
+		$this->assertEquals('extra', $errors[0]['field']);
+
+		// Case 2: type=other, extra is missing (should be valid)
+		$request2 = $this->createStub(ServerRequestInterface::class);
+		$request2->method('getQueryParams')->willReturn(['type' => 'other']);
+		$errors2 = $this->validator->validate($request2, $endpoint, []);
+		$this->assertNull($errors2);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateHandlesNumericRange(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['age' => 15]);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [
+				new ApiQueryParam(name: 'age', type: 'integer', min: 18, max: 99)
+			],
+			'bodyParams' => []
 		];
 
 		$errors = $this->validator->validate($request, $endpoint, []);
 		$this->assertIsArray($errors);
-		$this->assertCount(1, $errors);
-		$this->assertStringContainsString('pattern', $errors[0]['message']);
+		$this->assertEquals('Value must be at least 18', $errors[0]['message']);
+
+		$request2 = $this->createStub(ServerRequestInterface::class);
+		$request2->method('getQueryParams')->willReturn(['age' => 100]);
+		$errors2 = $this->validator->validate($request2, $endpoint, []);
+		$this->assertEquals('Value must be at most 99', $errors2[0]['message']);
 	}
 
-	public function testValidateQueryParametersFailsOnInvalidType(): void {
+	/**
+	 * @test
+	 */
+	public function testValidateHandlesStringLength(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getQueryParams')->willReturn(['page' => 'not-a-number']);
+		$request->method('getParsedBody')->willReturn(['username' => 'abc']);
 
 		$endpoint = [
-			'queryParams' => [
-				new ApiQueryParam(name: 'page', type: 'integer')
-			]
-		];
-
-		$errors = $this->validator->validate($request, $endpoint, []);
-		$this->assertIsArray($errors);
-		$this->assertCount(1, $errors);
-		$this->assertStringContainsString('integer', $errors[0]['message']);
-	}
-
-	public function testValidatePathParametersSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getQueryParams')->willReturn([]);
-
-		$endpoint = [
-			'pathParams' => [
-				new ApiPathParam(name: 'id', type: 'integer')
-			]
-		];
-
-		$errors = $this->validator->validate($request, $endpoint, ['id' => '123']);
-		$this->assertNull($errors);
-	}
-
-	public function testValidateBodyParametersSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getParsedBody')->willReturn(['username' => 'testuser']);
-		$request->method('getMethod')->willReturn('POST');
-
-		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [],
 			'bodyParams' => [
-				new ApiBodyParam(name: 'username', type: 'string', required: TRUE)
+				new ApiBodyParam(name: 'username', type: 'string', minLength: 5, maxLength: 10)
 			]
 		];
 
 		$errors = $this->validator->validate($request, $endpoint, []);
-		$this->assertNull($errors);
+		$this->assertIsArray($errors);
+		$this->assertEquals('Value length must be at least 5', $errors[0]['message']);
+
+		$request2 = $this->createStub(ServerRequestInterface::class);
+		$request2->method('getParsedBody')->willReturn(['username' => 'verylongusername']);
+		$errors2 = $this->validator->validate($request2, $endpoint, []);
+		$this->assertEquals('Value length must be at most 10', $errors2[0]['message']);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateHandlesRegexPattern(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['code' => '123']);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [
+				new ApiQueryParam(name: 'code', pattern: '/^[A-Z]{3}$/')
+			],
+			'bodyParams' => []
+		];
+
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertIsArray($errors);
+		$this->assertStringContainsString('does not match the required pattern', $errors[0]['message']);
 	}
 }

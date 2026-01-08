@@ -51,7 +51,7 @@ class RequestValidator implements SingletonInterface {
 		foreach ($endpoint['pathParams'] ?? [] as $param) {
 			/** @var ApiPathParam $param */
 			$value = $pathParams[$param->name] ?? NULL;
-			if ($error = $this->validateValue($param->name, $value, $param->type, TRUE, $param->pattern)) {
+			if ($error = $this->validateValue($param, $value, TRUE)) {
 				$errors[] = $error;
 			}
 		}
@@ -61,7 +61,12 @@ class RequestValidator implements SingletonInterface {
 		foreach ($endpoint['queryParams'] ?? [] as $param) {
 			/** @var ApiQueryParam $param */
 			$value = $queryParams[$param->name] ?? NULL;
-			if ($error = $this->validateValue($param->name, $value, $param->type, $param->required, $param->pattern)) {
+			$required = $param->required;
+			if ($param->requiredIf && $this->checkCondition($param->requiredIf, $queryParams)) {
+				$required = TRUE;
+			}
+
+			if ($error = $this->validateValue($param, $value, $required)) {
 				$errors[] = $error;
 			}
 		}
@@ -83,7 +88,12 @@ class RequestValidator implements SingletonInterface {
 			if (!is_array($body) && $request->getMethod() !== 'GET') {
 				// If body params are expected but the body is not an array, check if any are required
 				foreach ($endpoint['bodyParams'] as $param) {
-					if ($param->required) {
+					$required = $param->required;
+					if ($param->requiredIf && $this->checkCondition($param->requiredIf, [])) {
+						$required = TRUE;
+					}
+
+					if ($required) {
 						$errors[] = [
 							'field' => 'body',
 							'message' => 'Request body must be a valid JSON object'
@@ -92,16 +102,16 @@ class RequestValidator implements SingletonInterface {
 					}
 				}
 			} else {
+				$body = is_array($body) ? $body : [];
 				foreach ($endpoint['bodyParams'] as $param) {
 					/** @var ApiBodyParam $param */
 					$value = $body[$param->name] ?? NULL;
-					if ($error = $this->validateValue(
-						$param->name,
-						$value,
-						$param->type,
-						$param->required,
-						$param->pattern
-					)) {
+					$required = $param->required;
+					if ($param->requiredIf && $this->checkCondition($param->requiredIf, $body)) {
+						$required = TRUE;
+					}
+
+					if ($error = $this->validateValue($param, $value, $required)) {
 						$errors[] = $error;
 					}
 				}
@@ -112,22 +122,50 @@ class RequestValidator implements SingletonInterface {
 	}
 
 	/**
+	 * Checks if a condition is met
+	 *
+	 * @param string $condition
+	 * @param array $values
+	 * @return bool
+	 */
+	protected function checkCondition(string $condition, array $values): bool {
+		if (str_contains($condition, '=')) {
+			[$field, $expectedValue] = explode('=', $condition, 2);
+			$field = trim($field);
+			$expectedValue = trim($expectedValue);
+			$actualValue = $values[$field] ?? NULL;
+
+			// Handle boolean strings
+			if ($expectedValue === 'true') {
+				return (bool) $actualValue === TRUE;
+			}
+			if ($expectedValue === 'false') {
+				return (bool) $actualValue === FALSE;
+			}
+
+			return (string) $actualValue === $expectedValue;
+		}
+
+		return !empty($values[trim($condition)]);
+	}
+
+	/**
 	 * Validates a single value
 	 *
-	 * @param string $name
+	 * @param ApiPathParam|ApiQueryParam|ApiBodyParam $param
 	 * @param mixed $value
-	 * @param string $type
 	 * @param bool $required
-	 * @param string|null $pattern
 	 * @return array|null
 	 */
 	protected function validateValue(
-		string $name,
+		object $param,
 		mixed $value,
-		string $type,
-		bool $required,
-		?string $pattern
+		bool $required
 	): ?array {
+		$name = $param->name;
+		$type = $param->type;
+		$pattern = $param->pattern;
+
 		if ($value === NULL || $value === '') {
 			if ($required) {
 				return [
@@ -148,6 +186,18 @@ class RequestValidator implements SingletonInterface {
 						'message' => 'Value must be an integer'
 					];
 				}
+				if (property_exists($param, 'min') && $param->min !== NULL && (float) $value < $param->min) {
+					return [
+						'field' => $name,
+						'message' => 'Value must be at least ' . $param->min
+					];
+				}
+				if (property_exists($param, 'max') && $param->max !== NULL && (float) $value > $param->max) {
+					return [
+						'field' => $name,
+						'message' => 'Value must be at most ' . $param->max
+					];
+				}
 				break;
 			case 'float':
 			case 'double':
@@ -158,6 +208,18 @@ class RequestValidator implements SingletonInterface {
 						'message' => 'Value must be a number'
 					];
 				}
+				if (property_exists($param, 'min') && $param->min !== NULL && (float) $value < $param->min) {
+					return [
+						'field' => $name,
+						'message' => 'Value must be at least ' . $param->min
+					];
+				}
+				if (property_exists($param, 'max') && $param->max !== NULL && (float) $value > $param->max) {
+					return [
+						'field' => $name,
+						'message' => 'Value must be at most ' . $param->max
+					];
+				}
 				break;
 			case 'bool':
 			case 'boolean':
@@ -166,6 +228,20 @@ class RequestValidator implements SingletonInterface {
 					return [
 						'field' => $name,
 						'message' => 'Value must be a boolean'
+					];
+				}
+				break;
+			case 'string':
+				if (property_exists($param, 'minLength') && $param->minLength !== NULL && strlen((string) $value) < $param->minLength) {
+					return [
+						'field' => $name,
+						'message' => 'Value length must be at least ' . $param->minLength
+					];
+				}
+				if (property_exists($param, 'maxLength') && $param->maxLength !== NULL && strlen((string) $value) > $param->maxLength) {
+					return [
+						'field' => $name,
+						'message' => 'Value length must be at most ' . $param->maxLength
 					];
 				}
 				break;

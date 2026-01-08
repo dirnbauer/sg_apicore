@@ -40,6 +40,11 @@ class ApiBodyParam {
 	 * @param string $description A short description of the parameter
 	 * @param string|null $pattern Optional regex pattern for validation
 	 * @param mixed|null $example An example value for the parameter
+	 * @param string|null $requiredIf Condition for making this field required (e.g. 'field=value')
+	 * @param float|null $min Minimum value (for numeric types)
+	 * @param float|null $max Maximum value (for numeric types)
+	 * @param int|null $minLength Minimum length (for string types)
+	 * @param int|null $maxLength Maximum length (for string types)
 	 */
 	public function __construct(
 		public string $name,
@@ -47,7 +52,12 @@ class ApiBodyParam {
 		public bool $required = TRUE,
 		public string $description = '',
 		public ?string $pattern = NULL,
-		public mixed $example = NULL
+		public mixed $example = NULL,
+		public ?string $requiredIf = NULL,
+		public ?float $min = NULL,
+		public ?float $max = NULL,
+		public ?int $minLength = NULL,
+		public ?int $maxLength = NULL
 	) {
 	}
 }

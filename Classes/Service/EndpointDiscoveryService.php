@@ -171,22 +171,44 @@ class EndpointDiscoveryService implements SingletonInterface {
 		foreach ($allFields as $fieldName) {
 			$type = 'string';
 			$description = 'Field: ' . $fieldName;
+			$required = FALSE;
+			$pattern = NULL;
+			$min = NULL;
+			$max = NULL;
 			if (isset($tca['columns'][$fieldName]['config'])) {
 				$colConfig = $tca['columns'][$fieldName]['config'];
 				$tcaType = $colConfig['type'] ?? '';
+				$eval = $colConfig['eval'] ?? '';
 				switch ($tcaType) {
 					case 'check':
 						$type = 'boolean';
 						break;
 					case 'number':
 						$type = str_contains($colConfig['format'] ?? '', 'decimal') ? 'float' : 'integer';
+						if (isset($colConfig['range']['lower'])) {
+							$min = (float) $colConfig['range']['lower'];
+						}
+						if (isset($colConfig['range']['upper'])) {
+							$max = (float) $colConfig['range']['upper'];
+						}
 						break;
 					case 'input':
-						if (isset($colConfig['eval']) && str_contains($colConfig['eval'], 'int')) {
+						if (str_contains($eval, 'int')) {
 							$type = 'integer';
+						} elseif (str_contains($eval, 'double2')) {
+							$type = 'float';
+						}
+
+						if (str_contains($eval, 'email')) {
+							$pattern = '/^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$/';
 						}
 						break;
 				}
+
+				if (str_contains($eval, 'required')) {
+					$required = TRUE;
+				}
+
 				if (isset($tca['columns'][$fieldName]['label'])) {
 					$description = $tca['columns'][$fieldName]['label'];
 				}
@@ -194,7 +216,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 			$fieldMetadata[$fieldName] = [
 				'name' => $fieldName,
 				'type' => $type,
-				'description' => $description
+				'description' => $description,
+				'required' => $required,
+				'pattern' => $pattern,
+				'min' => $min,
+				'max' => $max
 			];
 		}
 
@@ -206,8 +232,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 				$bodyParams[] = new ApiBodyParam(
 					name: $meta['name'],
 					type: $meta['type'],
-					required: FALSE,
-					description: $meta['description']
+					required: $meta['required'],
+					description: $meta['description'],
+					pattern: $meta['pattern'],
+					min: $meta['min'],
+					max: $meta['max']
 				);
 			}
 		}

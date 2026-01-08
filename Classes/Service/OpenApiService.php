@@ -182,6 +182,25 @@ class OpenApiService implements SingletonInterface {
 				if ($param->example !== NULL) {
 					$propertySpec['example'] = $param->example;
 				}
+				if ($param->pattern !== NULL) {
+					$propertySpec['pattern'] = $param->pattern;
+				}
+				if ($param->min !== NULL) {
+					$propertySpec['minimum'] = $param->min;
+				}
+				if ($param->max !== NULL) {
+					$propertySpec['maximum'] = $param->max;
+				}
+				if ($param->minLength !== NULL) {
+					$propertySpec['minLength'] = $param->minLength;
+				}
+				if ($param->maxLength !== NULL) {
+					$propertySpec['maxLength'] = $param->maxLength;
+				}
+				if ($param->requiredIf !== NULL) {
+					$propertySpec['description'] .= "\n\n**Required if:** " . $param->requiredIf;
+				}
+
 				$properties[$param->name] = $propertySpec;
 				if ($param->required) {
 					$required[] = $param->name;
@@ -211,30 +230,73 @@ class OpenApiService implements SingletonInterface {
 		$operation['parameters'] = [];
 		/** @var ApiQueryParam $param */
 		foreach ($endpoint['queryParams'] as $param) {
+			$schema = [
+				'type' => $this->mapPhpTypeToOpenApi($param->type)
+			];
+			if ($param->example !== NULL) {
+				$schema['example'] = $param->example;
+			}
+			if ($param->pattern !== NULL) {
+				$schema['pattern'] = $param->pattern;
+			}
+			if ($param->min !== NULL) {
+				$schema['minimum'] = $param->min;
+			}
+			if ($param->max !== NULL) {
+				$schema['maximum'] = $param->max;
+			}
+			if ($param->minLength !== NULL) {
+				$schema['minLength'] = $param->minLength;
+			}
+			if ($param->maxLength !== NULL) {
+				$schema['maxLength'] = $param->maxLength;
+			}
+
+			$description = $param->description;
+			if ($param->requiredIf !== NULL) {
+				$description .= "\n\n**Required if:** " . $param->requiredIf;
+			}
+
 			$parameterSpec = [
 				'name' => $param->name,
 				'in' => 'query',
 				'required' => $param->required,
-				'description' => $param->description,
-				'schema' => ['type' => $this->mapPhpTypeToOpenApi($param->type)]
+				'description' => $description,
+				'schema' => $schema
 			];
-			if ($param->example !== NULL) {
-				$parameterSpec['schema']['example'] = $param->example;
-			}
 			$operation['parameters'][] = $parameterSpec;
 		}
 		/** @var ApiPathParam $param */
 		foreach ($endpoint['pathParams'] as $param) {
+			$schema = [
+				'type' => $this->mapPhpTypeToOpenApi($param->type)
+			];
+			if ($param->example !== NULL) {
+				$schema['example'] = $param->example;
+			}
+			if ($param->pattern !== NULL) {
+				$schema['pattern'] = $param->pattern;
+			}
+			if ($param->min !== NULL) {
+				$schema['minimum'] = $param->min;
+			}
+			if ($param->max !== NULL) {
+				$schema['maximum'] = $param->max;
+			}
+			if ($param->minLength !== NULL) {
+				$schema['minLength'] = $param->minLength;
+			}
+			if ($param->maxLength !== NULL) {
+				$schema['maxLength'] = $param->maxLength;
+			}
+
 			$parameterSpec = [
 				'name' => $param->name,
 				'in' => 'path',
 				'required' => TRUE,
 				'description' => $param->description,
-				'schema' => ['type' => $this->mapPhpTypeToOpenApi($param->type)]
+				'schema' => $schema
 			];
-			if ($param->example !== NULL) {
-				$parameterSpec['schema']['example'] = $param->example;
-			}
 			$operation['parameters'][] = $parameterSpec;
 		}
 

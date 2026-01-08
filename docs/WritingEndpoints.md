@@ -81,22 +81,38 @@ The extension supports automatic validation of parameters based on the attribute
 
 ### Validation Constraints
 
-You can add validation constraints to these attributes:
+You can add various validation constraints to these attributes:
 
 * `type`: The expected data type (`string`, `integer`, `float`, `boolean`).
-* `required`: Whether the parameter must be present (default: `true` for body, `false` for query).
+* `required`: Whether the parameter must be present.
 * `pattern`: An optional regular expression (PCRE) the value must match.
+* `min` / `max`: For numeric types, defines the inclusive range.
+* `minLength` / `maxLength`: For string types, defines the length range.
+* `requiredIf`: Makes a field required only if a certain condition is met.
+  * Example: `requiredIf: 'type=special'` (field is required if the field `type` has the value `special`).
+  * Example: `requiredIf: 'otherField'` (field is required if the field `otherField` is present and not empty).
 
 Example:
 
 ```php
-#[ApiRoute(path: '/search', methods: ['GET'])]
-#[ApiQueryParam(name: 'query', type: 'string', required: true, pattern: '/^[a-z0-9 ]+$/i')]
-#[ApiQueryParam(name: 'page', type: 'integer', description: 'Page number')]
-public function searchAction(ServerRequestInterface $request): ResponseInterface {
-    // If validation fails, the router returns a 400 Bad Request before this method is called.
+#[ApiRoute(path: '/register', methods: ['POST'])]
+#[ApiBodyParam(name: 'username', type: 'string', minLength: 5, maxLength: 20, pattern: '/^[a-z0-9_]+$/')]
+#[ApiBodyParam(name: 'age', type: 'integer', min: 18)]
+#[ApiBodyParam(name: 'type', type: 'string')]
+#[ApiBodyParam(name: 'company_name', required: false, requiredIf: 'type=business')]
+public function registerAction(ServerRequestInterface $request): ResponseInterface {
+    // ...
 }
 ```
+
+### Automatic Validation from TCA
+
+For Auto-CRUD resources, validation rules are automatically derived from the TYPO3 TCA:
+
+* `eval => required` results in `required: true`.
+* `eval => email` results in a standard email regex pattern.
+* `type => number` results in `integer` or `float` type validation.
+* `config => range` results in `min` and `max` validation. (Note: I should check if I implemented range yet)
 
 ## Standardized Responses
 
