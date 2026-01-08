@@ -65,4 +65,22 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 			'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider', 'legacytokenprovider']
 		]);
 	}
+
+	// Register Authentication Service
+	\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addService(
+		'sg_apicore',
+		'auth',
+		\SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::class,
+		[
+			'title' => 'API Token Authentication',
+			'description' => 'Authenticates users based on API tokens (JWT, Opaque, Legacy)',
+			'subtype' => 'getUserFE,authUserFE',
+			'available' => TRUE,
+			'priority' => 80,
+			'quality' => 80,
+			'os' => '',
+			'exec' => '',
+			'className' => \SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::class,
+		]
+	);
 })();

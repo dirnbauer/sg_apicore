@@ -92,6 +92,28 @@ class TokenRepository implements SingletonInterface {
 	}
 
 	/**
+	 * Finds a token by hash globally (across all APIs and tenants)
+	 *
+	 * @param string $tokenHash
+	 * @return array|null
+	 * @throws Exception
+	 */
+	public function findByHashGlobally(string $tokenHash): ?array {
+		$queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
+			?->getQueryBuilderForTable(self::TABLE_NAME);
+
+		return $queryBuilder
+			->select('*')
+			->from(self::TABLE_NAME)
+			->where(
+				$queryBuilder->expr()->eq('token_hash', $queryBuilder->createNamedParameter($tokenHash)),
+				$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, ParameterType::INTEGER))
+			)
+			->executeQuery()
+			->fetchAssociative() ?: NULL;
+	}
+
+	/**
 	 * Finds tokens by apiId, and tenantId
 	 *
 	 * @param string $apiId
