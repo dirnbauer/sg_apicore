@@ -49,7 +49,7 @@ class ApiBodyParam {
 	public function __construct(
 		public string $name,
 		public string $type = 'string',
-		public bool $required = TRUE,
+		public bool $required = FALSE,
 		public string $description = '',
 		public ?string $pattern = NULL,
 		public mixed $example = NULL,
