@@ -158,6 +158,15 @@ class ExtensionConfiguration implements SingletonInterface {
 	}
 
 	/**
+	 * Returns whether caching is enabled
+	 *
+	 * @return bool
+	 */
+	public function isCacheEnabled(): bool {
+		return (bool) $this->get('enableCaching', TRUE);
+	}
+
+	/**
 	 * Returns whether demo APIs and resources should be activated
 	 *
 	 * @return bool

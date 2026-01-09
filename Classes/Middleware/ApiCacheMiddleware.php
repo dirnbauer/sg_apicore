@@ -31,6 +31,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Attribute\ApiCache;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
 use TYPO3\CMS\Core\Cache\CacheManager;
@@ -60,18 +61,26 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	protected EndpointDiscoveryService $discoveryService;
 
 	/**
+	 * @var ExtensionConfiguration
+	 */
+	protected ExtensionConfiguration $extensionConfiguration;
+
+	/**
 	 * @param EndpointDiscoveryService $discoveryService
 	 * @param PathAnalysisService $pathAnalysisService
 	 * @param CacheManager $cacheManager
+	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @throws NoSuchCacheException
 	 */
 	public function __construct(
 		EndpointDiscoveryService $discoveryService,
 		PathAnalysisService $pathAnalysisService,
-		CacheManager $cacheManager
+		CacheManager $cacheManager,
+		ExtensionConfiguration $extensionConfiguration
 	) {
 		$this->discoveryService = $discoveryService;
 		$this->pathAnalysisService = $pathAnalysisService;
+		$this->extensionConfiguration = $extensionConfiguration;
 		$this->cache = $cacheManager->getCache('sg_apicore_responses');
 	}
 
@@ -84,6 +93,10 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	 * @throws \ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+		if (!$this->extensionConfiguration->isCacheEnabled()) {
+			return $handler->handle($request);
+		}
+
 		// Skip if it contains legacy auth headers and is not already a legacy-mapped request
 		$hasLegacyAuthHeader = $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
 		if ($hasLegacyAuthHeader && !$request->getAttribute('api.isLegacy')) {
