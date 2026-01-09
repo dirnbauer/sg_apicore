@@ -92,7 +92,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			return $handler->handle($request);
 		}
 
-		// Skip if it contains legacy auth headers and is not already a legacy-mapped request
+		// Skip if it contains legacy auth headers and is not yet a legacy-mapped request
 		$hasLegacyAuthHeader = $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
 		if ($hasLegacyAuthHeader && !$request->getAttribute('api.isLegacy')) {
 			return $handler->handle($request);
