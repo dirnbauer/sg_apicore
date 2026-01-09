@@ -81,7 +81,7 @@
 								<f:if condition="{endpoint.version -> f:count()} == 1">
 									<f:then>
 										<f:for each="{endpoint.version}" as="version">
-											<a href="/api/{apiId}/v{version}/docs/ui" target="_blank"
+											<a href="{apiPathPrefix}{apiId}/v{version}/docs/ui" target="_blank"
 											   class="btn btn-default btn-sm" title="View in Swagger UI">
 												<core:icon identifier="actions-document-view" size="small"/>
 												Docs

@@ -77,8 +77,10 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		// If it's already a new API request, skip
-		if (str_starts_with($path, $apiPathPrefix)) {
+		// If it's already a new API request, skip - unless it contains legacy auth headers
+		// which indicates that it might be a legacy request using the same path prefix
+		$hasLegacyAuthHeader = $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
+		if (str_starts_with($path, $apiPathPrefix) && !$hasLegacyAuthHeader) {
 			return $handler->handle($request);
 		}
 
@@ -112,32 +114,48 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 		// Example: /my-key/news/1/get
 		if (!$isLegacyRequest && $path !== '/' && $path !== '') {
 			$pathSegments = explode('/', trim($path, '/'));
+
+			// If it starts with the apiPathPrefix, we strip it to analyze the rest of the segments
+			$strippedPathSegments = $pathSegments;
+			$apiPathSegments = explode('/', trim($apiPathPrefix, '/'));
+			$match = TRUE;
+			foreach ($apiPathSegments as $index => $segment) {
+				if (!isset($pathSegments[$index]) || strcasecmp($pathSegments[$index], $segment) !== 0) {
+					$match = FALSE;
+					break;
+				}
+			}
+
+			if ($match) {
+				$strippedPathSegments = array_slice($pathSegments, count($apiPathSegments));
+			}
+
 			// We only consider it a legacy API call if it has at least 2 segments,
 			// doesn't look like a file (no dot in the last segment),
 			// and doesn't start with a reserved TYPO3 path.
 			// ALSO: We check if the type parameter is set to the typical sg_rest type
-			// or if we are sure it's a legacy request.
+			// or if the request contains legacy auth headers.
 			$isRestType = (isset($queryParams['type']) && (int) $queryParams['type'] === 1595576052);
-			if ($isRestType && count($pathSegments) >= 2 && !str_contains(
-				end($pathSegments),
+			if (($isRestType || $hasLegacyAuthHeader) && count($strippedPathSegments) >= 2 && !str_contains(
+				end($strippedPathSegments),
 				'.'
-			) && !$this->isReservedPath($pathSegments[0])) {
+			) && !$this->isReservedPath($strippedPathSegments[0])) {
 				$isLegacyRequest = TRUE;
-				$apiKey = $pathSegments[0];
+				$apiKey = $strippedPathSegments[0];
 				/** @noinspection MultiAssignmentUsageInspection */
-				$entity = $pathSegments[1];
-				$identifier = $pathSegments[2] ?? NULL;
-				$verb = $pathSegments[3] ?? NULL;
+				$entity = $strippedPathSegments[1];
+				$identifier = $strippedPathSegments[2] ?? NULL;
+				$verb = $strippedPathSegments[3] ?? NULL;
 			}
 		}
 
 		if ($isLegacyRequest && $apiKey !== '' && $entity !== '') {
 			// Refined mapping strategy:
-			// If it's a bearer token request, map to /api/legacy/v1/auth/login
+			// If it's a bearer token request, map to {apiPathPrefix}/legacy/v1/auth/login
 			if ($apiKey === 'authentication' && $entity === 'authentication' && $identifier === 'getBearerToken') {
 				$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1/auth/legacyLogin';
 			} else {
-				// Map other legacy requests to /api/legacy/v1/{apiKey}/{entity}/{identifier}
+				// Map other legacy requests to {apiPathPrefix}/legacy/v1/{apiKey}/{entity}/{identifier}
 				$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1/' . $apiKey . '/' . $entity;
 				if ($identifier !== NULL) {
 					$newPath .= '/' . $identifier;
@@ -147,7 +165,7 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 				}
 			}
 
-			// Prepend language prefix if it was present
+			// Prepend a language prefix if it was present
 			if ($hasLanguagePrefix) {
 				$newPath = '/' . trim($languagePrefix, '/') . '/' . ltrim($newPath, '/');
 			}
@@ -171,7 +189,8 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 	 * @return bool
 	 */
 	protected function isReservedPath(string $segment): bool {
-		$reserved = ['typo3', 'fileadmin', 'typo3conf', 'typo3temp', 'uploads', 'api', 'docs'];
+		$apiPathPrefix = trim($this->extensionConfiguration->getApiPathPrefix(), '/');
+		$reserved = ['typo3', 'fileadmin', 'typo3conf', 'typo3temp', 'uploads', 'docs', $apiPathPrefix];
 		return in_array(strtolower($segment), $reserved, TRUE);
 	}
 }

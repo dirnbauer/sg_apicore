@@ -84,6 +84,12 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	 * @throws \ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+		// Skip if it contains legacy auth headers and is not already a legacy-mapped request
+		$hasLegacyAuthHeader = $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
+		if ($hasLegacyAuthHeader && !$request->getAttribute('api.isLegacy')) {
+			return $handler->handle($request);
+		}
+
 		if ($request->getMethod() === 'GET') {
 			return $this->handleGetRequest($request, $handler);
 		}

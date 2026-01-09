@@ -92,17 +92,23 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		/** @var SiteLanguage $language */
 		$language = $request->getAttribute('language');
 		$languagePrefix = $language?->getBase()->getPath();
+		$pathWithoutLanguage = $path;
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
 				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
-				if (!str_starts_with($pathWithoutLanguage, $apiPathPrefix)) {
-					return $handler->handle($request);
-				}
-			} elseif (!str_starts_with($path, $apiPathPrefix)) {
-				return $handler->handle($request);
 			}
-		} elseif (!str_starts_with($path, $apiPathPrefix)) {
+		}
+
+		// Skip if it doesn't start with the API path prefix
+		if (!str_starts_with($pathWithoutLanguage, $apiPathPrefix)) {
+			return $handler->handle($request);
+		}
+
+		// Skip if it contains legacy auth headers and is not already a legacy-mapped request
+		// This allows the LegacyRoutingMiddleware to handle these requests if they use the same path prefix
+		$hasLegacyAuthHeader = $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
+		if ($hasLegacyAuthHeader && !$request->getAttribute('api.isLegacy')) {
 			return $handler->handle($request);
 		}
 

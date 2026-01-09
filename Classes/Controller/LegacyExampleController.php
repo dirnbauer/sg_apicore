@@ -53,7 +53,7 @@ class LegacyExampleController {
 	/**
 	 * Example list action
 	 * URL (legacy): /my-api-key/example/list
-	 * URL (new): /api/my-api-key/v1/example/list
+	 * URL (new): {apiPathPrefix}/my-api-key/v1/example/list
 	 *
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface

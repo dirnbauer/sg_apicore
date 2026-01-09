@@ -17,7 +17,7 @@ logBody = 0
 logResponse = 0
 
 # cat=basic/logging; type=string; label=Comma-separated list of keys to mask in logs
-redactKeys = password,token,authorization,secret,access_token,refresh_token
+redactKeys = password,token,authorization,secret,access_token,refresh_token,authtoken,bearertoken
 
 # cat=basic/expiration; type=int; label=Time in seconds until a JWT / Bearer-Token expires
 tokenExpirationTime = 86400

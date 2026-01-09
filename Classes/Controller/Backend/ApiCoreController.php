@@ -28,6 +28,7 @@ namespace SGalinski\SgApiCore\Controller\Backend;
 
 use Psr\Http\Message\ResponseInterface;
 use Random\RandomException;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
@@ -50,36 +51,6 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 #[AsController]
 class ApiCoreController extends ActionController {
 	/**
-	 * @var ApiRegistry
-	 */
-	protected ApiRegistry $apiRegistry;
-
-	/**
-	 * @var TokenRepository
-	 */
-	protected TokenRepository $tokenRepository;
-
-	/**
-	 * @var TokenService
-	 */
-	protected TokenService $tokenService;
-
-	/**
-	 * @var EndpointDiscoveryService
-	 */
-	protected EndpointDiscoveryService $endpointDiscoveryService;
-
-	/**
-	 * @var ModuleTemplateFactory
-	 */
-	protected ModuleTemplateFactory $moduleTemplateFactory;
-
-	/**
-	 * @var IconFactory
-	 */
-	protected IconFactory $iconFactory;
-
-	/**
 	 * @param ApiRegistry $apiRegistry
 	 * @param TokenRepository $tokenRepository
 	 * @param TokenService $tokenService
@@ -88,19 +59,14 @@ class ApiCoreController extends ActionController {
 	 * @param IconFactory $iconFactory
 	 */
 	public function __construct(
-		ApiRegistry $apiRegistry,
-		TokenRepository $tokenRepository,
-		TokenService $tokenService,
-		EndpointDiscoveryService $endpointDiscoveryService,
-		ModuleTemplateFactory $moduleTemplateFactory,
-		IconFactory $iconFactory
+		protected readonly ApiRegistry $apiRegistry,
+		protected readonly TokenRepository $tokenRepository,
+		protected readonly TokenService $tokenService,
+		protected readonly EndpointDiscoveryService $endpointDiscoveryService,
+		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
+		protected readonly IconFactory $iconFactory,
+		protected readonly ExtensionConfiguration $extensionConfiguration
 	) {
-		$this->apiRegistry = $apiRegistry;
-		$this->tokenRepository = $tokenRepository;
-		$this->tokenService = $tokenService;
-		$this->endpointDiscoveryService = $endpointDiscoveryService;
-		$this->moduleTemplateFactory = $moduleTemplateFactory;
-		$this->iconFactory = $iconFactory;
 	}
 
 	/**
@@ -114,6 +80,7 @@ class ApiCoreController extends ActionController {
 		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Overview');
 		$moduleTemplate->assign('apis', $apis);
+		$moduleTemplate->assign('apiPathPrefix', $this->extensionConfiguration->getApiPathPrefix());
 		$moduleTemplate->assign('currentTab', 'index');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Index');
 	}
@@ -256,6 +223,7 @@ class ApiCoreController extends ActionController {
 		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Endpoints');
 		$moduleTemplate->assign('endpoints', $endpoints);
+		$moduleTemplate->assign('apiPathPrefix', $this->extensionConfiguration->getApiPathPrefix());
 		$moduleTemplate->assign('currentTab', 'endpoints');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Endpoints');
 	}

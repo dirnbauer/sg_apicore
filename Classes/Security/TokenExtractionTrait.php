@@ -45,12 +45,16 @@ trait TokenExtractionTrait {
 			return substr($authorizationHeader, 7);
 		}
 
-		// 2. Custom 'bearertoken' header (common in legacy systems or weird clients)
+		// 2. Custom 'authtoken' or 'bearertoken' header (common in legacy systems or weird clients)
+		if ($request->hasHeader('authtoken')) {
+			return $request->getHeaderLine('authtoken');
+		}
+
 		if ($request->hasHeader('bearertoken')) {
 			return $request->getHeaderLine('bearertoken');
 		}
 
-		// 3. Query Parameter 'bearertoken'
-		return (string) ($request->getQueryParams()['bearertoken'] ?? '');
+		// 3. Query Parameter 'authtoken' or 'bearertoken'
+		return (string) ($request->getQueryParams()['authtoken'] ?? $request->getQueryParams()['bearertoken'] ?? '');
 	}
 }

@@ -35,14 +35,14 @@
 						</f:then>
 						<f:else>
 							<f:for each="{config.versions}" as="version">
-								<code>/api/{apiId}/v{version}</code><br/>
+								<code>{apiPathPrefix}{apiId}/v{version}</code><br/>
 							</f:for>
 						</f:else>
 					</f:if>
 				</td>
 				<td>
 					<f:for each="{config.versions}" as="version">
-						<a href="/api/{apiId}/v{version}/docs/ui" target="_blank" class="btn btn-default btn-sm"
+						<a href="{apiPathPrefix}{apiId}/v{version}/docs/ui" target="_blank" class="btn btn-default btn-sm"
 						   title="Open Swagger UI">
 							<core:icon identifier="actions-document-view" size="small"/>
 							v{version}
