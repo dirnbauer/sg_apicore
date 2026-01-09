@@ -33,7 +33,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
-use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\SingletonInterface;
 use function FastRoute\simpleDispatcher;
 
@@ -152,7 +151,7 @@ class Router implements SingletonInterface {
 				}
 				if (!empty($endpoint['authMode'])) {
 					// Visibility logic
-					$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
+					$restrictedTo = array_filter($endpoint['authMode'], static fn($m) => $m !== 'public');
 					if (!empty($restrictedTo)) {
 						if (!in_array($authMode, $restrictedTo, TRUE)) {
 							continue;
@@ -216,10 +215,10 @@ class Router implements SingletonInterface {
 
 				// If effective auth mode is not public, require authentication
 				$isPublic = $effectiveAuthMode === 'public' || (is_array($effectiveAuthMode) && in_array(
-					'public',
-					$effectiveAuthMode,
-					TRUE
-				));
+							'public',
+							$effectiveAuthMode,
+							TRUE
+						));
 				if (!$isPublic && $authContext === NULL) {
 					return $this->createErrorResponse($request, 'Unauthorized', 'Authentication required.', 401);
 				}
@@ -266,10 +265,70 @@ class Router implements SingletonInterface {
 				}
 
 				$controller = $this->getControllerInstances()[$handler['controller']];
-				return call_user_func_array([$controller, $handler['action']], [$request, ...array_values($vars)]);
+				$arguments = $this->resolveArguments($request, $handler['endpoint'], $vars);
+				return call_user_func_array([$controller, $handler['action']], $arguments);
 		}
 
 		return $this->createErrorResponse($request, 'Internal Server Error', 'An unexpected error occurred.', 500);
+	}
+
+	/**
+	 * Resolves and type-casts the arguments for the controller action
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param array $endpoint
+	 * @param array $pathParams
+	 * @return array
+	 * @throws \ReflectionException
+	 */
+	protected function resolveArguments(ServerRequestInterface $request, array $endpoint, array $pathParams): array {
+		$arguments = [$request];
+		$queryParams = $request->getQueryParams();
+		$bodyParams = $request->getParsedBody();
+
+		// We need to match the action's parameter names and order
+		$reflectionClass = new \ReflectionClass($endpoint['controller']);
+		$reflectionMethod = $reflectionClass->getMethod($endpoint['action']);
+
+		foreach ($reflectionMethod->getParameters() as $index => $parameter) {
+			if ($index === 0) {
+				// The first argument is always the request
+				continue;
+			}
+
+			$name = $parameter->getName();
+			$value = $pathParams[$name] ?? $queryParams[$name] ?? $bodyParams[$name] ?? NULL;
+
+			if ($value === NULL && $parameter->isDefaultValueAvailable()) {
+				$value = $parameter->getDefaultValue();
+			}
+
+			$paramMetadata = NULL;
+			$allMetadata = array_merge(
+				$endpoint['pathParams'] ?? [],
+				$endpoint['queryParams'] ?? [],
+				$endpoint['bodyParams'] ?? []
+			);
+			foreach ($allMetadata as $meta) {
+				if ($meta->name === $name) {
+					$paramMetadata = $meta;
+					break;
+				}
+			}
+
+			if ($paramMetadata !== NULL && $value !== NULL) {
+				$value = match (strtolower($paramMetadata->type)) {
+					'int', 'integer' => (int) $value,
+					'float', 'double', 'number' => (float) $value,
+					'bool', 'boolean' => in_array($value, ['1', 'true', 1, TRUE, 'on', 'yes'], TRUE),
+					default => $value,
+				};
+			}
+
+			$arguments[] = $value;
+		}
+
+		return $arguments;
 	}
 
 	/**
@@ -290,7 +349,9 @@ class Router implements SingletonInterface {
 		array $additionalData = []
 	): ResponseInterface {
 		$legacyMode = $request->getAttribute('api.legacyMode');
-		if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute('api.id') === 'legacy')) {
+		if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute(
+					'api.id'
+				) === 'legacy')) {
 			$legacyMode = new ApiLegacyMode();
 		}
 
