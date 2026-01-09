@@ -102,7 +102,7 @@ In the `sg_demo` extension, a legacy news API was migrated.
 **Old Controller (sg_rest):**
 
 - Path: `news/news/list`
-- Authenticated via `AuthenticationServiceInterface`.
+- Authenticated via `api.auth` request attribute (replaces `AuthenticationServiceInterface`).
 
 **Migrated Controller (sg_apicore):**
 
