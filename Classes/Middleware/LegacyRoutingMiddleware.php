@@ -80,7 +80,7 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 		// If it's already a new API request, skip - unless it contains legacy auth headers
 		// which indicates that it might be a legacy request using the same path prefix
 		$hasLegacyAuthHeader = $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
-		if (str_starts_with($path, $apiPathPrefix) && !$hasLegacyAuthHeader) {
+		if (!$hasLegacyAuthHeader && str_starts_with($path, $apiPathPrefix)) {
 			return $handler->handle($request);
 		}
 
@@ -106,6 +106,22 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 				if (count($requestSegments) > 3) {
 					$verb = implode('/', array_slice($requestSegments, 3));
 				}
+
+				// Tag the request as legacy
+				$request = $request->withAttribute('api.isLegacy', TRUE);
+				$request = $request->withAttribute('api.id', 'legacy');
+				$request = $request->withAttribute('api.version', '1');
+
+				// Map other legacy requests to /{apiKey}/{entity}/{identifier}[/{verb}]
+				$remainingPathAttribute = '/' . $apiKey . '/' . $entity;
+				if ($identifier !== NULL) {
+					$remainingPathAttribute .= '/' . $identifier;
+				}
+
+				if ($verb !== NULL) {
+					$remainingPathAttribute .= '/' . $verb;
+				}
+				$request = $request->withAttribute('api.remainingPath', $remainingPathAttribute);
 			}
 		}
 
@@ -128,6 +144,14 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 
 			if ($match) {
 				$strippedPathSegments = array_slice($pathSegments, count($apiPathSegments));
+
+				// If it already starts with 'legacy/v1', we skip these segments for analysis, but we still want to
+				// process the rest as a legacy request if it has additional path parameters
+				if (count($strippedPathSegments) >= 2 && $strippedPathSegments[0] === 'legacy' &&
+					$strippedPathSegments[1] === 'v1'
+				) {
+					$strippedPathSegments = array_slice($strippedPathSegments, 2);
+				}
 			}
 
 			// We only consider it a legacy API call if it has at least 2 segments,
@@ -136,34 +160,80 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			// ALSO: We check if the type parameter is set to the typical sg_rest type
 			// or if the request contains legacy auth headers.
 			$isRestType = (isset($queryParams['type']) && (int) $queryParams['type'] === 1595576052);
-			if (($isRestType || $hasLegacyAuthHeader) && count($strippedPathSegments) >= 2 && !str_contains(
-				end($strippedPathSegments),
-				'.'
-			) && !$this->isReservedPath($strippedPathSegments[0])) {
+			if (($isRestType || $hasLegacyAuthHeader) && count($strippedPathSegments) >= 2 &&
+				!str_contains(end($strippedPathSegments), '.') && !$this->isReservedPath($strippedPathSegments[0])
+			) {
 				$isLegacyRequest = TRUE;
 				$apiKey = $strippedPathSegments[0];
 				/** @noinspection MultiAssignmentUsageInspection */
 				$entity = $strippedPathSegments[1];
 				$identifier = $strippedPathSegments[2] ?? NULL;
 				$verb = $strippedPathSegments[3] ?? NULL;
+
+				// Special case: If the verb looks like a key (e.g. "page", "limit"), it might be part of the
+				// key-value pairs instead of being a verb. However, sg_rest usually has a verb as the 4th segment
+				//(index 3).
+				// But in the example: /api/legacy/v1/offer/offer/list/page/c1
+				// apiKey: offer, entity: offer, identifier: list, verb: page
+				// Wait, if it's /offer/offer/list, then the identifier is 'list'.
+				// If there is more, then 'page' would be the verb. But 'page' is a key for a query param.
+
+				// Extract additional key/value pairs from the path if they exist
+				// Example: /api/offer/offer/list/page/1/limit/20
+				$remainingSegments = array_slice($strippedPathSegments, 4);
+				if ($verb !== NULL && count($remainingSegments) % 2 !== 0) {
+					// This means we have an odd number of segments after the verb (which is at index 3).
+					// This usually happens if the verb is actually a key.
+					$possibleVerbAsKey = $verb;
+					$possibleValue = $remainingSegments[0] ?? NULL;
+					if ($possibleValue !== NULL) {
+						$queryParams[$possibleVerbAsKey] = $possibleValue;
+						$remainingSegments = array_slice($remainingSegments, 1);
+						$verb = NULL;
+					}
+				}
+
+				if (count($remainingSegments) > 0) {
+					for ($i = 0, $iMax = count($remainingSegments); $i < $iMax; $i += 2) {
+						if (isset($remainingSegments[$i + 1])) {
+							$queryParams[$remainingSegments[$i]] = $remainingSegments[$i + 1];
+						}
+					}
+				}
+
+				// Move attribute setting here to ensure they are available for following middlewares
+				// Tag the request as legacy
+				$request = $request->withAttribute('api.isLegacy', TRUE);
+				$request = $request->withAttribute('api.id', 'legacy');
+				$request = $request->withAttribute('api.version', '1');
+
+				// Map legacy requests to /{apiKey}/{entity}/{identifier}[/{verb}]
+				$remainingPath = '/' . $apiKey . '/' . $entity;
+				if ($identifier !== NULL) {
+					$remainingPath .= '/' . $identifier;
+				}
+
+				// We DO NOT append the verb if it was identified as a query parameter key (and thus set to NULL)
+				if ($verb !== NULL) {
+					$remainingPath .= '/' . $verb;
+				}
+
+				$request = $request->withAttribute('api.remainingPath', $remainingPath);
 			}
 		}
 
 		if ($isLegacyRequest && $apiKey !== '' && $entity !== '') {
+			$request = $request->withQueryParams($queryParams);
+			$remainingPath = $request->getAttribute('api.remainingPath');
+
 			// Refined mapping strategy:
 			// If it's a bearer token request, map to {apiPathPrefix}/legacy/v1/auth/login
 			if ($apiKey === 'authentication' && $entity === 'authentication' && $identifier === 'getBearerToken') {
-				$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1/auth/legacyLogin';
-			} else {
-				// Map other legacy requests to {apiPathPrefix}/legacy/v1/{apiKey}/{entity}/{identifier}
-				$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1/' . $apiKey . '/' . $entity;
-				if ($identifier !== NULL) {
-					$newPath .= '/' . $identifier;
-				}
-				if ($verb !== NULL) {
-					$newPath .= '/' . $verb;
-				}
+				$remainingPath = '/auth/legacyLogin';
+				$request = $request->withAttribute('api.remainingPath', $remainingPath);
 			}
+
+			$newPath = rtrim($apiPathPrefix, '/') . '/legacy/v1' . $remainingPath;
 
 			// Prepend a language prefix if it was present
 			if ($hasLanguagePrefix) {
@@ -171,8 +241,6 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			}
 
 			$request = $request->withUri($uri->withPath($newPath));
-			// Tag the request as legacy
-			$request = $request->withAttribute('api.isLegacy', TRUE);
 			// Also ensure the legacyApiKey is passed for authentication bridge
 			if (!$request->hasHeader('Authorization')) {
 				$request = $request->withAttribute('api.legacyApiKey', $apiKey);

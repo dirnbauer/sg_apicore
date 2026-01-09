@@ -136,15 +136,17 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			$request = $request->withAttribute('language', $language);
 		}
 
-		// Analyze Path
-		$analysis = $this->pathAnalysisService->analyze(
-			$path,
-			$languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL
-		);
-		if ($analysis) {
-			$request = $request->withAttribute('api.id', $analysis['apiId']);
-			$request = $request->withAttribute('api.version', $analysis['version']);
-			$request = $request->withAttribute('api.remainingPath', $analysis['remainingPath']);
+		// Analyze Path if not already done by previous middleware (e.g. LegacyRoutingMiddleware)
+		if (!$request->getAttribute('api.id') || !$request->getAttribute('api.version')) {
+			$analysis = $this->pathAnalysisService->analyze(
+				$path,
+				$languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL
+			);
+			if ($analysis) {
+				$request = $request->withAttribute('api.id', $analysis['apiId']);
+				$request = $request->withAttribute('api.version', $analysis['version']);
+				$request = $request->withAttribute('api.remainingPath', $analysis['remainingPath']);
+			}
 		}
 
 		// Mock PageInformation for extensions like gridelements that expect it in TYPO3 13 frontend context

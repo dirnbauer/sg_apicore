@@ -53,7 +53,7 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 	 *
 	 * @param ServerRequestInterface $request
 	 * @param string $apiId
-	 * @param string $tenantId
+	 * @param string|null $tenantId
 	 * @param array $activeProviders
 	 * @return AuthContext|null
 	 * @throws Exception
