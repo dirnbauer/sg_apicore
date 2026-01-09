@@ -31,7 +31,7 @@ use Attribute;
 /**
  * Attribute to define extra metadata for an API endpoint (primarily for OpenAPI)
  */
-#[Attribute(Attribute::TARGET_METHOD)]
+#[Attribute(Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final readonly class ApiEndpoint {
 	/**
 	 * @param string|null $summary A short summary of what the endpoint does

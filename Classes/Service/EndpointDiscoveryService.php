@@ -112,6 +112,14 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$apiCache = $cacheAttr[0]->newInstance();
 					}
 
+					$tags = $endpoint?->tags ?? [];
+					if (empty($tags)) {
+						$pathSegments = explode('/', trim($route->path, '/'));
+						if (count($pathSegments) > 0) {
+							$tags = [$pathSegments[0]];
+						}
+					}
+
 					$endpoints[] = [
 						'apiId' => is_array($route->apiId) ?
 							$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
@@ -123,7 +131,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 							$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
 						'summary' => $endpoint?->summary ?? $method->getName(),
 						'description' => $endpoint?->description ?? '',
-						'tags' => $endpoint?->tags ?? [],
+						'tags' => $tags,
 						'scopes' => $requireScopes?->scopes ?? [],
 						'bodyParams' => $bodyParams,
 						'queryParams' => $queryParams,
@@ -195,12 +203,18 @@ class EndpointDiscoveryService implements SingletonInterface {
 					case 'input':
 						if (str_contains($eval, 'int')) {
 							$type = 'integer';
-						} elseif (str_contains($eval, 'double2')) {
+						} elseif (str_contains($eval, 'double2') || str_contains($eval, 'num')) {
 							$type = 'float';
 						}
 
 						if (str_contains($eval, 'email')) {
 							$pattern = '/^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$/';
+						}
+						break;
+					case 'select':
+						$type = 'string';
+						if (isset($colConfig['items'])) {
+							$description .= ' (Possible values: ' . implode(', ', array_map(static fn ($item) => $item[1] ?? $item['value'] ?? '', $colConfig['items'])) . ')';
 						}
 						break;
 				}
@@ -268,7 +282,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 						name: 'perPage',
 						type: 'integer',
 						required: FALSE,
-						description: 'Items per page'
+						description: 'Items per page',
+						example: 50
 					),
 					new ApiQueryParam(
 						name: 'sort',

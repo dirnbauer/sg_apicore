@@ -151,12 +151,20 @@ class ResponseService implements SingletonInterface {
 		array $additionalData = [],
 		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
+		$contentType = 'application/problem+json';
 		if ($legacyMode?->legacyErrorFormat) {
-			$response = [
-				'error' => $title,
-				'message' => $detail,
-				'code' => $status
-			];
+			if ($legacyMode->source === 'sg_rest') {
+				$response = [
+					'message' => $detail
+				];
+				$contentType = 'application/json';
+			} else {
+				$response = [
+					'error' => $title,
+					'message' => $detail,
+					'code' => $status
+				];
+			}
 		} else {
 			$response = [
 				'title' => $title,
@@ -171,7 +179,7 @@ class ResponseService implements SingletonInterface {
 		}
 
 		return new JsonResponse($response, $status, [
-			'Content-Type' => 'application/problem+json',
+			'Content-Type' => $contentType,
 			'X-Content-Type-Options' => 'nosniff',
 			'X-Frame-Options' => 'DENY',
 		]);

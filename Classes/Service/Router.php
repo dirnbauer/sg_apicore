@@ -57,6 +57,11 @@ class Router implements SingletonInterface {
 	protected RequestValidator $requestValidator;
 
 	/**
+	 * @var ResponseService
+	 */
+	protected ResponseService $responseService;
+
+	/**
 	 * @var array|null
 	 */
 	protected ?array $controllerInstances = NULL;
@@ -65,15 +70,18 @@ class Router implements SingletonInterface {
 	 * @param iterable $controllers
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param RequestValidator $requestValidator
+	 * @param ResponseService $responseService
 	 */
 	public function __construct(
 		iterable $controllers,
 		EndpointDiscoveryService $endpointDiscoveryService,
-		RequestValidator $requestValidator
+		RequestValidator $requestValidator,
+		ResponseService $responseService
 	) {
 		$this->controllers = $controllers;
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->requestValidator = $requestValidator;
+		$this->responseService = $responseService;
 	}
 
 	/**
@@ -168,9 +176,10 @@ class Router implements SingletonInterface {
 
 		switch ($routeInfo[0]) {
 			case Dispatcher::NOT_FOUND:
-				return $this->createErrorResponse('Not Found', 'The requested route does not exist.', 404);
+				return $this->createErrorResponse($request, 'Not Found', 'The requested route does not exist.', 404);
 			case Dispatcher::METHOD_NOT_ALLOWED:
 				return $this->createErrorResponse(
+					$request,
 					'Method Not Allowed',
 					'The requested method is not allowed for this route.',
 					405
@@ -189,6 +198,7 @@ class Router implements SingletonInterface {
 					$validationErrors = $this->requestValidator->validate($request, $handler['endpoint'], $vars);
 					if ($validationErrors !== NULL) {
 						return $this->createErrorResponse(
+							$request,
 							'Validation Failed',
 							'The request parameters are invalid.',
 							400,
@@ -211,7 +221,7 @@ class Router implements SingletonInterface {
 					TRUE
 				));
 				if (!$isPublic && $authContext === NULL) {
-					return $this->createErrorResponse('Unauthorized', 'Authentication required.', 401);
+					return $this->createErrorResponse($request, 'Unauthorized', 'Authentication required.', 401);
 				}
 
 				// 3. Scope Enforcement
@@ -225,6 +235,20 @@ class Router implements SingletonInterface {
 					$request = $request->withAttribute('api.legacyMode', $legacyMode);
 				}
 
+				// 3. Authenticated User Enforcement
+				$userAttributes = $reflectionMethod->getAttributes(RequireUser::class);
+				if (count($userAttributes) > 0) {
+					if ($authContext === NULL || $authContext->getUserId() === NULL) {
+						return $this->createErrorResponse(
+							$request,
+							'Forbidden',
+							'This endpoint requires a user login context.',
+							403
+						);
+					}
+				}
+
+				// 4. Scope Enforcement
 				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
 				if (count($scopeAttributes) > 0) {
 					/** @var RequireScopes $requireScopes */
@@ -232,6 +256,7 @@ class Router implements SingletonInterface {
 					foreach ($requireScopes->scopes as $scope) {
 						if ($authContext === NULL || !$authContext->hasScope($scope)) {
 							return $this->createErrorResponse(
+								$request,
 								'Forbidden',
 								'You do not have the required scope: ' . $scope,
 								403
@@ -240,28 +265,17 @@ class Router implements SingletonInterface {
 					}
 				}
 
-				// User Enforcement
-				$userAttributes = $reflectionMethod->getAttributes(RequireUser::class);
-				if (count($userAttributes) > 0) {
-					if ($authContext === NULL || $authContext->getUserId() === NULL) {
-						return $this->createErrorResponse(
-							'Forbidden',
-							'This endpoint requires a user login context.',
-							403
-						);
-					}
-				}
-
 				$controller = $this->getControllerInstances()[$handler['controller']];
 				return call_user_func_array([$controller, $handler['action']], [$request, ...array_values($vars)]);
 		}
 
-		return $this->createErrorResponse('Internal Server Error', 'An unexpected error occurred.', 500);
+		return $this->createErrorResponse($request, 'Internal Server Error', 'An unexpected error occurred.', 500);
 	}
 
 	/**
 	 * Creates a Problem JSON error response (RFC 7807)
 	 *
+	 * @param ServerRequestInterface $request
 	 * @param string $title
 	 * @param string $detail
 	 * @param int $status
@@ -269,22 +283,23 @@ class Router implements SingletonInterface {
 	 * @return ResponseInterface
 	 */
 	protected function createErrorResponse(
+		ServerRequestInterface $request,
 		string $title,
 		string $detail,
 		int $status,
 		array $additionalData = []
 	): ResponseInterface {
-		$response = [
-			'title' => $title,
-			'detail' => $detail,
-			'status' => $status,
-			'type' => 'about:blank'
-		];
-
-		if (!empty($additionalData)) {
-			$response = array_merge($response, $additionalData);
+		$legacyMode = $request->getAttribute('api.legacyMode');
+		if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute('api.id') === 'legacy')) {
+			$legacyMode = new ApiLegacyMode();
 		}
 
-		return new JsonResponse($response, $status, ['Content-Type' => 'application/problem+json']);
+		return $this->responseService->createErrorResponse(
+			$title,
+			$detail,
+			$status,
+			additionalData: $additionalData,
+			legacyMode: $legacyMode
+		);
 	}
 }

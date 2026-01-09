@@ -34,6 +34,7 @@ use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
@@ -46,17 +47,20 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	protected ApiRegistry $apiRegistry;
 	protected Router $router;
 	protected PathAnalysisService $pathAnalysisService;
+	protected ResponseService $responseService;
 
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		ApiRegistry $apiRegistry,
 		Router $router,
-		PathAnalysisService $pathAnalysisService
+		PathAnalysisService $pathAnalysisService,
+		ResponseService $responseService
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->apiRegistry = $apiRegistry;
 		$this->router = $router;
 		$this->pathAnalysisService = $pathAnalysisService;
+		$this->responseService = $responseService;
 	}
 
 	/**
@@ -157,19 +161,15 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		?ServerRequestInterface $request = NULL
 	): ResponseInterface {
 		$legacyMode = $request?->getAttribute('api.legacyMode');
-		if ($legacyMode instanceof ApiLegacyMode && $legacyMode->legacyErrorFormat) {
-			return new JsonResponse([
-				'error' => $title,
-				'message' => $detail,
-				'code' => $status
-			], $status);
+		if ($legacyMode === NULL && ($request?->getAttribute('api.isLegacy') || $request?->getAttribute('api.id') === 'legacy')) {
+			$legacyMode = new ApiLegacyMode();
 		}
 
-		return new JsonResponse([
-			'title' => $title,
-			'detail' => $detail,
-			'status' => $status,
-			'type' => 'about:blank'
-		], $status, ['Content-Type' => 'application/problem+json']);
+		return $this->responseService->createErrorResponse(
+			$title,
+			$detail,
+			$status,
+			legacyMode: $legacyMode
+		);
 	}
 }

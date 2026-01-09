@@ -248,11 +248,18 @@ class RequestValidator implements SingletonInterface {
 		}
 
 		// Pattern Validation
-		if ($pattern !== NULL && $pattern !== '' && !preg_match($pattern, (string) $value)) {
-			return [
-				'field' => $name,
-				'message' => 'Value does not match the required pattern: ' . $pattern
-			];
+		if ($pattern !== NULL && $pattern !== '') {
+			$regex = $pattern;
+			if (!str_starts_with($regex, '/') || !str_ends_with($regex, '/')) {
+				$regex = '/' . str_replace('/', '\/', $regex) . '/';
+			}
+
+			if (!preg_match($regex, (string) $value)) {
+				return [
+					'field' => $name,
+					'message' => 'Value does not match the required pattern: ' . $pattern
+				];
+			}
 		}
 
 		return NULL;

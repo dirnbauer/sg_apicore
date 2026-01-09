@@ -37,7 +37,9 @@ use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -272,10 +274,16 @@ class ApiCoreController extends ActionController {
 		// Refresh button using core translation
 		$buttonBar = $moduleTemplate->getDocHeaderComponent()->getButtonBar();
 		$refreshTitle = LocalizationUtility::translate('labels.reload', 'core') ?? 'Reload';
+
+		$iconSize = Icon::SIZE_SMALL;
+		if (class_exists(\TYPO3\CMS\Core\Imaging\IconSize::class)) {
+			$iconSize = \TYPO3\CMS\Core\Imaging\IconSize::SMALL;
+		}
+
 		$refreshButton = $buttonBar->makeLinkButton()
 			->setHref(GeneralUtility::getIndpEnv('REQUEST_URI'))
 			->setTitle($refreshTitle)
-			->setIcon($this->iconFactory->getIcon('actions-refresh', \TYPO3\CMS\Core\Imaging\IconSize::SMALL));
+			->setIcon($this->iconFactory->getIcon('actions-refresh', $iconSize));
 		$buttonBar->addButton($refreshButton, ButtonBar::BUTTON_POSITION_RIGHT);
 		$shortcutButton = $buttonBar->makeShortcutButton()
 			->setDisplayName('Shortcut')

@@ -31,19 +31,24 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Random\RandomException;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\LanguageAspectFactory;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
 use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
-use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
  * Middleware to setup API request context (Tenant, TSFE, etc.)
@@ -53,17 +58,23 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 	protected TenantResolverInterface $tenantResolver;
 	protected PathAnalysisService $pathAnalysisService;
 	protected LogService $logService;
+	protected ResponseService $responseService;
+	protected Context $context;
 
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		TenantResolverInterface $tenantResolver,
 		PathAnalysisService $pathAnalysisService,
-		LogService $logService
+		LogService $logService,
+		ResponseService $responseService,
+		Context $context
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->tenantResolver = $tenantResolver;
 		$this->pathAnalysisService = $pathAnalysisService;
 		$this->logService = $logService;
+		$this->responseService = $responseService;
+		$this->context = $context;
 	}
 
 	/**
@@ -78,7 +89,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
 		// Respect TYPO3 Language Prefix
-		/** @var \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language */
+		/** @var SiteLanguage $language */
 		$language = $request->getAttribute('language');
 		$languagePrefix = $language?->getBase()->getPath();
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
@@ -102,7 +113,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		// Resolve tenant early
 		$tenantResult = $this->tenantResolver->resolve($request);
 		if (!$tenantResult->isSuccess()) {
-			return $this->createErrorResponse(
+			return $this->responseService->createErrorResponse(
 				'Tenant Resolution Failed',
 				'Could not resolve a valid tenant for this request. Reason: ' . $tenantResult->getError(),
 				$this->extensionConfiguration->getOnMissingTenantStatusCode()
@@ -112,9 +123,8 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 
 		// Initialize Language Aspect in Context
 		if ($language) {
-			$context = GeneralUtility::makeInstance(Context::class);
 			$languageAspect = LanguageAspectFactory::createFromSiteLanguage($language);
-			$context->setAspect('language', $languageAspect);
+			$this->context->setAspect('language', $languageAspect);
 
 			// Ensure the language aspect is also reflected in the site attribute for some core processes
 			$request = $request->withAttribute('language', $language);
@@ -133,8 +143,11 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 
 		// Mock PageInformation for extensions like gridelements that expect it in TYPO3 13 frontend context
 		$siteRootPageId = $tenantResult->getContext()?->getSiteRootPageId() ?? 0;
-		if ($siteRootPageId > 0 && !$request->getAttribute('frontend.page.information')) {
-			$pageInformation = new PageInformation();
+		$typo3Version = GeneralUtility::makeInstance(Typo3Version::class);
+		if ($siteRootPageId > 0 && $typo3Version->getMajorVersion() >= 13
+			&& !$request->getAttribute('frontend.page.information')
+		) {
+			$pageInformation = new \TYPO3\CMS\Frontend\Page\PageInformation();
 			$pageInformation->setId($siteRootPageId);
 
 			$rootline = [];
@@ -142,7 +155,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 				$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
 				$rootline = $rootlineUtility->get();
 			} catch (\Throwable) {
-				// Fallback if rootline cannot be generated
+				// Fallback if the rootline cannot be generated
 			}
 			$pageInformation->setRootLine($rootline);
 
@@ -152,10 +165,10 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			if (!isset($GLOBALS['TSFE'])) {
 				$site = $request->getAttribute('site');
 				$language = $request->getAttribute('language');
-				if ($site && $language) {
+				if ($site instanceof Site && $language instanceof SiteLanguage) {
 					$tsfe = GeneralUtility::makeInstance(
 						TypoScriptFrontendController::class,
-						$GLOBALS['TYPO3_CONF_VARS'],
+						$this->context,
 						$site,
 						$language,
 						$pageInformation,
@@ -175,13 +188,57 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], []);
 					$frontendTypoScript->setSetupArray($setupArray);
 					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
-					$tsfe->page = ['uid' => $siteRootPageId];
+					$tsfe->page = [
+						'uid' => $siteRootPageId,
+						'starttime' => 0,
+						'endtime' => 0,
+						'fe_group' => '',
+						'tx_staticfilecache_cache_priority' => 0
+					];
+					$tsfe->id = $siteRootPageId;
+					$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
+					$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
 					$GLOBALS['TSFE'] = $tsfe;
 				}
 			}
 
 			if (isset($GLOBALS['TYPO3_REQUEST'])) {
 				$GLOBALS['TYPO3_REQUEST'] = $request;
+			}
+		} elseif ($siteRootPageId > 0 && !isset($GLOBALS['TSFE']) && $typo3Version->getMajorVersion() < 13) {
+			// Mock TSFE for TYPO3 12
+			$site = $request->getAttribute('site');
+			$language = $request->getAttribute('language');
+			if ($site && $language) {
+				$frontendUser = $request->getAttribute('frontend.user');
+				if (!($frontendUser instanceof FrontendUserAuthentication)) {
+					$frontendUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
+				}
+
+				$pageArguments = $request->getAttribute('routing');
+				if (!($pageArguments instanceof \TYPO3\CMS\Core\Routing\PageArguments)) {
+					$pageArguments = new \TYPO3\CMS\Core\Routing\PageArguments($siteRootPageId, '0', []);
+				}
+
+				$tsfe = GeneralUtility::makeInstance(
+					TypoScriptFrontendController::class,
+					$this->context,
+					$site,
+					$language,
+					$pageArguments,
+					$frontendUser
+				);
+				$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
+				$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+				$tsfe->page = [
+					'uid' => $siteRootPageId,
+					'starttime' => 0,
+					'endtime' => 0,
+					'fe_group' => '',
+					'tx_staticfilecache_cache_priority' => 0
+				];
+				$tsfe->id = $siteRootPageId;
+				$GLOBALS['TSFE'] = $tsfe;
 			}
 		}
 
@@ -204,24 +261,37 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			$response = $handler->handle($request);
 		} catch (\Throwable $e) {
 			$this->logService->logException($e, $request);
-			$response = $this->createErrorResponse(
-				'Internal Server Error',
-				'An unexpected error occurred during API request processing.',
-				500
+			$status = (int) $e->getCode();
+			if ($status < 400 || $status > 599) {
+				$status = 500;
+			}
+
+			$title = 'Internal Server Error';
+			if ($status === 404) {
+				$title = 'Not Found';
+			} elseif ($status === 403) {
+				$title = 'Forbidden';
+			} elseif ($status === 401) {
+				$title = 'Unauthorized';
+			} elseif ($status === 400) {
+				$title = 'Bad Request';
+			}
+
+			$legacyMode = $request->getAttribute('api.legacyMode');
+			if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute('api.id') === 'legacy')) {
+				$legacyMode = new ApiLegacyMode();
+			}
+
+			$response = $this->responseService->createErrorResponse(
+				$title,
+				$e->getMessage(),
+				$status,
+				legacyMode: $legacyMode
 			);
 		}
 		$duration = microtime(TRUE) - $startTime;
 		$this->logService->logRequestResponse($request, $response, $duration);
 
 		return $response->withHeader('X-Request-ID', $requestId);
-	}
-
-	protected function createErrorResponse(string $title, string $detail, int $status): ResponseInterface {
-		return new JsonResponse([
-			'title' => $title,
-			'detail' => $detail,
-			'status' => $status,
-			'type' => 'about:blank'
-		], $status, ['Content-Type' => 'application/problem+json']);
 	}
 }

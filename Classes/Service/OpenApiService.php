@@ -183,7 +183,7 @@ class OpenApiService implements SingletonInterface {
 					$propertySpec['example'] = $param->example;
 				}
 				if ($param->pattern !== NULL) {
-					$propertySpec['pattern'] = $param->pattern;
+					$propertySpec['pattern'] = $this->stripRegexDelimiters($param->pattern);
 				}
 				if ($param->min !== NULL) {
 					$propertySpec['minimum'] = $param->min;
@@ -237,7 +237,7 @@ class OpenApiService implements SingletonInterface {
 				$schema['example'] = $param->example;
 			}
 			if ($param->pattern !== NULL) {
-				$schema['pattern'] = $param->pattern;
+				$schema['pattern'] = $this->stripRegexDelimiters($param->pattern);
 			}
 			if ($param->min !== NULL) {
 				$schema['minimum'] = $param->min;
@@ -275,7 +275,7 @@ class OpenApiService implements SingletonInterface {
 				$schema['example'] = $param->example;
 			}
 			if ($param->pattern !== NULL) {
-				$schema['pattern'] = $param->pattern;
+				$schema['pattern'] = $this->stripRegexDelimiters($param->pattern);
 			}
 			if ($param->min !== NULL) {
 				$schema['minimum'] = $param->min;
@@ -375,6 +375,24 @@ class OpenApiService implements SingletonInterface {
 		}
 
 		return $schema;
+	}
+
+	/**
+	 * Strips regex delimiters from a pattern for OpenAPI compatibility
+	 *
+	 * @param string $pattern
+	 * @return string
+	 */
+	protected function stripRegexDelimiters(string $pattern): string {
+		if ($pattern === '') {
+			return '';
+		}
+
+		if (str_starts_with($pattern, '/') && str_ends_with($pattern, '/')) {
+			return substr($pattern, 1, -1);
+		}
+
+		return $pattern;
 	}
 
 	/**

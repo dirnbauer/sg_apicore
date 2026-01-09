@@ -97,27 +97,6 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 			return $this->fetchUserRecordById((int) $tokenRecord['user_id']);
 		}
 
-		// 3. Check Legacy Tokens (stored in the fe_users table directly)
-		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
-		$userRecord = $queryBuilder->select('*')
-			->from('fe_users')
-			->where(
-				$queryBuilder->expr()->eq(
-					'tx_sgrest_auth_token',
-					$queryBuilder->createNamedParameter($token)
-				),
-				$queryBuilder->expr()->neq(
-					'tx_sgrest_auth_token',
-					$queryBuilder->createNamedParameter('')
-				)
-			)
-			->executeQuery()
-			->fetchAssociative();
-
-		if ($userRecord) {
-			return $userRecord;
-		}
-
 		return NULL;
 	}
 

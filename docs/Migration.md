@@ -65,29 +65,14 @@ public function listAction(...)
 
 ### User Token Migration
 
-The old `tx_sgrest_auth_token` in `fe_users` is deprecated. While the `LegacyTokenProvider` can read them, it is
-recommended to transition to the new token system:
+The old `tx_sgrest_auth_token` in `fe_users` is deprecated and no longer supported.
+All clients MUST migrate to the new token system.
 
-1. Users should authenticate via the new `/api/legacy/v1/auth/login` endpoint.
+If you want to log in against a user account, you can use the following steps:
+
+1. Users should authenticate via the new `/api/legacy/v1/auth/legacyLogin` (or `/api/legacy/v1/auth/login`) endpoint.
 2. This will issue a new token (Opaque or JWT) stored in the `tx_apicore_token` table.
-3. Once all clients are migrated, the `tx_sgrest_auth_token` column can be removed.
-
-### Legacy Bridge (Optional)
-
-If you still need to accept old tokens from the `fe_users` table for some time, use the `LegacyTokenProvider`:
-
-```php
-// ext_localconf.php
-$apiRegistry->registerApi('legacy', [
-    'versions' => ['1'],
-    'security' => [
-        'authProviders' => [
-            \SGalinski\SgApiCore\Security\LegacyTokenProvider::class,
-            \SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider::class
-        ]
-    ]
-]);
-```
+3. Once all clients are migrated, the `tx_sgrest_auth_token` column can be removed from the `fe_users` table.
 
 ### Response Format
 
@@ -108,7 +93,7 @@ class MyLegacyController {
 3. **Data Access**:
     - For simple CRUD operations, use **TCA Mapping** (Phase K).
     - For complex logic, inject your repositories or services into the controller.
-4. **Auth**: If you don't want to issue new tokens, use the `LegacyTokenProvider`.
+4. **Auth**: The `LegacyTokenProvider` was removed. You must issue new tokens via the login endpoints.
 
 ## 4. Example: News API Migration (EXT:sg_demo)
 
