@@ -89,8 +89,28 @@ You can add various validation constraints to these attributes:
 * `min` / `max`: For numeric types, defines the inclusive range.
 * `minLength` / `maxLength`: For string types, defines the length range.
 * `requiredIf`: Makes a field required only if a certain condition is met.
-  * Example: `requiredIf: 'type=special'` (field is required if the field `type` has the value `special`).
-  * Example: `requiredIf: 'otherField'` (field is required if the field `otherField` is present and not empty).
+    * Example: `requiredIf: 'type=special'` (field is required if the field `type` has the value `special`).
+    * Example: `requiredIf: 'otherField'` (field is required if the field `otherField` is present and not empty).
+
+### Requirement of TypoScript
+
+Some endpoints might require the full TYPO3 TypoScript configuration for parsing (e.g., using `lib.parseFunc_RTE`) or
+rendering content. By default, the API context only provides a minimal TypoScript stub for performance reasons.
+
+You can signal that an endpoint requires the full TypoScript to be loaded by using the `#[RequireFullTypoScript]`
+attribute:
+
+```php
+#[ApiRoute(path: '/render-content', methods: ['GET'])]
+#[RequireFullTypoScript]
+public function renderAction(ServerRequestInterface $request): ResponseInterface {
+    // The full TypoScript setup is now available via $request->getAttribute('frontend.typoscript')
+    // and globally in $GLOBALS['TSFE']->tmpl->setup (v12) or the request object (v13).
+}
+```
+
+**Note**: Loading the full TypoScript can significantly impact the performance of the API request as it triggers
+the TYPO3 TypoScript parsing and potentially caching mechanisms. Only use it if absolutely necessary.
 
 Example:
 

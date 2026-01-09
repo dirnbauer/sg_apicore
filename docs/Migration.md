@@ -77,10 +77,12 @@ If you want to log in against a user account, you can use the following steps:
 ### Response Format
 
 Use the `#[ApiLegacyMode]` attribute on your controller or action to emulate the old JSON format
-(data wrapping, legacy error format):
+(data wrapping, legacy error format). If your endpoint requires full TypoScript for rendering,
+use the `#[RequireFullTypoScript]` attribute as well:
 
 ```php
 #[ApiLegacyMode(source: 'sg_rest', wrapData: true, legacyErrorFormat: true)]
+#[RequireFullTypoScript]
 class MyLegacyController {
     // ...
 }

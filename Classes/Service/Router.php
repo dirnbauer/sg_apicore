@@ -31,9 +31,14 @@ use FastRoute\RouteCollector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
+use SGalinski\SgApiCore\Attribute\RequireFullTypoScript;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
+use TYPO3\CMS\Core\Error\Http\AbstractServerErrorException;
+use TYPO3\CMS\Core\Http\PropagateResponseException;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use function FastRoute\simpleDispatcher;
 
 /**
@@ -61,6 +66,11 @@ class Router implements SingletonInterface {
 	protected ResponseService $responseService;
 
 	/**
+	 * @var LogService
+	 */
+	protected LogService $logService;
+
+	/**
 	 * @var array|null
 	 */
 	protected ?array $controllerInstances = NULL;
@@ -70,17 +80,20 @@ class Router implements SingletonInterface {
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param RequestValidator $requestValidator
 	 * @param ResponseService $responseService
+	 * @param LogService $logService
 	 */
 	public function __construct(
 		iterable $controllers,
 		EndpointDiscoveryService $endpointDiscoveryService,
 		RequestValidator $requestValidator,
-		ResponseService $responseService
+		ResponseService $responseService,
+		LogService $logService
 	) {
 		$this->controllers = $controllers;
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->requestValidator = $requestValidator;
 		$this->responseService = $responseService;
+		$this->logService = $logService;
 	}
 
 	/**
@@ -109,6 +122,8 @@ class Router implements SingletonInterface {
 	 * @param string|null $authMode
 	 * @return ResponseInterface
 	 * @throws \ReflectionException
+	 * @throws AbstractServerErrorException
+	 * @throws PropagateResponseException
 	 */
 	public function dispatch(
 		ServerRequestInterface $request,
@@ -151,7 +166,7 @@ class Router implements SingletonInterface {
 				}
 				if (!empty($endpoint['authMode'])) {
 					// Visibility logic
-					$restrictedTo = array_filter($endpoint['authMode'], static fn($m) => $m !== 'public');
+					$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
 					if (!empty($restrictedTo)) {
 						if (!in_array($authMode, $restrictedTo, TRUE)) {
 							continue;
@@ -215,10 +230,10 @@ class Router implements SingletonInterface {
 
 				// If effective auth mode is not public, require authentication
 				$isPublic = $effectiveAuthMode === 'public' || (is_array($effectiveAuthMode) && in_array(
-							'public',
-							$effectiveAuthMode,
-							TRUE
-						));
+					'public',
+					$effectiveAuthMode,
+					TRUE
+				));
 				if (!$isPublic && $authContext === NULL) {
 					return $this->createErrorResponse($request, 'Unauthorized', 'Authentication required.', 401);
 				}
@@ -232,6 +247,49 @@ class Router implements SingletonInterface {
 				if (count($legacyModeAttributes) > 0) {
 					$legacyMode = $legacyModeAttributes[0]->newInstance();
 					$request = $request->withAttribute('api.legacyMode', $legacyMode);
+				}
+
+				// 3. TypoScript Enforcement
+				$typoScriptAttributes = $reflectionMethod->getAttributes(RequireFullTypoScript::class);
+				if (count($typoScriptAttributes) === 0) {
+					$typoScriptAttributes = $reflectionClass->getAttributes(RequireFullTypoScript::class);
+				}
+
+				if (count($typoScriptAttributes) > 0) {
+					$request = $request->withAttribute('api.requireFullTypoScript', TRUE);
+					if (isset($GLOBALS['TSFE']) && $GLOBALS['TSFE'] instanceof TypoScriptFrontendController) {
+						if ($GLOBALS['TSFE']->id <= 0) {
+							$tenantContext = $request->getAttribute('api.tenant');
+							if ($tenantContext instanceof \SGalinski\SgApiCore\Context\TenantContext) {
+								$GLOBALS['TSFE']->id = $tenantContext->getSiteRootPageId();
+							}
+						}
+
+						try {
+							// Remove the stub to ensure getFromCache creates a fresh, full TypoScript object
+							$request = $request->withoutAttribute('frontend.typoscript');
+							$request = $GLOBALS['TSFE']->getFromCache($request);
+							$GLOBALS['TYPO3_REQUEST'] = $request;
+
+							// Ensure TypoScript references are resolved (v12)
+							if (isset($GLOBALS['TSFE']->tmpl) && $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService) {
+								$GLOBALS['TSFE']->tmpl->generateConfig();
+
+								// Ensure config array is also populated in TSFE
+								$GLOBALS['TSFE']->config = $GLOBALS['TSFE']->tmpl->setup['config.'] ?? [];
+							}
+
+							// Ensure the setup array is initialized and synchronized for TYPO3 13
+							$frontendTypoScript = $request->getAttribute('frontend.typoscript');
+							if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
+								if (!$frontendTypoScript->hasSetup() && isset($GLOBALS['TSFE']->tmpl->setup) && is_array($GLOBALS['TSFE']->tmpl->setup)) {
+									$frontendTypoScript->setSetupArray($GLOBALS['TSFE']->tmpl->setup);
+								}
+							}
+						} catch (\Throwable $e) {
+							$this->logService->logException($e, $request);
+						}
+					}
 				}
 
 				// 3. Authenticated User Enforcement
@@ -349,9 +407,9 @@ class Router implements SingletonInterface {
 		array $additionalData = []
 	): ResponseInterface {
 		$legacyMode = $request->getAttribute('api.legacyMode');
-		if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute(
-					'api.id'
-				) === 'legacy')) {
+		if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') ||
+				$request->getAttribute('api.id') === 'legacy')
+		) {
 			$legacyMode = new ApiLegacyMode();
 		}
 

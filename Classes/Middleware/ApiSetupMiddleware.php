@@ -190,48 +190,6 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 									'storagePid' => $siteRootPageId
 								]
 							]
-						],
-						'lib.' => [
-							'parseFunc_RTE.' => [
-								'nonTypoTagStdWrap.' => [
-									'encapsLines.' => [
-										'nonWrappedTag' => 'P',
-										'remapTag.' => [
-											'DIV' => 'P'
-										],
-										'addAttributes.' => [
-											'P.' => [
-												'class' => 'bodytext'
-											]
-										]
-									]
-								],
-								'externalBlocks' => 'table, blockquote, ol, ul, div',
-								'externalBlocks.' => [
-									'table.' => [
-										'stripNL' => 1,
-										'stdWrap.' => [
-											'HTMLparser' => 1,
-											'HTMLparser.' => [
-												'tags.' => [
-													'table.' => [
-														'fixAttrib.' => [
-															'class.' => [
-																'default' => 'contenttable'
-															]
-														]
-													]
-												]
-											]
-										]
-									]
-								],
-								'allowTags' => 'a, abbr, acronym, address, article, aside, b, bdo, big, blockquote, br, caption, cite, code, col, colgroup, dd, del, dfn, div, dl, dt, em, figcaption, figure, footer, h1, h2, h3, h4, h5, h6, header, hr, i, ins, kbd, label, li, main, mark, nav, ol, p, pre, q, rb, rp, rt, ruby, s, samp, section, small, span, strike, strong, sub, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var',
-								'proc.' => [
-									'allowTags' => 'a, abbr, acronym, address, article, aside, b, bdo, big, blockquote, br, caption, cite, code, col, colgroup, dd, del, dfn, div, dl, dt, em, figcaption, figure, footer, h1, h2, h3, h4, h5, h6, header, hr, i, ins, kbd, label, li, main, mark, nav, ol, p, pre, q, rb, rp, rt, ruby, s, samp, section, small, span, strike, strong, sub, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var'
-								]
-							],
-							'parseFunc_RTE' => '< lib.parseFunc_RTE.'
 						]
 					];
 
@@ -277,51 +235,17 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					$frontendUser
 				);
 				$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
+
+				$rootline = [];
+				try {
+					$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
+					$rootline = $rootlineUtility->get();
+				} catch (\Throwable) {
+					// Fallback if the rootline cannot be generated
+				}
+				$tsfe->rootLine = $rootline;
+
 				$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
-				$tsfe->tmpl->setup = [
-					'lib.' => [
-						'parseFunc_RTE.' => [
-							'nonTypoTagStdWrap.' => [
-								'encapsLines.' => [
-									'nonWrappedTag' => 'P',
-									'remapTag.' => [
-										'DIV' => 'P'
-									],
-									'addAttributes.' => [
-										'P.' => [
-											'class' => 'bodytext'
-										]
-									]
-								]
-							],
-							'externalBlocks' => 'table, blockquote, ol, ul, div',
-							'externalBlocks.' => [
-								'table.' => [
-									'stripNL' => 1,
-									'stdWrap.' => [
-										'HTMLparser' => 1,
-										'HTMLparser.' => [
-											'tags.' => [
-												'table.' => [
-													'fixAttrib.' => [
-														'class.' => [
-															'default' => 'contenttable'
-														]
-													]
-												]
-											]
-										]
-									]
-								]
-							],
-							'allowTags' => 'a, abbr, acronym, address, article, aside, b, bdo, big, blockquote, br, caption, cite, code, col, colgroup, dd, del, dfn, div, dl, dt, em, figcaption, figure, footer, h1, h2, h3, h4, h5, h6, header, hr, i, ins, kbd, label, li, main, mark, nav, ol, p, pre, q, rb, rp, rt, ruby, s, samp, section, small, span, strike, strong, sub, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var',
-							'proc.' => [
-								'allowTags' => 'a, abbr, acronym, address, article, aside, b, bdo, big, blockquote, br, caption, cite, code, col, colgroup, dd, del, dfn, div, dl, dt, em, figcaption, figure, footer, h1, h2, h3, h4, h5, h6, header, hr, i, ins, kbd, label, li, main, mark, nav, ol, p, pre, q, rb, rp, rt, ruby, s, samp, section, small, span, strike, strong, sub, sup, table, tbody, td, tfoot, th, thead, time, tr, tt, u, ul, var'
-							]
-						],
-						'parseFunc_RTE' => '< lib.parseFunc_RTE.'
-					]
-				];
 				$tsfe->page = [
 					'uid' => $siteRootPageId,
 					'starttime' => 0,
