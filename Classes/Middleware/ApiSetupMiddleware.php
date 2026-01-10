@@ -204,6 +204,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 						'tx_staticfilecache_cache_priority' => 0
 					];
 					$tsfe->id = $siteRootPageId;
+					$tsfe->rootLine = $rootline;
 					$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
 					$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
 					$GLOBALS['TSFE'] = $tsfe;
