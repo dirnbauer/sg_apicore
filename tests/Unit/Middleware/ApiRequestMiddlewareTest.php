@@ -34,6 +34,7 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -46,6 +47,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	protected $apiRegistry;
 	protected $router;
 	protected $pathAnalysisService;
+	protected $responseService;
 	protected $middleware;
 
 	protected function setUp(): void {
@@ -56,12 +58,14 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->router = $this->createStub(Router::class);
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
+		$this->responseService = $this->createStub(ResponseService::class);
 
 		$this->middleware = new ApiRequestMiddleware(
 			$this->extensionConfiguration,
 			$this->apiRegistry,
 			$this->router,
-			$this->pathAnalysisService
+			$this->pathAnalysisService,
+			$this->responseService
 		);
 	}
 
@@ -100,7 +104,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$this->extensionConfiguration,
 			$this->apiRegistry,
 			$this->router,
-			$this->pathAnalysisService
+			$this->pathAnalysisService,
+			$this->responseService
 		);
 
 		$middleware->process($request, $this->createStub(RequestHandlerInterface::class));
@@ -150,7 +155,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$this->extensionConfiguration,
 			$this->apiRegistry,
 			$router,
-			$this->pathAnalysisService
+			$this->pathAnalysisService,
+			$this->responseService
 		);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);

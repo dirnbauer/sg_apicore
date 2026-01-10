@@ -34,9 +34,12 @@ use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\ResponseService;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\Stream;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -70,15 +73,20 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
 	}
 
-	/**
-	 * @param FrontendInterface $cache
-	 * @return ApiCacheMiddleware
-	 */
 	protected function createMiddlewareWithCache(FrontendInterface $cache): ApiCacheMiddleware {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isCacheEnabled')->willReturn(TRUE);
+		$responseService = $this->createStub(ResponseService::class);
 
-		return new ApiCacheMiddleware($this->discoveryService, $this->pathAnalysisService, $cacheManager);
+		return new ApiCacheMiddleware(
+			$this->discoveryService,
+			$this->pathAnalysisService,
+			$cacheManager,
+			$extensionConfiguration,
+			$responseService
+		);
 	}
 
 	/**
@@ -88,13 +96,10 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache = $this->createStub(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('GET');
-		$request->method('getAttribute')->willReturnMap([
-			['api.id', 'test'],
-			['api.version', 'v1'],
-			['api.remainingPath', '/foo'],
-		]);
+		$request = new ServerRequest('https://example.com/api/test/v1/foo', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/foo');
 
 		$this->discoveryService->method('getEndpointsForApi')->willReturn([
 			[
@@ -127,13 +132,10 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache = $this->createMock(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('GET');
-		$request->method('getAttribute')->willReturnMap([
-			['api.id', 'test'],
-			['api.version', 'v1'],
-			['api.remainingPath', '/foo'],
-		]);
+		$request = new ServerRequest('https://example.com/api/test/v1/foo', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/foo');
 
 		$this->discoveryService->method('getEndpointsForApi')->willReturn([
 			[
@@ -167,13 +169,10 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache = $this->createMock(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('POST');
-		$request->method('getAttribute')->willReturnMap([
-			['api.id', 'test'],
-			['api.version', 'v1'],
-			['api.remainingPath', '/foo'],
-		]);
+		$request = new ServerRequest('https://example.com/api/test/v1/foo', 'POST');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/foo');
 
 		$this->discoveryService->method('getEndpointsForApi')->willReturn([
 			[

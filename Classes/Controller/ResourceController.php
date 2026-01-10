@@ -109,7 +109,7 @@ class ResourceController {
 
 		// Count total for pagination meta BEFORE applying offset/limit
 		$countQueryBuilder = clone $queryBuilder;
-		$total = (int) $countQueryBuilder->resetQueryPart('orderBy')
+		$total = (int) $countQueryBuilder->resetOrderBy()
 			->count('*')
 			->executeQuery()
 			->fetchOne();

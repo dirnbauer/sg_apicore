@@ -35,6 +35,7 @@ use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class LegacyRoutingMiddlewareTest extends UnitTestCase {
@@ -63,82 +64,46 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 	}
 
 	public function testProcessMapsQueryParamLegacyRequest(): void {
-		$uri = $this->createStub(UriInterface::class);
-		$uri->method('getPath')->willReturn('/');
-		$uri->method('withPath')->with('/api/legacy/v1/auth/legacyLogin')->willReturn($uri);
-
-		$request = $this->createMock(ServerRequestInterface::class);
-		$request->method('getUri')->willReturn($uri);
-		$request->method('getQueryParams')->willReturn([
+		$request = new ServerRequest('https://example.com/', 'GET', 'php://input', [], [
 			'type' => '1595576052',
 			'tx_sgrest' => [
 				'request' => 'authentication/authentication/getBearerToken'
 			]
 		]);
-		$request->method('hasHeader')->with('Authorization')->willReturn(FALSE);
-
-		$request->expects($this->exactly(2))
-			->method('withAttribute')
-			->willReturnMap([
-				['api.isLegacy', TRUE, $request],
-				['api.legacyApiKey', 'authentication', $request],
-			]);
-		$request->method('withUri')->willReturn($request);
 
 		$this->handler->expects($this->once())
 			->method('handle')
-			->with($request)
 			->willReturn($this->createStub(ResponseInterface::class));
 
 		$this->middleware->process($request, $this->handler);
 	}
 
 	public function testProcessMapsPathBasedLegacyRequest(): void {
-		$uri = $this->createStub(UriInterface::class);
-		$uri->method('getPath')->willReturn('/my-key/news/1/get');
-		$uri->method('withPath')->with('/api/legacy/v1/my-key/news/1/get')->willReturn($uri);
-
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getUri')->willReturn($uri);
-		$request->method('getQueryParams')->willReturn(['type' => '1595576052']);
-		$request->method('hasHeader')->with('Authorization')->willReturn(FALSE);
-
-		$request->method('withUri')->willReturn($request);
-		$request->method('withAttribute')->willReturn($request);
+		$request = new ServerRequest('https://example.com/my-key/news/1/get', 'GET', 'php://input', [], [
+			'type' => '1595576052'
+		]);
 
 		$this->handler->expects($this->once())
 			->method('handle')
-			->with($request)
 			->willReturn($this->createStub(ResponseInterface::class));
 
 		$this->middleware->process($request, $this->handler);
 	}
 
 	public function testProcessMapsPathBasedLegacyRequestWithLanguagePrefix(): void {
-		$uri = $this->createStub(UriInterface::class);
-		$uri->method('getPath')->willReturn('/en/my-key/news/1/get');
-		$uri->method('withPath')->with('/en/api/legacy/v1/my-key/news/1/get')->willReturn($uri);
-
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getUri')->willReturn($uri);
-		$request->method('getQueryParams')->willReturn(['type' => '1595576052']);
-		$request->method('hasHeader')->with('Authorization')->willReturn(FALSE);
+		$request = new ServerRequest('https://example.com/en/my-key/news/1/get', 'GET', 'php://input', [], [
+			'type' => '1595576052'
+		]);
 
 		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
 		$base = $this->createStub(\Psr\Http\Message\UriInterface::class);
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);
 
-		$request->method('getAttribute')->willReturnMap([
-			['language', $language],
-		]);
-
-		$request->method('withUri')->willReturn($request);
-		$request->method('withAttribute')->willReturn($request);
+		$request = $request->withAttribute('language', $language);
 
 		$this->handler->expects($this->once())
 			->method('handle')
-			->with($request)
 			->willReturn($this->createStub(ResponseInterface::class));
 
 		$this->middleware->process($request, $this->handler);
@@ -151,6 +116,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getUri')->willReturn($uri);
 		$request->method('getQueryParams')->willReturn([]);
+		$request->method('hasHeader')->willReturn(FALSE);
 
 		$request->expects($this->never())->method('withUri');
 		$request->expects($this->never())->method('withAttribute');
@@ -170,6 +136,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getUri')->willReturn($uri);
 		$request->method('getQueryParams')->willReturn([]);
+		$request->method('hasHeader')->willReturn(FALSE);
 
 		$request->expects($this->never())->method('withUri');
 
@@ -187,6 +154,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		$middleware = new LegacyRoutingMiddleware($extensionConfiguration);
 
 		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('hasHeader')->willReturn(FALSE);
 		// If legacy support is disabled, it shouldn't even check the URI or query params
 		$request->expects($this->never())->method('getUri');
 

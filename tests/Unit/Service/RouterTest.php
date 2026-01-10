@@ -34,8 +34,11 @@ use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
+use SGalinski\SgApiCore\Service\ResponseService;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -58,7 +61,12 @@ class RouterTest extends UnitTestCase {
 		$resourceRegistry->method('getResources')->willReturn([]);
 		$discoveryService = new EndpointDiscoveryService($controllersIterator, $resourceRegistry);
 		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
-		return new Router($controllersIterator, $discoveryService, $validator);
+		$responseService = $this->createStub(ResponseService::class);
+		$responseService->method('createErrorResponse')->willReturnCallback(function($title, $detail, $status) {
+			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
+		});
+		$logService = $this->createStub(LogService::class);
+		return new Router($controllersIterator, $discoveryService, $validator, $responseService, $logService);
 	}
 
 	public function testDispatchMatchesRouteAndCallsController(): void {
@@ -112,11 +120,9 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchEnforcesScopesFailsWith403(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('GET');
-
+		$request = new ServerRequest('https://example.com/api/public/v1/scoped', 'GET');
 		$authContext = new AuthContext('public', 'tenant-1', 1, ['wrong-scope']);
-		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
+		$request = $request->withAttribute('api.auth', $authContext);
 
 		$router = $this->createRouter([MockController::class]);
 
@@ -126,10 +132,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchEnforcesScopesFailsWith401WhenNoAuth(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('GET');
-		$request->method('getAttribute')->with('api.auth')->willReturn(NULL);
-
+		$request = new ServerRequest('https://example.com/api/public/v1/scoped', 'GET');
 		$router = $this->createRouter([MockController::class]);
 
 		$response = $router->dispatch($request, 'public', '1', '/scoped', 'token');
@@ -185,9 +188,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchEnforcesRequireUser(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('GET');
-
+		$request = new ServerRequest('https://example.com/api/public/v1/user-required', 'GET');
 		$router = $this->createRouter([MockController::class]);
 
 		// 1. No auth -> 401
@@ -196,16 +197,14 @@ class RouterTest extends UnitTestCase {
 
 		// 2. Auth but no userId (M2M token) -> 403
 		$authContextNoUser = new AuthContext('public', 'tenant-1', 1);
-		$request->method('getAttribute')->with('api.auth')->willReturn($authContextNoUser);
-		$response = $router->dispatch($request, 'public', '1', '/user-required', 'user');
+		$requestWithAuth = $request->withAttribute('api.auth', $authContextNoUser);
+		$response = $router->dispatch($requestWithAuth, 'public', '1', '/user-required', 'user');
 		$this->assertEquals(403, $response->getStatusCode());
 
 		// 3. Auth with userId -> 200
-		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getMethod')->willReturn('GET');
 		$authContextWithUser = new AuthContext('public', 'tenant-1', 1, [], 123);
-		$request->method('getAttribute')->with('api.auth')->willReturn($authContextWithUser);
-		$response = $router->dispatch($request, 'public', '1', '/user-required', 'user');
+		$requestWithUserAuth = $request->withAttribute('api.auth', $authContextWithUser);
+		$response = $router->dispatch($requestWithUserAuth, 'public', '1', '/user-required', 'user');
 		$this->assertEquals(200, $response->getStatusCode());
 	}
 }

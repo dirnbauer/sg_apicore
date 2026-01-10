@@ -268,22 +268,36 @@ class Router implements SingletonInterface {
 						try {
 							// Remove the stub to ensure getFromCache creates a fresh, full TypoScript object
 							$request = $request->withoutAttribute('frontend.typoscript');
-							$request = $GLOBALS['TSFE']->getFromCache($request);
+							if (method_exists($GLOBALS['TSFE'], 'getFromCache')) {
+								/** @phpstan-ignore-next-line */
+								$request = $GLOBALS['TSFE']->getFromCache($request);
+							}
 							$GLOBALS['TYPO3_REQUEST'] = $request;
 
 							// Ensure TypoScript references are resolved (v12)
-							if (isset($GLOBALS['TSFE']->tmpl) && $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService) {
+							if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
+								&& isset($GLOBALS['TSFE']->tmpl)
+								&& $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService
+							) {
+								/** @phpstan-ignore-next-line */
 								$GLOBALS['TSFE']->tmpl->generateConfig();
 
 								// Ensure config array is also populated in TSFE
+								/** @phpstan-ignore-next-line */
 								$GLOBALS['TSFE']->config = $GLOBALS['TSFE']->tmpl->setup['config.'] ?? [];
 							}
 
 							// Ensure the setup array is initialized and synchronized for TYPO3 13
 							$frontendTypoScript = $request->getAttribute('frontend.typoscript');
 							if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
-								if (!$frontendTypoScript->hasSetup() && isset($GLOBALS['TSFE']->tmpl->setup) && is_array($GLOBALS['TSFE']->tmpl->setup)) {
-									$frontendTypoScript->setSetupArray($GLOBALS['TSFE']->tmpl->setup);
+								if (!$frontendTypoScript->hasSetup()) {
+									if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
+										&& isset($GLOBALS['TSFE']->tmpl->setup)
+										&& is_array($GLOBALS['TSFE']->tmpl->setup)
+									) {
+										/** @phpstan-ignore-next-line */
+										$frontendTypoScript->setSetupArray($GLOBALS['TSFE']->tmpl->setup);
+									}
 								}
 							}
 						} catch (\Throwable $e) {

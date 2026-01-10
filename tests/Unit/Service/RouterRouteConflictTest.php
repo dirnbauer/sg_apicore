@@ -28,6 +28,7 @@ namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\RequestValidator;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
@@ -54,10 +55,11 @@ class RouterRouteConflictTest extends UnitTestCase {
 		$this->endpointDiscoveryService = $this->createStub(EndpointDiscoveryService::class);
 		$requestValidator = $this->createStub(RequestValidator::class);
 		$responseService = $this->createStub(ResponseService::class);
+		$logService = $this->createStub(LogService::class);
 
-		$this->router = new class([], $this->endpointDiscoveryService, $requestValidator) extends Router {
-			public function __construct($controllers, $endpointDiscoveryService, $requestValidator) {
-				parent::__construct($controllers, $endpointDiscoveryService, $requestValidator);
+		$this->router = new class([], $this->endpointDiscoveryService, $requestValidator, $responseService, $logService) extends Router {
+			public function __construct($controllers, $endpointDiscoveryService, $requestValidator, $responseService, $logService) {
+				parent::__construct($controllers, $endpointDiscoveryService, $requestValidator, $responseService, $logService);
 			}
 
 			protected function getControllerInstances(): array {

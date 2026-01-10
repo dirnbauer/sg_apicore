@@ -206,7 +206,10 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					$tsfe->id = $siteRootPageId;
 					$tsfe->rootLine = $rootline;
 					$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
-					$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+					if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
+						/** @phpstan-ignore-next-line */
+						$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+					}
 					$GLOBALS['TSFE'] = $tsfe;
 				}
 			}
@@ -246,7 +249,11 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 				}
 				$tsfe->rootLine = $rootline;
 
-				$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+				if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
+					/** @phpstan-ignore-next-line */
+					$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+				}
+
 				$tsfe->page = [
 					'uid' => $siteRootPageId,
 					'starttime' => 0,

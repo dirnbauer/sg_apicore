@@ -35,8 +35,10 @@ use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -48,6 +50,8 @@ class ApiSetupMiddlewareTest extends UnitTestCase {
 	protected $tenantResolver;
 	protected $pathAnalysisService;
 	protected $logService;
+	protected $responseService;
+	protected $context;
 	protected $middleware;
 
 	protected function setUp(): void {
@@ -58,12 +62,16 @@ class ApiSetupMiddlewareTest extends UnitTestCase {
 		$this->tenantResolver = $this->createStub(TenantResolverInterface::class);
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
 		$this->logService = $this->createStub(LogService::class);
+		$this->responseService = $this->createStub(ResponseService::class);
+		$this->context = $this->createStub(Context::class);
 
 		$this->middleware = new ApiSetupMiddleware(
 			$this->extensionConfiguration,
 			$this->tenantResolver,
 			$this->pathAnalysisService,
-			$this->logService
+			$this->logService,
+			$this->responseService,
+			$this->context
 		);
 	}
 
