@@ -337,7 +337,20 @@ class Router implements SingletonInterface {
 
 				$controller = $this->getControllerInstances()[$handler['controller']];
 				$arguments = $this->resolveArguments($request, $handler['endpoint'], $vars);
-				return call_user_func_array([$controller, $handler['action']], $arguments);
+
+				$apiCache = $handler['endpoint']['apiCache'] ?? NULL;
+				$response = call_user_func_array([$controller, $handler['action']], $arguments);
+
+				// Add Cache-Control headers if not already set by the controller and an ApiCache attribute exists
+				if ($apiCache instanceof \SGalinski\SgApiCore\Attribute\ApiCache && !$response->hasHeader('Cache-Control')) {
+					if ($apiCache->enabled && $apiCache->lifetime > 0) {
+						$response = $response->withHeader('Cache-Control', 'public, max-age=' . $apiCache->lifetime);
+					} elseif (!$apiCache->enabled) {
+						$response = $response->withHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+					}
+				}
+
+				return $response;
 		}
 
 		return $this->createErrorResponse($request, 'Internal Server Error', 'An unexpected error occurred.', 500);

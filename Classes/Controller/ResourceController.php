@@ -33,6 +33,7 @@ use SGalinski\SgApiCore\Mapper\TcaMapper;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -86,9 +87,15 @@ class ResourceController {
 					continue;
 				}
 
-				$queryBuilder->andWhere(
-					$queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value))
-				);
+				if (is_array($value)) {
+					$queryBuilder->andWhere(
+						$queryBuilder->expr()->in($field, $queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY))
+					);
+				} else {
+					$queryBuilder->andWhere(
+						$queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value))
+					);
+				}
 			}
 		}
 

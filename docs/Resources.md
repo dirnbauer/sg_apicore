@@ -75,6 +75,9 @@ Use the `sort` query parameter. Prefix with `-` for descending order:
 Use the `filter` query parameter with field names:
 `GET /api/public/v1/contents?filter[header]=Welcome`
 
+You can also use arrays for IN-queries:
+`GET /api/public/v1/contents?filter[uid][]=1&filter[uid][]=2`
+
 Only fields defined in `readFields` (or all if empty) can be used for filtering.
 
 ## Persistence & DataHandler

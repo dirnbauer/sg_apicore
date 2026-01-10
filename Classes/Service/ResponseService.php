@@ -57,13 +57,15 @@ class ResponseService implements SingletonInterface {
 	 * @param array $meta Optional metadata
 	 * @param int $status HTTP status code
 	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
+	 * @param \SGalinski\SgApiCore\Attribute\ApiCache|null $apiCache
 	 * @return ResponseInterface
 	 */
 	public function createSuccessResponse(
 		mixed $data,
 		array $meta = [],
 		int $status = 200,
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL,
+		?\SGalinski\SgApiCore\Attribute\ApiCache $apiCache = NULL
 	): ResponseInterface {
 		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || count($meta) > 0;
 		if ($legacyMode !== NULL) {
@@ -81,10 +83,18 @@ class ResponseService implements SingletonInterface {
 			$response = $data;
 		}
 
-		return new JsonResponse($response, $status, [
+		$headers = [
 			'X-Content-Type-Options' => 'nosniff',
 			'X-Frame-Options' => 'DENY',
-		]);
+		];
+
+		if ($apiCache !== NULL && $apiCache->enabled && $apiCache->lifetime > 0) {
+			$headers['Cache-Control'] = 'public, max-age=' . $apiCache->lifetime;
+		} elseif ($apiCache !== NULL && !$apiCache->enabled) {
+			$headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+		}
+
+		return new JsonResponse($response, $status, $headers);
 	}
 
 	/**

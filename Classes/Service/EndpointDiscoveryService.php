@@ -52,6 +52,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 	protected ?array $controllerClasses = NULL;
 
 	/**
+	 * @var array|null
+	 */
+	protected ?array $endpoints = NULL;
+
+	/**
 	 * @param iterable $controllers
 	 * @param ResourceRegistry $resourceRegistry
 	 */
@@ -69,6 +74,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @throws \ReflectionException
 	 */
 	public function getAllEndpoints(): array {
+		if ($this->endpoints !== NULL) {
+			return $this->endpoints;
+		}
+
 		$endpoints = [];
 		foreach ($this->getControllerClasses() as $controllerClass) {
 			$reflectionClass = new \ReflectionClass($controllerClass);
@@ -153,6 +162,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 			}
 		}
 
+		$this->endpoints = $endpoints;
 		return $endpoints;
 	}
 
