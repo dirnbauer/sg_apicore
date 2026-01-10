@@ -48,8 +48,7 @@ return [
 				'sgalinski/sg-apicore/legacy-routing'
 			],
 			'before' => [
-				'typo3/cms-frontend/frontend-user-authenticator',
-				'sgalinski/content-replacer'
+				'typo3/cms-frontend/frontend-user-authenticator'
 			]
 		],
 		'sgalinski/sg-apicore/api-auth' => [
@@ -57,8 +56,7 @@ return [
 			'description' => 'Handles API authentication and scope validation',
 			'after' => [
 				'typo3/cms-frontend/frontend-user-authenticator',
-				'sgalinski/sg-apicore/api-setup',
-				'sgalinski/content-replacer'
+				'sgalinski/sg-apicore/api-setup'
 			],
 			'before' => [
 				'sgalinski/sg-apicore/api-cache'
