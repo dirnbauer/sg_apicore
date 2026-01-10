@@ -33,9 +33,9 @@ use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
-use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\ServerRequest;
@@ -62,7 +62,7 @@ class RouterTest extends UnitTestCase {
 		$discoveryService = new EndpointDiscoveryService($controllersIterator, $resourceRegistry);
 		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
 		$responseService = $this->createStub(ResponseService::class);
-		$responseService->method('createErrorResponse')->willReturnCallback(function($title, $detail, $status) {
+		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {
 			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
 		});
 		$logService = $this->createStub(LogService::class);

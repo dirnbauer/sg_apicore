@@ -116,7 +116,10 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 		// Fallback for path analysis if not already set by previous middleware
 		if (!$apiId || !$version) {
-			$analysis = $this->pathAnalysisService->analyze($path, $languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL);
+			$analysis = $this->pathAnalysisService->analyze(
+				$path,
+				$languagePrefix ? $languagePrefix . ltrim($apiPathPrefix, '/') : NULL
+			);
 			if ($analysis) {
 				$apiId = $analysis['apiId'];
 				$version = $analysis['version'];
@@ -167,7 +170,9 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		?ServerRequestInterface $request = NULL
 	): ResponseInterface {
 		$legacyMode = $request?->getAttribute('api.legacyMode');
-		if ($legacyMode === NULL && ($request?->getAttribute('api.isLegacy') || $request?->getAttribute('api.id') === 'legacy')) {
+		if ($legacyMode === NULL && ($request?->getAttribute('api.isLegacy') || $request?->getAttribute(
+			'api.id'
+		) === 'legacy')) {
 			$legacyMode = new ApiLegacyMode();
 		}
 

@@ -31,16 +31,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Attribute\ApiCache;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
 use SGalinski\SgApiCore\Service\ResponseService;
-use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Http\ServerRequest;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**

@@ -37,7 +37,6 @@ use SGalinski\SgApiCore\Attribute\RequireUser;
 use TYPO3\CMS\Core\Error\Http\AbstractServerErrorException;
 use TYPO3\CMS\Core\Http\PropagateResponseException;
 use TYPO3\CMS\Core\SingletonInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use function FastRoute\simpleDispatcher;
 
@@ -282,7 +281,7 @@ class Router implements SingletonInterface {
 								/** @phpstan-ignore-next-line */
 								$GLOBALS['TSFE']->tmpl->generateConfig();
 
-								// Ensure config array is also populated in TSFE
+								// Ensure a config array is also populated in TSFE
 								/** @phpstan-ignore-next-line */
 								$GLOBALS['TSFE']->config = $GLOBALS['TSFE']->tmpl->setup['config.'] ?? [];
 							}

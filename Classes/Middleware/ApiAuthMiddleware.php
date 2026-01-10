@@ -34,7 +34,6 @@ use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
-use TYPO3\CMS\Core\Http\JsonResponse;
 
 /**
  * Middleware to handle API authentication and scope validation

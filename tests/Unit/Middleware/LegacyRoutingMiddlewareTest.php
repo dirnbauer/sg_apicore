@@ -96,7 +96,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		]);
 
 		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
-		$base = $this->createStub(\Psr\Http\Message\UriInterface::class);
+		$base = $this->createStub(UriInterface::class);
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);
 

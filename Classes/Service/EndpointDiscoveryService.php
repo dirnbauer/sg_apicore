@@ -214,7 +214,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 					case 'select':
 						$type = 'string';
 						if (isset($colConfig['items'])) {
-							$description .= ' (Possible values: ' . implode(', ', array_map(static fn ($item) => $item[1] ?? $item['value'] ?? '', $colConfig['items'])) . ')';
+							$description .= ' (Possible values: ' . implode(
+								', ',
+								array_map(static fn ($item) => $item[1] ?? $item['value'] ?? '', $colConfig['items'])
+							) . ')';
 						}
 						break;
 				}

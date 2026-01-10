@@ -232,13 +232,17 @@ class RequestValidator implements SingletonInterface {
 				}
 				break;
 			case 'string':
-				if (property_exists($param, 'minLength') && $param->minLength !== NULL && strlen((string) $value) < $param->minLength) {
+				if (property_exists($param, 'minLength') && $param->minLength !== NULL && strlen(
+					(string) $value
+				) < $param->minLength) {
 					return [
 						'field' => $name,
 						'message' => 'Value length must be at least ' . $param->minLength
 					];
 				}
-				if (property_exists($param, 'maxLength') && $param->maxLength !== NULL && strlen((string) $value) > $param->maxLength) {
+				if (property_exists($param, 'maxLength') && $param->maxLength !== NULL && strlen(
+					(string) $value
+				) > $param->maxLength) {
 					return [
 						'field' => $name,
 						'message' => 'Value length must be at most ' . $param->maxLength

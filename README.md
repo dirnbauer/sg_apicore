@@ -69,7 +69,8 @@ public function helloAction(ServerRequestInterface $request): ResponseInterface 
 
 ### 3. Access the API
 
-Open your browser at `https://your-domain.local/api/docs/ui/` to see the generated Swagger UI and test your new endpoint!
+Open your browser at `https://your-domain.local/api/docs/ui/` to see the generated Swagger UI and test your new
+endpoint!
 
 ## Testing
 

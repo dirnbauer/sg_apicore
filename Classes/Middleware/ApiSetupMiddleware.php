@@ -39,7 +39,6 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\LanguageAspectFactory;
-use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
@@ -205,7 +204,9 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					];
 					$tsfe->id = $siteRootPageId;
 					$tsfe->rootLine = $rootline;
-					$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
+					$tsfe->sys_page = GeneralUtility::makeInstance(
+						\TYPO3\CMS\Core\Domain\Repository\PageRepository::class
+					);
 					if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
 						/** @phpstan-ignore-next-line */
 						$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
@@ -303,7 +304,9 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			}
 
 			$legacyMode = $request->getAttribute('api.legacyMode');
-			if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute('api.id') === 'legacy')) {
+			if ($legacyMode === NULL && ($request->getAttribute('api.isLegacy') || $request->getAttribute(
+				'api.id'
+			) === 'legacy')) {
 				$legacyMode = new ApiLegacyMode();
 			}
 
