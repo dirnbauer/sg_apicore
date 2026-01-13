@@ -116,6 +116,7 @@ class ApiCoreController extends ActionController {
 	 * @param string $apiId
 	 * @param string $tenantId
 	 * @param string $label
+	 * @param string $tokenKey
 	 * @param string $scopes
 	 * @param int $expiresDays
 	 * @return ResponseInterface
@@ -126,10 +127,11 @@ class ApiCoreController extends ActionController {
 		string $apiId,
 		string $tenantId,
 		string $label,
+		string $tokenKey = '',
 		string $scopes = '',
 		int $expiresDays = 0
 	): ResponseInterface {
-		$newTokenKey = $this->tokenService->generateRandomToken();
+		$newTokenKey = $tokenKey !== '' ? $tokenKey : $this->tokenService->generateRandomToken();
 		$expiresAt = $expiresDays > 0 ? time() + ($expiresDays * 24 * 3600) : 0;
 
 		$scopeArray = [];

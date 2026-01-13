@@ -11,7 +11,7 @@ return [
 		'searchFields' => 'label,token_hash,tenant_id,api_id',
 		'iconfile' => 'EXT:core/Resources/Public/Icons/T3Icons/svgs/actions/actions-key.svg',
 		'hideTable' => FALSE,
-		'rootLevel' => 0,
+		'rootLevel' => -1,
 		'security' => [
 			'ignorePageTypeRestriction' => TRUE,
 		],
