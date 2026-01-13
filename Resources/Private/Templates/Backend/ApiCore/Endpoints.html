@@ -4,6 +4,17 @@
 	<h1>API Endpoints Overview</h1>
 	<p>Listing of all registered endpoints discovered via <code>EndpointDiscoveryService</code>.</p>
 
+	<div class="alert alert-info">
+		<h4>Troubleshooting: Missing Authorization Header</h4>
+		<p>
+			If you experience <strong>"Authentication required"</strong> errors on live environments despite sending a valid token, the <code>Authorization</code> header might be stripped by Apache.
+		</p>
+		<p>
+			<strong>Fix:</strong> Add this to your <code>.htaccess</code>:
+			<code>SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</code>
+		</p>
+	</div>
+
 	<table class="table table-striped table-hover">
 		<thead>
 		<tr>

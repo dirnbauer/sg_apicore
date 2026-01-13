@@ -107,6 +107,18 @@
 			</table>
 		</div>
 		<div class="col-md-4">
+			<div class="card mb-3">
+				<div class="card-header bg-warning text-white">Troubleshooting</div>
+				<div class="card-body">
+					<p class="card-text">
+						If you experience <strong>"Authentication required"</strong> errors on live environments despite sending a valid token, the <code>Authorization</code> header might be stripped by Apache.
+					</p>
+					<p class="card-text">
+						<strong>Fix:</strong> Add this to your <code>.htaccess</code>:
+					</p>
+					<pre class="bg-light p-2">SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1</pre>
+				</div>
+			</div>
 			<div class="card">
 				<div class="card-header">Create New Opaque Token</div>
 				<div class="card-body">

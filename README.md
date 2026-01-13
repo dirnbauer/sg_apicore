@@ -162,6 +162,18 @@ See [Tenants Documentation](docs/Tenants.md).
 Supports multiple auth modes (public, token, user) and scope-based authorization.
 See [Authentication & Scopes](docs/AuthScopes.md).
 
+### Known Issues & Troubleshooting
+
+#### Missing Authorization Header (Apache)
+
+In some hosting environments (especially Apache with PHP via CGI/FastCGI), the `Authorization` header is stripped before it reaches PHP. If you experience "Authentication required" errors despite sending a valid token, add the following to your `.htaccess` file:
+
+```apache
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+```
+
+The extension includes a fallback to check for `HTTP_AUTHORIZATION` and `REDIRECT_HTTP_AUTHORIZATION`, but this server-side configuration is the most reliable fix.
+
 ## Legacy Support (Migration from sg_rest)
 
 The extension provides a bridge to support legacy `sg_rest` clients. This includes:

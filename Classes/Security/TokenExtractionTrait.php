@@ -41,6 +41,15 @@ trait TokenExtractionTrait {
 	protected function extractToken(ServerRequestInterface $request): string {
 		// 1. Authorization: Bearer <token>
 		$authorizationHeader = $request->getHeaderLine('Authorization');
+
+		// Handle cases where Apache strips the Authorization header (common in CGI/FastCGI)
+		if ($authorizationHeader === '') {
+			$serverParams = $request->getServerParams();
+			$authorizationHeader = $serverParams['HTTP_AUTHORIZATION']
+				?? $serverParams['REDIRECT_HTTP_AUTHORIZATION']
+				?? '';
+		}
+
 		if (str_starts_with($authorizationHeader, 'Bearer ')) {
 			return substr($authorizationHeader, 7);
 		}
