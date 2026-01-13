@@ -268,8 +268,9 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		// Parse JSON Body if applicable
-		if (str_contains($request->getHeaderLine('Content-Type'), 'application/json')) {
+		// Parse JSON Body if applicable (allowance of text/plain is a legacy fallback)
+		$contentType = $request->getHeaderLine('Content-Type');
+		if (str_contains($contentType, 'application/json') || str_contains($contentType, 'text/plain')) {
 			$body = (string) $request->getBody();
 			if ($body !== '') {
 				try {
@@ -278,6 +279,14 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 						$request = $request->withParsedBody($parsedBody);
 					}
 				} catch (\JsonException) {
+					// Only throw an error for application/json if it's invalid
+					if (str_contains($contentType, 'application/json')) {
+						return $this->responseService->createErrorResponse(
+							'Invalid JSON',
+							'The request body could not be parsed as JSON.',
+							400
+						);
+					}
 				}
 			}
 		}
