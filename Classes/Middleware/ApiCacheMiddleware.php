@@ -265,8 +265,12 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 			}
 		}
 
+		$queryParams = $request->getQueryParams();
+		ksort($queryParams);
+
 		$vary = [
 			'uri' => (string) $request->getUri(),
+			'queryParams' => $queryParams,
 			'apiId' => $apiId,
 			'version' => $version,
 			'site' => $request->getAttribute('site')?->getIdentifier(),
