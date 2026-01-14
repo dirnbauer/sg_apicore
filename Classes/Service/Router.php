@@ -278,6 +278,11 @@ class Router implements SingletonInterface {
 								&& isset($GLOBALS['TSFE']->tmpl)
 								&& $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService
 							) {
+								// Load TypoScript templates including constants before generating config
+								if (isset($GLOBALS['TSFE']->rootLine) && is_array($GLOBALS['TSFE']->rootLine)) {
+									/** @phpstan-ignore-next-line */
+									$GLOBALS['TSFE']->tmpl->runThroughTemplates($GLOBALS['TSFE']->rootLine);
+								}
 								/** @phpstan-ignore-next-line */
 								$GLOBALS['TSFE']->tmpl->generateConfig();
 
