@@ -132,7 +132,7 @@ For Auto-CRUD resources, validation rules are automatically derived from the TYP
 * `eval => required` results in `required: true`.
 * `eval => email` results in a standard email regex pattern.
 * `type => number` results in `integer` or `float` type validation.
-* `config => range` results in `min` and `max` validation. (Note: I should check if I implemented range yet)
+* `config => range` results in `min` and `max` validation.
 
 ## Standardized Responses
 

@@ -237,7 +237,7 @@ class Router implements SingletonInterface {
 					return $this->createErrorResponse($request, 'Unauthorized', 'Authentication required.', 401);
 				}
 
-				// 3. Scope Enforcement
+				// 3. Legacy Mode Enforcement
 				$legacyModeAttributes = $reflectionMethod->getAttributes(ApiLegacyMode::class);
 				if (count($legacyModeAttributes) === 0) {
 					$legacyModeAttributes = $reflectionClass->getAttributes(ApiLegacyMode::class);
@@ -248,7 +248,7 @@ class Router implements SingletonInterface {
 					$request = $request->withAttribute('api.legacyMode', $legacyMode);
 				}
 
-				// 3. TypoScript Enforcement
+				// 4. TypoScript Enforcement
 				$typoScriptAttributes = $reflectionMethod->getAttributes(RequireFullTypoScript::class);
 				if (count($typoScriptAttributes) === 0) {
 					$typoScriptAttributes = $reflectionClass->getAttributes(RequireFullTypoScript::class);
@@ -305,7 +305,7 @@ class Router implements SingletonInterface {
 					}
 				}
 
-				// 3. Authenticated User Enforcement
+				// 5. Authenticated User Enforcement
 				$userAttributes = $reflectionMethod->getAttributes(RequireUser::class);
 				if (count($userAttributes) > 0) {
 					if ($authContext === NULL || $authContext->getUserId() === NULL) {
@@ -318,7 +318,7 @@ class Router implements SingletonInterface {
 					}
 				}
 
-				// 4. Scope Enforcement
+				// 6. Scope Enforcement
 				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
 				if (count($scopeAttributes) > 0) {
 					/** @var RequireScopes $requireScopes */
@@ -341,8 +341,10 @@ class Router implements SingletonInterface {
 				$apiCache = $handler['endpoint']['apiCache'] ?? NULL;
 				$response = call_user_func_array([$controller, $handler['action']], $arguments);
 
-				// Add Cache-Control headers if not already set by the controller and an ApiCache attribute exists
-				if ($apiCache instanceof \SGalinski\SgApiCore\Attribute\ApiCache && !$response->hasHeader('Cache-Control')) {
+				// Add Cache-Control headers if not already set by the controller, and an ApiCache attribute exists
+				if ($apiCache instanceof \SGalinski\SgApiCore\Attribute\ApiCache &&
+					!$response->hasHeader('Cache-Control')
+				) {
 					if ($apiCache->enabled && $apiCache->lifetime > 0) {
 						$response = $response->withHeader('Cache-Control', 'public, max-age=' . $apiCache->lifetime);
 					} elseif (!$apiCache->enabled) {
