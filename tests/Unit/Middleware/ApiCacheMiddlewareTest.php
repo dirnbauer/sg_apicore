@@ -77,14 +77,12 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cacheManager->method('getCache')->willReturn($cache);
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isCacheEnabled')->willReturn(TRUE);
-		$responseService = $this->createStub(ResponseService::class);
 
 		return new ApiCacheMiddleware(
 			$this->discoveryService,
 			$this->pathAnalysisService,
 			$cacheManager,
-			$extensionConfiguration,
-			$responseService
+			$extensionConfiguration
 		);
 	}
 

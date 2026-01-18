@@ -46,6 +46,11 @@ class LogServiceTest extends UnitTestCase {
 	protected $logManager;
 
 	/**
+	 * @var \Psr\Log\LoggerInterface|\PHPUnit\Framework\MockObject\MockObject
+	 */
+	protected $logger;
+
+	/**
 	 * @var ExtensionConfiguration|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected $extensionConfiguration;
@@ -53,7 +58,8 @@ class LogServiceTest extends UnitTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->logManager = $this->createStub(LogManager::class);
-		$this->logManager->method('getLogger')->willReturn($this->createStub(\Psr\Log\LoggerInterface::class));
+		$this->logger = $this->createMock(\Psr\Log\LoggerInterface::class);
+		$this->logManager->method('getLogger')->willReturn($this->logger);
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$this->service = new LogService($this->logManager, $this->extensionConfiguration);
 	}
@@ -99,5 +105,63 @@ class LogServiceTest extends UnitTestCase {
 		$result = $this->service->redact($data, $redactKeys);
 
 		$this->assertEquals($data, $result);
+	}
+
+	public function testLogErrorCallsLoggerWhenEnabled(): void {
+		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
+
+		$this->logger->expects($this->once())->method('error')->with('Test Error', []);
+
+		$this->service->logError('Test Error');
+	}
+
+	public function testLogExceptionCallsLoggerWithContext(): void {
+		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
+
+		$exception = new \Exception('Test Exception');
+		$request = $this->createStub(\Psr\Http\Message\ServerRequestInterface::class);
+		$request->method('getAttribute')->willReturnMap([
+			['api.requestId', '', 'req-123'],
+			['language', NULL, NULL]
+		]);
+		$uri = new \TYPO3\CMS\Core\Http\Uri('https://example.org/api/v1/test');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getMethod')->willReturn('GET');
+
+		$this->logger->expects($this->once())
+			->method('critical')
+			->with('Test Exception', $this->callback(function ($context) {
+				return $context['requestId'] === 'req-123' && $context['method'] === 'GET';
+			}));
+
+		$this->service->logException($exception, $request);
+	}
+
+	public function testLogRequestResponseCallsLoggerWithRedactedData(): void {
+		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
+		$this->extensionConfiguration->method('getRedactKeys')->willReturn(['password']);
+		$this->extensionConfiguration->method('isLogBodyEnabled')->willReturn(TRUE);
+
+		$request = $this->createStub(\Psr\Http\Message\ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('POST');
+		$request->method('getUri')->willReturn(new \TYPO3\CMS\Core\Http\Uri('https://example.org/api/v1/test'));
+		$request->method('getParsedBody')->willReturn(['password' => 'secret']);
+		$request->method('getAttribute')->willReturnMap([
+			['api.requestId', '', 'req-123'],
+			['api.id', 'global', 'public'],
+			['api.tenant', NULL, NULL],
+			['language', NULL, NULL]
+		]);
+
+		$response = $this->createStub(\Psr\Http\Message\ResponseInterface::class);
+		$response->method('getStatusCode')->willReturn(200);
+
+		$this->logger->expects($this->once())
+			->method('info')
+			->with($this->anything(), $this->callback(function ($context) {
+				return $context['requestBody']['password'] === '***REDACTED***';
+			}));
+
+		$this->service->logRequestResponse($request, $response, 0.5);
 	}
 }

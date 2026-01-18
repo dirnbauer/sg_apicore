@@ -112,4 +112,37 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 		$this->assertNull($result);
 	}
+
+	public function testAuthenticateRespectsSiteRootPageIdFromTenantContext(): void {
+		$token = 'test-token';
+		$tokenHash = hash('sha256', $token);
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
+
+		$tenantContext = new \SGalinski\SgApiCore\Context\TenantContext(
+			tenantId: 'tenant-1',
+			siteRootPageId: 456
+		);
+		$request->method('getAttribute')->with('api.tenant')->willReturn($tenantContext);
+
+		$tokenRecord = [
+			'uid' => 123,
+			'token_hash' => $tokenHash,
+			'api_id' => 'public',
+			'tenant_id' => 'tenant-1',
+			'scopes' => '[]',
+			'expires_at' => 0
+		];
+
+		$tokenRepository = $this->createMock(TokenRepository::class);
+		$tokenRepository->expects($this->once())
+			->method('findByHashApiAndTenant')
+			->with($tokenHash, 'public', 'tenant-1', 456)
+			->willReturn($tokenRecord);
+
+		$provider = new BearerOpaqueTokenProvider($tokenRepository);
+
+		$result = $provider->authenticate($request, 'public', 'tenant-1');
+		$this->assertInstanceOf(AuthContext::class, $result);
+	}
 }

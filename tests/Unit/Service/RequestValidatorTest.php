@@ -160,4 +160,54 @@ class RequestValidatorTest extends UnitTestCase {
 		$this->assertIsArray($errors);
 		$this->assertStringContainsString('does not match the required pattern', $errors[0]['message']);
 	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateHandlesBooleanTypes(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['active' => 'not-a-bool']);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [
+				new ApiQueryParam(name: 'active', type: 'boolean')
+			],
+			'bodyParams' => []
+		];
+
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertIsArray($errors);
+		$this->assertEquals('Value must be a boolean', $errors[0]['message']);
+
+		$request2 = $this->createStub(ServerRequestInterface::class);
+		$request2->method('getQueryParams')->willReturn(['active' => 'true']);
+		$errors2 = $this->validator->validate($request2, $endpoint, []);
+		$this->assertNull($errors2);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateHandlesFloatTypes(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn(['price' => 'invalid']);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [
+				new ApiQueryParam(name: 'price', type: 'float')
+			],
+			'bodyParams' => []
+		];
+
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertIsArray($errors);
+		$this->assertEquals('Value must be a number', $errors[0]['message']);
+
+		$request2 = $this->createStub(ServerRequestInterface::class);
+		$request2->method('getQueryParams')->willReturn(['price' => '12.50']);
+		$errors2 = $this->validator->validate($request2, $endpoint, []);
+		$this->assertNull($errors2);
+	}
 }
