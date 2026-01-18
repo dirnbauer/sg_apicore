@@ -54,6 +54,7 @@ class ResourceControllerTest extends UnitTestCase {
 	protected TcaMapper|MockObject $tcaMapper;
 	protected ResponseService|MockObject $responseService;
 	protected PaginationService|MockObject $paginationService;
+	protected \SGalinski\SgApiCore\Service\LogService|MockObject $logService;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -70,11 +71,14 @@ class ResourceControllerTest extends UnitTestCase {
 		// Mock BE_USER
 		$GLOBALS['BE_USER'] = $this->createStub(BackendUserAuthentication::class);
 
+		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
+
 		$this->controller = new ResourceController(
 			$this->connectionPool,
 			$this->tcaMapper,
 			$this->responseService,
-			$this->paginationService
+			$this->paginationService,
+			$this->logService
 		);
 	}
 

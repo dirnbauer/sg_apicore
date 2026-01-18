@@ -35,6 +35,8 @@ use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\ResourceController;
+use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
@@ -57,14 +59,22 @@ class EndpointDiscoveryService implements SingletonInterface {
 	protected ?array $endpoints = NULL;
 
 	/**
+	 * @var FrontendInterface
+	 */
+	protected FrontendInterface $cache;
+
+	/**
 	 * @param iterable $controllers
 	 * @param ResourceRegistry $resourceRegistry
+	 * @param CacheManager $cacheManager
 	 */
 	public function __construct(
 		iterable $controllers,
-		protected ResourceRegistry $resourceRegistry
+		protected ResourceRegistry $resourceRegistry,
+		CacheManager $cacheManager
 	) {
 		$this->controllers = $controllers;
+		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
 	}
 
 	/**
@@ -75,6 +85,13 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 */
 	public function getAllEndpoints(): array {
 		if ($this->endpoints !== NULL) {
+			return $this->endpoints;
+		}
+
+		$cacheKey = 'all_endpoints';
+		$cachedEndpoints = $this->cache->get($cacheKey);
+		if (is_array($cachedEndpoints)) {
+			$this->endpoints = $cachedEndpoints;
 			return $this->endpoints;
 		}
 
@@ -162,7 +179,29 @@ class EndpointDiscoveryService implements SingletonInterface {
 			}
 		}
 
+		// Sort endpoints to ensure static routes are registered before variable routes.
+		// This prevents "shadowing" errors in fast-route and improves performance in Router::dispatch
+		usort($endpoints, static function ($a, $b) {
+			$pathA = $a['path'];
+			$pathB = $b['path'];
+
+			$isStaticA = !str_contains($pathA, '{');
+			$isStaticB = !str_contains($pathB, '{');
+
+			if ($isStaticA && !$isStaticB) {
+				return -1;
+			}
+			if (!$isStaticA && $isStaticB) {
+				return 1;
+			}
+
+			// If both are static or both are variable, sort by path length (descending)
+			// to ensure more specific routes are matched first.
+			return strlen($pathB) <=> strlen($pathA);
+		});
+
 		$this->endpoints = $endpoints;
+		$this->cache->set($cacheKey, $endpoints);
 		return $endpoints;
 	}
 
@@ -309,6 +348,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 						type: 'array',
 						required: FALSE,
 						description: 'Filter by fields: filter[field]=value'
+					),
+					new ApiQueryParam(
+						name: 'skipCount',
+						type: 'boolean',
+						required: FALSE,
+						description: 'If set to true, the total record count for pagination is skipped for better performance.'
 					),
 				],
 				'pathParams' => [],

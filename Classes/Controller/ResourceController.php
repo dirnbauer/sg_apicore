@@ -116,11 +116,19 @@ class ResourceController {
 		}
 
 		// Count total for pagination meta BEFORE applying offset/limit
-		$countQueryBuilder = clone $queryBuilder;
-		$total = (int) $countQueryBuilder->resetOrderBy()
-			->count('*')
-			->executeQuery()
-			->fetchOne();
+		$total = 0;
+		$skipCount = FALSE;
+		if (isset($queryParams['skipCount'])) {
+			$skipCount = filter_var($queryParams['skipCount'], FILTER_VALIDATE_BOOLEAN);
+		}
+
+		if (!$skipCount) {
+			$countQueryBuilder = clone $queryBuilder;
+			$total = (int) $countQueryBuilder->resetOrderBy()
+				->count('*')
+				->executeQuery()
+				->fetchOne();
+		}
 
 		// Apply pagination to the main query
 		$queryBuilder->setFirstResult($pagination['offset'])->setMaxResults($pagination['limit']);

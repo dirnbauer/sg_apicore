@@ -35,6 +35,8 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
+use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -45,7 +47,13 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
-		$service = new EndpointDiscoveryService($controllers, $resourceRegistry);
+
+		$cache = $this->createMock(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager);
 		$endpoints = $service->getAllEndpoints();
 
 		$this->assertCount(1, $endpoints);

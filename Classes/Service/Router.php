@@ -131,50 +131,56 @@ class Router implements SingletonInterface {
 		string $path,
 		?string $authMode = NULL
 	): ResponseInterface {
-		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($apiId, $version, $authMode) {
-			$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
 
-			// Sort endpoints to ensure static routes are registered before variable routes.
-			// This prevents "shadowing" errors in fast-route.
-			usort($endpoints, static function ($a, $b) {
-				$pathA = $a['path'];
-				$pathB = $b['path'];
-
-				$isStaticA = !str_contains($pathA, '{');
-				$isStaticB = !str_contains($pathB, '{');
-
-				if ($isStaticA && !$isStaticB) {
-					return -1;
-				}
-				if (!$isStaticA && $isStaticB) {
-					return 1;
-				}
-
-				// If both are static or both are variable, sort by path length (descending)
-				// to ensure more specific routes are matched first.
-				return strlen($pathB) <=> strlen($pathA);
-			});
-
-			foreach ($endpoints as $endpoint) {
-				// Filter by API ID, version and auth mode if specified
-				if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
-					continue;
-				}
-				if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
-					continue;
-				}
-				if (!empty($endpoint['authMode'])) {
-					// Visibility logic
-					$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
-					if (!empty($restrictedTo)) {
-						if (!in_array($authMode, $restrictedTo, TRUE)) {
-							continue;
-						}
-					} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
+		// Filter endpoints by API ID, version and auth mode before creating the dispatcher
+		$filteredEndpoints = [];
+		foreach ($endpoints as $endpoint) {
+			// Filter by API ID, version and auth mode if specified
+			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+				continue;
+			}
+			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+				continue;
+			}
+			if (!empty($endpoint['authMode'])) {
+				// Visibility logic
+				$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
+				if (!empty($restrictedTo)) {
+					if (!in_array($authMode, $restrictedTo, TRUE)) {
 						continue;
 					}
+				} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
+					continue;
 				}
+			}
+			$filteredEndpoints[] = $endpoint;
+		}
 
+		// Sort filtered endpoints again to ensure static routes are registered before variable routes.
+		// This is necessary because some tests mock the discovery service and return unsorted endpoints.
+		// It also doesn't hurt to be sure.
+		usort($filteredEndpoints, static function ($a, $b) {
+			$pathA = $a['path'];
+			$pathB = $b['path'];
+
+			$isStaticA = !str_contains($pathA, '{');
+			$isStaticB = !str_contains($pathB, '{');
+
+			if ($isStaticA && !$isStaticB) {
+				return -1;
+			}
+			if (!$isStaticA && $isStaticB) {
+				return 1;
+			}
+
+			// If both are static or both are variable, sort by path length (descending)
+			// to ensure more specific routes are matched first.
+			return strlen($pathB) <=> strlen($pathA);
+		});
+
+		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($filteredEndpoints) {
+			foreach ($filteredEndpoints as $endpoint) {
 				$r->addRoute($endpoint['methods'], $endpoint['path'], [
 					'controller' => $endpoint['controller'],
 					'action' => $endpoint['action'],

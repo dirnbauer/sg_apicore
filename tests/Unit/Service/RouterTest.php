@@ -37,6 +37,8 @@ use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
+use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -59,7 +61,13 @@ class RouterTest extends UnitTestCase {
 		$controllersIterator = new \ArrayIterator($instances);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
-		$discoveryService = new EndpointDiscoveryService($controllersIterator, $resourceRegistry);
+
+		$cache = $this->createMock(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$discoveryService = new EndpointDiscoveryService($controllersIterator, $resourceRegistry, $cacheManager);
 		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
 		$responseService = $this->createStub(ResponseService::class);
 		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {

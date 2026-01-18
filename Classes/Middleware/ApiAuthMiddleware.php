@@ -72,6 +72,12 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 			if ($analysis) {
 				$apiId = $analysis['apiId'];
 				$version = $analysis['version'];
+
+				$request = $request->withAttribute('api.id', $apiId);
+				$request = $request->withAttribute('api.version', $version);
+				if (isset($analysis['remainingPath'])) {
+					$request = $request->withAttribute('api.remainingPath', $analysis['remainingPath']);
+				}
 			}
 		}
 

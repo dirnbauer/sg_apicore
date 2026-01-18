@@ -127,21 +127,24 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		ServerRequestInterface $request,
 		RequestHandlerInterface $handler
 	): ResponseInterface {
-		// Try to find the endpoint to see if caching is enabled
 		$apiId = $request->getAttribute('api.id');
 		$version = $request->getAttribute('api.version');
 		$path = $request->getAttribute('api.remainingPath');
 
-		if (!$apiId || !$path) {
+		if (!$apiId || $path === NULL) {
 			$analysis = $this->pathAnalysisService->analyze($request->getUri()->getPath());
 			if ($analysis) {
 				$apiId = $analysis['apiId'];
 				$version = $analysis['version'];
 				$path = $analysis['remainingPath'];
+
+				$request = $request->withAttribute('api.id', $apiId);
+				$request = $request->withAttribute('api.version', $version);
+				$request = $request->withAttribute('api.remainingPath', $path);
 			}
 		}
 
-		if (!$apiId || !$path) {
+		if (!$apiId || $path === NULL) {
 			return $handler->handle($request);
 		}
 

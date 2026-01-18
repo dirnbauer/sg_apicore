@@ -91,4 +91,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 			'groups' => ['all'],
 		];
 	}
+
+	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_discovery'])) {
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_discovery'] = [
+			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
+			'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
+			'groups' => ['system'],
+		];
+	}
 })();
