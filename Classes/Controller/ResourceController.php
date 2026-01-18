@@ -46,7 +46,8 @@ class ResourceController {
 		protected ConnectionPool $connectionPool,
 		protected TcaMapper $tcaMapper,
 		protected ResponseService $responseService,
-		protected PaginationService $paginationService
+		protected PaginationService $paginationService,
+		protected \SGalinski\SgApiCore\Service\LogService $logService
 	) {
 	}
 
@@ -215,9 +216,13 @@ class ResourceController {
 		$dataHandler->process_datamap();
 
 		if (count($dataHandler->errorLog) > 0) {
+			foreach ($dataHandler->errorLog as $error) {
+				$this->logService->logError('DataHandler Error: ' . $error, []);
+			}
+
 			return $this->responseService->createErrorResponse(
 				'Internal Error',
-				'DataHandler errors: ' . implode(', ', $dataHandler->errorLog),
+				'An error occurred while processing the data.',
 				500
 			);
 		}
@@ -277,9 +282,13 @@ class ResourceController {
 		$dataHandler->process_datamap();
 
 		if (count($dataHandler->errorLog) > 0) {
+			foreach ($dataHandler->errorLog as $error) {
+				$this->logService->logError('DataHandler Error: ' . $error, []);
+			}
+
 			return $this->responseService->createErrorResponse(
 				'Internal Error',
-				'DataHandler errors: ' . implode(', ', $dataHandler->errorLog),
+				'An error occurred while processing the data.',
 				500
 			);
 		}

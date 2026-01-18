@@ -38,7 +38,10 @@ class JwtService implements SingletonInterface {
 	protected string $privateKey;
 
 	public function __construct() {
-		$this->privateKey = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? 'fallback-key';
+		$this->privateKey = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '';
+		if (strlen($this->privateKey) < 32) {
+			throw new \RuntimeException('Insecure or missing encryptionKey in TYPO3 configuration. A key with at least 32 characters is required.');
+		}
 	}
 
 	/**

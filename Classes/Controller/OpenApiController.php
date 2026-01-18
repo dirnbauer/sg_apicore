@@ -33,6 +33,7 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Service\OpenApiService;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
  * Controller to serve OpenAPI documentation
@@ -79,18 +80,23 @@ class OpenApiController {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
+		$swaggerUiPath = 'EXT:sg_apicore/Resources/Public/Vendor/swagger-ui/';
+		$cssPath = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'swagger-ui.css');
+		$bundleJsPath = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'swagger-ui-bundle.js');
+		$presetJsPath = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'swagger-ui-standalone-preset.js');
+		$fav32Path = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'favicon-32x32.png');
+		$fav16Path = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'favicon-16x16.png');
+
 		// Build the path to the docs.json relative to the current URL
-		// We use a relative path that works regardless of whether the URL has a trailing slash or not.
-		// If the URL is /api/public/v1/docs/ui -> relative to /api/public/v1/docs/ -> ../docs.json is /api/public/v1/docs.json
-		// If the URL is /api/public/v1/docs/ui/ -> relative to /api/public/v1/docs/ui/ -> ../../docs.json is /api/public/v1/docs.json
-		// We can use a script to determine the correct path in the browser.
 		$html = <<<HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
 	<title>Swagger UI - {$apiId} (v{$version})</title>
-	<link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@4/swagger-ui.css" >
+	<link rel="stylesheet" type="text/css" href="{$cssPath}" >
+	<link rel="icon" type="image/png" href="{$fav32Path}" sizes="32x32" />
+	<link rel="icon" type="image/png" href="{$fav16Path}" sizes="16x16" />
 	<style>
 		html { box-sizing: border-box; overflow-y: scroll; }
 		*, *:before, *:after { box-sizing: inherit; }
@@ -99,8 +105,8 @@ class OpenApiController {
 </head>
 <body>
 	<div id="swagger-ui"></div>
-	<script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-bundle.js"> </script>
-	<script src="https://unpkg.com/swagger-ui-dist@4/swagger-ui-standalone-preset.js"> </script>
+	<script src="{$bundleJsPath}"> </script>
+	<script src="{$presetJsPath}"> </script>
 	<script>
 	window.onload = function() {
 		// Calculate the path to docs.json relative to docs/ui
