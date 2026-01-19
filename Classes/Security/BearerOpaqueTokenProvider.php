@@ -57,7 +57,6 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 	 * @param array $activeProviders
 	 * @return AuthContext|null
 	 * @throws Exception
-	 * @throws \JsonException
 	 */
 	public function authenticate(
 		ServerRequestInterface $request,
@@ -90,7 +89,12 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 
 		$scopes = [];
 		if ($tokenRecord['scopes']) {
-			$scopes = json_decode($tokenRecord['scopes'], TRUE, 512, JSON_THROW_ON_ERROR);
+			try {
+				$scopes = json_decode($tokenRecord['scopes'], TRUE, 512, JSON_THROW_ON_ERROR);
+			} catch (\JsonException) {
+				$scopes = [];
+			}
+
 			if (!is_array($scopes)) {
 				$scopes = [];
 			}
