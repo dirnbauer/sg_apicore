@@ -54,6 +54,7 @@ class ResourceRegistry implements SingletonInterface {
 			'allowedOperations' => ['list', 'get', 'create', 'update', 'delete'],
 			'readFields' => [], // Empty = all (respecting TcaMapper defaults)
 			'writeFields' => [],
+			'tags' => [],
 			'requiredScopes' => [
 				'list' => [],
 				'get' => [],

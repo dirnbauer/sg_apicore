@@ -22,6 +22,7 @@ $resourceRegistry->registerResource('public', 'tt_content', '/contents', [
 $resourceRegistry->registerResource('partner', 'tx_myext_domain_model_item', '/items', [
     'allowedOperations' => ['list', 'get', 'create', 'update', 'delete'],
     'writeFields' => ['header', 'bodytext', 'pid'],
+    'tags' => ['Items'],
     'requiredScopes' => [
         'list' => ['partner:read'],
         'get' => ['partner:read'],

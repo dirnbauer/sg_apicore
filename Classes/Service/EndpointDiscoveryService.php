@@ -220,6 +220,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$scopes = $config['requiredScopes'] ?? [];
 		$writeFields = $config['writeFields'] ?? [];
 		$readFields = $config['readFields'] ?? [];
+		$tags = $config['tags'] ?? [];
+		if (empty($tags)) {
+			$tags = [$tableName];
+		}
 		$allFields = array_unique(array_merge($readFields, $writeFields));
 
 		// Determine field metadata from TCA
@@ -320,7 +324,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'authMode' => [], // Default
 				'summary' => 'List ' . $tableName,
 				'description' => 'Returns a paginated list of ' . $tableName . ' resources.',
-				'tags' => [$tableName],
+				'tags' => $tags,
 				'scopes' => $scopes['list'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [
@@ -377,7 +381,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'authMode' => [],
 				'summary' => 'Get ' . $tableName,
 				'description' => 'Returns a single ' . $tableName . ' resource by ID.',
-				'tags' => [$tableName],
+				'tags' => $tags,
 				'scopes' => $scopes['get'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [],
@@ -405,7 +409,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'authMode' => [],
 				'summary' => 'Create ' . $tableName,
 				'description' => 'Creates a new ' . $tableName . ' resource.',
-				'tags' => [$tableName],
+				'tags' => $tags,
 				'scopes' => $scopes['create'] ?? [],
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
@@ -430,7 +434,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'authMode' => [],
 				'summary' => 'Update ' . $tableName,
 				'description' => 'Updates an existing ' . $tableName . ' resource.',
-				'tags' => [$tableName],
+				'tags' => $tags,
 				'scopes' => $scopes['update'] ?? [],
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
@@ -457,8 +461,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'methods' => ['DELETE'],
 				'authMode' => [],
 				'summary' => 'Delete ' . $tableName,
-				'description' => 'Deletes a ' . $tableName . ' resource.',
-				'tags' => [$tableName],
+				'description' => 'Deletes an existing ' . $tableName . ' resource.',
+				'tags' => $tags,
 				'scopes' => $scopes['delete'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [],
