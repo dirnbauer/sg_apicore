@@ -31,8 +31,16 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 	$services->set(SGalinski\SgApiCore\Controller\OpenApiController::class)
 		->tag('sg_apicore.router');
 
-	$services->set(SGalinski\SgApiCore\Controller\TestController::class)
-		->tag('sg_apicore.router');
+	$extensionConfiguration = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+		\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
+	);
+	if ($extensionConfiguration->isActivateDemoApis()) {
+		$services->set(SGalinski\SgApiCore\Controller\TestController::class)
+			->tag('sg_apicore.router');
+
+		$services->set(SGalinski\SgApiCore\Controller\LegacyExampleController::class)
+			->tag('sg_apicore.router');
+	}
 
 	$services->set(SGalinski\SgApiCore\Controller\UserAuthController::class)
 		->tag('sg_apicore.router');
