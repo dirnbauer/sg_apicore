@@ -111,6 +111,8 @@ class OpenApiService implements SingletonInterface {
 		}
 
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+		$filteredEndpoints = [];
+		$allTags = [];
 		foreach ($endpoints as $endpoint) {
 			// Filter by API ID, version and auth mode if specified
 			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
@@ -131,6 +133,11 @@ class OpenApiService implements SingletonInterface {
 				}
 			}
 
+			$filteredEndpoints[] = $endpoint;
+			foreach ($endpoint['tags'] as $tag) {
+				$allTags[$tag] = TRUE;
+			}
+
 			// Collect schemas for resources
 			if (isset($endpoint['resource'])) {
 				$tableName = $endpoint['resource']['table'];
@@ -138,7 +145,25 @@ class OpenApiService implements SingletonInterface {
 					$spec['components']['schemas'][$tableName] = $this->generateResourceSchema($endpoint);
 				}
 			}
+		}
 
+		// Sort tags alphabetically but keep specific tags at the end
+		$tagNames = array_keys($allTags);
+		natcasesort($tagNames);
+		$bottomTags = ['openapi', 'health'];
+		$sortedTags = [];
+		$tagsToPutAtBottom = [];
+
+		foreach ($tagNames as $tagName) {
+			if (in_array(strtolower($tagName), $bottomTags, TRUE)) {
+				$tagsToPutAtBottom[] = ['name' => $tagName];
+			} else {
+				$sortedTags[] = ['name' => $tagName];
+			}
+		}
+		$spec['tags'] = array_merge($sortedTags, $tagsToPutAtBottom);
+
+		foreach ($filteredEndpoints as $endpoint) {
 			$this->addRouteToSpec($spec, $endpoint);
 		}
 
