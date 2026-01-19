@@ -103,7 +103,8 @@ class ResourceControllerTest extends UnitTestCase {
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('setFirstResult')->willReturn($queryBuilder);
 		$queryBuilder->method('setMaxResults')->willReturn($queryBuilder);
-		$queryBuilder->method('resetOrderBy')->willReturn($queryBuilder);
+		$concreteQueryBuilder = $this->createStub(\Doctrine\DBAL\Query\QueryBuilder::class);
+		$queryBuilder->method('getConcreteQueryBuilder')->willReturn($concreteQueryBuilder);
 		$queryBuilder->method('count')->willReturn($queryBuilder);
 
 		$result = $this->createStub(Result::class);

@@ -124,8 +124,8 @@ class ResourceController {
 
 		if (!$skipCount) {
 			$countQueryBuilder = clone $queryBuilder;
-			$total = (int) $countQueryBuilder->resetOrderBy()
-				->count('*')
+			$countQueryBuilder->getConcreteQueryBuilder()->resetOrderBy();
+			$total = (int) $countQueryBuilder->count('*')
 				->executeQuery()
 				->fetchOne();
 		}
