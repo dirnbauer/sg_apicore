@@ -189,6 +189,8 @@ body {
 .swagger-ui .opblock-title_normal,
 .swagger-ui .opblock-title.parameter__name,
 .swagger-ui .opblock .opblock-section-header h4,
+.swagger-ui .responses-inner h4,
+.swagger-ui .responses-inner h5,
 .swagger-ui .tab li button,
 .swagger-ui label,
 .swagger-ui .model-box-control,
@@ -196,8 +198,7 @@ body {
 .swagger-ui .model-title,
 .swagger-ui .prop-name,
 .swagger-ui .prop-type,
-.swagger-ui section.models .property-row td:first-child,
-.swagger-ui .opblock-body pre.microlight {
+.swagger-ui section.models .property-row td:first-child {
 	color: var(--b-body-color) !important;
 }
 
@@ -206,7 +207,7 @@ body {
 }
 
 .swagger-ui .opblock .opblock-section-header h4 {
-	color: #3b4151 !important;
+	color: var(--b-heading-color) !important;
 }
 
 .swagger-ui .opblock-body pre.microlight span {
@@ -218,38 +219,38 @@ body {
 	font-weight: bold;
 }
 
-.swagger-ui .opblock-body pre.microlight .hljs-string {
+.swagger-ui pre.microlight .hljs-string {
 	color: #008000 !important;
 }
 
-.swagger-ui .opblock-body pre.microlight .hljs-number,
-.swagger-ui .opblock-body pre.microlight .hljs-literal {
+.swagger-ui pre.microlight .hljs-number,
+.swagger-ui pre.microlight .hljs-literal {
 	color: #8b0000 !important;
 }
 
-[data-theme='dark'] .swagger-ui .opblock-body pre.microlight code,
-[data-theme='dark'] .swagger-ui .opblock-body pre.microlight span {
+[data-theme='dark'] .swagger-ui pre.microlight code,
+[data-theme='dark'] .swagger-ui pre.microlight span {
 	color: var(--b-primary-light);
 }
 
-[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight code,
-[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight span {
+[data-theme='contrast'] .swagger-ui pre.microlight code,
+[data-theme='contrast'] .swagger-ui pre.microlight span {
 	color: var(--b-primary-light);
 }
 
-[data-theme='dark'] .swagger-ui .opblock-body pre.microlight .hljs-attr {
+[data-theme='dark'] .swagger-ui pre.microlight .hljs-attr {
 	color: var(--b-primary-light) !important;
 }
 
-[data-theme='dark'] .swagger-ui .opblock-body pre.microlight .hljs-string {
+[data-theme='dark'] .swagger-ui pre.microlight .hljs-string {
 	color: #a2fca2 !important;
 }
 
-[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight .hljs-attr {
+[data-theme='contrast'] .swagger-ui pre.microlight .hljs-attr {
 	color: var(--b-primary) !important;
 }
 
-[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight .hljs-string {
+[data-theme='contrast'] .swagger-ui pre.microlight .hljs-string {
 	color: var(--b-success) !important;
 }
 
@@ -340,8 +341,10 @@ body {
 [data-theme='dark'] .swagger-ui .auth-container,
 [data-theme='dark'] .swagger-ui .auth-container h4,
 [data-theme='dark'] .swagger-ui .auth-container label,
-[data-theme='dark'] .swagger-ui .auth-container code {
-	color: #3b4151 !important;
+[data-theme='dark'] .swagger-ui .auth-container code,
+[data-theme='dark'] .swagger-ui .responses-inner h4,
+[data-theme='dark'] .swagger-ui .responses-inner h5 {
+	color: #fff !important;
 }
 
 [data-theme='contrast'] .swagger-ui section.models h4,
@@ -353,8 +356,10 @@ body {
 [data-theme='contrast'] .swagger-ui .auth-container,
 [data-theme='contrast'] .swagger-ui .auth-container h4,
 [data-theme='contrast'] .swagger-ui .auth-container label,
-[data-theme='contrast'] .swagger-ui .auth-container code {
-	color: #3b4151 !important;
+[data-theme='contrast'] .swagger-ui .auth-container code,
+[data-theme='contrast'] .swagger-ui .responses-inner h4,
+[data-theme='contrast'] .swagger-ui .responses-inner h5 {
+	color: #fff !important;
 }
 
 [data-theme='contrast'] .swagger-ui .parameters-container .btn,
