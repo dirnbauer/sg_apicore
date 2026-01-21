@@ -35,6 +35,10 @@ body {
 }
 
 /* Buttons (CTA) */
+.swagger-ui .btn {
+	color: var(--b-body-color) !important;
+}
+
 .swagger-ui .btn.execute,
 .swagger-ui .btn.authorize {
 	background-color: var(--b-primary) !important;
@@ -304,7 +308,8 @@ body {
 	margin-top: 10px;
 }
 
-[data-theme='contrast'] .swagger-ui .btn.authorize {
+[data-theme='contrast'] .swagger-ui .btn.authorize,
+[data-theme='contrast'] .swagger-ui .btn.execute {
 	color: #000 !important;
 	border: 2px solid #fff !important;
 }
@@ -315,7 +320,8 @@ body {
 	fill: #fff !important;
 }
 
-[data-theme='contrast'] .swagger-ui .btn.authorize svg {
+[data-theme='contrast'] .swagger-ui .btn.authorize svg,
+[data-theme='contrast'] .swagger-ui .btn.execute svg {
 	fill: #000 !important;
 }
 
@@ -326,9 +332,35 @@ body {
 
 /* Dark Mode Specific Tweaks */
 [data-theme='dark'] .swagger-ui section.models h4,
-[data-theme='dark'] .swagger-ui .model-title,
-[data-theme='dark'] .swagger-ui .btn.authorize {
+[data-theme='dark'] .swagger-ui .model-title {
 	color: #fff !important;
+}
+
+[data-theme='dark'] .swagger-ui .btn,
+[data-theme='dark'] .swagger-ui .auth-container,
+[data-theme='dark'] .swagger-ui .auth-container h4,
+[data-theme='dark'] .swagger-ui .auth-container label,
+[data-theme='dark'] .swagger-ui .auth-container code {
+	color: #3b4151 !important;
+}
+
+[data-theme='contrast'] .swagger-ui section.models h4,
+[data-theme='contrast'] .swagger-ui .model-title {
+	color: #fff !important;
+}
+
+[data-theme='contrast'] .swagger-ui .btn,
+[data-theme='contrast'] .swagger-ui .auth-container,
+[data-theme='contrast'] .swagger-ui .auth-container h4,
+[data-theme='contrast'] .swagger-ui .auth-container label,
+[data-theme='contrast'] .swagger-ui .auth-container code {
+	color: #3b4151 !important;
+}
+
+[data-theme='contrast'] .swagger-ui .parameters-container .btn,
+[data-theme='dark'] .swagger-ui .btn.authorize,
+[data-theme='dark'] .swagger-ui .parameters-container .btn {
+	color: var(--b-body-color) !important;
 }
 
 /* Theme Switcher Styles (floating) */
