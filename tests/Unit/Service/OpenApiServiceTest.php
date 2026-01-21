@@ -73,6 +73,21 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertArrayHasKey('/test', $spec['paths']);
 		$this->assertArrayHasKey('get', $spec['paths']['/test']);
 		$this->assertEquals('Test summary', $spec['paths']['/test']['get']['summary']);
+		$this->assertEquals('/api/public/v1', $spec['servers'][0]['url']);
+	}
+
+	public function testGenerateSpecUsesProvidedBaseUrl(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+
+		$controllers = new \ArrayIterator([new MockOpenApiController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1', 'https://example.com/api/public/v1');
+
+		$this->assertEquals('https://example.com/api/public/v1', $spec['servers'][0]['url']);
 	}
 
 	public function testGenerateSpecFiltersByApiId(): void {

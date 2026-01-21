@@ -64,7 +64,10 @@ class OpenApiController {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
-		$spec = $this->openApiService->generateSpec($apiId, $version);
+		$baseUrl = $request->getUri()->withPath(
+			str_replace('/docs.json', '', $request->getUri()->getPath())
+		);
+		$spec = $this->openApiService->generateSpec($apiId, $version, (string) $baseUrl);
 		return new JsonResponse($spec);
 	}
 
@@ -93,6 +96,10 @@ class OpenApiController {
 		$poweredByJsPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/JavaScript/powered-by.js');
 
 		// Build the path to the docs.json relative to the current URL
+		$docsUrl = $request->getUri()->withPath(
+			str_replace('/docs/ui', '/docs.json', $request->getUri()->getPath())
+		);
+
 		$html = <<<HTML
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -136,17 +143,8 @@ class OpenApiController {
 	<script src="{$poweredByJsPath}"> </script>
 	<script>
 	window.onload = function() {
-		// Calculate the path to docs.json relative to docs/ui
-		let pathParts = window.location.pathname.split('/');
-		if (pathParts[pathParts.length - 1] === '') {
-			pathParts.pop(); // remove trailing slash part
-		}
-		pathParts.pop(); // remove 'ui'
-		pathParts.pop(); // remove 'docs'
-		let docsUrl = pathParts.join('/') + '/docs.json';
-
 		const ui = SwaggerUIBundle({
-			url: docsUrl,
+			url: '{$docsUrl}',
 			dom_id: '#swagger-ui',
 			deepLinking: true,
 			presets: [

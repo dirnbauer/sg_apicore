@@ -286,7 +286,8 @@ body {
 }
 
 .swagger-ui .model-toggle::after {
-	background: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>") 50% no-repeat !important;
+	background: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>")
+		50% no-repeat !important;
 	background-size: 100% !important;
 	content: '' !important;
 	display: block !important;
@@ -305,30 +306,27 @@ body {
 
 [data-theme='contrast'] .swagger-ui .btn.authorize {
 	color: #000 !important;
-	border: 2px solid #FFF !important;
+	border: 2px solid #fff !important;
 }
 
 [data-theme='dark'] .swagger-ui .authorization__btn svg,
 [data-theme='dark'] .swagger-ui .btn.authorize svg {
-	fill: var(--b-body-color) !important;
+	fill: #fff !important;
 }
 
-[data-theme='contrast'] .swagger-ui .authorization__btn svg,
 [data-theme='contrast'] .swagger-ui .btn.authorize svg {
 	fill: #000 !important;
+}
+
+[data-theme='contrast'] .swagger-ui .authorization__btn svg {
+	fill: #fff !important;
 }
 
 /* Dark Mode Specific Tweaks */
 [data-theme='dark'] .swagger-ui section.models h4,
 [data-theme='dark'] .swagger-ui .model-title,
-[data-theme='dark'] .swagger-ui .btn.authorize,
-[data-theme='dark'] .swagger-ui .authorization__btn svg {
+[data-theme='dark'] .swagger-ui .btn.authorize {
 	color: #fff !important;
-	fill: #fff !important;
-}
-
-[data-theme='contrast'] .swagger-ui .authorization__btn svg {
-	fill: #fff !important;
 }
 
 /* Theme Switcher Styles (floating) */
@@ -356,8 +354,9 @@ body {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	transition: transform 0.2s ease,
-	border-color 0.2s ease;
+	transition:
+		transform 0.2s ease,
+		border-color 0.2s ease;
 	position: relative;
 	overflow: hidden;
 }
@@ -371,7 +370,7 @@ body {
 }
 
 .theme-switcher .btn-light {
-	background: #FFF;
+	background: #fff;
 }
 
 .theme-switcher .btn-dark {
@@ -380,7 +379,7 @@ body {
 
 .theme-switcher .btn-contrast {
 	background: #000;
-	border: 2px solid #FFF;
+	border: 2px solid #fff;
 }
 
 .theme-switcher .btn-contrast::after {
@@ -390,5 +389,5 @@ body {
 	left: 50%;
 	width: 50%;
 	height: 100%;
-	background: #FFF;
+	background: #fff;
 }

@@ -72,14 +72,17 @@ class OpenApiService implements SingletonInterface {
 	 *
 	 * @param string $apiId
 	 * @param string $version
+	 * @param string $baseUrl
 	 * @return array
 	 * @throws \ReflectionException
 	 */
-	public function generateSpec(string $apiId, string $version): array {
+	public function generateSpec(string $apiId, string $version, string $baseUrl = ''): array {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
-		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
-		$baseUrl = rtrim($apiPathPrefix, '/') . '/' . $apiId . '/v' . $version;
+		if ($baseUrl === '') {
+			$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
+			$baseUrl = rtrim($apiPathPrefix, '/') . '/' . $apiId . '/v' . $version;
+		}
 
 		$spec = [
 			'openapi' => '3.0.3',
