@@ -185,6 +185,35 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertArrayHasKey('200', $operation['responses']);
 		$this->assertEquals(['foo' => 'bar'], $operation['responses']['200']['content']['application/json']['example']);
 	}
+
+	public function testGenerateSpecFixesMissingDescriptionAndMissingArrayItems(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockSchemaErrorController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+
+		$operation = $spec['paths']['/error-test']['get'];
+
+		// Check missing description is now empty string
+		$this->assertIsString($operation['responses']['200']['description']);
+		$this->assertIsString($operation['parameters'][0]['description']);
+
+		// Check array items
+		$this->assertArrayHasKey('items', $operation['parameters'][0]['schema']);
+		$this->assertEquals('string', $operation['parameters'][0]['schema']['items']['type']);
+
+		$this->assertArrayHasKey('requestBody', $operation);
+		$properties = $operation['requestBody']['content']['application/json']['schema']['properties'];
+		$this->assertArrayHasKey('tags', $properties);
+		$this->assertEquals('array', $properties['tags']['type']);
+		$this->assertArrayHasKey('items', $properties['tags']);
+		$this->assertEquals('string', $properties['tags']['items']['type']);
+	}
 }
 
 /**
@@ -198,6 +227,18 @@ class MockOpenApiController {
 
 	#[ApiRoute(path: '/partner-only', methods: ['GET'], apiId: 'partner', version: '1')]
 	public function partnerAction(): void {
+	}
+}
+
+/**
+ * Mock controller for testing schema errors
+ */
+class MockSchemaErrorController {
+	#[ApiRoute(path: '/error-test', methods: ['GET'])]
+	#[ApiQueryParam(name: 'list', type: 'array', description: NULL)]
+	#[ApiBodyParam(name: 'tags', type: 'array', description: 'tags')]
+	#[ApiResponse(status: 200, description: NULL)]
+	public function errorAction(): void {
 	}
 }
 

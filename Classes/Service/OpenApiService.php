@@ -203,10 +203,14 @@ class OpenApiService implements SingletonInterface {
 			$required = [];
 			/** @var ApiBodyParam $param */
 			foreach ($endpoint['bodyParams'] as $param) {
+				$type = $this->mapPhpTypeToOpenApi($param->type);
 				$propertySpec = [
-					'type' => $this->mapPhpTypeToOpenApi($param->type),
-					'description' => $param->description
+					'type' => $type,
+					'description' => (string) $param->description
 				];
+				if ($type === 'array' && !isset($propertySpec['items'])) {
+					$propertySpec['items'] = ['type' => 'string'];
+				}
 				if ($param->example !== NULL) {
 					$propertySpec['example'] = $param->example;
 				}
@@ -258,9 +262,13 @@ class OpenApiService implements SingletonInterface {
 		$operation['parameters'] = [];
 		/** @var ApiQueryParam $param */
 		foreach ($endpoint['queryParams'] as $param) {
+			$type = $this->mapPhpTypeToOpenApi($param->type);
 			$schema = [
-				'type' => $this->mapPhpTypeToOpenApi($param->type)
+				'type' => $type
 			];
+			if ($type === 'array' && !isset($schema['items'])) {
+				$schema['items'] = ['type' => 'string'];
+			}
 			if ($param->example !== NULL) {
 				$schema['example'] = $param->example;
 			}
@@ -280,7 +288,7 @@ class OpenApiService implements SingletonInterface {
 				$schema['maxLength'] = $param->maxLength;
 			}
 
-			$description = $param->description;
+			$description = (string) $param->description;
 			if ($param->requiredIf !== NULL) {
 				$description .= "\n\n**Required if:** " . $param->requiredIf;
 			}
@@ -296,9 +304,13 @@ class OpenApiService implements SingletonInterface {
 		}
 		/** @var ApiPathParam $param */
 		foreach ($endpoint['pathParams'] as $param) {
+			$type = $this->mapPhpTypeToOpenApi($param->type);
 			$schema = [
-				'type' => $this->mapPhpTypeToOpenApi($param->type)
+				'type' => $type
 			];
+			if ($type === 'array' && !isset($schema['items'])) {
+				$schema['items'] = ['type' => 'string'];
+			}
 			if ($param->example !== NULL) {
 				$schema['example'] = $param->example;
 			}
@@ -322,7 +334,7 @@ class OpenApiService implements SingletonInterface {
 				'name' => $param->name,
 				'in' => 'path',
 				'required' => TRUE,
-				'description' => $param->description,
+				'description' => (string) $param->description,
 				'schema' => $schema
 			];
 			$operation['parameters'][] = $parameterSpec;
@@ -332,7 +344,7 @@ class OpenApiService implements SingletonInterface {
 		/** @var ApiResponse $response */
 		foreach ($endpoint['responses'] as $response) {
 			$resp = [
-				'description' => $response->description
+				'description' => (string) $response->description
 			];
 			if ($response->schema || $response->example !== NULL) {
 				$resp['content'] = [
@@ -372,10 +384,15 @@ class OpenApiService implements SingletonInterface {
 
 		if (isset($endpoint['resource']['fieldMetadata'])) {
 			foreach ($endpoint['resource']['fieldMetadata'] as $fieldName => $meta) {
-				$properties[$fieldName] = [
-					'type' => $this->mapPhpTypeToOpenApi($meta['type']),
-					'description' => $meta['description']
+				$type = $this->mapPhpTypeToOpenApi($meta['type']);
+				$property = [
+					'type' => $type,
+					'description' => (string) $meta['description']
 				];
+				if ($type === 'array' && !isset($property['items'])) {
+					$property['items'] = ['type' => 'string'];
+				}
+				$properties[$fieldName] = $property;
 			}
 		}
 
@@ -383,10 +400,15 @@ class OpenApiService implements SingletonInterface {
 		/** @var ApiBodyParam $param */
 		foreach ($endpoint['bodyParams'] as $param) {
 			if (!isset($properties[$param->name])) {
-				$properties[$param->name] = [
-					'type' => $this->mapPhpTypeToOpenApi($param->type),
-					'description' => $param->description
+				$type = $this->mapPhpTypeToOpenApi($param->type);
+				$property = [
+					'type' => $type,
+					'description' => (string) $param->description
 				];
+				if ($type === 'array' && !isset($property['items'])) {
+					$property['items'] = ['type' => 'string'];
+				}
+				$properties[$param->name] = $property;
 			}
 			if ($param->required) {
 				$required[] = $param->name;
@@ -448,7 +470,7 @@ class OpenApiService implements SingletonInterface {
 	 */
 	protected function parseSchema(?string $schemaStr, array $knownSchemas = []): array {
 		if ($schemaStr === NULL) {
-			return ['type' => 'object'];
+			return ['type' => 'object', 'description' => ''];
 		}
 		if (str_ends_with($schemaStr, '[]')) {
 			$baseSchema = substr($schemaStr, 0, -2);

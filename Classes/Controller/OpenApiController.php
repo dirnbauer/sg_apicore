@@ -64,10 +64,11 @@ class OpenApiController {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
-		$baseUrl = $request->getUri()->withPath(
-			str_replace('/docs.json', '', $request->getUri()->getPath())
+		$path = rtrim($request->getUri()->getPath(), '/');
+		$baseUrl = (string) $request->getUri()->withPath(
+			str_replace('/docs.json', '', $path)
 		);
-		$spec = $this->openApiService->generateSpec($apiId, $version, (string) $baseUrl);
+		$spec = $this->openApiService->generateSpec($apiId, $version, $baseUrl);
 		return new JsonResponse($spec);
 	}
 
@@ -96,8 +97,9 @@ class OpenApiController {
 		$poweredByJsPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/JavaScript/powered-by.js');
 
 		// Build the path to the docs.json relative to the current URL
-		$docsUrl = $request->getUri()->withPath(
-			str_replace('/docs/ui', '/docs.json', $request->getUri()->getPath())
+		$path = rtrim($request->getUri()->getPath(), '/');
+		$docsUrl = (string) $request->getUri()->withPath(
+			str_replace('/docs/ui', '/docs.json', $path)
 		);
 
 		$html = <<<HTML
