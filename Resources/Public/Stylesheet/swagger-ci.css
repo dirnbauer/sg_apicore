@@ -309,6 +309,7 @@ body {
 	border: 2px solid #fff !important;
 }
 
+[data-theme='dark'] .swagger-ui .models-control svg,
 [data-theme='dark'] .swagger-ui .authorization__btn svg,
 [data-theme='dark'] .swagger-ui .btn.authorize svg {
 	fill: #fff !important;
@@ -318,6 +319,7 @@ body {
 	fill: #000 !important;
 }
 
+[data-theme='contrast'] .swagger-ui .models-control svg,
 [data-theme='contrast'] .swagger-ui .authorization__btn svg {
 	fill: #fff !important;
 }
