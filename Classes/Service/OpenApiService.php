@@ -208,8 +208,13 @@ class OpenApiService implements SingletonInterface {
 					'type' => $type,
 					'description' => (string) $param->description
 				];
-				if ($type === 'array' && !isset($propertySpec['items'])) {
-					$propertySpec['items'] = ['type' => 'string'];
+				if ($type === 'array') {
+					$propertySpec['items'] = [
+						'anyOf' => [
+							['type' => 'string'],
+							['type' => 'integer']
+						]
+					];
 				}
 				if ($param->example !== NULL) {
 					$propertySpec['example'] = $param->example;
@@ -263,11 +268,20 @@ class OpenApiService implements SingletonInterface {
 		/** @var ApiQueryParam $param */
 		foreach ($endpoint['queryParams'] as $param) {
 			$type = $this->mapPhpTypeToOpenApi($param->type);
+			if ($type === 'string' && is_array($param->example)) {
+				$type = 'array';
+			}
+
 			$schema = [
 				'type' => $type
 			];
-			if ($type === 'array' && !isset($schema['items'])) {
-				$schema['items'] = ['type' => 'string'];
+			if ($type === 'array') {
+				$schema['items'] = [
+					'anyOf' => [
+						['type' => 'string'],
+						['type' => 'integer']
+					]
+				];
 			}
 			if ($param->example !== NULL) {
 				$schema['example'] = $param->example;
@@ -300,6 +314,10 @@ class OpenApiService implements SingletonInterface {
 				'description' => $description,
 				'schema' => $schema
 			];
+			if ($type === 'array' || ($param->type === 'string' && (str_ends_with($param->name, '[]') || is_array($param->example)))) {
+				$parameterSpec['explode'] = TRUE;
+				$parameterSpec['style'] = 'form';
+			}
 			$operation['parameters'][] = $parameterSpec;
 		}
 		/** @var ApiPathParam $param */
@@ -308,8 +326,13 @@ class OpenApiService implements SingletonInterface {
 			$schema = [
 				'type' => $type
 			];
-			if ($type === 'array' && !isset($schema['items'])) {
-				$schema['items'] = ['type' => 'string'];
+			if ($type === 'array') {
+				$schema['items'] = [
+					'anyOf' => [
+						['type' => 'string'],
+						['type' => 'integer']
+					]
+				];
 			}
 			if ($param->example !== NULL) {
 				$schema['example'] = $param->example;
@@ -389,8 +412,13 @@ class OpenApiService implements SingletonInterface {
 					'type' => $type,
 					'description' => (string) $meta['description']
 				];
-				if ($type === 'array' && !isset($property['items'])) {
-					$property['items'] = ['type' => 'string'];
+				if ($type === 'array') {
+					$property['items'] = [
+						'anyOf' => [
+							['type' => 'string'],
+							['type' => 'integer']
+						]
+					];
 				}
 				$properties[$fieldName] = $property;
 			}
@@ -405,8 +433,13 @@ class OpenApiService implements SingletonInterface {
 					'type' => $type,
 					'description' => (string) $param->description
 				];
-				if ($type === 'array' && !isset($property['items'])) {
-					$property['items'] = ['type' => 'string'];
+				if ($type === 'array') {
+					$property['items'] = [
+						'anyOf' => [
+							['type' => 'string'],
+							['type' => 'integer']
+						]
+					];
 				}
 				$properties[$param->name] = $property;
 			}

@@ -418,6 +418,7 @@ class Router implements SingletonInterface {
 					'int', 'integer' => (int) $value,
 					'float', 'double', 'number' => (float) $value,
 					'bool', 'boolean' => in_array($value, ['1', 'true', 1, TRUE, 'on', 'yes'], TRUE),
+					'array' => is_array($value) ? $value : [$value],
 					default => $value,
 				};
 			}

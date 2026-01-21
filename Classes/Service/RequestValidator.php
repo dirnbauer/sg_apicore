@@ -152,7 +152,7 @@ class RequestValidator implements SingletonInterface {
 	/**
 	 * Validates a single value
 	 *
-	 * @param ApiPathParam|ApiQueryParam|ApiBodyParam $param
+	 * @param object $param
 	 * @param mixed $value
 	 * @param bool $required
 	 * @return array|null
@@ -172,6 +172,65 @@ class RequestValidator implements SingletonInterface {
 					'field' => $name,
 					'message' => 'This field is required'
 				];
+			}
+			return NULL;
+		}
+
+		// If the expected type is array, and we have an array, validate it as a whole.
+		if (strtolower($type) === 'array') {
+			if (!is_array($value)) {
+				// If we expect an array but get a scalar, we wrap it in an array for consistent processing
+				$value = [$value];
+			} else {
+				// We have an array and expect an array.
+				// Since Swagger-UI sends numeric values without quotes in arrays,
+				// we validate each element of the array against a string type if it was an array[string]
+				foreach ($value as $index => $subValue) {
+					$subError = $this->validateValue(
+						new (get_class($param))(
+							name: $name . '[' . $index . ']',
+							type: 'string',
+							required: $required,
+							pattern: $pattern,
+							min: property_exists($param, 'min') ? $param->min : NULL,
+							max: property_exists($param, 'max') ? $param->max : NULL,
+							minLength: property_exists($param, 'minLength') ? $param->minLength : NULL,
+							maxLength: property_exists($param, 'maxLength') ? $param->maxLength : NULL
+						),
+						$subValue,
+						$required
+					);
+
+					if ($subError) {
+						return $subError;
+					}
+				}
+				return NULL;
+			}
+		}
+
+		// If it's an array, but we expect a scalar type, we iterate and validate each element.
+		// This happens for query parameters like ?theme[]=1&theme[]=2 which TYPO3 parses as an array.
+		if (is_array($value)) {
+			foreach ($value as $index => $subValue) {
+				$subError = $this->validateValue(
+					new (get_class($param))(
+						name: $name . '[' . $index . ']',
+						type: strtolower($type) === 'array' ? 'string' : $type,
+						required: $required,
+						pattern: $pattern,
+						min: property_exists($param, 'min') ? $param->min : NULL,
+						max: property_exists($param, 'max') ? $param->max : NULL,
+						minLength: property_exists($param, 'minLength') ? $param->minLength : NULL,
+						maxLength: property_exists($param, 'maxLength') ? $param->maxLength : NULL
+					),
+					$subValue,
+					$required
+				);
+
+				if ($subError) {
+					return $subError;
+				}
 			}
 			return NULL;
 		}
@@ -232,8 +291,16 @@ class RequestValidator implements SingletonInterface {
 				}
 				break;
 			case 'string':
+				if (!is_scalar($value)) {
+					return [
+						'field' => $name,
+						'message' => 'Value must be a string'
+					];
+				}
+
+				$stringValue = (string) $value;
 				if (property_exists($param, 'minLength') && $param->minLength !== NULL && strlen(
-					(string) $value
+					$stringValue
 				) < $param->minLength) {
 					return [
 						'field' => $name,
@@ -241,19 +308,11 @@ class RequestValidator implements SingletonInterface {
 					];
 				}
 				if (property_exists($param, 'maxLength') && $param->maxLength !== NULL && strlen(
-					(string) $value
+					$stringValue
 				) > $param->maxLength) {
 					return [
 						'field' => $name,
 						'message' => 'Value length must be at most ' . $param->maxLength
-					];
-				}
-				break;
-			case 'array':
-				if (!is_array($value)) {
-					return [
-						'field' => $name,
-						'message' => 'Value must be an array'
 					];
 				}
 				break;
