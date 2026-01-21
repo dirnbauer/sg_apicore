@@ -206,8 +206,11 @@ body {
 	color: var(--b-info-light);
 }
 
-.swagger-ui .opblock .opblock-section-header h4 {
-	color: var(--b-heading-color) !important;
+[data-theme='contrast'] .swagger-ui .opblock .opblock-section-header h4,
+[data-theme='contrast'] .swagger-ui .opblock .opblock-section-header .btn,
+[data-theme='dark'] .swagger-ui .opblock .opblock-section-header h4,
+[data-theme='dark'] .swagger-ui .opblock .opblock-section-header .btn {
+	color: var(--b-info-light) !important;
 }
 
 .swagger-ui .opblock-body pre.microlight span {
