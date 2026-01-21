@@ -1,0 +1,148 @@
+/* Design Tokens from tokens.json and theme.css */
+
+:root {
+	/* Default / Fallback */
+	--b-body-bg: #fff;
+	--b-body-color: #33404d;
+}
+
+:root[data-theme='light'] {
+	--b-black: #000;
+	--b-body-bg: #fff;
+	--b-body-color: #33404d;
+	--b-heading-color: #33404d;
+	--b-border-color: #e5e8eb;
+	--b-primary: #4713ae;
+	--b-primary-light: #3964db;
+	--b-primary-dark: #340679;
+	--b-link-color: #3f0b98;
+	--b-link-hover-color: #5f39db;
+	--b-secondary: #fad16b;
+	--b-secondary-light: #fceec5;
+	--b-secondary-dark: #fbda89;
+	--b-success: #00857e;
+	--b-success-light: #e6fcf5;
+	--b-success-dark: #00857e;
+	--b-warning: #f7c94a;
+	--b-warning-light: #fffbea;
+	--b-warning-dark: #f7c94a;
+	--b-danger: #d01124;
+	--b-danger-light: #fff5f5;
+	--b-danger-dark: #d01124;
+	--b-info: #f5f7fa;
+	--b-info-light: #f5f7fa;
+	--b-info-dark: #cad1d8;
+	--b-light: #f5f7fa;
+	--b-light-light: #f5f7fa;
+	--b-light-dark: #cad1d8;
+	--b-dark: #340679;
+	--b-dark-light: #3f4d5a;
+	--b-dark-dark: #000;
+	--b-tertiary: #45c8ed;
+	--b-tertiary-light: #d4f1f7;
+	--b-tertiary-dark: #1596c1;
+	--b-default: #000;
+	--b-default-light: #000;
+	--b-default-dark: #1f2933;
+	--shadow-rgb: 32, 38, 96;
+	--b-box-shadow-sm: 0 1px 3px rgb(32 38 96 / 7%), 0 1px 2px rgb(32 38 96 / 17%);
+	--b-box-shadow: 0 3px 6px rgb(32 38 96 / 10%), 0 3px 6px rgb(32 38 96 / 16%);
+	--b-box-shadow-lg: 0 10px 20px rgb(32 38 96 / 12%), 0 6px 6px rgb(32 38 96 / 16%);
+
+	/* RGB helpers for gradients */
+	--b-primary-compl-rgb: 21, 150, 193;
+	--b-secondary-compl-rgb: 212, 241, 247;
+	--b-tertiary-compl-rgb: 252, 238, 197;
+	--b-success-compl-rgb: 45, 205, 173;
+	--b-warning-compl-rgb: 255, 243, 194;
+	--b-danger-compl-rgb: 248, 104, 104;
+	--b-info-compl-rgb: 249, 248, 246;
+	--b-light-compl-rgb: 217, 222, 227;
+	--b-dark-compl-rgb: 27, 180, 222;
+	--b-default-compl-rgb: 79, 73, 64;
+	--g-brand-primary: linear-gradient(-45deg, var(--b-primary), var(--b-primary-light));
+	--g-brand-secondary: linear-gradient(-45deg, var(--b-secondary), var(--b-secondary-light));
+	--g-brand-tertiary: linear-gradient(-45deg, var(--b-tertiary), var(--b-tertiary-light));
+	--g-brand-dark: linear-gradient(-45deg, var(--b-dark), var(--b-dark-light));
+	--g-brand-light: linear-gradient(-45deg, var(--b-light), var(--b-light-light));
+	--g-brand-info: linear-gradient(-45deg, var(--b-info), var(--b-info-light));
+	--g-brand-success: linear-gradient(-45deg, var(--b-success), var(--b-success-light));
+	--g-brand-warning: linear-gradient(-45deg, var(--b-warning), var(--b-warning-light));
+	--g-brand-danger: linear-gradient(-45deg, var(--b-danger), var(--b-danger-light));
+	--g-utility-shadow-sweep: linear-gradient(
+		-90deg,
+		rgb(var(--shadow-rgb) / 30%) 20%,
+		transparent 70%
+	);
+	--g-utility-shine: linear-gradient(90deg, transparent, rgb(255 255 255 / 20%), transparent);
+	--g-utility-fade-to-shadow: linear-gradient(
+		to top right,
+		transparent,
+		transparent,
+		rgb(var(--shadow-rgb))
+	);
+}
+
+:root[data-theme='dark'] {
+	--b-black: #fff;
+	--b-body-bg: #131920;
+	--b-body-color: #f5f7fa;
+	--b-heading-color: #fff;
+	--b-border-color: #3f4d5a;
+	--b-primary: #6332c0;
+	--b-primary-light: #527df1;
+	--b-primary-dark: #4713ae;
+	--b-link-color: #a7e3f1;
+	--b-link-hover-color: #d4f1f7;
+	--b-secondary: #fbda89;
+	--b-success: #00a8a0;
+	--b-success-light: #162a28;
+	--b-success-dark: #00a8a0;
+	--b-warning: #f7c94a;
+	--b-warning-light: #2c291c;
+	--b-warning-dark: #f7c94a;
+	--b-danger: #ef4e4e;
+	--b-danger-light: #2c1a1c;
+	--b-danger-dark: #ef4e4e;
+	--b-info: #1f2933;
+	--b-info-light: #1f2933;
+	--b-info-dark: #3f4d5a;
+	--b-light: #1f2933;
+	--b-dark: #340679;
+	--shadow-rgb: 0, 0, 0;
+	--b-box-shadow-sm: 0 1px 3px rgb(0 0 0 / 7%), 0 1px 2px rgb(0 0 0 / 17%);
+	--b-box-shadow: 0 3px 6px rgb(0 0 0 / 10%), 0 3px 6px rgb(0 0 0 / 16%);
+	--b-box-shadow-lg: 0 10px 20px rgb(0 0 0 / 12%), 0 6px 6px rgb(0 0 0 / 16%);
+}
+
+:root[data-theme='contrast'] {
+	--b-black: #fff;
+	--b-body-bg: #000;
+	--b-body-color: #fff;
+	--b-heading-color: #fff;
+	--b-border-color: #fff;
+	--b-primary: #ff0;
+	--b-primary-light: #fff;
+	--b-primary-dark: #cc0;
+	--b-link-color: #0ff;
+	--b-link-hover-color: #0ff;
+	--b-secondary: #fff;
+	--b-success: #0f0;
+	--b-success-light: #000;
+	--b-success-dark: #0f0;
+	--b-warning: #ff0;
+	--b-warning-light: #000;
+	--b-warning-dark: #ff0;
+	--b-danger: #f00;
+	--b-danger-light: #000;
+	--b-danger-dark: #f00;
+	--b-info: #000;
+	--b-info-light: #000;
+	--b-info-dark: #fff;
+	--b-light: #000;
+	--b-dark: #000;
+	--shadow-rgb: 255, 255, 255;
+	--b-box-shadow-sm: 0 0 0 2px #fff;
+	--b-box-shadow: 0 0 0 3px #fff;
+	--b-box-shadow-lg: 0 0 0 4px #fff;
+}

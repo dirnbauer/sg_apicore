@@ -1,0 +1,394 @@
+/* Overwriting Swagger UI styles with semantic Design Tokens */
+
+:root {
+	--swagger-header-bg: var(--b-primary-dark);
+}
+
+/* Background & Global Colors */
+body {
+	background-color: var(--b-body-bg) !important;
+	color: var(--b-body-color) !important;
+}
+
+.swagger-ui {
+	background-color: #f8f7ff; /* Subtle lilac tone for Light Mode */
+	color: var(--b-body-color);
+}
+
+[data-theme='dark'] .swagger-ui,
+[data-theme='contrast'] .swagger-ui {
+	background-color: var(--b-info-light);
+}
+
+/* Typography */
+.swagger-ui .info .title,
+.swagger-ui .opblock-tag,
+.swagger-ui section.models h4 {
+	color: var(--b-heading-color) !important;
+}
+
+/* Topbar (CTA Style) */
+.swagger-ui .topbar {
+	background-color: var(--swagger-header-bg) !important;
+	padding: 10px 0;
+	border-bottom: 3px solid var(--b-primary-light);
+}
+
+/* Buttons (CTA) */
+.swagger-ui .btn.execute,
+.swagger-ui .btn.authorize {
+	background-color: var(--b-primary) !important;
+	border-color: var(--b-primary) !important;
+	color: #fff !important;
+	box-shadow: var(--b-box-shadow-sm);
+	border-radius: 4px;
+	transition: opacity 0.2s ease;
+}
+
+.swagger-ui .btn.execute:hover,
+.swagger-ui .btn.authorize:hover {
+	background-color: var(--b-primary-light) !important;
+	border-color: var(--b-primary-light) !important;
+}
+
+.swagger-ui .btn.execute:active,
+.swagger-ui .btn.authorize:active {
+	background-color: var(--b-primary-dark) !important;
+	border-color: var(--b-primary-dark) !important;
+}
+
+/* Links */
+.swagger-ui a {
+	color: var(--b-link-color) !important;
+	text-decoration: underline;
+}
+
+.swagger-ui a:hover {
+	color: var(--b-link-hover-color) !important;
+}
+
+/* Operation Blocks (Cards/Surfaces) */
+.swagger-ui .opblock {
+	background: var(--b-light) !important;
+	border: 1px solid var(--b-border-color) !important;
+	box-shadow: var(--b-box-shadow-sm) !important;
+	border-radius: 8px !important;
+	margin-bottom: 15px !important;
+}
+
+/* GET Operation */
+.swagger-ui .opblock.opblock-get {
+	border-color: var(--b-info-dark) !important;
+	background: var(--b-info-light) !important;
+}
+
+.swagger-ui .opblock.opblock-get .opblock-summary-method {
+	background-color: var(--b-info-dark) !important;
+	color: #000 !important;
+}
+
+[data-theme='dark'] .swagger-ui .opblock.opblock-get .opblock-summary-method {
+	color: var(--b-body-color) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock.opblock-get .opblock-summary-method {
+	color: #000 !important;
+}
+
+/* POST Operation */
+.swagger-ui .opblock.opblock-post {
+	border-color: var(--b-success-dark) !important;
+	background: var(--b-success-light) !important;
+}
+
+.swagger-ui .opblock.opblock-post .opblock-summary-method {
+	background-color: var(--b-success-dark) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock.opblock-post .opblock-summary-method {
+	color: #000 !important;
+}
+
+/* PUT Operation */
+.swagger-ui .opblock.opblock-put {
+	border-color: var(--b-warning-dark) !important;
+	background: var(--b-warning-light) !important;
+}
+
+.swagger-ui .opblock.opblock-put .opblock-summary-method {
+	background-color: var(--b-warning-dark) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock.opblock-put .opblock-summary-method {
+	color: #000 !important;
+}
+
+/* PATCH Operation */
+.swagger-ui .opblock.opblock-patch {
+	border-color: var(--b-warning-dark) !important;
+	background: var(--b-warning-light) !important;
+}
+
+.swagger-ui .opblock.opblock-patch .opblock-summary-method {
+	background-color: var(--b-warning-dark) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock.opblock-patch .opblock-summary-method {
+	color: #000 !important;
+}
+
+/* DELETE Operation */
+.swagger-ui .opblock.opblock-delete {
+	border-color: var(--b-danger-dark) !important;
+	background: var(--b-danger-light) !important;
+}
+
+.swagger-ui .opblock.opblock-delete .opblock-summary-method {
+	background-color: var(--b-danger-dark) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+	color: #000 !important;
+}
+
+/* Models Section (Surface) */
+.swagger-ui section.models {
+	border: 1px solid var(--b-border-color) !important;
+	border-radius: 8px !important;
+	background: var(--b-light) !important;
+}
+
+/* Tables & Inputs */
+.swagger-ui table thead tr td,
+.swagger-ui table thead tr th {
+	border-bottom: 1px solid var(--b-border-color) !important;
+	color: var(--b-heading-color) !important;
+}
+
+.swagger-ui input[type='text'] {
+	background: var(--b-body-bg) !important;
+	color: var(--b-body-color) !important;
+	border: 1px solid var(--b-border-color) !important;
+	border-radius: 4px !important;
+}
+
+.swagger-ui .opblock .opblock-summary-description,
+.swagger-ui .opblock .opblock-summary-path,
+.swagger-ui .opblock .opblock-summary-path__deprecated,
+.swagger-ui .parameter__name,
+.swagger-ui .parameter__type,
+.swagger-ui .parameter__in,
+.swagger-ui .response-col_status,
+.swagger-ui .response-col_description,
+.swagger-ui .opblock-description-wrapper p,
+.swagger-ui .opblock-external-docs-wrapper p,
+.swagger-ui .opblock-title_normal,
+.swagger-ui .opblock-title.parameter__name,
+.swagger-ui .opblock .opblock-section-header h4,
+.swagger-ui .tab li button,
+.swagger-ui label,
+.swagger-ui .model-box-control,
+.swagger-ui .model,
+.swagger-ui .model-title,
+.swagger-ui .prop-name,
+.swagger-ui .prop-type,
+.swagger-ui section.models .property-row td:first-child,
+.swagger-ui .opblock-body pre.microlight {
+	color: var(--b-body-color) !important;
+}
+
+.swagger-ui .opblock-body pre.microlight code {
+	color: var(--b-info-light);
+}
+
+.swagger-ui .opblock .opblock-section-header h4 {
+	color: #3b4151 !important;
+}
+
+.swagger-ui .opblock-body pre.microlight span {
+	color: var(--b-info-light);
+}
+
+.swagger-ui .opblock-body pre.microlight .hljs-attr {
+	color: var(--b-info-light) !important;
+	font-weight: bold;
+}
+
+.swagger-ui .opblock-body pre.microlight .hljs-string {
+	color: #008000 !important;
+}
+
+.swagger-ui .opblock-body pre.microlight .hljs-number,
+.swagger-ui .opblock-body pre.microlight .hljs-literal {
+	color: #8b0000 !important;
+}
+
+[data-theme='dark'] .swagger-ui .opblock-body pre.microlight code,
+[data-theme='dark'] .swagger-ui .opblock-body pre.microlight span {
+	color: var(--b-primary-light);
+}
+
+[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight code,
+[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight span {
+	color: var(--b-primary-light);
+}
+
+[data-theme='dark'] .swagger-ui .opblock-body pre.microlight .hljs-attr {
+	color: var(--b-primary-light) !important;
+}
+
+[data-theme='dark'] .swagger-ui .opblock-body pre.microlight .hljs-string {
+	color: #a2fca2 !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight .hljs-attr {
+	color: var(--b-primary) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .opblock-body pre.microlight .hljs-string {
+	color: var(--b-success) !important;
+}
+
+.swagger-ui .info .description,
+.swagger-ui .info .description p {
+	color: var(--b-body-color) !important;
+}
+
+.swagger-ui .model-toggle::after,
+.swagger-ui .opblock .arrow,
+.swagger-ui button svg,
+.swagger-ui .arrow {
+	background: none !important;
+}
+
+.swagger-ui .response-col_links {
+	color: #3b4151 !important;
+}
+
+[data-theme='dark'] .swagger-ui .response-col_links,
+[data-theme='contrast'] .swagger-ui .response-col_links {
+	color: var(--b-body-color) !important;
+}
+
+.swagger-ui .btn.authorize svg {
+	fill: #fff;
+}
+
+.swagger-ui .opblock .arrow,
+.swagger-ui .arrow {
+	fill: var(--b-body-color) !important;
+}
+
+.swagger-ui .scheme-container {
+	background: var(--b-body-bg) !important;
+	color: var(--b-body-color) !important;
+	box-shadow: var(--b-box-shadow-sm) !important;
+}
+
+.swagger-ui .model-toggle::after {
+	background: url("data:image/svg+xml;charset=utf-8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='9 18 15 12 9 6'></polyline></svg>") 50% no-repeat !important;
+	background-size: 100% !important;
+	content: '' !important;
+	display: block !important;
+	height: 20px !important;
+	width: 20px !important;
+}
+
+[data-theme='dark'] .swagger-ui .model-toggle::after,
+[data-theme='contrast'] .swagger-ui .model-toggle::after {
+	filter: invert(1) brightness(2) !important;
+}
+
+.swagger-ui .model {
+	margin-top: 10px;
+}
+
+[data-theme='contrast'] .swagger-ui .btn.authorize {
+	color: #000 !important;
+	border: 2px solid #FFF !important;
+}
+
+[data-theme='dark'] .swagger-ui .authorization__btn svg,
+[data-theme='dark'] .swagger-ui .btn.authorize svg {
+	fill: var(--b-body-color) !important;
+}
+
+[data-theme='contrast'] .swagger-ui .authorization__btn svg,
+[data-theme='contrast'] .swagger-ui .btn.authorize svg {
+	fill: #000 !important;
+}
+
+/* Dark Mode Specific Tweaks */
+[data-theme='dark'] .swagger-ui section.models h4,
+[data-theme='dark'] .swagger-ui .model-title,
+[data-theme='dark'] .swagger-ui .btn.authorize,
+[data-theme='dark'] .swagger-ui .authorization__btn svg {
+	color: #fff !important;
+	fill: #fff !important;
+}
+
+[data-theme='contrast'] .swagger-ui .authorization__btn svg {
+	fill: #fff !important;
+}
+
+/* Theme Switcher Styles (floating) */
+.theme-switcher {
+	position: fixed;
+	bottom: 80px;
+	right: 20px;
+	z-index: 1000;
+	background: var(--b-light);
+	border: 1px solid var(--b-border-color);
+	padding: 5px;
+	border-radius: 50px;
+	box-shadow: var(--b-box-shadow);
+	display: flex;
+	gap: 5px;
+}
+
+.theme-switcher button {
+	border: 2px solid transparent;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	cursor: pointer;
+	text-indent: -9999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: transform 0.2s ease,
+	border-color 0.2s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.theme-switcher button:hover {
+	transform: scale(1.1);
+}
+
+.theme-switcher button.active {
+	border-color: var(--b-primary);
+}
+
+.theme-switcher .btn-light {
+	background: #FFF;
+}
+
+.theme-switcher .btn-dark {
+	background: #131920;
+}
+
+.theme-switcher .btn-contrast {
+	background: #000;
+	border: 2px solid #FFF;
+}
+
+.theme-switcher .btn-contrast::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 50%;
+	height: 100%;
+	background: #FFF;
+}

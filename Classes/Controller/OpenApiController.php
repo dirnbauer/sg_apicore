@@ -87,17 +87,21 @@ class OpenApiController {
 		$fav32Path = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'favicon-32x32.png');
 		$fav16Path = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'favicon-16x16.png');
 		$logoPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Images/sgalinski-logo.svg');
+		$tokensCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/tokens.css');
+		$ciCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/swagger-ci.css');
 		$poweredByCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/powered-by.css');
 		$poweredByJsPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/JavaScript/powered-by.js');
 
 		// Build the path to the docs.json relative to the current URL
 		$html = <<<HTML
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 	<meta charset="UTF-8">
 	<title>Swagger UI - {$apiId} (v{$version})</title>
 	<link rel="stylesheet" type="text/css" href="{$cssPath}" >
+	<link rel="stylesheet" type="text/css" href="{$tokensCssPath}" >
+	<link rel="stylesheet" type="text/css" href="{$ciCssPath}" >
 	<link rel="stylesheet" type="text/css" href="{$poweredByCssPath}" >
 	<link rel="icon" type="image/png" href="{$fav32Path}" sizes="32x32" />
 	<link rel="icon" type="image/png" href="{$fav16Path}" sizes="16x16" />
@@ -109,10 +113,25 @@ class OpenApiController {
 </head>
 <body>
 	<div id="swagger-ui"></div>
+	<div class="theme-switcher">
+		<button onclick="setTheme('light')" class="btn-light" title="Light Theme">Light</button>
+		<button onclick="setTheme('dark')" class="btn-dark" title="Dark Theme">Dark</button>
+		<button onclick="setTheme('contrast')" class="btn-contrast" title="Contrast Theme">Contrast</button>
+	</div>
 	<script src="{$bundleJsPath}"> </script>
 	<script src="{$presetJsPath}"> </script>
 	<script>
 		window.sgApiCoreLogoPath = '{$logoPath}';
+		function setTheme(theme) {
+			document.documentElement.setAttribute('data-theme', theme);
+			localStorage.setItem('sg-apicore-theme', theme);
+			document.querySelectorAll('.theme-switcher button').forEach(btn => {
+				btn.classList.remove('active');
+			});
+			document.querySelector('.btn-' + theme).classList.add('active');
+		}
+		const savedTheme = localStorage.getItem('sg-apicore-theme') || 'dark';
+		setTheme(savedTheme);
 	</script>
 	<script src="{$poweredByJsPath}"> </script>
 	<script>
