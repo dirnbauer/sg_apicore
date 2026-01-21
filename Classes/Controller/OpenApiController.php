@@ -86,6 +86,9 @@ class OpenApiController {
 		$presetJsPath = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'swagger-ui-standalone-preset.js');
 		$fav32Path = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'favicon-32x32.png');
 		$fav16Path = PathUtility::getPublicResourceWebPath($swaggerUiPath . 'favicon-16x16.png');
+		$logoPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Images/sgalinski-logo.svg');
+		$poweredByCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/powered-by.css');
+		$poweredByJsPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/JavaScript/powered-by.js');
 
 		// Build the path to the docs.json relative to the current URL
 		$html = <<<HTML
@@ -95,6 +98,7 @@ class OpenApiController {
 	<meta charset="UTF-8">
 	<title>Swagger UI - {$apiId} (v{$version})</title>
 	<link rel="stylesheet" type="text/css" href="{$cssPath}" >
+	<link rel="stylesheet" type="text/css" href="{$poweredByCssPath}" >
 	<link rel="icon" type="image/png" href="{$fav32Path}" sizes="32x32" />
 	<link rel="icon" type="image/png" href="{$fav16Path}" sizes="16x16" />
 	<style>
@@ -107,6 +111,10 @@ class OpenApiController {
 	<div id="swagger-ui"></div>
 	<script src="{$bundleJsPath}"> </script>
 	<script src="{$presetJsPath}"> </script>
+	<script>
+		window.sgApiCoreLogoPath = '{$logoPath}';
+	</script>
+	<script src="{$poweredByJsPath}"> </script>
 	<script>
 	window.onload = function() {
 		// Calculate the path to docs.json relative to docs/ui
