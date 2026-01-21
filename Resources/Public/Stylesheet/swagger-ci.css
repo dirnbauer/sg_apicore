@@ -341,13 +341,17 @@ body {
 }
 
 [data-theme='dark'] .swagger-ui .btn,
-[data-theme='dark'] .swagger-ui .auth-container,
-[data-theme='dark'] .swagger-ui .auth-container h4,
-[data-theme='dark'] .swagger-ui .auth-container label,
-[data-theme='dark'] .swagger-ui .auth-container code,
 [data-theme='dark'] .swagger-ui .responses-inner h4,
 [data-theme='dark'] .swagger-ui .responses-inner h5 {
 	color: #fff !important;
+}
+
+[data-theme='dark'] .swagger-ui .auth-container,
+[data-theme='dark'] .swagger-ui .auth-container h4,
+[data-theme='dark'] .swagger-ui .auth-container .btn,
+[data-theme='dark'] .swagger-ui .auth-container label,
+[data-theme='dark'] .swagger-ui .auth-container code {
+	color: var(--b-info-light) !important;
 }
 
 [data-theme='contrast'] .swagger-ui section.models h4,
@@ -356,13 +360,17 @@ body {
 }
 
 [data-theme='contrast'] .swagger-ui .btn,
-[data-theme='contrast'] .swagger-ui .auth-container,
-[data-theme='contrast'] .swagger-ui .auth-container h4,
-[data-theme='contrast'] .swagger-ui .auth-container label,
-[data-theme='contrast'] .swagger-ui .auth-container code,
 [data-theme='contrast'] .swagger-ui .responses-inner h4,
 [data-theme='contrast'] .swagger-ui .responses-inner h5 {
 	color: #fff !important;
+}
+
+[data-theme='contrast'] .swagger-ui .auth-container,
+[data-theme='contrast'] .swagger-ui .auth-container .btn,
+[data-theme='contrast'] .swagger-ui .auth-container h4,
+[data-theme='contrast'] .swagger-ui .auth-container label,
+[data-theme='contrast'] .swagger-ui .auth-container code {
+	color: var(--b-info-light) !important;
 }
 
 [data-theme='contrast'] .swagger-ui .parameters-container .btn,

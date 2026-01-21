@@ -249,10 +249,18 @@ class RequestValidator implements SingletonInterface {
 					];
 				}
 				break;
+			case 'array':
+				if (!is_array($value)) {
+					return [
+						'field' => $name,
+						'message' => 'Value must be an array'
+					];
+				}
+				break;
 		}
 
 		// Pattern Validation
-		if ($pattern !== NULL && $pattern !== '') {
+		if ($pattern !== NULL && $pattern !== '' && !is_array($value)) {
 			$regex = $pattern;
 			if (!str_starts_with($regex, '/') || !str_ends_with($regex, '/')) {
 				$regex = '/' . str_replace('/', '\/', $regex) . '/';
