@@ -77,12 +77,31 @@ class ResourceController {
 
 		// Filtering (minimal)
 		$queryParams = $request->getQueryParams();
-		if (isset($queryParams['filter']) && is_array($queryParams['filter'])) {
-			foreach ($queryParams['filter'] as $field => $value) {
+		$filters = $queryParams['filter'] ?? [];
+		if (is_string($filters)) {
+			// Some clients might send filters as a string, e.g. filter[name]=value
+			// Or even name=value directly if they misinterpret the documentation
+			if (str_contains($filters, '[') && str_contains($filters, ']')) {
+				parse_str($filters, $parsedFilters);
+				if (isset($parsedFilters['filter']) && is_array($parsedFilters['filter'])) {
+					$filters = $parsedFilters['filter'];
+				}
+			} elseif (str_contains($filters, '=')) {
+				parse_str($filters, $parsedFilters);
+				$filters = $parsedFilters;
+			}
+		}
+
+		if (is_array($filters) && count($filters) > 0) {
+			foreach ($filters as $field => $value) {
 				// Only filter by whitelisted fields
 				if (!empty($resourceConfig['readFields']) && !in_array($field, $resourceConfig['readFields'], TRUE)) {
-					continue;
+					// Also check if uid or pid is requested, which is always allowed if not explicitly restricted
+					if ($field !== 'uid' && $field !== 'pid') {
+						continue;
+					}
 				}
+
 				// Basic check if field exists in TCA
 				if (!isset($GLOBALS['TCA'][$tableName]['columns'][$field]) && $field !== 'uid' && $field !== 'pid') {
 					continue;
@@ -189,6 +208,14 @@ class ResourceController {
 	 */
 	public function createAction(ServerRequestInterface $request): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
+		if (!$resourceConfig) {
+			return $this->responseService->createErrorResponse(
+				'Internal Error',
+				'Resource configuration missing.',
+				500
+			);
+		}
+
 		$tableName = $resourceConfig['table'];
 		$data = $request->getParsedBody();
 

@@ -84,10 +84,12 @@ class ResourceControllerTest extends UnitTestCase {
 
 	protected function tearDown(): void {
 		unset($GLOBALS['BE_USER']);
+		unset($GLOBALS['TCA']['tt_content']);
 		parent::tearDown();
 	}
 
 	public function testListActionReturnsMappedRecords(): void {
+		$GLOBALS['TCA']['tt_content']['columns']['header'] = [];
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
@@ -126,6 +128,87 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->assertEquals(json_encode($records), (string) $response->getBody());
 	}
 
+	public function testListActionFiltersWithArray(): void {
+		$GLOBALS['TCA']['tt_content']['columns']['header'] = [];
+		$request = $this->createStub(ServerRequestInterface::class);
+		$resourceConfig = [
+			'table' => 'tt_content',
+			'readFields' => ['header']
+		];
+		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
+		$request->method('getQueryParams')->willReturn(['filter' => ['header' => 'Test']]);
+
+		$queryBuilder = $this->createMock(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+
+		$expressionBuilder = $this->createMock(ExpressionBuilder::class);
+		$queryBuilder->method('expr')->willReturn($expressionBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('setFirstResult')->willReturn($queryBuilder);
+		$queryBuilder->method('setMaxResults')->willReturn($queryBuilder);
+		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
+		$concreteQueryBuilder = $this->createStub(\Doctrine\DBAL\Query\QueryBuilder::class);
+		$queryBuilder->method('getConcreteQueryBuilder')->willReturn($concreteQueryBuilder);
+
+		$expressionBuilder->expects($this->atLeastOnce())
+			->method('eq')
+			->with('header', $this->anything())
+			->willReturn('header = :ptr');
+
+		$queryBuilder->expects($this->atLeastOnce())
+			->method('andWhere')
+			->with('header = :ptr')
+			->willReturn($queryBuilder);
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$this->paginationService->method('getPaginationParams')->willReturn(['offset' => 0, 'limit' => 10]);
+
+		$this->controller->listAction($request);
+	}
+
+	public function testListActionFiltersWithString(): void {
+		$GLOBALS['TCA']['tt_content']['columns']['header'] = [];
+		$request = $this->createStub(ServerRequestInterface::class);
+		$resourceConfig = [
+			'table' => 'tt_content',
+			'readFields' => ['header']
+		];
+		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
+		// filter[header]=Test
+		$request->method('getQueryParams')->willReturn(['filter' => 'filter[header]=Test']);
+
+		$queryBuilder = $this->createMock(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+
+		$expressionBuilder = $this->createMock(ExpressionBuilder::class);
+		$queryBuilder->method('expr')->willReturn($expressionBuilder);
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('setFirstResult')->willReturn($queryBuilder);
+		$queryBuilder->method('setMaxResults')->willReturn($queryBuilder);
+		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
+		$concreteQueryBuilder = $this->createStub(\Doctrine\DBAL\Query\QueryBuilder::class);
+		$queryBuilder->method('getConcreteQueryBuilder')->willReturn($concreteQueryBuilder);
+
+		$expressionBuilder->expects($this->atLeastOnce())
+			->method('eq')
+			->with('header', $this->anything())
+			->willReturn('header = :ptr');
+
+		$queryBuilder->expects($this->atLeastOnce())
+			->method('andWhere')
+			->with('header = :ptr')
+			->willReturn($queryBuilder);
+
+		$result = $this->createStub(Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$this->paginationService->method('getPaginationParams')->willReturn(['offset' => 0, 'limit' => 10]);
+
+		$this->controller->listAction($request);
+	}
+
 	public function testGetActionReturns404IfNotFound(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
@@ -161,7 +244,12 @@ class ResourceControllerTest extends UnitTestCase {
 			'table' => 'tt_content',
 			'writeFields' => ['header']
 		];
-		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
+		$request->method('getAttribute')->willReturnCallback(function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			return NULL;
+		});
 		$request->method('getParsedBody')->willReturn(['header' => 'New', 'pid' => 123]);
 
 		$this->tcaMapper->method('mapDataForDatabase')->willReturn(['header' => 'New']);
@@ -194,10 +282,15 @@ class ResourceControllerTest extends UnitTestCase {
 		$site->method('getRootPageId')->willReturn(456);
 		$tenantContext = new TenantContext('test-tenant', NULL, NULL, $site);
 
-		$request->method('getAttribute')->willReturnMap([
-			['api.resource', $resourceConfig],
-			['api.tenant', $tenantContext]
-		]);
+		$request->method('getAttribute')->willReturnCallback(function ($name) use ($resourceConfig, $tenantContext) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			if ($name === 'api.tenant') {
+				return $tenantContext;
+			}
+			return NULL;
+		});
 		$request->method('getParsedBody')->willReturn(['header' => 'New']);
 
 		$this->tcaMapper->method('mapDataForDatabase')->willReturn(['header' => 'New']);
