@@ -1,14 +1,48 @@
 .badge-outline-dark {
-	color: #343A40;
-	border: 1px solid #343A40;
+	color: #343a40;
+	border: 1px solid #343a40;
 	background-color: transparent;
 }
 
 .nav-tabs .nav-link.active {
-	border-bottom-color: #FFF;
+	border-bottom-color: #fff;
 	font-weight: bold;
+}
+
+.badge.badge-info {
+	color: #fff;
 }
 
 .card {
 	margin-bottom: 1.5rem;
+}
+
+.card-header {
+	padding: 0.75rem 1.25rem;
+}
+
+.card-body {
+	padding: 1.25rem;
+}
+
+.form-group {
+	margin-bottom: 1rem;
+}
+
+/* API Core Backend Module */
+.form-inline.mb-3 {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: flex-end;
+}
+
+.form-inline.mb-3 .form-control {
+	flex: 1 1 150px;
+	width: auto;
+	margin-right: 0 !important;
+}
+
+.form-inline.mb-3 .btn {
+	flex: 0 0 auto;
 }
