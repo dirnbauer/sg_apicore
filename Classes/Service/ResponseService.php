@@ -184,6 +184,20 @@ class ResponseService implements SingletonInterface {
 			];
 		}
 
+		if (!isset($additionalData['requestId'])) {
+			$requestId = $GLOBALS['TYPO3_REQUEST']?->getAttribute('api.requestId');
+			if (is_string($requestId) && $requestId !== '') {
+				$additionalData['requestId'] = $requestId;
+			}
+		}
+
+		if (!isset($additionalData['requestId'])) {
+			$requestId = $GLOBALS['TYPO3_REQUEST']?->getAttribute('api.requestId');
+			if (is_string($requestId) && $requestId !== '') {
+				$additionalData['requestId'] = $requestId;
+			}
+		}
+
 		if (count($additionalData) > 0) {
 			$response = array_merge($response, $additionalData);
 		}

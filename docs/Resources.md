@@ -61,7 +61,7 @@ Based on the configuration, the following endpoints are automatically generated:
 * `GET /api/{apiId}/v{version}/{basePath}/{id}`: Get a single resource.
 * `POST /api/{apiId}/v{version}/{basePath}`: Create a new resource.
 * `PATCH /api/{apiId}/v{version}/{basePath}/{id}`: Update an existing resource.
-* `DELETE /api/{apiId}/v{version}/{basePath}/{id}`: Delete a resource.
+* `DELETE /api/{apiId}/v{version}/{basePath}/{id}`: Delete a resource (returns 204 without a response body).
 
 ## List Operation Features
 

@@ -61,6 +61,22 @@ public function profileAction(...) {
 }
 ```
 
+## Authentication Error Responses
+
+Authentication failures return RFC 7807 Problem JSON and include `requestId` for tracing.
+
+* **401 Unauthorized**: Missing credentials (`Authentication required.`).
+* **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).
+* **403 Forbidden**: Authenticated but missing required scopes or `#[RequireUser]`.
+
+## Authentication Error Responses
+
+Authentication failures return RFC 7807 Problem JSON and include `requestId` for tracing.
+
+* **401 Unauthorized**: Missing credentials (`Authentication required.`).
+* **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).
+* **403 Forbidden**: Authenticated but missing required scopes or `#[RequireUser]`.
+
 ## Token Management in the Backend
 
 In the TYPO3 backend under **System > API Core**, you can:

@@ -479,7 +479,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
 				],
 				'responses' => [
-					new ApiResponse(status: 204, description: 'Deleted'),
+					new ApiResponse(status: 204, description: 'Deleted (no content)'),
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
