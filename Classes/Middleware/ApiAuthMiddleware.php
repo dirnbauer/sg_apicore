@@ -99,6 +99,8 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 
 				if ($authContext !== NULL) {
 					$request = $request->withAttribute('api.auth', $authContext);
+				} elseif ($this->hasAuthToken($request)) {
+					$request = $request->withAttribute('api.authError', 'Invalid or expired token.');
 				}
 
 				if (isset($GLOBALS['TYPO3_REQUEST'])) {
@@ -108,5 +110,14 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 		}
 
 		return $handler->handle($request);
+	}
+
+	protected function hasAuthToken(ServerRequestInterface $request): bool {
+		$authorizationHeader = $request->getHeaderLine('Authorization');
+		if ($authorizationHeader !== '') {
+			return TRUE;
+		}
+
+		return $request->hasHeader('authtoken') || $request->hasHeader('bearertoken');
 	}
 }

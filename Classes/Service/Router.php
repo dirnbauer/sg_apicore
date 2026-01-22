@@ -240,7 +240,9 @@ class Router implements SingletonInterface {
 					TRUE
 				));
 				if (!$isPublic && $authContext === NULL) {
-					return $this->createErrorResponse($request, 'Unauthorized', 'Authentication required.', 401);
+					$authError = $request->getAttribute('api.authError');
+					$detail = is_string($authError) && $authError !== '' ? $authError : 'Authentication required.';
+					return $this->createErrorResponse($request, 'Unauthorized', $detail, 401);
 				}
 
 				// 3. Legacy Mode Enforcement

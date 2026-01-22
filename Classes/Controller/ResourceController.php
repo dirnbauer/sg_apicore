@@ -415,6 +415,10 @@ class ResourceController {
 			$dataHandler->process_cmdmap();
 
 			if (count($dataHandler->errorLog) > 0) {
+				foreach ($dataHandler->errorLog as $error) {
+					$this->logService->logError('DataHandler Error: ' . $error, []);
+				}
+
 				return $this->responseService->createErrorResponse(
 					'Internal Error',
 					'DataHandler errors: ' . implode(', ', $dataHandler->errorLog),

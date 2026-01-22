@@ -296,7 +296,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					if (str_contains($contentType, 'application/json')) {
 						return $this->responseService->createErrorResponse(
 							'Invalid JSON',
-							'The request body could not be parsed as JSON.',
+							'The request body could not be parsed as JSON. Ensure Content-Type is application/json and the body is valid JSON.',
 							400
 						);
 					}
