@@ -32,6 +32,7 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\LogDashboardService;
 use SGalinski\SgApiCore\Service\RateLimitDashboardService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Backend\Attribute\AsController;
@@ -66,7 +67,8 @@ class ApiCoreController extends ActionController {
 		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
 		protected readonly IconFactory $iconFactory,
 		protected readonly ExtensionConfiguration $extensionConfiguration,
-		protected readonly RateLimitDashboardService $rateLimitDashboardService
+		protected readonly RateLimitDashboardService $rateLimitDashboardService,
+		protected readonly LogDashboardService $logDashboardService
 	) {
 	}
 
@@ -244,6 +246,34 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->assignMultiple($dashboardData);
 		$moduleTemplate->assign('currentTab', 'rateLimits');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/RateLimits');
+	}
+
+	/**
+	 * Log dashboard
+	 *
+	 * @param array $filters
+	 * @return ResponseInterface
+	 */
+	public function logsAction(array $filters = []): ResponseInterface {
+		$hours = isset($filters['hours']) ? (int) $filters['hours'] : 24;
+		$maxLines = isset($filters['maxLines']) ? (int) $filters['maxLines'] : 5000;
+
+		$hours = max(1, min($hours, 168));
+		$maxLines = max(500, min($maxLines, 50000));
+
+		$filters = [
+			'hours' => $hours,
+			'maxLines' => $maxLines,
+		];
+
+		$dashboardData = $this->logDashboardService->getDashboardData($hours, $maxLines);
+		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
+		$moduleTemplate->setTitle('API Core - Logs');
+		$moduleTemplate->assignMultiple($dashboardData);
+		$moduleTemplate->assign('filters', $filters);
+		$moduleTemplate->assign('currentTab', 'logs');
+		return $moduleTemplate->renderResponse('Backend/ApiCore/Logs');
 	}
 
 	/**

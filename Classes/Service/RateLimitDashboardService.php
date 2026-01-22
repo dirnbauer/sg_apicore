@@ -14,8 +14,8 @@
 
 namespace SGalinski\SgApiCore\Service;
 
-use TYPO3\CMS\Core\Database\ConnectionPool;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 
 /**
  * Provides data for the backend rate limit dashboard

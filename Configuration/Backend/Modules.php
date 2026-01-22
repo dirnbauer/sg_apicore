@@ -21,6 +21,7 @@ return [
 				'providers',
 				'endpoints',
 				'rateLimits',
+				'logs',
 			],
 		],
 	],
