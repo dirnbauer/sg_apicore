@@ -33,13 +33,16 @@ class RateLimitService implements SingletonInterface {
 	 * @param string $identifier
 	 * @param int $limit
 	 * @param int $windowSeconds
-	 * @return array{allowed: bool, limit: int, remaining: int, reset: int}
+	 * @param int $burst
+	 * @return array{allowed: bool, limit: int, remaining: int, reset: int, burst: int}
 	 * @throws Exception
 	 */
-	public function consume(string $identifier, int $limit, int $windowSeconds): array {
+	public function consume(string $identifier, int $limit, int $windowSeconds, int $burst = 0): array {
 		$now = time();
 		$windowStart = $now - ($now % $windowSeconds);
 		$expiresAt = $windowStart + $windowSeconds;
+		$burst = max(0, $burst);
+		$effectiveLimit = $limit + $burst;
 
 		$connection = $this->connectionPool->getConnectionForTable(self::TABLE_NAME);
 		$connection->beginTransaction();
@@ -52,7 +55,7 @@ class RateLimitService implements SingletonInterface {
 			$allowed = TRUE;
 			if (is_array($row) && (int) $row['window_start'] === $windowStart) {
 				$hits = (int) $row['hits'];
-				if ($hits >= $limit) {
+				if ($hits >= $effectiveLimit) {
 					$allowed = FALSE;
 				} else {
 					$hits++;
@@ -85,17 +88,19 @@ class RateLimitService implements SingletonInterface {
 			// Fail open on limiter errors
 			return [
 				'allowed' => TRUE,
-				'limit' => $limit,
-				'remaining' => $limit,
-				'reset' => $expiresAt
+				'limit' => $effectiveLimit,
+				'remaining' => $effectiveLimit,
+				'reset' => $expiresAt,
+				'burst' => $burst
 			];
 		}
 
 		return [
 			'allowed' => $allowed,
-			'limit' => $limit,
-			'remaining' => max(0, $limit - $hits),
-			'reset' => $expiresAt
+			'limit' => $effectiveLimit,
+			'remaining' => max(0, $effectiveLimit - $hits),
+			'reset' => $expiresAt,
+			'burst' => $burst
 		];
 	}
 }

@@ -219,6 +219,9 @@ class ResponseService implements SingletonInterface {
 			if (isset($additionalData['rateLimit']['reset'])) {
 				$headers['X-RateLimit-Reset'] = (string) $additionalData['rateLimit']['reset'];
 			}
+			if (isset($additionalData['rateLimit']['burst']) && (int) $additionalData['rateLimit']['burst'] > 0) {
+				$headers['X-RateLimit-Burst'] = (string) $additionalData['rateLimit']['burst'];
+			}
 		}
 
 		if (count($additionalData) > 0) {

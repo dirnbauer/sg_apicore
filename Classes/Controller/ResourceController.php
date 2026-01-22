@@ -264,15 +264,7 @@ class ResourceController {
 		$dataHandler->process_datamap();
 
 		if (count($dataHandler->errorLog) > 0) {
-			foreach ($dataHandler->errorLog as $error) {
-				$this->logService->logError('DataHandler Error: ' . $error, []);
-			}
-
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'An error occurred while processing the data.',
-				500
-			);
+			return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 		}
 
 		$newUid = $dataHandler->substNEWwithIDs['NEW1'] ?? 0;
@@ -343,15 +335,7 @@ class ResourceController {
 		$dataHandler->process_datamap();
 
 		if (count($dataHandler->errorLog) > 0) {
-			foreach ($dataHandler->errorLog as $error) {
-				$this->logService->logError('DataHandler Error: ' . $error, []);
-			}
-
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'An error occurred while processing the data.',
-				500
-			);
+			return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 		}
 
 		return $this->getAction($request, (string) $uid);
@@ -415,15 +399,7 @@ class ResourceController {
 			$dataHandler->process_cmdmap();
 
 			if (count($dataHandler->errorLog) > 0) {
-				foreach ($dataHandler->errorLog as $error) {
-					$this->logService->logError('DataHandler Error: ' . $error, []);
-				}
-
-				return $this->responseService->createErrorResponse(
-					'Internal Error',
-					'DataHandler errors: ' . implode(', ', $dataHandler->errorLog),
-					500
-				);
+				return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 			}
 		}
 
@@ -467,6 +443,23 @@ class ResourceController {
 		$GLOBALS['BE_USER'] = $backendUser;
 		$this->initializeLanguageService();
 		return NULL;
+	}
+
+	/**
+	 * @param array $errors
+	 * @return ResponseInterface
+	 */
+	protected function createDataHandlerErrorResponse(array $errors): ResponseInterface {
+		foreach ($errors as $error) {
+			$this->logService->logError('DataHandler Error: ' . $error, []);
+		}
+
+		return $this->responseService->createErrorResponse(
+			'Internal Error',
+			'An error occurred while processing the data.',
+			500,
+			additionalData: ['errors' => array_values($errors)]
+		);
 	}
 
 	protected function initializeLanguageService(): void {

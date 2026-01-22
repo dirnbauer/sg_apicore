@@ -20,8 +20,10 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\RateLimitService;
+use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 
 /**
@@ -30,6 +32,8 @@ use SGalinski\SgApiCore\Service\ResponseService;
 class RateLimitMiddleware implements MiddlewareInterface {
 	public function __construct(
 		protected ExtensionConfiguration $extensionConfiguration,
+		protected ApiRegistry $apiRegistry,
+		protected ResourceRegistry $resourceRegistry,
 		protected RateLimitService $rateLimitService,
 		protected ResponseService $responseService,
 		protected LogService $logService
@@ -52,14 +56,20 @@ class RateLimitMiddleware implements MiddlewareInterface {
 			return $handler->handle($request);
 		}
 
-		$limit = $this->extensionConfiguration->getRateLimitDefaultLimit();
-		$windowSeconds = $this->extensionConfiguration->getRateLimitWindowSeconds();
+		$rateLimitConfig = $this->resolveRateLimitConfig($request, $apiId);
+		if (is_array($rateLimitConfig) && array_key_exists('enabled', $rateLimitConfig) && !$rateLimitConfig['enabled']) {
+			return $handler->handle($request);
+		}
+
+		$limit = (int) ($rateLimitConfig['limit'] ?? $this->extensionConfiguration->getRateLimitDefaultLimit());
+		$windowSeconds = (int) ($rateLimitConfig['windowSeconds'] ?? $this->extensionConfiguration->getRateLimitWindowSeconds());
+		$burst = (int) ($rateLimitConfig['burst'] ?? $this->extensionConfiguration->getRateLimitDefaultBurst());
 		if ($limit <= 0 || $windowSeconds <= 0) {
 			return $handler->handle($request);
 		}
 
 		$identifier = $this->buildIdentifier($request);
-		$result = $this->rateLimitService->consume($identifier, $limit, $windowSeconds);
+		$result = $this->rateLimitService->consume($identifier, $limit, $windowSeconds, $burst);
 
 		if (!$result['allowed']) {
 			$this->logService->logError('Rate limit exceeded.', [
@@ -79,10 +89,16 @@ class RateLimitMiddleware implements MiddlewareInterface {
 		$request = $request->withAttribute('api.rateLimit', $result);
 		$response = $handler->handle($request);
 
-		return $response
+		$response = $response
 			->withHeader('X-RateLimit-Limit', (string) $result['limit'])
 			->withHeader('X-RateLimit-Remaining', (string) $result['remaining'])
 			->withHeader('X-RateLimit-Reset', (string) $result['reset']);
+
+		if ($result['burst'] > 0) {
+			$response = $response->withHeader('X-RateLimit-Burst', (string) $result['burst']);
+		}
+
+		return $response;
 	}
 
 	/**
@@ -103,6 +119,47 @@ class RateLimitMiddleware implements MiddlewareInterface {
 		}
 
 		return $apiId . ':' . $tenantId . ':' . $subject;
+	}
+
+	/**
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @return array|null
+	 */
+	protected function resolveRateLimitConfig(ServerRequestInterface $request, string $apiId): ?array {
+		$resourceConfig = $this->resolveResourceConfig($request, $apiId);
+		if (is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && is_array($resourceConfig['rateLimit'])) {
+			return $resourceConfig['rateLimit'];
+		}
+
+		$version = (string) $request->getAttribute('api.version', '');
+		return $this->apiRegistry->getRateLimitConfig($apiId, $version);
+	}
+
+	/**
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @return array|null
+	 */
+	protected function resolveResourceConfig(ServerRequestInterface $request, string $apiId): ?array {
+		$remainingPath = (string) $request->getAttribute('api.remainingPath', '');
+		if ($remainingPath === '') {
+			return NULL;
+		}
+
+		$normalizedPath = '/' . trim($remainingPath, '/');
+		if ($normalizedPath === '/') {
+			return NULL;
+		}
+
+		foreach ($this->resourceRegistry->getResources($apiId) as $resource) {
+			$basePath = '/' . trim((string) ($resource['basePath'] ?? ''), '/');
+			if ($basePath !== '/' && ($normalizedPath === $basePath || str_starts_with($normalizedPath, $basePath . '/'))) {
+				return $resource;
+			}
+		}
+
+		return NULL;
 	}
 
 	/**

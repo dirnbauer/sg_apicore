@@ -26,8 +26,8 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
-use TYPO3\CMS\Core\Database\Connection;
 use SGalinski\SgApiCore\Service\RateLimitService;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -58,13 +58,14 @@ class RateLimitServiceTest extends UnitTestCase {
 		$connectionPool->method('getConnectionForTable')->willReturn($connection);
 
 		$service = new RateLimitService($connectionPool);
+		$now = time();
 		$result = $service->consume('api:tenant:ip:127.0.0.1', 2, 60);
 
 		$this->assertTrue($result['allowed']);
 		$this->assertSame(2, $result['limit']);
 		$this->assertSame(1, $result['remaining']);
-		$this->assertGreaterThanOrEqual(time(), $result['reset']);
-		$this->assertLessThanOrEqual(time() + 60, $result['reset']);
+		$this->assertTrue($result['reset'] >= $now);
+		$this->assertTrue($result['reset'] <= $now + 60);
 	}
 
 	public function testConsumeBlocksWhenLimitReached(): void {
@@ -93,5 +94,36 @@ class RateLimitServiceTest extends UnitTestCase {
 		$this->assertFalse($result['allowed']);
 		$this->assertSame(2, $result['limit']);
 		$this->assertSame(0, $result['remaining']);
+	}
+
+	public function testConsumeAllowsBurstCapacity(): void {
+		$connection = $this->createMock(Connection::class);
+		$state = NULL;
+
+		$connection->expects($this->once())->method('beginTransaction');
+		$connection->expects($this->once())->method('commit');
+		$connection->expects($this->never())->method('rollBack');
+
+		$connection->method('fetchAssociative')->willReturnCallback(function () use (&$state) {
+			return $state;
+		});
+		$connection->method('insert')->willReturnCallback(function ($table, array $data) use (&$state) {
+			$state = [
+				'hits' => $data['hits'],
+				'window_start' => $data['window_start'],
+			];
+			return 1;
+		});
+
+		$connectionPool = $this->createStub(ConnectionPool::class);
+		$connectionPool->method('getConnectionForTable')->willReturn($connection);
+
+		$service = new RateLimitService($connectionPool);
+		$result = $service->consume('api:tenant:ip:127.0.0.1', 2, 60, 3);
+
+		$this->assertTrue($result['allowed']);
+		$this->assertSame(5, $result['limit']);
+		$this->assertSame(4, $result['remaining']);
+		$this->assertSame(3, $result['burst']);
 	}
 }

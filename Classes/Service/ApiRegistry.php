@@ -44,12 +44,22 @@ class ApiRegistry implements SingletonInterface {
 	 * @param array $versions Supported versions (e.g., ['1', '2'])
 	 * @param array $security Security configuration
 	 * @param string|null $basePath Optional base path override
+	 * @param array $options Additional options
 	 */
-	public function registerApi(string $apiId, array $versions, array $security = [], ?string $basePath = NULL): void {
+	public function registerApi(
+		string $apiId,
+		array $versions,
+		array $security = [],
+		?string $basePath = NULL,
+		array $options = []
+	): void {
+		$rateLimit = $options['rateLimit'] ?? $security['rateLimit'] ?? NULL;
+
 		$this->apis[$apiId] = [
 			'versions' => $versions,
 			'security' => $security,
-			'basePath' => $basePath
+			'basePath' => $basePath,
+			'rateLimit' => $rateLimit
 		];
 	}
 
@@ -79,6 +89,31 @@ class ApiRegistry implements SingletonInterface {
 	 */
 	public function getApi(string $apiId): ?array {
 		return $this->apis[$apiId] ?? NULL;
+	}
+
+	/**
+	 * Returns the rate limit configuration for a given API and version
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @return array|null
+	 */
+	public function getRateLimitConfig(string $apiId, string $version): ?array {
+		$api = $this->getApi($apiId);
+		if ($api === NULL) {
+			return NULL;
+		}
+
+		$rateLimit = $api['rateLimit'] ?? NULL;
+		if (!is_array($rateLimit)) {
+			return NULL;
+		}
+
+		if (isset($rateLimit['versions']) && is_array($rateLimit['versions'])) {
+			return $rateLimit['versions'][$version] ?? $rateLimit;
+		}
+
+		return $rateLimit;
 	}
 
 	/**

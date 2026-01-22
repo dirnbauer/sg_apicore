@@ -190,7 +190,7 @@ class ExtensionConfiguration implements SingletonInterface {
 	 * @return bool
 	 */
 	public function isRateLimitEnabled(): bool {
-		return (bool) $this->get('rateLimitEnabled', FALSE);
+		return (bool) $this->get('rateLimitEnabled', TRUE);
 	}
 
 	/**
@@ -209,6 +209,15 @@ class ExtensionConfiguration implements SingletonInterface {
 	 */
 	public function getRateLimitWindowSeconds(): int {
 		return (int) $this->get('rateLimitWindowSeconds', 60);
+	}
+
+	/**
+	 * Returns the default rate limit burst size
+	 *
+	 * @return int
+	 */
+	public function getRateLimitDefaultBurst(): int {
+		return (int) $this->get('rateLimitDefaultBurst', 0);
 	}
 
 	/**

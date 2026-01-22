@@ -48,6 +48,7 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `readFields`: Whitelist of fields for output mapping (empty = all except internal fields).
 * `writeFields`: Whitelist of fields accepted for `create` and `update`.
 * `deleteMode`: `soft` (default) uses DataHandler delete, `hard` deletes the DB record directly (no TYPO3 audit log).
+* `rateLimit`: Optional rate limit overrides for this resource (see `RateLimiting.md`).
 * `requiredScopes`: Associative array mapping operations to required scope arrays.
 
 If `writeFields` is empty, the OpenAPI request body is generated from `readFields`. If both are empty, the request body
@@ -105,3 +106,5 @@ user UID via the extension configuration key `apiResourceWriteBackendUserId`.
 
 If set, the configured backend user's permissions and groups are used for resource write operations. If not set (or 0),
 the extension keeps the admin bypass behavior for write operations.
+
+This setting only affects Auto-CRUD resource endpoints and does not apply to custom controllers.

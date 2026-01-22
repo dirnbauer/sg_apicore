@@ -46,5 +46,8 @@ rateLimitDefaultLimit = 60
 # cat=basic/rate-limit; type=int; label=Rate limit window in seconds
 rateLimitWindowSeconds = 60
 
+# cat=basic/rate-limit; type=int; label=Default burst size:Additional requests allowed per window
+rateLimitDefaultBurst = 0
+
 # cat=basic/security; type=int; label=Backend user UID for Auto-CRUD resource writes:Use this BE user for create/update/delete in Auto-CRUD resources. Leave empty or 0 to keep the admin bypass.
 apiResourceWriteBackendUserId = 0

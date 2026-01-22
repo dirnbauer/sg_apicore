@@ -17,10 +17,22 @@ $apiRegistry->registerApi('public', ['1'], [
     'authMode' => 'public'
 ]);
 
-// Registers a partner API with token authentication
-$apiRegistry->registerApi('partner', ['1', '2'], [
-    'authMode' => 'token'
-]);
+// Registers a partner API with token authentication and rate limits
+$apiRegistry->registerApi(
+	'partner',
+	['1', '2'],
+	[
+		'authMode' => 'token'
+	],
+	NULL,
+	[
+		'rateLimit' => [
+			'limit' => 120,
+			'windowSeconds' => 60,
+			'burst' => 30
+		]
+	]
+);
 ```
 
 ## Configuration Options
@@ -32,7 +44,11 @@ When registering, the following options can be passed in the third parameter:
     * `token`: A valid Opaque Bearer Token is required.
     * `user`: A user login (Access/Refresh Token) is required.
 * `authProviders`: List of allowed providers (e.g., `['beareropaquetokenprovider']`).
-* `basePath`: Optional base path override (default: `/api/{apiId}/v{version}`).
+Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
+
+Use the fifth parameter for additional options:
+
+* `rateLimit`: Overrides rate limit settings for this API (see `RateLimiting.md`).
 
 ## Versioning
 

@@ -56,6 +56,7 @@ class ResourceRegistry implements SingletonInterface {
 			'writeFields' => [],
 			'tags' => [],
 			'deleteMode' => 'soft',
+			'rateLimit' => [],
 			'requiredScopes' => [
 				'list' => [],
 				'get' => [],
