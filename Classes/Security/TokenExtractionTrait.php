@@ -27,6 +27,8 @@
 namespace SGalinski\SgApiCore\Security;
 
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Trait for shared token extraction logic
@@ -64,6 +66,11 @@ trait TokenExtractionTrait {
 		}
 
 		// 3. Query Parameter 'authtoken' or 'bearertoken'
+		$legacySupportEnabled = GeneralUtility::makeInstance(ExtensionConfiguration::class)->isActivateLegacySupport();
+		if (!$legacySupportEnabled) {
+			return '';
+		}
+
 		return (string) ($request->getQueryParams()['authtoken'] ?? $request->getQueryParams()['bearertoken'] ?? '');
 	}
 }

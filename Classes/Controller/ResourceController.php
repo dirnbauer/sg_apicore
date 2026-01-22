@@ -36,6 +36,7 @@ use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -276,6 +277,14 @@ class ResourceController {
 	 */
 	public function updateAction(ServerRequestInterface $request, string $id): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
+		if (!$resourceConfig) {
+			return $this->responseService->createErrorResponse(
+				'Internal Error',
+				'Resource configuration missing.',
+				500
+			);
+		}
+
 		$tableName = $resourceConfig['table'];
 		$idField = $resourceConfig['idField'] ?? 'uid';
 		$data = $request->getParsedBody();
@@ -341,6 +350,14 @@ class ResourceController {
 	 */
 	public function deleteAction(ServerRequestInterface $request, string $id): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
+		if (!$resourceConfig) {
+			return $this->responseService->createErrorResponse(
+				'Internal Error',
+				'Resource configuration missing.',
+				500
+			);
+		}
+
 		$tableName = $resourceConfig['table'];
 		$idField = $resourceConfig['idField'] ?? 'uid';
 
@@ -377,7 +394,10 @@ class ResourceController {
 			);
 		}
 
-		return $this->responseService->createSuccessResponse(['success' => TRUE], [], 204);
+		return new Response('', 204, [
+			'X-Content-Type-Options' => 'nosniff',
+			'X-Frame-Options' => 'DENY',
+		]);
 	}
 
 	/**

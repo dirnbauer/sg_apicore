@@ -80,7 +80,11 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 
 		// 1. Check JWT
 		if (count(explode('.', $token)) === 3) {
-			$payload = $this->jwtService->decode($token);
+			try {
+				$payload = $this->jwtService->decode($token);
+			} catch (\JsonException) {
+				$payload = NULL;
+			}
 			if ($payload && isset($payload['userId'])) {
 				return $this->fetchUserRecordById((int) $payload['userId']);
 			}
