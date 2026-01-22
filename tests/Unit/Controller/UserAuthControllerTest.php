@@ -27,7 +27,6 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 
 use Doctrine\DBAL\Result;
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
@@ -47,7 +46,6 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for UserAuthController
  */
-#[AllowMockObjectsWithoutExpectations]
 class UserAuthControllerTest extends UnitTestCase {
 	/**
 	 * @var UserAuthController

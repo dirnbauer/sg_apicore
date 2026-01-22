@@ -27,15 +27,25 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Security;
 
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
  * Test case for BearerOpaqueTokenProvider
  */
 class BearerOpaqueTokenProviderTest extends UnitTestCase {
+	protected function setUp(): void {
+		parent::setUp();
+		$this->resetSingletonInstances = TRUE;
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isActivateLegacySupport')->willReturn(FALSE);
+		GeneralUtility::setSingletonInstance(ExtensionConfiguration::class, $extensionConfiguration);
+	}
+
 	public function testAuthenticateReturnsNullIfNoBearerToken(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('');

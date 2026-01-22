@@ -71,15 +71,24 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/test/v1/foo');
 		$request->method('getUri')->willReturn($uri);
-		$request->method('getAttribute')->willReturnMap([
-			['api.id', 'test'],
-			['api.version', '1'],
-			['api.tenant', new \SGalinski\SgApiCore\Context\TenantContext('tenant')],
-		]);
+		$request->method('getAttribute')->willReturnCallback(static function ($name) {
+			if ($name === 'api.id') {
+				return 'test';
+			}
+			if ($name === 'api.version') {
+				return '1';
+			}
+			if ($name === 'api.tenant') {
+				return new \SGalinski\SgApiCore\Context\TenantContext('tenant');
+			}
+			return NULL;
+		});
+		$request->method('hasHeader')->willReturn(FALSE);
 		$request->method('withAttribute')->willReturnSelf();
 
 		$this->apiRegistry->method('hasApi')->with('test')->willReturn(TRUE);
 		$this->apiRegistry->method('getApi')->with('test')->willReturn(['versions' => ['1']]);
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
 
 		$authContext = new AuthContext('test', 'tenant');
 		$this->loginProvider->expects($this->once())

@@ -224,11 +224,20 @@ class EndpointDiscoveryService implements SingletonInterface {
 		if (empty($tags)) {
 			$tags = [$tableName];
 		}
-		$allFields = array_unique(array_merge($readFields, $writeFields));
+		$tca = $GLOBALS['TCA'][$tableName] ?? [];
+		$availableFields = array_keys($tca['columns'] ?? []);
+		$writeFieldCandidates = $writeFields;
+		if (empty($writeFieldCandidates)) {
+			$writeFieldCandidates = !empty($readFields) ? $readFields : $availableFields;
+		}
+		$writeFieldCandidates = array_values(array_filter(
+			$writeFieldCandidates,
+			static fn (string $fieldName): bool => $fieldName !== 'uid'
+		));
+		$allFields = array_unique(array_merge($readFields, $writeFieldCandidates));
 
 		// Determine field metadata from TCA
 		$fieldMetadata = [];
-		$tca = $GLOBALS['TCA'][$tableName] ?? [];
 		foreach ($allFields as $fieldName) {
 			$type = 'string';
 			$description = 'Field: ' . $fieldName;
@@ -296,7 +305,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 		// Body params for write operations
 		$bodyParams = [];
-		foreach ($writeFields as $fieldName) {
+		foreach ($writeFieldCandidates as $fieldName) {
 			if (isset($fieldMetadata[$fieldName])) {
 				$meta = $fieldMetadata[$fieldName];
 				$bodyParams[] = new ApiBodyParam(

@@ -48,6 +48,9 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `writeFields`: Whitelist of fields accepted for `create` and `update`.
 * `requiredScopes`: Associative array mapping operations to required scope arrays.
 
+If `writeFields` is empty, the OpenAPI request body is generated from `readFields`. If both are empty, the request body
+is generated from the table TCA (excluding `uid`).
+
 ## Generated Endpoints
 
 Based on the configuration, the following endpoints are automatically generated:
@@ -92,3 +95,11 @@ For `create`, `update`, and `delete` operations, the extension uses the TYPO3 `D
 
 Data provided in the request body is automatically mapped using the `TcaMapper`, handling types like booleans and dates
 correctly.
+
+### Backend User for Resource Writes
+
+Auto-CRUD write operations (`create`, `update`, `delete`) can run under a dedicated backend user. Configure the backend
+user UID via the extension configuration key `apiResourceWriteBackendUserId`.
+
+If set, the configured backend user's permissions and groups are used for resource write operations. If not set (or 0),
+the extension keeps the admin bypass behavior for write operations.

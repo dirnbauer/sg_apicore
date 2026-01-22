@@ -29,6 +29,7 @@ namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 use Doctrine\DBAL\Result;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\ResourceController;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
@@ -55,6 +56,7 @@ class ResourceControllerTest extends UnitTestCase {
 	protected ResponseService|MockObject $responseService;
 	protected PaginationService|MockObject $paginationService;
 	protected \SGalinski\SgApiCore\Service\LogService|MockObject $logService;
+	protected ExtensionConfiguration|MockObject $extensionConfiguration;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -63,6 +65,8 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->tcaMapper = $this->createStub(TcaMapper::class);
 		$this->responseService = $this->createStub(ResponseService::class);
 		$this->paginationService = $this->createStub(PaginationService::class);
+		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$this->extensionConfiguration->method('getApiResourceWriteBackendUserId')->willReturn(0);
 
 		// Mock LogManager to avoid singleton issues in tests
 		$logManager = $this->createStub(LogManager::class);
@@ -78,7 +82,8 @@ class ResourceControllerTest extends UnitTestCase {
 			$this->tcaMapper,
 			$this->responseService,
 			$this->paginationService,
-			$this->logService
+			$this->logService,
+			$this->extensionConfiguration
 		);
 	}
 

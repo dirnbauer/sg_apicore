@@ -29,6 +29,7 @@ namespace SGalinski\SgApiCore\Controller;
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
@@ -37,6 +38,8 @@ use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\Response;
+use TYPO3\CMS\Core\Localization\LanguageService;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
@@ -48,7 +51,8 @@ class ResourceController {
 		protected TcaMapper $tcaMapper,
 		protected ResponseService $responseService,
 		protected PaginationService $paginationService,
-		protected \SGalinski\SgApiCore\Service\LogService $logService
+		protected \SGalinski\SgApiCore\Service\LogService $logService,
+		protected ExtensionConfiguration $extensionConfiguration
 	) {
 	}
 
@@ -110,7 +114,10 @@ class ResourceController {
 
 				if (is_array($value)) {
 					$queryBuilder->andWhere(
-						$queryBuilder->expr()->in($field, $queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY))
+						$queryBuilder->expr()->in(
+							$field,
+							$queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY)
+						)
 					);
 				} else {
 					$queryBuilder->andWhere(
@@ -244,9 +251,14 @@ class ResourceController {
 			]
 		];
 
-		$this->initializeBackendUser();
+		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
+		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
+		if ($errorResponse instanceof ResponseInterface) {
+			return $errorResponse;
+		}
+
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-		$dataHandler->admin = TRUE;
+		$dataHandler->admin = $writeBackendUserId <= 0;
 		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
@@ -318,9 +330,14 @@ class ResourceController {
 			]
 		];
 
-		$this->initializeBackendUser();
+		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
+		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
+		if ($errorResponse instanceof ResponseInterface) {
+			return $errorResponse;
+		}
+
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-		$dataHandler->admin = TRUE;
+		$dataHandler->admin = $writeBackendUserId <= 0;
 		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
@@ -379,9 +396,14 @@ class ResourceController {
 			]
 		];
 
-		$this->initializeBackendUser();
+		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
+		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
+		if ($errorResponse instanceof ResponseInterface) {
+			return $errorResponse;
+		}
+
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-		$dataHandler->admin = TRUE;
+		$dataHandler->admin = $writeBackendUserId <= 0;
 		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start([], $cmdMap);
 		$dataHandler->process_cmdmap();
@@ -394,23 +416,55 @@ class ResourceController {
 			);
 		}
 
-		return new Response('', 204, [
+		return new Response(NULL, 204, [
 			'X-Content-Type-Options' => 'nosniff',
 			'X-Frame-Options' => 'DENY',
 		]);
 	}
 
 	/**
-	 * Initializes a dummy backend user if none exists
+	 * Initializes the backend user context for resource write operations
 	 *
-	 * @return void
+	 * @param int $writeBackendUserId
+	 * @return ResponseInterface|null
 	 */
-	protected function initializeBackendUser(): void {
+	protected function initializeBackendUser(int $writeBackendUserId): ?ResponseInterface {
 		if (($GLOBALS['BE_USER'] ?? NULL) instanceof BackendUserAuthentication) {
+			return NULL;
+		}
+
+		/** @var BackendUserAuthentication $backendUser */
+		$backendUser = GeneralUtility::makeInstance(BackendUserAuthentication::class);
+		if ($writeBackendUserId > 0) {
+			$backendUser->setBeUserByUid($writeBackendUserId);
+			if (empty($backendUser->user)) {
+				return $this->responseService->createErrorResponse(
+					'Internal Error',
+					'Configured API resource write backend user (uid ' . $writeBackendUserId . ') not found or inactive.',
+					500
+				);
+			}
+
+			$backendUser->fetchGroupData();
+			$GLOBALS['BE_USER'] = $backendUser;
+			$this->initializeLanguageService();
+			return NULL;
+		}
+
+		$backendUser->user['admin'] = 1;
+		$backendUser->user['uid'] = 0;
+		$GLOBALS['BE_USER'] = $backendUser;
+		$this->initializeLanguageService();
+		return NULL;
+	}
+
+	protected function initializeLanguageService(): void {
+		if (($GLOBALS['LANG'] ?? NULL) instanceof LanguageService) {
 			return;
 		}
 
-		$GLOBALS['BE_USER'] = GeneralUtility::makeInstance(BackendUserAuthentication::class);
-		$GLOBALS['BE_USER']->user['admin'] = 1;
+		/** @var LanguageServiceFactory $languageServiceFactory */
+		$languageServiceFactory = GeneralUtility::makeInstance(LanguageServiceFactory::class);
+		$GLOBALS['LANG'] = $languageServiceFactory->create('default');
 	}
 }

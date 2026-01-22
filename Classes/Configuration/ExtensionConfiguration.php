@@ -183,4 +183,13 @@ class ExtensionConfiguration implements SingletonInterface {
 	public function isActivateLegacySupport(): bool {
 		return (bool) $this->get('activateLegacySupport', FALSE);
 	}
+
+	/**
+	 * Returns the backend user uid for Auto-CRUD resource write operations
+	 *
+	 * @return int
+	 */
+	public function getApiResourceWriteBackendUserId(): int {
+		return (int) $this->get('apiResourceWriteBackendUserId', 0);
+	}
 }

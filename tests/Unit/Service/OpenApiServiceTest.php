@@ -205,14 +205,22 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		// Check array items
 		$this->assertArrayHasKey('items', $operation['parameters'][0]['schema']);
-		$this->assertEquals('string', $operation['parameters'][0]['schema']['items']['type']);
+		$this->assertArrayHasKey('anyOf', $operation['parameters'][0]['schema']['items']);
+		$this->assertEquals(
+			[['type' => 'string'], ['type' => 'integer']],
+			$operation['parameters'][0]['schema']['items']['anyOf']
+		);
 
 		$this->assertArrayHasKey('requestBody', $operation);
 		$properties = $operation['requestBody']['content']['application/json']['schema']['properties'];
 		$this->assertArrayHasKey('tags', $properties);
 		$this->assertEquals('array', $properties['tags']['type']);
 		$this->assertArrayHasKey('items', $properties['tags']);
-		$this->assertEquals('string', $properties['tags']['items']['type']);
+		$this->assertArrayHasKey('anyOf', $properties['tags']['items']);
+		$this->assertEquals(
+			[['type' => 'string'], ['type' => 'integer']],
+			$properties['tags']['items']['anyOf']
+		);
 	}
 }
 

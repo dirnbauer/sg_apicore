@@ -77,18 +77,28 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/en/api/test/v1/foo');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('hasHeader')->willReturn(FALSE);
 
 		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
 		$base = $this->createStub(UriInterface::class);
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);
 
-		$request->method('getAttribute')->willReturnMap([
-			['language', $language],
-			['api.id', 'test'],
-			['api.version', '1'],
-			['api.remainingPath', '/foo'],
-		]);
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($language) {
+			if ($name === 'language') {
+				return $language;
+			}
+			if ($name === 'api.id') {
+				return 'test';
+			}
+			if ($name === 'api.version') {
+				return '1';
+			}
+			if ($name === 'api.remainingPath') {
+				return '/foo';
+			}
+			return NULL;
+		});
 
 		$this->apiRegistry->method('hasApi')->with('test')->willReturn(TRUE);
 		$this->apiRegistry->method('getApi')->with('test')->willReturn(['versions' => ['1']]);
@@ -119,6 +129,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/health');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('hasHeader')->willReturn(FALSE);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
 
@@ -135,11 +146,19 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/test/v1/foo');
 		$request->method('getUri')->willReturn($uri);
-		$request->method('getAttribute')->willReturnMap([
-			['api.id', 'test'],
-			['api.version', '1'],
-			['api.remainingPath', '/foo'],
-		]);
+		$request->method('getAttribute')->willReturnCallback(static function ($name) {
+			if ($name === 'api.id') {
+				return 'test';
+			}
+			if ($name === 'api.version') {
+				return '1';
+			}
+			if ($name === 'api.remainingPath') {
+				return '/foo';
+			}
+			return NULL;
+		});
+		$request->method('hasHeader')->willReturn(FALSE);
 
 		$this->apiRegistry->method('hasApi')->with('test')->willReturn(TRUE);
 		$this->apiRegistry->method('getApi')->with('test')->willReturn(['versions' => ['1']]);
@@ -172,6 +191,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/other/path');
 		$request->method('getUri')->willReturn($uri);
+		$request->method('hasHeader')->willReturn(FALSE);
 
 		$responseMock = $this->createStub(ResponseInterface::class);
 		$handler = $this->createMock(RequestHandlerInterface::class);
