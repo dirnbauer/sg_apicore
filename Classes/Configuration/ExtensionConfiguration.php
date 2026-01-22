@@ -185,6 +185,33 @@ class ExtensionConfiguration implements SingletonInterface {
 	}
 
 	/**
+	 * Returns whether rate limiting is enabled
+	 *
+	 * @return bool
+	 */
+	public function isRateLimitEnabled(): bool {
+		return (bool) $this->get('rateLimitEnabled', FALSE);
+	}
+
+	/**
+	 * Returns the default rate limit (requests per window)
+	 *
+	 * @return int
+	 */
+	public function getRateLimitDefaultLimit(): int {
+		return (int) $this->get('rateLimitDefaultLimit', 60);
+	}
+
+	/**
+	 * Returns the rate limit window size in seconds
+	 *
+	 * @return int
+	 */
+	public function getRateLimitWindowSeconds(): int {
+		return (int) $this->get('rateLimitWindowSeconds', 60);
+	}
+
+	/**
 	 * Returns the backend user uid for Auto-CRUD resource write operations
 	 *
 	 * @return int

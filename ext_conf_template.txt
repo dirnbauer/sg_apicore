@@ -37,5 +37,14 @@ onMissingTenant = 404
 # cat=basic/response; type=boolean; label=Enable response envelope:Wrap success responses in a "data" property
 responseEnvelope = 0
 
+# cat=basic/rate-limit; type=boolean; label=Enable rate limiting:Apply a fixed window rate limit to API requests
+rateLimitEnabled = 1
+
+# cat=basic/rate-limit; type=int; label=Default rate limit:Requests per window
+rateLimitDefaultLimit = 60
+
+# cat=basic/rate-limit; type=int; label=Rate limit window in seconds
+rateLimitWindowSeconds = 60
+
 # cat=basic/security; type=int; label=Backend user UID for Auto-CRUD resource writes:Use this BE user for create/update/delete in Auto-CRUD resources. Leave empty or 0 to keep the admin bypass.
 apiResourceWriteBackendUserId = 0

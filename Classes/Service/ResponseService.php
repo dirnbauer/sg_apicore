@@ -121,7 +121,11 @@ class ResponseService implements SingletonInterface {
 		if ($languageService === NULL) {
 			/** @var LanguageServiceFactory $languageServiceFactory */
 			$languageServiceFactory = GeneralUtility::makeInstance(LanguageServiceFactory::class);
-			$language = $GLOBALS['TYPO3_REQUEST']?->getAttribute('language');
+			$language = NULL;
+			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+				$language = $request->getAttribute('language');
+			}
 			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
 				$languageService = $languageServiceFactory->createFromSiteLanguage($language);
 			} else {
@@ -191,7 +195,11 @@ class ResponseService implements SingletonInterface {
 		}
 
 		if (!isset($additionalData['requestId'])) {
-			$requestId = $GLOBALS['TYPO3_REQUEST']?->getAttribute('api.requestId');
+			$requestId = NULL;
+			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+				$requestId = $request->getAttribute('api.requestId');
+			}
 			if (is_string($requestId) && $requestId !== '') {
 				$additionalData['requestId'] = $requestId;
 			}

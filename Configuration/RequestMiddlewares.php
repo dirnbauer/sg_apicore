@@ -27,6 +27,7 @@
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
+use SGalinski\SgApiCore\Middleware\RateLimitMiddleware;
 
 return [
 	'frontend' => [
@@ -59,6 +60,16 @@ return [
 				'sgalinski/sg-apicore/api-setup'
 			],
 			'before' => [
+				'sgalinski/sg-apicore/rate-limit'
+			]
+		],
+		'sgalinski/sg-apicore/rate-limit' => [
+			'target' => RateLimitMiddleware::class,
+			'description' => 'Enforces API rate limits',
+			'after' => [
+				'sgalinski/sg-apicore/api-auth'
+			],
+			'before' => [
 				'sgalinski/sg-apicore/api-cache'
 			]
 		],
@@ -66,7 +77,7 @@ return [
 			'target' => ApiCacheMiddleware::class,
 			'description' => 'Handles API response caching',
 			'after' => [
-				'sgalinski/sg-apicore/api-auth'
+				'sgalinski/sg-apicore/rate-limit'
 			],
 			'before' => [
 				'sgalinski/sg-apicore/api-request'

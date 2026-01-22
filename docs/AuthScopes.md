@@ -71,6 +71,16 @@ optionally provide a `rateLimit` object in the response body.
 * **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).
 * **403 Forbidden**: Authenticated but missing required scopes or `#[RequireUser]`.
 
+## Rate Limit Configuration
+
+Use the extension configuration to enable and tune rate limits:
+
+* `rateLimitEnabled` (boolean)
+* `rateLimitDefaultLimit` (int, requests per window)
+* `rateLimitWindowSeconds` (int, window size)
+
+See also: `docs/RateLimiting.md`.
+
 ## Authentication Error Responses
 
 Authentication failures return RFC 7807 Problem JSON, include `requestId` for tracing, and set `X-Request-ID`.

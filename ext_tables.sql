@@ -21,3 +21,15 @@ CREATE TABLE tx_apicore_token (
 	KEY parent(pid),
 	KEY tenant_api_hash(tenant_id, api_id, token_hash)
 );
+
+CREATE TABLE tx_apicore_rate_limit (
+	uid          int(11)             NOT NULL auto_increment,
+	identifier   varchar(191)        NOT NULL,
+	window_start int(11) DEFAULT '0' NOT NULL,
+	hits         int(11) DEFAULT '0' NOT NULL,
+	expires_at   int(11) DEFAULT '0' NOT NULL,
+
+	PRIMARY KEY (uid),
+	UNIQUE KEY identifier_unique(identifier),
+	KEY expires_at(expires_at)
+);
