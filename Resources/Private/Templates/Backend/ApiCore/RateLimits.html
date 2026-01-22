@@ -1,0 +1,240 @@
+<f:layout name="Backend/Default"/>
+
+<f:section name="Content">
+	<h1>Rate Limits</h1>
+	<p>Overview of rate limit configuration and current counters.</p>
+
+	<div class="row mb-4">
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-header">Global Status</div>
+				<div class="card-body">
+					<f:if condition="{config.enabled}">
+						<f:then><span class="badge badge-success">Enabled</span></f:then>
+						<f:else><span class="badge badge-secondary">Disabled</span></f:else>
+					</f:if>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-header">Default Limit</div>
+				<div class="card-body">
+					<strong>{config.defaultLimit}</strong> / {config.windowSeconds}s
+					<br/>
+					Burst: <strong>{config.defaultBurst}</strong>
+				</div>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<div class="card">
+				<div class="card-header">Effective Limit</div>
+				<div class="card-body">
+					<strong>{defaultEffectiveLimit}</strong> per window
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<h2>API Overrides</h2>
+	<table class="table table-striped table-hover">
+		<thead>
+		<tr>
+			<th>API</th>
+			<th>Enabled</th>
+			<th>Limit</th>
+			<th>Window</th>
+			<th>Burst</th>
+			<th>Effective</th>
+			<th>Version Overrides</th>
+		</tr>
+		</thead>
+		<tbody>
+		<f:for each="{apiOverrides}" as="apiOverride">
+			<tr>
+				<td><strong>{apiOverride.apiId}</strong></td>
+				<td>
+					<f:if condition="{apiOverride.normalized.enabled}">
+						<f:then><span class="badge badge-success">Yes</span></f:then>
+						<f:else><span class="badge badge-secondary">No</span></f:else>
+					</f:if>
+				</td>
+				<td>{apiOverride.normalized.limit}</td>
+				<td>{apiOverride.normalized.windowSeconds}s</td>
+				<td>{apiOverride.normalized.burst}</td>
+				<td>{apiOverride.normalized.effectiveLimit}</td>
+				<td>
+					<f:if condition="{apiOverride.versionOverrides}">
+						<f:then>
+							<f:for each="{apiOverride.versionOverrides}" as="versionOverride">
+								<div>
+									v{versionOverride.version}:
+									{versionOverride.normalized.limit}/{versionOverride.normalized.windowSeconds}s
+									(Burst {versionOverride.normalized.burst})
+								</div>
+							</f:for>
+						</f:then>
+						<f:else>-</f:else>
+					</f:if>
+				</td>
+			</tr>
+		</f:for>
+		</tbody>
+	</table>
+
+	<h2>Resource Overrides</h2>
+	<f:if condition="{resourceOverrides}">
+		<f:then>
+			<table class="table table-striped table-hover">
+				<thead>
+				<tr>
+					<th>API</th>
+					<th>Table</th>
+					<th>Base Path</th>
+					<th>Enabled</th>
+					<th>Limit</th>
+					<th>Window</th>
+					<th>Burst</th>
+					<th>Effective</th>
+				</tr>
+				</thead>
+				<tbody>
+				<f:for each="{resourceOverrides}" as="resourceOverride">
+					<tr>
+						<td><strong>{resourceOverride.apiId}</strong></td>
+						<td><code>{resourceOverride.table}</code></td>
+						<td><code>{resourceOverride.basePath}</code></td>
+						<td>
+							<f:if condition="{resourceOverride.normalized.enabled}">
+								<f:then><span class="badge badge-success">Yes</span></f:then>
+								<f:else><span class="badge badge-secondary">No</span></f:else>
+							</f:if>
+						</td>
+						<td>{resourceOverride.normalized.limit}</td>
+						<td>{resourceOverride.normalized.windowSeconds}s</td>
+						<td>{resourceOverride.normalized.burst}</td>
+						<td>{resourceOverride.normalized.effectiveLimit}</td>
+					</tr>
+				</f:for>
+				</tbody>
+			</table>
+		</f:then>
+		<f:else>
+			<p>No resource overrides configured.</p>
+		</f:else>
+	</f:if>
+
+	<h2>Current Counters</h2>
+	<p class="text-muted">
+		Counters show the latest window per identifier. Resource-specific limits are not visible in the counter table.
+	</p>
+	<f:if condition="{counters}">
+		<f:then>
+			<table class="table table-striped table-hover">
+				<thead>
+				<tr>
+					<th>API</th>
+					<th>Tenant</th>
+					<th>Subject</th>
+					<th>Hits</th>
+					<th>Limit</th>
+					<th>Remaining</th>
+					<th>Window Start</th>
+					<th>Reset</th>
+					<th>Status</th>
+				</tr>
+				</thead>
+				<tbody>
+				<f:for each="{counters}" as="counter">
+					<tr class="{f:if(condition: counter.isExpired, then: 'text-muted')}">
+						<td><strong>{counter.apiId}</strong></td>
+						<td>{counter.tenantId}</td>
+						<td>{counter.subject}</td>
+						<td>{counter.hits}</td>
+						<td>{counter.effectiveLimit}</td>
+						<td>{counter.remaining}</td>
+						<td>{f:format.date(date: counter.windowStart, format: 'Y-m-d H:i:s')}</td>
+						<td>{f:format.date(date: counter.expiresAt, format: 'Y-m-d H:i:s')}</td>
+						<td>
+							<f:if condition="{counter.isExpired}">
+								<f:then><span class="badge badge-secondary">Expired</span></f:then>
+								<f:else><span class="badge badge-success">Active</span></f:else>
+							</f:if>
+						</td>
+					</tr>
+				</f:for>
+				</tbody>
+			</table>
+		</f:then>
+		<f:else>
+			<p>No counters recorded yet.</p>
+		</f:else>
+	</f:if>
+
+	<div class="row">
+		<div class="col-md-6">
+			<h2>Top Clients</h2>
+			<f:if condition="{topClients}">
+				<f:then>
+					<table class="table table-striped table-hover">
+						<thead>
+						<tr>
+							<th>Subject</th>
+							<th>API</th>
+							<th>Hits</th>
+							<th>Limit</th>
+							<th>Remaining</th>
+						</tr>
+						</thead>
+						<tbody>
+						<f:for each="{topClients}" as="counter">
+							<tr>
+								<td>{counter.subject}</td>
+								<td>{counter.apiId}</td>
+								<td>{counter.hits}</td>
+								<td>{counter.effectiveLimit}</td>
+								<td>{counter.remaining}</td>
+							</tr>
+						</f:for>
+						</tbody>
+					</table>
+				</f:then>
+				<f:else>
+					<p>No active counters.</p>
+				</f:else>
+			</f:if>
+		</div>
+		<div class="col-md-6">
+			<h2>Window Summary</h2>
+			<f:if condition="{windowSummary}">
+				<f:then>
+					<table class="table table-striped table-hover">
+						<thead>
+						<tr>
+							<th>Window Start</th>
+							<th>Reset</th>
+							<th>Entries</th>
+							<th>Active</th>
+							<th>Total Hits</th>
+						</tr>
+						</thead>
+						<tbody>
+						<f:for each="{windowSummary}" as="window">
+							<tr>
+								<td>{f:format.date(date: window.windowStart, format: 'Y-m-d H:i:s')}</td>
+								<td>{f:format.date(date: window.expiresAt, format: 'Y-m-d H:i:s')}</td>
+								<td>{window.entries}</td>
+								<td>{window.activeEntries}</td>
+								<td>{window.totalHits}</td>
+							</tr>
+						</f:for>
+						</tbody>
+					</table>
+				</f:then>
+				<f:else>
+					<p>No window data available.</p>
+				</f:else>
+			</f:if>
+		</div>
+	</div>
+</f:section>

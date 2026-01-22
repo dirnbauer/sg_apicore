@@ -32,6 +32,7 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\RateLimitDashboardService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Backend\Attribute\AsController;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
@@ -64,7 +65,8 @@ class ApiCoreController extends ActionController {
 		protected readonly EndpointDiscoveryService $endpointDiscoveryService,
 		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
 		protected readonly IconFactory $iconFactory,
-		protected readonly ExtensionConfiguration $extensionConfiguration
+		protected readonly ExtensionConfiguration $extensionConfiguration,
+		protected readonly RateLimitDashboardService $rateLimitDashboardService
 	) {
 	}
 
@@ -227,6 +229,21 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->assign('apiPathPrefix', $this->extensionConfiguration->getApiPathPrefix());
 		$moduleTemplate->assign('currentTab', 'endpoints');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Endpoints');
+	}
+
+	/**
+	 * Rate limit dashboard
+	 *
+	 * @return ResponseInterface
+	 */
+	public function rateLimitsAction(): ResponseInterface {
+		$dashboardData = $this->rateLimitDashboardService->getDashboardData();
+		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
+		$this->prepareDocHeader($moduleTemplate);
+		$moduleTemplate->setTitle('API Core - Rate Limits');
+		$moduleTemplate->assignMultiple($dashboardData);
+		$moduleTemplate->assign('currentTab', 'rateLimits');
+		return $moduleTemplate->renderResponse('Backend/ApiCore/RateLimits');
 	}
 
 	/**

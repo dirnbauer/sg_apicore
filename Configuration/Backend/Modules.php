@@ -20,6 +20,7 @@ return [
 				'regenerateToken',
 				'providers',
 				'endpoints',
+				'rateLimits',
 			],
 		],
 	],
