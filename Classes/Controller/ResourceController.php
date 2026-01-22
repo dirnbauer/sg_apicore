@@ -402,18 +402,25 @@ class ResourceController {
 			return $errorResponse;
 		}
 
-		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-		$dataHandler->admin = $writeBackendUserId <= 0;
-		$dataHandler->dontProcessTransformations = TRUE;
-		$dataHandler->start([], $cmdMap);
-		$dataHandler->process_cmdmap();
+		$deleteMode = (string) ($resourceConfig['deleteMode'] ?? 'soft');
+		$hardDelete = $deleteMode === 'hard';
+		if ($hardDelete) {
+			$connection = $this->connectionPool->getConnectionForTable($tableName);
+			$connection->delete($tableName, ['uid' => $uid]);
+		} else {
+			$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+			$dataHandler->admin = $writeBackendUserId <= 0;
+			$dataHandler->dontProcessTransformations = TRUE;
+			$dataHandler->start([], $cmdMap);
+			$dataHandler->process_cmdmap();
 
-		if (count($dataHandler->errorLog) > 0) {
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'DataHandler errors: ' . implode(', ', $dataHandler->errorLog),
-				500
-			);
+			if (count($dataHandler->errorLog) > 0) {
+				return $this->responseService->createErrorResponse(
+					'Internal Error',
+					'DataHandler errors: ' . implode(', ', $dataHandler->errorLog),
+					500
+				);
+			}
 		}
 
 		return new Response(NULL, 204, [

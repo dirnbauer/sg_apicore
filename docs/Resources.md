@@ -22,6 +22,7 @@ $resourceRegistry->registerResource('public', 'tt_content', '/contents', [
 $resourceRegistry->registerResource('partner', 'tx_myext_domain_model_item', '/items', [
     'allowedOperations' => ['list', 'get', 'create', 'update', 'delete'],
     'writeFields' => ['header', 'bodytext', 'pid'],
+    'deleteMode' => 'hard',
     'tags' => ['Items'],
     'requiredScopes' => [
         'list' => ['partner:read'],
@@ -46,6 +47,7 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `allowedOperations`: Array of enabled operations (`list`, `get`, `create`, `update`, `delete`).
 * `readFields`: Whitelist of fields for output mapping (empty = all except internal fields).
 * `writeFields`: Whitelist of fields accepted for `create` and `update`.
+* `deleteMode`: `soft` (default) uses DataHandler delete, `hard` deletes the DB record directly (no TYPO3 audit log).
 * `requiredScopes`: Associative array mapping operations to required scope arrays.
 
 If `writeFields` is empty, the OpenAPI request body is generated from `readFields`. If both are empty, the request body
