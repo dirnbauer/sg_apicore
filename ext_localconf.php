@@ -99,4 +99,15 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 			'groups' => ['system'],
 		];
 	}
+
+	if (class_exists(\TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask::class)) {
+		$taskClass = \TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask::class;
+		$tables = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][$taskClass]['options']['tables'] ?? [];
+		if (!is_array($tables['tx_apicore_rate_limit'] ?? FALSE)) {
+			$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][$taskClass]['options']['tables']['tx_apicore_rate_limit'] = [
+				'dateField' => 'expires_at',
+				'expirePeriod' => 30,
+			];
+		}
+	}
 })();

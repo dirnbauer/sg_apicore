@@ -91,3 +91,8 @@ When enabled, responses include:
 * `X-RateLimit-Burst` (only if burst > 0)
 
 If the limit is exceeded, the API returns `429 Too Many Requests` with Problem JSON and a `rateLimit` object.
+
+## Cleanup
+
+Rate limit counters are registered with TYPO3's table garbage collection task and are removed 30 days after
+`expires_at` by default.
