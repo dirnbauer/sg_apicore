@@ -63,7 +63,9 @@ public function profileAction(...) {
 
 ## Authentication Error Responses
 
-Authentication failures return RFC 7807 Problem JSON and include `requestId` for tracing.
+Authentication failures return RFC 7807 Problem JSON, include `requestId` for tracing, and set `X-Request-ID`.
+If rate limiting is applied, use `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers and
+optionally provide a `rateLimit` object in the response body.
 
 * **401 Unauthorized**: Missing credentials (`Authentication required.`).
 * **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).
@@ -71,7 +73,9 @@ Authentication failures return RFC 7807 Problem JSON and include `requestId` for
 
 ## Authentication Error Responses
 
-Authentication failures return RFC 7807 Problem JSON and include `requestId` for tracing.
+Authentication failures return RFC 7807 Problem JSON, include `requestId` for tracing, and set `X-Request-ID`.
+If rate limiting is applied, use `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers and
+optionally provide a `rateLimit` object in the response body.
 
 * **401 Unauthorized**: Missing credentials (`Authentication required.`).
 * **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).

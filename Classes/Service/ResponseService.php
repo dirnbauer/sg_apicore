@@ -162,12 +162,18 @@ class ResponseService implements SingletonInterface {
 		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
 		$contentType = 'application/problem+json';
+		$headers = [
+			'Content-Type' => $contentType,
+			'X-Content-Type-Options' => 'nosniff',
+			'X-Frame-Options' => 'DENY',
+		];
 		if ($legacyMode?->legacyErrorFormat) {
 			if ($legacyMode->source === 'sg_rest') {
 				$response = [
 					'message' => $detail
 				];
 				$contentType = 'application/json';
+				$headers['Content-Type'] = $contentType;
 			} else {
 				$response = [
 					'error' => $title,
@@ -191,10 +197,19 @@ class ResponseService implements SingletonInterface {
 			}
 		}
 
-		if (!isset($additionalData['requestId'])) {
-			$requestId = $GLOBALS['TYPO3_REQUEST']?->getAttribute('api.requestId');
-			if (is_string($requestId) && $requestId !== '') {
-				$additionalData['requestId'] = $requestId;
+		if (isset($additionalData['requestId']) && is_string($additionalData['requestId'])) {
+			$headers['X-Request-ID'] = $additionalData['requestId'];
+		}
+
+		if (isset($additionalData['rateLimit']) && is_array($additionalData['rateLimit'])) {
+			if (isset($additionalData['rateLimit']['limit'])) {
+				$headers['X-RateLimit-Limit'] = (string) $additionalData['rateLimit']['limit'];
+			}
+			if (isset($additionalData['rateLimit']['remaining'])) {
+				$headers['X-RateLimit-Remaining'] = (string) $additionalData['rateLimit']['remaining'];
+			}
+			if (isset($additionalData['rateLimit']['reset'])) {
+				$headers['X-RateLimit-Reset'] = (string) $additionalData['rateLimit']['reset'];
 			}
 		}
 
@@ -202,10 +217,6 @@ class ResponseService implements SingletonInterface {
 			$response = array_merge($response, $additionalData);
 		}
 
-		return new JsonResponse($response, $status, [
-			'Content-Type' => $contentType,
-			'X-Content-Type-Options' => 'nosniff',
-			'X-Frame-Options' => 'DENY',
-		]);
+		return new JsonResponse($response, $status, $headers);
 	}
 }

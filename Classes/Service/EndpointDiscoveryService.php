@@ -463,6 +463,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 		// Delete
 		if (in_array('delete', $allowedOps, TRUE)) {
+			$deleteDescription = 'Deletes an existing ' . $tableName . ' resource.';
+			if (($config['deleteMode'] ?? 'soft') === 'hard') {
+				$deleteDescription .= ' Hard delete (no TYPO3 audit log).';
+			}
 			$endpoints[] = [
 				'apiId' => [$apiId],
 				'version' => [],
@@ -470,7 +474,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'methods' => ['DELETE'],
 				'authMode' => [],
 				'summary' => 'Delete ' . $tableName,
-				'description' => 'Deletes an existing ' . $tableName . ' resource.',
+				'description' => $deleteDescription,
 				'tags' => $tags,
 				'scopes' => $scopes['delete'] ?? [],
 				'bodyParams' => [],
