@@ -257,6 +257,7 @@ class ApiCoreController extends ActionController {
 	public function logsAction(array $filters = []): ResponseInterface {
 		$hours = isset($filters['hours']) ? (int) $filters['hours'] : 24;
 		$maxLines = isset($filters['maxLines']) ? (int) $filters['maxLines'] : 5000;
+		$includeErrors = !isset($filters['includeErrors']) || (bool) $filters['includeErrors'];
 
 		$hours = max(1, min($hours, 168));
 		$maxLines = max(500, min($maxLines, 50000));
@@ -264,9 +265,10 @@ class ApiCoreController extends ActionController {
 		$filters = [
 			'hours' => $hours,
 			'maxLines' => $maxLines,
+			'includeErrors' => $includeErrors ? 1 : 0,
 		];
 
-		$dashboardData = $this->logDashboardService->getDashboardData($hours, $maxLines);
+		$dashboardData = $this->logDashboardService->getDashboardData($hours, $maxLines, $includeErrors);
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
 		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Logs');

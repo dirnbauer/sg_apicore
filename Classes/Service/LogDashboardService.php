@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Service;
 
 use Psr\Log\LogLevel;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Core\Environment;
 
 /**
@@ -23,16 +24,21 @@ use TYPO3\CMS\Core\Core\Environment;
 class LogDashboardService {
 	protected const string DEFAULT_LOG_FILE = '/log/sg_apicore.log';
 
+	public function __construct(protected readonly ExtensionConfiguration $extensionConfiguration) {
+	}
+
 	/**
 	 * @param int $hours
 	 * @param int $maxLines
+	 * @param bool $includeErrors
 	 * @return array<string, mixed>
 	 */
-	public function getDashboardData(int $hours, int $maxLines): array {
+	public function getDashboardData(int $hours, int $maxLines, bool $includeErrors): array {
 		$logFilePath = $this->resolveLogFilePath();
 		$cutoff = time() - ($hours * 3600);
 
 		$baseData = [
+			'loggingEnabled' => $this->extensionConfiguration->isLoggingEnabled(),
 			'logFilePath' => $logFilePath,
 			'logFileReadable' => $logFilePath !== '' && is_readable($logFilePath),
 			'logFileSize' => $logFilePath !== '' && is_file($logFilePath) ? filesize($logFilePath) : 0,
@@ -82,7 +88,7 @@ class LogDashboardService {
 		$topTenants = $this->buildTopList($requestEntries, 'tenantId');
 		$topApis = $this->buildTopList($requestEntries, 'apiId');
 		$slowRequests = $this->buildSlowRequests($requestEntries);
-		$recentErrors = $this->buildRecentErrors($entries);
+		$recentErrors = $this->buildRecentErrors($entries, $includeErrors);
 
 		return array_merge($baseData, [
 			'logEntries' => $entries,
@@ -372,12 +378,19 @@ class LogDashboardService {
 
 	/**
 	 * @param array<int, array<string, mixed>> $entries
+	 * @param bool $includeErrors
 	 * @return array<int, array<string, mixed>>
 	 */
-	protected function buildRecentErrors(array $entries): array {
-		$errors = array_filter($entries, static function (array $entry) {
+	protected function buildRecentErrors(array $entries, bool $includeErrors): array {
+		$errors = array_filter($entries, static function (array $entry) use ($includeErrors) {
 			$status = (int) ($entry['status'] ?? 0);
-			return $status >= 400 || in_array($entry['level'], ['ERROR', 'CRITICAL'], TRUE);
+			if ($status >= 400) {
+				return TRUE;
+			}
+			if (!$includeErrors) {
+				return FALSE;
+			}
+			return in_array($entry['level'], ['ERROR', 'CRITICAL'], TRUE);
 		});
 		usort($errors, static fn (array $a, array $b) => $b['timestamp'] <=> $a['timestamp']);
 		return array_slice($errors, 0, 10);

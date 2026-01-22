@@ -4,6 +4,12 @@
 	<h1>Logs</h1>
 	<p>Visualization of API request logs from the sg_apicore log file.</p>
 
+	<f:if condition="!{loggingEnabled}">
+		<div class="alert alert-warning">
+			<strong>Logging is disabled.</strong> Enable it via extension configuration to populate the dashboard.
+		</div>
+	</f:if>
+
 	<f:if condition="{errorMessage}">
 		<div class="alert alert-danger">
 			<strong>Log file error:</strong> {errorMessage}
@@ -22,6 +28,10 @@
 				<f:form.select name="filters[maxLines]"
 							   options="{1000: '1000', 2500: '2500', 5000: '5000', 10000: '10000', 20000: '20000'}"
 							   class="form-control mr-3" value="{filters.maxLines}"/>
+				<label class="mr-2">Errors</label>
+				<f:form.select name="filters[includeErrors]"
+							   options="{1: 'Include error entries', 0: 'Requests only'}"
+							   class="form-control mr-3" value="{filters.includeErrors}"/>
 				<f:form.submit value="Apply" class="btn btn-primary"/>
 			</f:form>
 		</div>
