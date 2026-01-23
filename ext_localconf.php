@@ -100,6 +100,14 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 		];
 	}
 
+	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_dashboard'])) {
+		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_dashboard'] = [
+			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
+			'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
+			'groups' => ['system'],
+		];
+	}
+
 	if (class_exists(\TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask::class)) {
 		$taskClass = \TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask::class;
 		$tables = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][$taskClass]['options']['tables'] ?? [];

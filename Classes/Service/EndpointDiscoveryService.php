@@ -33,6 +33,7 @@ use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\RequireFullTypoScript;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\ResourceController;
 use TYPO3\CMS\Core\Cache\CacheManager;
@@ -138,6 +139,15 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$apiCache = $cacheAttr[0]->newInstance();
 					}
 
+					$requireTypoScript = FALSE;
+					$typoScriptAttributes = $method->getAttributes(RequireFullTypoScript::class);
+					if (count($typoScriptAttributes) === 0) {
+						$typoScriptAttributes = $reflectionClass->getAttributes(RequireFullTypoScript::class);
+					}
+					if (count($typoScriptAttributes) > 0) {
+						$requireTypoScript = TRUE;
+					}
+
 					$tags = $endpoint?->tags ?? [];
 					if (empty($tags)) {
 						$pathSegments = explode('/', trim($route->path, '/'));
@@ -164,6 +174,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						'pathParams' => $pathParams,
 						'responses' => $responses,
 						'apiCache' => $apiCache,
+						'requireFullTypoScript' => $requireTypoScript,
 						'controller' => $controllerClass,
 						'action' => $method->getName()
 					];
@@ -374,6 +385,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'listAction',
 				'resource' => $resourceInfo
@@ -402,6 +414,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'getAction',
 				'resource' => $resourceInfo
@@ -427,6 +440,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 201, description: 'Created', schema: $tableName)
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'createAction',
 				'resource' => $resourceInfo
@@ -455,6 +469,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'updateAction',
 				'resource' => $resourceInfo
@@ -487,6 +502,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found')
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'deleteAction',
 				'resource' => $resourceInfo

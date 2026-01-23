@@ -39,15 +39,8 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\LanguageAspectFactory;
-use TYPO3\CMS\Core\Information\Typo3Version;
-use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
-use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
-use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\RootlineUtility;
-use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 /**
  * Middleware to setup API request context (Tenant, TSFE, etc.)
@@ -148,138 +141,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		// Mock PageInformation for extensions like gridelements that expect it in TYPO3 13 frontend context
-		$siteRootPageId = $tenantResult->getContext()?->getSiteRootPageId() ?? 0;
-		$typo3Version = GeneralUtility::makeInstance(Typo3Version::class);
-		/** @phpstan-ignore-next-line */
-		$pageInformationAttribute = $request->getAttribute('frontend.page.information');
-		if (!$pageInformationAttribute && $siteRootPageId > 0 && $typo3Version->getMajorVersion() >= 13) {
-			$pageInformationClass = 'TYPO3\\CMS\\Frontend\\Page\\PageInformation';
-			if (!class_exists($pageInformationClass)) {
-				$pageInformationClass = NULL;
-			}
-			if ($pageInformationClass !== NULL) {
-				/** @var object $pageInformation */
-				$pageInformation = new $pageInformationClass();
-				if (method_exists($pageInformation, 'setId')) {
-					/** @phpstan-ignore-next-line */
-					$pageInformation->setId($siteRootPageId);
-				}
-
-				$rootline = [];
-				try {
-					$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
-					$rootline = $rootlineUtility->get();
-				} catch (\Throwable) {
-					// Fallback if the rootline cannot be generated
-				}
-				if (method_exists($pageInformation, 'setRootLine')) {
-					/** @phpstan-ignore-next-line */
-					$pageInformation->setRootLine($rootline);
-				}
-
-				$request = $request->withAttribute('frontend.page.information', $pageInformation);
-
-				// Mock TSFE for Extbase ConfigurationManager in TYPO3 13
-				if (!isset($GLOBALS['TSFE'])) {
-					$site = $request->getAttribute('site');
-					$language = $request->getAttribute('language');
-					if ($site instanceof Site && $language instanceof SiteLanguage) {
-						$tsfe = GeneralUtility::makeInstance(
-							TypoScriptFrontendController::class,
-							$this->context,
-							$site,
-							$language,
-							$pageInformation,
-							$request->getAttribute('frontend.user')
-						);
-
-						$setupArray = [
-							'config.' => [
-								'tx_sgapicore.' => [
-									'persistence.' => [
-										'storagePid' => $siteRootPageId
-									]
-								]
-							]
-						];
-
-						$frontendTypoScript = new FrontendTypoScript(new RootNode(), []);
-						$frontendTypoScript->setSetupArray($setupArray);
-						$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
-						$tsfe->page = [
-							'uid' => $siteRootPageId,
-							'starttime' => 0,
-							'endtime' => 0,
-							'fe_group' => '',
-							'tx_staticfilecache_cache_priority' => 0
-						];
-						$tsfe->id = $siteRootPageId;
-						$tsfe->rootLine = $rootline;
-						$tsfe->sys_page = GeneralUtility::makeInstance(
-							\TYPO3\CMS\Core\Domain\Repository\PageRepository::class
-						);
-						if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
-							/** @phpstan-ignore-next-line */
-							$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
-						}
-						$GLOBALS['TSFE'] = $tsfe;
-					}
-				}
-			}
-
-			$GLOBALS['TYPO3_REQUEST'] = $request;
-		} elseif ($siteRootPageId > 0 && !isset($GLOBALS['TSFE']) && $typo3Version->getMajorVersion() < 13) {
-			// Mock TSFE for TYPO3 12
-			$site = $request->getAttribute('site');
-			$language = $request->getAttribute('language');
-			if ($site && $language) {
-				$frontendUser = $request->getAttribute('frontend.user');
-				if (!($frontendUser instanceof FrontendUserAuthentication)) {
-					$frontendUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
-				}
-
-				$pageArguments = $request->getAttribute('routing');
-				if (!($pageArguments instanceof \TYPO3\CMS\Core\Routing\PageArguments)) {
-					$pageArguments = new \TYPO3\CMS\Core\Routing\PageArguments($siteRootPageId, '0', []);
-				}
-
-				$tsfe = GeneralUtility::makeInstance(
-					TypoScriptFrontendController::class,
-					$this->context,
-					$site,
-					$language,
-					$pageArguments,
-					$frontendUser
-				);
-				$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
-
-				$rootline = [];
-				try {
-					$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
-					$rootline = $rootlineUtility->get();
-				} catch (\Throwable) {
-					// Fallback if the rootline cannot be generated
-				}
-				$tsfe->rootLine = $rootline;
-
-				if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
-					/** @phpstan-ignore-next-line */
-					$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
-				}
-
-				$tsfe->page = [
-					'uid' => $siteRootPageId,
-					'starttime' => 0,
-					'endtime' => 0,
-					'fe_group' => '',
-					'tx_staticfilecache_cache_priority' => 0
-				];
-				$tsfe->id = $siteRootPageId;
-				$GLOBALS['TSFE'] = $tsfe;
-				$GLOBALS['TYPO3_REQUEST'] = $request;
-			}
-		}
+		$GLOBALS['TYPO3_REQUEST'] = $request;
 
 		// Parse JSON Body if applicable (allowance of text/plain is a legacy fallback)
 		$contentType = $request->getHeaderLine('Content-Type');

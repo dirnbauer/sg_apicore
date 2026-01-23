@@ -60,4 +60,20 @@ class ApiBodyParam {
 		public ?int $maxLength = NULL
 	) {
 	}
+
+	public static function __set_state(array $properties): self {
+		return new self(
+			$properties['name'] ?? '',
+			$properties['type'] ?? 'string',
+			$properties['required'] ?? FALSE,
+			$properties['description'] ?? '',
+			$properties['pattern'] ?? NULL,
+			$properties['example'] ?? NULL,
+			$properties['requiredIf'] ?? NULL,
+			$properties['min'] ?? NULL,
+			$properties['max'] ?? NULL,
+			$properties['minLength'] ?? NULL,
+			$properties['maxLength'] ?? NULL
+		);
+	}
 }

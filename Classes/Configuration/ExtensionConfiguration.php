@@ -112,6 +112,15 @@ class ExtensionConfiguration implements SingletonInterface {
 	}
 
 	/**
+	 * Returns the max length for logged request/response bodies (0 = unlimited)
+	 *
+	 * @return int
+	 */
+	public function getLogBodyMaxLength(): int {
+		return (int) $this->get('logBodyMaxLength', 4096);
+	}
+
+	/**
 	 * Returns the token expiration time in seconds
 	 *
 	 * @return int

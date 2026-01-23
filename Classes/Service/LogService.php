@@ -121,6 +121,7 @@ class LogService implements SingletonInterface {
 		}
 
 		$redactKeys = $this->extensionConfiguration->getRedactKeys();
+		$maxBodyLength = $this->extensionConfiguration->getLogBodyMaxLength();
 		$requestId = (string) $request->getAttribute('api.requestId', '');
 		$apiId = (string) $request->getAttribute('api.id', 'global');
 		$tenant = $request->getAttribute('api.tenant');
@@ -148,11 +149,14 @@ class LogService implements SingletonInterface {
 		if ($this->extensionConfiguration->isLogBodyEnabled()) {
 			$body = $request->getParsedBody();
 			if ($body) {
-				$context['requestBody'] = $this->redact($body, $redactKeys);
+				$context['requestBody'] = $this->truncateLogData($this->redact($body, $redactKeys), $maxBodyLength);
 			} else {
 				$rawBody = (string) $request->getBody();
 				if ($rawBody !== '') {
-					$context['requestBody'] = $this->redact($rawBody, $redactKeys);
+					$context['requestBody'] = $this->truncateLogData(
+						$this->redact($rawBody, $redactKeys),
+						$maxBodyLength
+					);
 				}
 			}
 		}
@@ -160,7 +164,10 @@ class LogService implements SingletonInterface {
 		if ($this->extensionConfiguration->isLogResponseEnabled()) {
 			$responseBody = (string) $response->getBody();
 			if ($responseBody !== '') {
-				$context['responseBody'] = $this->redact($responseBody, $redactKeys);
+				$context['responseBody'] = $this->truncateLogData(
+					$this->redact($responseBody, $redactKeys),
+					$maxBodyLength
+				);
 			}
 		}
 
@@ -211,5 +218,42 @@ class LogService implements SingletonInterface {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * @param mixed $data
+	 * @param int $maxLength
+	 * @return mixed
+	 */
+	protected function truncateLogData(mixed $data, int $maxLength): mixed {
+		if ($maxLength <= 0) {
+			return $data;
+		}
+
+		if (is_string($data)) {
+			return $this->truncateString($data, $maxLength);
+		}
+
+		if (is_array($data)) {
+			$encoded = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+			if (is_string($encoded) && strlen($encoded) > $maxLength) {
+				return $this->truncateString($encoded, $maxLength);
+			}
+		}
+
+		return $data;
+	}
+
+	/**
+	 * @param string $value
+	 * @param int $maxLength
+	 * @return string
+	 */
+	protected function truncateString(string $value, int $maxLength): string {
+		if (strlen($value) <= $maxLength) {
+			return $value;
+		}
+
+		return substr($value, 0, $maxLength) . '... [truncated]';
 	}
 }

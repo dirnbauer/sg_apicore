@@ -31,6 +31,8 @@ use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
@@ -53,18 +55,26 @@ class OpenApiService implements SingletonInterface {
 	protected ExtensionConfiguration $extensionConfiguration;
 
 	/**
+	 * @var FrontendInterface
+	 */
+	protected FrontendInterface $cache;
+
+	/**
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param ApiRegistry $apiRegistry
 	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @param CacheManager $cacheManager
 	 */
 	public function __construct(
 		EndpointDiscoveryService $endpointDiscoveryService,
 		ApiRegistry $apiRegistry,
-		ExtensionConfiguration $extensionConfiguration
+		ExtensionConfiguration $extensionConfiguration,
+		CacheManager $cacheManager
 	) {
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->apiRegistry = $apiRegistry;
 		$this->extensionConfiguration = $extensionConfiguration;
+		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
 	}
 
 	/**
@@ -82,6 +92,12 @@ class OpenApiService implements SingletonInterface {
 		if ($baseUrl === '') {
 			$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 			$baseUrl = rtrim($apiPathPrefix, '/') . '/' . $apiId . '/v' . $version;
+		}
+
+		$cacheKey = 'openapi_' . md5($apiId . '|' . $version . '|' . $authMode . '|' . $baseUrl);
+		$cachedSpec = $this->cache->get($cacheKey);
+		if (is_array($cachedSpec)) {
+			return $cachedSpec;
 		}
 
 		$spec = [
@@ -170,6 +186,7 @@ class OpenApiService implements SingletonInterface {
 			$this->addRouteToSpec($spec, $endpoint);
 		}
 
+		$this->cache->set($cacheKey, $spec);
 		return $spec;
 	}
 

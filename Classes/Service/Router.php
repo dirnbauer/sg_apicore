@@ -31,14 +31,14 @@ use FastRoute\RouteCollector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
-use SGalinski\SgApiCore\Attribute\RequireFullTypoScript;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Error\Http\AbstractServerErrorException;
 use TYPO3\CMS\Core\Http\PropagateResponseException;
 use TYPO3\CMS\Core\SingletonInterface;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
-use function FastRoute\simpleDispatcher;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+use function FastRoute\cachedDispatcher;
 
 /**
  * Router service for the API
@@ -131,65 +131,8 @@ class Router implements SingletonInterface {
 		string $path,
 		?string $authMode = NULL
 	): ResponseInterface {
-		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
-
-		// Filter endpoints by API ID, version and auth mode before creating the dispatcher
-		$filteredEndpoints = [];
-		foreach ($endpoints as $endpoint) {
-			// Filter by API ID, version and auth mode if specified
-			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
-				continue;
-			}
-			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
-				continue;
-			}
-			if (!empty($endpoint['authMode'])) {
-				// Visibility logic
-				$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
-				if (!empty($restrictedTo)) {
-					if (!in_array($authMode, $restrictedTo, TRUE)) {
-						continue;
-					}
-				} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
-					continue;
-				}
-			}
-			$filteredEndpoints[] = $endpoint;
-		}
-
-		// Sort filtered endpoints again to ensure static routes are registered before variable routes.
-		// This is necessary because some tests mock the discovery service and return unsorted endpoints.
-		// It also doesn't hurt to be sure.
-		usort($filteredEndpoints, static function ($a, $b) {
-			$pathA = $a['path'];
-			$pathB = $b['path'];
-
-			$isStaticA = !str_contains($pathA, '{');
-			$isStaticB = !str_contains($pathB, '{');
-
-			if ($isStaticA && !$isStaticB) {
-				return -1;
-			}
-			if (!$isStaticA && $isStaticB) {
-				return 1;
-			}
-
-			// If both are static or both are variable, sort by path length (descending)
-			// to ensure more specific routes are matched first.
-			return strlen($pathB) <=> strlen($pathA);
-		});
-
-		$dispatcher = simpleDispatcher(function (RouteCollector $r) use ($filteredEndpoints) {
-			foreach ($filteredEndpoints as $endpoint) {
-				$r->addRoute($endpoint['methods'], $endpoint['path'], [
-					'controller' => $endpoint['controller'],
-					'action' => $endpoint['action'],
-					'authMode' => $endpoint['authMode'] ?? NULL,
-					'endpoint' => $endpoint,
-					'resource' => $endpoint['resource'] ?? NULL
-				]);
-			}
-		});
+		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
+		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode);
 
 		$routeInfo = $dispatcher->dispatch($request->getMethod(), $path);
 
@@ -210,6 +153,9 @@ class Router implements SingletonInterface {
 
 				if (isset($handler['resource'])) {
 					$request = $request->withAttribute('api.resource', $handler['resource']);
+				}
+				if (!empty($handler['endpoint']['requireFullTypoScript'])) {
+					$request = $request->withAttribute('api.requireFullTypoScript', TRUE);
 				}
 
 				// 1. Validation Enforcement
@@ -256,69 +202,7 @@ class Router implements SingletonInterface {
 					$request = $request->withAttribute('api.legacyMode', $legacyMode);
 				}
 
-				// 4. TypoScript Enforcement
-				$typoScriptAttributes = $reflectionMethod->getAttributes(RequireFullTypoScript::class);
-				if (count($typoScriptAttributes) === 0) {
-					$typoScriptAttributes = $reflectionClass->getAttributes(RequireFullTypoScript::class);
-				}
-
-				if (count($typoScriptAttributes) > 0) {
-					$request = $request->withAttribute('api.requireFullTypoScript', TRUE);
-					if (isset($GLOBALS['TSFE']) && $GLOBALS['TSFE'] instanceof TypoScriptFrontendController) {
-						if ($GLOBALS['TSFE']->id <= 0) {
-							$tenantContext = $request->getAttribute('api.tenant');
-							if ($tenantContext instanceof \SGalinski\SgApiCore\Context\TenantContext) {
-								$GLOBALS['TSFE']->id = $tenantContext->getSiteRootPageId();
-							}
-						}
-
-						try {
-							// Remove the stub to ensure getFromCache creates a fresh, full TypoScript object
-							$request = $request->withoutAttribute('frontend.typoscript');
-							if (method_exists($GLOBALS['TSFE'], 'getFromCache')) {
-								/** @phpstan-ignore-next-line */
-								$request = $GLOBALS['TSFE']->getFromCache($request);
-							}
-							$GLOBALS['TYPO3_REQUEST'] = $request;
-
-							// Ensure TypoScript references are resolved (v12)
-							if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
-								&& isset($GLOBALS['TSFE']->tmpl)
-								&& $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService
-							) {
-								// Load TypoScript templates including constants before generating config
-								if (isset($GLOBALS['TSFE']->rootLine) && is_array($GLOBALS['TSFE']->rootLine)) {
-									/** @phpstan-ignore-next-line */
-									$GLOBALS['TSFE']->tmpl->runThroughTemplates($GLOBALS['TSFE']->rootLine);
-								}
-								/** @phpstan-ignore-next-line */
-								$GLOBALS['TSFE']->tmpl->generateConfig();
-
-								// Ensure a config array is also populated in TSFE
-								/** @phpstan-ignore-next-line */
-								$GLOBALS['TSFE']->config = $GLOBALS['TSFE']->tmpl->setup['config.'] ?? [];
-							}
-
-							// Ensure the setup array is initialized and synchronized for TYPO3 13
-							$frontendTypoScript = $request->getAttribute('frontend.typoscript');
-							if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
-								if (!$frontendTypoScript->hasSetup()) {
-									if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
-										&& isset($GLOBALS['TSFE']->tmpl->setup)
-										&& is_array($GLOBALS['TSFE']->tmpl->setup)
-									) {
-										/** @phpstan-ignore-next-line */
-										$frontendTypoScript->setSetupArray($GLOBALS['TSFE']->tmpl->setup);
-									}
-								}
-							}
-						} catch (\Throwable $e) {
-							$this->logService->logException($e, $request);
-						}
-					}
-				}
-
-				// 5. Authenticated User Enforcement
+				// 4. Authenticated User Enforcement
 				$userAttributes = $reflectionMethod->getAttributes(RequireUser::class);
 				if (count($userAttributes) > 0) {
 					if ($authContext === NULL || $authContext->getUserId() === NULL) {
@@ -331,7 +215,7 @@ class Router implements SingletonInterface {
 					}
 				}
 
-				// 6. Scope Enforcement
+				// 5. Scope Enforcement
 				$scopeAttributes = $reflectionMethod->getAttributes(RequireScopes::class);
 				if (count($scopeAttributes) > 0) {
 					/** @var RequireScopes $requireScopes */
@@ -369,6 +253,38 @@ class Router implements SingletonInterface {
 		}
 
 		return $this->createErrorResponse($request, 'Internal Server Error', 'An unexpected error occurred.', 500);
+	}
+
+	/**
+	 * Returns a matched endpoint for the given request data
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $path
+	 * @param string|null $authMode
+	 * @return array|null
+	 * @throws \ReflectionException
+	 */
+	public function matchEndpoint(
+		ServerRequestInterface $request,
+		string $apiId,
+		string $version,
+		string $path,
+		?string $authMode = NULL
+	): ?array {
+		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
+		if (count($filteredEndpoints) === 0) {
+			return NULL;
+		}
+
+		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode);
+		$routeInfo = $dispatcher->dispatch($request->getMethod(), $path);
+		if ($routeInfo[0] !== Dispatcher::FOUND) {
+			return NULL;
+		}
+
+		return $routeInfo[1];
 	}
 
 	/**
@@ -429,6 +345,111 @@ class Router implements SingletonInterface {
 		}
 
 		return $arguments;
+	}
+
+	/**
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string|null $authMode
+	 * @return array
+	 * @throws \ReflectionException
+	 */
+	protected function getFilteredEndpoints(string $apiId, string $version, ?string $authMode): array {
+		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+		$filteredEndpoints = [];
+
+		foreach ($endpoints as $endpoint) {
+			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+				continue;
+			}
+			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+				continue;
+			}
+			if (!empty($endpoint['authMode'])) {
+				$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
+				if (!empty($restrictedTo)) {
+					if (!in_array($authMode, $restrictedTo, TRUE)) {
+						continue;
+					}
+				} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
+					continue;
+				}
+			}
+			$filteredEndpoints[] = $endpoint;
+		}
+
+		usort($filteredEndpoints, static function ($a, $b) {
+			$pathA = $a['path'];
+			$pathB = $b['path'];
+
+			$isStaticA = !str_contains($pathA, '{');
+			$isStaticB = !str_contains($pathB, '{');
+
+			if ($isStaticA && !$isStaticB) {
+				return -1;
+			}
+			if (!$isStaticA && $isStaticB) {
+				return 1;
+			}
+
+			return strlen($pathB) <=> strlen($pathA);
+		});
+
+		return $filteredEndpoints;
+	}
+
+	/**
+	 * @param array $filteredEndpoints
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string|null $authMode
+	 * @return Dispatcher
+	 */
+	protected function createDispatcher(
+		array $filteredEndpoints,
+		string $apiId,
+		string $version,
+		?string $authMode
+	): Dispatcher {
+		try {
+			$varPath = Environment::getVarPath();
+		} catch (\Throwable) {
+			$varPath = '';
+		}
+
+		$useTempPath = $varPath === '';
+		if ($useTempPath) {
+			$varPath = sys_get_temp_dir();
+		}
+
+		$cacheDirectory = $useTempPath
+			? rtrim($varPath, '/') . '/sg_apicore_cache'
+			: rtrim($varPath, '/') . '/cache/sg_apicore';
+
+		if (!is_dir($cacheDirectory)) {
+			$created = @mkdir($cacheDirectory, 0775, TRUE);
+			if (!$created && !is_dir($cacheDirectory)) {
+				$cacheDirectory = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_cache';
+				if (!is_dir($cacheDirectory)) {
+					@mkdir($cacheDirectory, 0775, TRUE);
+				}
+			}
+		}
+
+		$authKey = is_array($authMode) ? implode(',', $authMode) : (string) $authMode;
+		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey) . '.php';
+
+		return cachedDispatcher(function (RouteCollector $r) use ($filteredEndpoints) {
+			foreach ($filteredEndpoints as $endpoint) {
+				$r->addRoute($endpoint['methods'], $endpoint['path'], [
+					'controller' => $endpoint['controller'],
+					'action' => $endpoint['action'],
+					'authMode' => $endpoint['authMode'] ?? NULL,
+					'endpoint' => $endpoint,
+					'resource' => $endpoint['resource'] ?? NULL
+				]);
+			}
+		}, ['cacheFile' => $cacheFile]);
 	}
 
 	/**

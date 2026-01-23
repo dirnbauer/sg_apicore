@@ -26,6 +26,7 @@
 
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
+use SGalinski\SgApiCore\Middleware\ApiTypoScriptMiddleware;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
 use SGalinski\SgApiCore\Middleware\RateLimitMiddleware;
 
@@ -58,6 +59,16 @@ return [
 			'after' => [
 				'typo3/cms-frontend/frontend-user-authenticator',
 				'sgalinski/sg-apicore/api-setup'
+			],
+			'before' => [
+				'sgalinski/sg-apicore/api-typoscript'
+			]
+		],
+		'sgalinski/sg-apicore/api-typoscript' => [
+			'target' => ApiTypoScriptMiddleware::class,
+			'description' => 'Initializes full TypoScript context when required',
+			'after' => [
+				'sgalinski/sg-apicore/api-auth'
 			],
 			'before' => [
 				'sgalinski/sg-apicore/rate-limit'

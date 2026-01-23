@@ -16,6 +16,8 @@ namespace SGalinski\SgApiCore\Service;
 
 use Psr\Log\LogLevel;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Core\Environment;
 
 /**
@@ -23,8 +25,15 @@ use TYPO3\CMS\Core\Core\Environment;
  */
 class LogDashboardService {
 	protected const string DEFAULT_LOG_FILE = '/log/sg_apicore.log';
+	protected const int CACHE_TTL = 60;
 
-	public function __construct(protected readonly ExtensionConfiguration $extensionConfiguration) {
+	protected FrontendInterface $cache;
+
+	public function __construct(
+		protected readonly ExtensionConfiguration $extensionConfiguration,
+		CacheManager $cacheManager
+	) {
+		$this->cache = $cacheManager->getCache('sg_apicore_dashboard');
 	}
 
 	/**
@@ -36,6 +45,17 @@ class LogDashboardService {
 	public function getDashboardData(int $hours, int $maxLines, bool $includeErrors): array {
 		$logFilePath = $this->resolveLogFilePath();
 		$cutoff = time() - ($hours * 3600);
+		$cacheKey = 'log_dashboard_' . $hours . '_' . $maxLines . '_' . (int) $includeErrors;
+		$fileMtime = $logFilePath !== '' && is_file($logFilePath) ? filemtime($logFilePath) : 0;
+
+		$cached = $this->cache->get($cacheKey);
+		if (is_array($cached)
+			&& isset($cached['cacheTimestamp'], $cached['fileMtime'])
+			&& $cached['fileMtime'] === $fileMtime
+			&& (time() - (int) $cached['cacheTimestamp']) <= self::CACHE_TTL
+		) {
+			return $cached;
+		}
 
 		$baseData = [
 			'loggingEnabled' => $this->extensionConfiguration->isLoggingEnabled(),
@@ -64,6 +84,9 @@ class LogDashboardService {
 
 		if (!$baseData['logFileReadable']) {
 			$baseData['errorMessage'] = 'Log file not found or not readable.';
+			$baseData['cacheTimestamp'] = time();
+			$baseData['fileMtime'] = $fileMtime;
+			$this->cache->set($cacheKey, $baseData, [], self::CACHE_TTL);
 			return $baseData;
 		}
 
@@ -90,7 +113,7 @@ class LogDashboardService {
 		$slowRequests = $this->buildSlowRequests($requestEntries);
 		$recentErrors = $this->buildRecentErrors($entries, $includeErrors);
 
-		return array_merge($baseData, [
+		$result = array_merge($baseData, [
 			'logEntries' => $entries,
 			'requestEntries' => $requestEntries,
 			'statusBuckets' => $statusBuckets,
@@ -103,6 +126,10 @@ class LogDashboardService {
 			'summary' => $summary,
 			'processedLines' => count($lines),
 		]);
+		$result['cacheTimestamp'] = time();
+		$result['fileMtime'] = $fileMtime;
+		$this->cache->set($cacheKey, $result, [], self::CACHE_TTL);
+		return $result;
 	}
 
 	/**

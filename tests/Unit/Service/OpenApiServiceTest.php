@@ -57,6 +57,20 @@ class OpenApiServiceTest extends UnitTestCase {
 		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager);
 	}
 
+	protected function getOpenApiService(
+		EndpointDiscoveryService $discoveryService,
+		ApiRegistry $apiRegistry,
+		ExtensionConfiguration $extensionConfiguration
+	): OpenApiService {
+		$cache = $this->createMock(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+
+		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		return new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration, $cacheManager);
+	}
+
 	public function testGenerateSpecContainsPaths(): void {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
@@ -66,7 +80,7 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 
 		$this->assertEquals('3.0.3', $spec['openapi']);
@@ -84,7 +98,7 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1', 'https://example.com/api/public/v1');
 
 		$this->assertEquals('https://example.com/api/public/v1', $spec['servers'][0]['url']);
@@ -98,7 +112,7 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
 		// 'public' api should have /test but not /partner-only
 		$spec = $service->generateSpec('public', '1');
@@ -122,7 +136,7 @@ class OpenApiServiceTest extends UnitTestCase {
 		$controllers = new \ArrayIterator([new MockHybridController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
 		// 'public' api should NOT have /hybrid
 		$specPublic = $service->generateSpec('public', '1');
@@ -143,7 +157,7 @@ class OpenApiServiceTest extends UnitTestCase {
 		$controllers = new \ArrayIterator([new MockBodyParamController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 
 		$this->assertArrayHasKey('/post-test', $spec['paths']);
@@ -169,7 +183,7 @@ class OpenApiServiceTest extends UnitTestCase {
 		$controllers = new \ArrayIterator([new MockExampleController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 		$operation = $spec['paths']['/example/{id}']['get'];
 
@@ -194,7 +208,7 @@ class OpenApiServiceTest extends UnitTestCase {
 		$controllers = new \ArrayIterator([new MockSchemaErrorController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
-		$service = new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 		$spec = $service->generateSpec('public', '1');
 
 		$operation = $spec['paths']['/error-test']['get'];

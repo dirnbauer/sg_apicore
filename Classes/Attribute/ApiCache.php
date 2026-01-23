@@ -50,4 +50,15 @@ final readonly class ApiCache {
 		public array $additionalVary = []
 	) {
 	}
+
+	public static function __set_state(array $properties): self {
+		return new self(
+			$properties['enabled'] ?? TRUE,
+			$properties['lifetime'] ?? 0,
+			$properties['tags'] ?? [],
+			$properties['useUserGroups'] ?? TRUE,
+			$properties['useLanguage'] ?? TRUE,
+			$properties['additionalVary'] ?? []
+		);
+	}
 }

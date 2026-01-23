@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Service;
 
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 
 /**
@@ -22,6 +23,7 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
  */
 class RateLimitDashboardService {
 	protected const string TABLE_NAME = 'tx_apicore_rate_limit';
+	protected const int DASHBOARD_LOOKBACK_DAYS = 30;
 
 	public function __construct(
 		protected readonly ExtensionConfiguration $extensionConfiguration,
@@ -126,9 +128,16 @@ class RateLimitDashboardService {
 		}
 
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+		$cutoff = time() - (self::DASHBOARD_LOOKBACK_DAYS * 86400);
 		$rows = $queryBuilder
 			->select('identifier', 'hits', 'window_start', 'expires_at')
 			->from(self::TABLE_NAME)
+			->where(
+				$queryBuilder->expr()->gte(
+					'expires_at',
+					$queryBuilder->createNamedParameter($cutoff, Connection::PARAM_INT)
+				)
+			)
 			->orderBy('hits', 'DESC')
 			->executeQuery()
 			->fetchAllAssociative();

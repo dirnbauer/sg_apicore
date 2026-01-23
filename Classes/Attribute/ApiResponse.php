@@ -46,4 +46,13 @@ final readonly class ApiResponse {
 		public mixed $example = NULL
 	) {
 	}
+
+	public static function __set_state(array $properties): self {
+		return new self(
+			$properties['status'] ?? 200,
+			$properties['description'] ?? NULL,
+			$properties['schema'] ?? NULL,
+			$properties['example'] ?? NULL
+		);
+	}
 }

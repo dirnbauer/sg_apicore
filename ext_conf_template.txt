@@ -19,6 +19,9 @@ logResponse = 0
 # cat=basic/logging; type=string; label=Comma-separated list of keys to mask in logs
 redactKeys = password,token,authorization,secret,access_token,refresh_token,authtoken,bearertoken
 
+# cat=basic/logging; type=int; label=Max body length for logging (0 = unlimited)
+logBodyMaxLength = 4096
+
 # cat=basic/cache; type=boolean; label=Enable API caching:Globally enable or disable response caching for the API
 enableCaching = 1
 
