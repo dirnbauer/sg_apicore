@@ -31,19 +31,16 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
  * Test case for BearerOpaqueTokenProvider
  */
 class BearerOpaqueTokenProviderTest extends UnitTestCase {
-	protected function setUp(): void {
-		parent::setUp();
-		$this->resetSingletonInstances = TRUE;
+	protected function createExtensionConfiguration(): ExtensionConfiguration {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isActivateLegacySupport')->willReturn(FALSE);
-		GeneralUtility::setSingletonInstance(ExtensionConfiguration::class, $extensionConfiguration);
+		return $extensionConfiguration;
 	}
 
 	public function testAuthenticateReturnsNullIfNoBearerToken(): void {
@@ -51,7 +48,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('');
 
 		$tokenRepository = $this->createStub(TokenRepository::class);
-		$provider = new BearerOpaqueTokenProvider($tokenRepository);
+		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 		$this->assertNull($result);
@@ -64,7 +61,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$tokenRepository = $this->createStub(TokenRepository::class);
 		$tokenRepository->method('findByHashApiAndTenant')->willReturn(NULL);
 
-		$provider = new BearerOpaqueTokenProvider($tokenRepository);
+		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 		$this->assertNull($result);
@@ -91,7 +88,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		);
 		$tokenRepository->expects($this->once())->method('updateLastUsed')->with(123);
 
-		$provider = new BearerOpaqueTokenProvider($tokenRepository);
+		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 
@@ -117,7 +114,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$tokenRepository = $this->createStub(TokenRepository::class);
 		$tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
 
-		$provider = new BearerOpaqueTokenProvider($tokenRepository);
+		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 		$this->assertNull($result);
@@ -150,7 +147,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 			->with($tokenHash, 'public', 'tenant-1', 456)
 			->willReturn($tokenRecord);
 
-		$provider = new BearerOpaqueTokenProvider($tokenRepository);
+		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 		$this->assertInstanceOf(AuthContext::class, $result);

@@ -29,7 +29,6 @@ namespace SGalinski\SgApiCore\EventListener;
 use TYPO3\CMS\Backend\Backend\Event\ModifyClearCacheActionsEvent;
 use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Event listener to add the API cache clear action to the TYPO3 cache menu
@@ -41,10 +40,10 @@ class ClearCacheEventListener {
 	protected UriBuilder $uriBuilder;
 
 	/**
-	 * @param UriBuilder|null $uriBuilder
+	 * @param UriBuilder $uriBuilder
 	 */
-	public function __construct(?UriBuilder $uriBuilder = NULL) {
-		$this->uriBuilder = $uriBuilder ?? GeneralUtility::makeInstance(UriBuilder::class);
+	public function __construct(UriBuilder $uriBuilder) {
+		$this->uriBuilder = $uriBuilder;
 	}
 
 	/**

@@ -27,6 +27,7 @@
 namespace SGalinski\SgApiCore\Security;
 
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\JwtService;
 
 /**
@@ -42,9 +43,11 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 
 	/**
 	 * @param JwtService $jwtService
+	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
-	public function __construct(JwtService $jwtService) {
+	public function __construct(JwtService $jwtService, ExtensionConfiguration $extensionConfiguration) {
 		$this->jwtService = $jwtService;
+		$this->extensionConfiguration = $extensionConfiguration;
 	}
 
 	/**

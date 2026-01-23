@@ -28,6 +28,7 @@ namespace SGalinski\SgApiCore\Security;
 
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\JwtService;
 use TYPO3\CMS\Core\Authentication\AbstractAuthenticationService;
@@ -46,15 +47,20 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 	 * @param JwtService|null $jwtService
 	 * @param TokenRepository|null $tokenRepository
 	 * @param ConnectionPool|null $connectionPool
+	 * @param ExtensionConfiguration|null $extensionConfiguration
 	 */
 	public function __construct(
 		protected ?JwtService $jwtService = NULL,
 		protected ?TokenRepository $tokenRepository = NULL,
-		protected ?ConnectionPool $connectionPool = NULL
+		protected ?ConnectionPool $connectionPool = NULL,
+		?ExtensionConfiguration $extensionConfiguration = NULL
 	) {
 		$this->jwtService ??= GeneralUtility::makeInstance(JwtService::class);
 		$this->tokenRepository ??= GeneralUtility::makeInstance(TokenRepository::class);
 		$this->connectionPool ??= GeneralUtility::makeInstance(ConnectionPool::class);
+		$this->extensionConfiguration = $extensionConfiguration ?? GeneralUtility::makeInstance(
+			ExtensionConfiguration::class
+		);
 	}
 
 	/**

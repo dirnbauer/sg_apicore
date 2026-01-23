@@ -35,6 +35,11 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 trait TokenExtractionTrait {
 	/**
+	 * @var ExtensionConfiguration|null
+	 */
+	protected ?ExtensionConfiguration $extensionConfiguration = NULL;
+
+	/**
 	 * Extracts the token from various possible locations
 	 *
 	 * @param ServerRequestInterface $request
@@ -66,11 +71,22 @@ trait TokenExtractionTrait {
 		}
 
 		// 3. Query Parameter 'authtoken' or 'bearertoken'
-		$legacySupportEnabled = GeneralUtility::makeInstance(ExtensionConfiguration::class)->isActivateLegacySupport();
+		$legacySupportEnabled = $this->getExtensionConfiguration()->isActivateLegacySupport();
 		if (!$legacySupportEnabled) {
 			return '';
 		}
 
 		return (string) ($request->getQueryParams()['authtoken'] ?? $request->getQueryParams()['bearertoken'] ?? '');
+	}
+
+	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		if ($this->extensionConfiguration === NULL) {
+			$this->extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
+		}
+
+		return $this->extensionConfiguration;
 	}
 }

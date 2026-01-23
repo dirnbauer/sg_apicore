@@ -28,6 +28,7 @@ namespace SGalinski\SgApiCore\Security;
 
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 
 /**
@@ -43,9 +44,11 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 
 	/**
 	 * @param TokenRepository $tokenRepository
+	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
-	public function __construct(TokenRepository $tokenRepository) {
+	public function __construct(TokenRepository $tokenRepository, ExtensionConfiguration $extensionConfiguration) {
 		$this->tokenRepository = $tokenRepository;
+		$this->extensionConfiguration = $extensionConfiguration;
 	}
 
 	/**
