@@ -34,6 +34,7 @@ use SGalinski\SgApiCore\Service\OpenApiService;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Controller to serve OpenAPI documentation
@@ -98,9 +99,23 @@ class OpenApiController {
 
 		// Build the path to the docs.json relative to the current URL
 		$path = rtrim($request->getUri()->getPath(), '/');
+		$baseUrl = (string) $request->getUri()->withPath(
+			str_replace('/docs/ui', '', $path)
+		);
 		$docsUrl = (string) $request->getUri()->withPath(
 			str_replace('/docs/ui', '/docs.json', $path)
 		);
+
+		$debugInfo = '';
+		$debugFlag = $request->getQueryParams()['debug'] ?? GeneralUtility::_GET('debug') ?? '';
+		$debugFlag = strtolower((string) $debugFlag);
+		if (in_array($debugFlag, ['1', 'true', 'yes'], TRUE)) {
+			$cacheInfo = $this->openApiService->getCacheDebugInfo($apiId, $version, $baseUrl);
+			$cacheKey = htmlspecialchars($cacheInfo['cacheKey'] ?? '', ENT_QUOTES);
+			$signature = htmlspecialchars($cacheInfo['signature'] ?? '', ENT_QUOTES);
+			$debugInfo = '<div class="swagger-debug">Cache key: ' . $cacheKey
+				. ' | Signature: ' . $signature . '</div>';
+		}
 
 		$html = <<<HTML
 <!DOCTYPE html>
@@ -118,6 +133,7 @@ class OpenApiController {
 		html { box-sizing: border-box; overflow-y: scroll; }
 		*, *:before, *:after { box-sizing: inherit; }
 		body { margin:0; background: #fafafa; }
+		.swagger-debug { position: fixed; right: 8px; bottom: 8px; padding: 4px 6px; font-size: 11px; color: #111; background: #fff; border: 1px solid #ccc; opacity: 0.75; z-index: 9999; }
 	</style>
 </head>
 <body>
@@ -161,6 +177,7 @@ class OpenApiController {
 		window.ui = ui
 	}
 	</script>
+	{$debugInfo}
 </body>
 </html>
 HTML;

@@ -127,24 +127,16 @@ class RateLimitDashboardService {
 			}
 		}
 
-		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 		$cutoff = time() - (self::DASHBOARD_LOOKBACK_DAYS * 86400);
-		$rows = $queryBuilder
-			->select('identifier', 'hits', 'window_start', 'expires_at')
-			->from(self::TABLE_NAME)
-			->where(
-				$queryBuilder->expr()->gte(
-					'expires_at',
-					$queryBuilder->createNamedParameter($cutoff, Connection::PARAM_INT)
-				)
-			)
-			->orderBy('hits', 'DESC')
-			->executeQuery()
-			->fetchAllAssociative();
+		$rows = $this->fetchRateLimitRows($cutoff);
 
 		$now = time();
 		$counters = [];
 		foreach ($rows as $row) {
+			if ((int) $row['expires_at'] < $cutoff) {
+				continue;
+			}
+
 			$identifier = (string) $row['identifier'];
 			$parsed = $this->parseIdentifier($identifier);
 			$apiId = $parsed['apiId'];
@@ -172,6 +164,27 @@ class RateLimitDashboardService {
 		}
 
 		return $counters;
+	}
+
+	/**
+	 * @param int $cutoff
+	 * @return array<int, array<string, mixed>>
+	 */
+	protected function fetchRateLimitRows(int $cutoff): array {
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
+
+		return $queryBuilder
+			->select('identifier', 'hits', 'window_start', 'expires_at')
+			->from(self::TABLE_NAME)
+			->where(
+				$queryBuilder->expr()->gte(
+					'expires_at',
+					$queryBuilder->createNamedParameter($cutoff, Connection::PARAM_INT)
+				)
+			)
+			->orderBy('hits', 'DESC')
+			->executeQuery()
+			->fetchAllAssociative();
 	}
 
 	/**

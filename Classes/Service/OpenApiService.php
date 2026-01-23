@@ -191,6 +191,29 @@ class OpenApiService implements SingletonInterface {
 	}
 
 	/**
+	 * Returns debug information for OpenAPI caching
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $baseUrl
+	 * @return array<string, string>
+	 * @throws \ReflectionException
+	 */
+	public function getCacheDebugInfo(string $apiId, string $version, string $baseUrl = ''): array {
+		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
+		$authMode = $securityConfig['authMode'] ?? 'token';
+		if ($baseUrl === '') {
+			$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
+			$baseUrl = rtrim($apiPathPrefix, '/') . '/' . $apiId . '/v' . $version;
+		}
+
+		return [
+			'cacheKey' => $this->getSpecCacheKey($apiId, $version, $authMode, $baseUrl),
+			'signature' => $this->endpointDiscoveryService->getDiscoverySignature(),
+		];
+	}
+
+	/**
 	 * @param string $apiId
 	 * @param string $version
 	 * @param string $authMode
