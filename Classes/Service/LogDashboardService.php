@@ -120,7 +120,7 @@ class LogDashboardService {
 		$timeBuckets = $this->buildTimeBuckets($requestEntries);
 		$topEndpoints = $this->buildTopList($requestEntries, 'endpoint');
 		$topTenants = $this->buildTopList($requestEntries, 'tenantId');
-		$topApis = $this->buildTopList($requestEntries, 'apiId');
+		$topApis = $this->buildTopList($requestEntries, 'apiId', ['unknown', 'global']);
 		$slowRequests = $this->buildSlowRequests($requestEntries);
 		$recentErrors = $this->buildRecentErrors($entries, $includeErrors);
 
@@ -392,12 +392,16 @@ class LogDashboardService {
 	 * @param string $field
 	 * @return array<int, array<string, mixed>>
 	 */
-	protected function buildTopList(array $requests, string $field): array {
+	protected function buildTopList(array $requests, string $field, array $ignoreValues = []): array {
 		$counts = [];
+		$ignoreLookup = array_flip($ignoreValues);
 		foreach ($requests as $entry) {
 			$value = $entry[$field] ?? 'unknown';
 			if ($value === NULL || $value === '') {
 				$value = 'unknown';
+			}
+			if (isset($ignoreLookup[$value])) {
+				continue;
 			}
 			$counts[$value] = ($counts[$value] ?? 0) + 1;
 		}
