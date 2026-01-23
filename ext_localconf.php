@@ -103,7 +103,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_dashboard'])) {
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_dashboard'] = [
 			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
-			'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
+			'backend' => \TYPO3\CMS\Core\Cache\Backend\FileBackend::class,
 			'groups' => ['system'],
 		];
 	}
