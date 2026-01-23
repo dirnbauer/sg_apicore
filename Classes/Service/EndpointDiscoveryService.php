@@ -89,7 +89,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 			return $this->endpoints;
 		}
 
-		$cacheKey = 'all_endpoints';
+		$cacheKey = 'all_endpoints_' . $this->getDiscoverySignature();
 		$cachedEndpoints = $this->cache->get($cacheKey);
 		if (is_array($cachedEndpoints)) {
 			$this->endpoints = $cachedEndpoints;
@@ -212,8 +212,61 @@ class EndpointDiscoveryService implements SingletonInterface {
 		});
 
 		$this->endpoints = $endpoints;
-		$this->cache->set($cacheKey, $endpoints);
+		$this->cache->set($cacheKey, $endpoints, ['sg_apicore_discovery']);
 		return $endpoints;
+	}
+
+	/**
+	 * Builds a cache signature to detect changes in routes/resources.
+	 *
+	 * @return string
+	 * @throws \ReflectionException
+	 */
+	public function getDiscoverySignature(): string {
+		$controllers = [];
+		foreach ($this->getControllerClasses() as $controllerClass) {
+			$reflectionClass = new \ReflectionClass($controllerClass);
+			$fileName = $reflectionClass->getFileName();
+			$mtime = $fileName !== FALSE && is_file($fileName) ? (int) filemtime($fileName) : 0;
+			$controllers[] = [
+				'class' => $controllerClass,
+				'mtime' => $mtime,
+			];
+		}
+
+		$resources = $this->normalizeSignatureData($this->resourceRegistry->getResources());
+		$signaturePayload = [
+			'controllers' => $controllers,
+			'resources' => $resources,
+		];
+
+		$encoded = json_encode($signaturePayload);
+		if ($encoded === FALSE) {
+			$encoded = serialize($signaturePayload);
+		}
+
+		return sha1($encoded);
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return mixed
+	 */
+	protected function normalizeSignatureData(mixed $value): mixed {
+		if (!is_array($value)) {
+			return $value;
+		}
+
+		$isAssoc = array_keys($value) !== range(0, count($value) - 1);
+		if ($isAssoc) {
+			ksort($value);
+		}
+
+		foreach ($value as $key => $item) {
+			$value[$key] = $this->normalizeSignatureData($item);
+		}
+
+		return $value;
 	}
 
 	/**

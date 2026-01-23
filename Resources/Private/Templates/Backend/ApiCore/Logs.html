@@ -314,6 +314,13 @@
 			<div><strong>Readable:</strong> {f:if(condition: logFileReadable, then: 'Yes', else: 'No')}</div>
 			<div><strong>Size:</strong> {logFileSize} bytes</div>
 			<div><strong>Lines processed:</strong> {processedLines}</div>
+			<div><strong>Cache hit:</strong> {f:if(condition: metrics.cacheHit, then: 'Yes', else: 'No')}</div>
+			<f:if condition="{metrics.cacheAgeSeconds}">
+				<div><strong>Cache age:</strong> {metrics.cacheAgeSeconds} s</div>
+			</f:if>
+			<f:if condition="{metrics.parseDurationMs}">
+				<div><strong>Parse time:</strong> {metrics.parseDurationMs -> f:format.number(decimals: 2)} ms</div>
+			</f:if>
 		</div>
 	</div>
 </f:section>

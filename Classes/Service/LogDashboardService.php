@@ -43,6 +43,7 @@ class LogDashboardService {
 	 * @return array<string, mixed>
 	 */
 	public function getDashboardData(int $hours, int $maxLines, bool $includeErrors): array {
+		$startTime = microtime(TRUE);
 		$logFilePath = $this->resolveLogFilePath();
 		$cutoff = time() - ($hours * 3600);
 		$cacheKey = 'log_dashboard_' . $hours . '_' . $maxLines . '_' . (int) $includeErrors;
@@ -54,6 +55,10 @@ class LogDashboardService {
 			&& $cached['fileMtime'] === $fileMtime
 			&& (time() - (int) $cached['cacheTimestamp']) <= self::CACHE_TTL
 		) {
+			$cached['metrics'] = array_merge($cached['metrics'] ?? [], [
+				'cacheHit' => TRUE,
+				'cacheAgeSeconds' => time() - (int) $cached['cacheTimestamp'],
+			]);
 			return $cached;
 		}
 
@@ -79,11 +84,17 @@ class LogDashboardService {
 				'timeRangeStart' => $cutoff,
 				'timeRangeEnd' => time(),
 			],
+			'metrics' => [
+				'cacheHit' => FALSE,
+				'cacheAgeSeconds' => NULL,
+				'parseDurationMs' => NULL,
+			],
 			'maxLines' => $maxLines,
 		];
 
 		if (!$baseData['logFileReadable']) {
 			$baseData['errorMessage'] = 'Log file not found or not readable.';
+			$baseData['metrics']['parseDurationMs'] = $this->getDurationMs($startTime);
 			$baseData['cacheTimestamp'] = time();
 			$baseData['fileMtime'] = $fileMtime;
 			$this->cache->set($cacheKey, $baseData, [], self::CACHE_TTL);
@@ -126,6 +137,11 @@ class LogDashboardService {
 			'summary' => $summary,
 			'processedLines' => count($lines),
 		]);
+		$result['metrics'] = [
+			'cacheHit' => FALSE,
+			'cacheAgeSeconds' => NULL,
+			'parseDurationMs' => $this->getDurationMs($startTime),
+		];
 		$result['cacheTimestamp'] = time();
 		$result['fileMtime'] = $fileMtime;
 		$this->cache->set($cacheKey, $result, [], self::CACHE_TTL);
@@ -251,6 +267,14 @@ class LogDashboardService {
 			return (float) $matches['value'];
 		}
 		return NULL;
+	}
+
+	/**
+	 * @param float $startTime
+	 * @return float
+	 */
+	protected function getDurationMs(float $startTime): float {
+		return (microtime(TRUE) - $startTime) * 1000;
 	}
 
 	/**

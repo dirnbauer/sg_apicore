@@ -94,7 +94,7 @@ class OpenApiService implements SingletonInterface {
 			$baseUrl = rtrim($apiPathPrefix, '/') . '/' . $apiId . '/v' . $version;
 		}
 
-		$cacheKey = 'openapi_' . md5($apiId . '|' . $version . '|' . $authMode . '|' . $baseUrl);
+		$cacheKey = $this->getSpecCacheKey($apiId, $version, $authMode, $baseUrl);
 		$cachedSpec = $this->cache->get($cacheKey);
 		if (is_array($cachedSpec)) {
 			return $cachedSpec;
@@ -188,6 +188,21 @@ class OpenApiService implements SingletonInterface {
 
 		$this->cache->set($cacheKey, $spec);
 		return $spec;
+	}
+
+	/**
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $authMode
+	 * @param string $baseUrl
+	 * @return string
+	 * @throws \ReflectionException
+	 */
+	protected function getSpecCacheKey(string $apiId, string $version, string $authMode, string $baseUrl): string {
+		$signature = $this->endpointDiscoveryService->getDiscoverySignature();
+		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
+		$cachePayload = implode('|', [$apiId, $version, $authMode, $baseUrl, $apiPathPrefix, $signature]);
+		return 'openapi_' . md5($cachePayload);
 	}
 
 	/**

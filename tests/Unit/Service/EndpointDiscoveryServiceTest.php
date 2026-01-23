@@ -86,6 +86,29 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$this->assertInstanceOf(ApiResponse::class, $endpoint['responses'][0]);
 		$this->assertEquals(200, $endpoint['responses'][0]->status);
 	}
+
+	public function testDiscoverySignatureChangesOnResourceChange(): void {
+		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
+		$cache = $this->createMock(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$resourceRegistryA = new ResourceRegistry();
+		$resourceRegistryA->registerResource('public', 'tt_content', '/contents', [
+			'allowedOperations' => ['list'],
+		]);
+
+		$resourceRegistryB = new ResourceRegistry();
+		$resourceRegistryB->registerResource('public', 'tt_content', '/contents', [
+			'allowedOperations' => ['list', 'get'],
+		]);
+
+		$serviceA = new EndpointDiscoveryService($controllers, $resourceRegistryA, $cacheManager);
+		$serviceB = new EndpointDiscoveryService($controllers, $resourceRegistryB, $cacheManager);
+
+		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
+	}
 }
 
 /**
