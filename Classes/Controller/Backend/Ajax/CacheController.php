@@ -31,6 +31,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\NullResponse;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * AJAX controller for cache management
@@ -42,10 +43,10 @@ class CacheController {
 	protected CacheManager $cacheManager;
 
 	/**
-	 * @param CacheManager $cacheManager
+	 * @param CacheManager|null $cacheManager
 	 */
-	public function __construct(CacheManager $cacheManager) {
-		$this->cacheManager = $cacheManager;
+	public function __construct(?CacheManager $cacheManager = NULL) {
+		$this->cacheManager = $cacheManager ?? GeneralUtility::makeInstance(CacheManager::class);
 	}
 
 	/**
