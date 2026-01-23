@@ -123,7 +123,7 @@ class LogService implements SingletonInterface {
 		$redactKeys = $this->extensionConfiguration->getRedactKeys();
 		$maxBodyLength = $this->extensionConfiguration->getLogBodyMaxLength();
 		$requestId = (string) $request->getAttribute('api.requestId', '');
-		$apiId = (string) $request->getAttribute('api.id', 'global');
+		$apiId = (string) $request->getAttribute('api.id', 'unknown');
 		$tenant = $request->getAttribute('api.tenant');
 		$tenantId = $tenant?->getTenantId() ?? 'none';
 
