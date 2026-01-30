@@ -307,25 +307,29 @@ class TcaMapper implements SingletonInterface {
 			case 'inline':
 				if ($resolveDepth > 0 && isset($config['foreign_table'])) {
 					$foreignTable = $config['foreign_table'];
-					if (is_string($value) && str_contains($value, ',')) {
-						$uids = GeneralUtility::intExplode(',', $value, TRUE);
-					} else {
-						$uids = [(int) $value];
-					}
-
 					$resolvedRecords = [];
-					foreach ($uids as $foreignUid) {
-						if ($foreignUid <= 0) {
-							continue;
-						}
-						$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-						$foreignRecord = $queryBuilder->select('*')
-							->from($foreignTable)
-							->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
-							->executeQuery()
-							->fetchAssociative();
 
-						if ($foreignRecord) {
+					if (isset($config['foreign_field'])) {
+						// 1:n relation via foreign_field
+						$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+						$queryBuilder->select('*')
+							->from($foreignTable)
+							->where($queryBuilder->expr()->eq($config['foreign_field'], $queryBuilder->createNamedParameter($uid)));
+
+						if (isset($config['foreign_table_field']) && $tableName !== '') {
+							$queryBuilder->andWhere(
+								$queryBuilder->expr()->eq($config['foreign_table_field'], $queryBuilder->createNamedParameter($tableName))
+							);
+						}
+
+						if (isset($GLOBALS['TCA'][$foreignTable]['ctrl']['sortby'])) {
+							$queryBuilder->orderBy($GLOBALS['TCA'][$foreignTable]['ctrl']['sortby']);
+						} elseif (isset($GLOBALS['TCA'][$foreignTable]['ctrl']['default_sortby'])) {
+							$queryBuilder->orderBy($GLOBALS['TCA'][$foreignTable]['ctrl']['default_sortby']);
+						}
+
+						$foreignRecords = $queryBuilder->executeQuery()->fetchAllAssociative();
+						foreach ($foreignRecords as $foreignRecord) {
 							$resolvedRecords[] = $this->mapRecord(
 								$foreignTable,
 								$foreignRecord,
@@ -334,6 +338,36 @@ class TcaMapper implements SingletonInterface {
 								$resolveDepth - 1,
 								$fieldConfiguration
 							);
+						}
+					} else {
+						// Relation via comma-separated list of UIDs
+						if (is_string($value) && str_contains($value, ',')) {
+							$uids = GeneralUtility::intExplode(',', $value, TRUE);
+						} else {
+							$uids = [(int) $value];
+						}
+
+						foreach ($uids as $foreignUid) {
+							if ($foreignUid <= 0) {
+								continue;
+							}
+							$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+							$foreignRecord = $queryBuilder->select('*')
+								->from($foreignTable)
+								->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
+								->executeQuery()
+								->fetchAssociative();
+
+							if ($foreignRecord) {
+								$resolvedRecords[] = $this->mapRecord(
+									$foreignTable,
+									$foreignRecord,
+									[],
+									[],
+									$resolveDepth - 1,
+									$fieldConfiguration
+								);
+							}
 						}
 					}
 
