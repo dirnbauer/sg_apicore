@@ -27,12 +27,15 @@
 namespace SGalinski\SgApiCore\Mapper;
 
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Http\StreamFactory;
 use TYPO3\CMS\Core\Resource\FileReference;
+use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Core\Resource\FileInterface;
+use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 
 /**
  * Service for mapping TYPO3 records to API responses based on TCA and vice versa
@@ -54,18 +57,26 @@ class TcaMapper implements SingletonInterface {
 	protected ResourceFactory $resourceFactory;
 
 	/**
+	 * @var FileRepository
+	 */
+	protected FileRepository $fileRepository;
+
+	/**
 	 * @param PersistenceManager $persistenceManager
 	 * @param ConnectionPool $connectionPool
 	 * @param ResourceFactory $resourceFactory
+	 * @param FileRepository $fileRepository
 	 */
 	public function __construct(
 		PersistenceManager $persistenceManager,
 		ConnectionPool $connectionPool,
-		ResourceFactory $resourceFactory
+		ResourceFactory $resourceFactory,
+		FileRepository $fileRepository
 	) {
 		$this->persistenceManager = $persistenceManager;
 		$this->connectionPool = $connectionPool;
 		$this->resourceFactory = $resourceFactory;
+		$this->fileRepository = $fileRepository;
 	}
 
 	/**
@@ -220,23 +231,35 @@ class TcaMapper implements SingletonInterface {
 		$type = $config['type'] ?? '';
 
 		if ($uid > 0 && $tableName !== '' && $fieldName !== '') {
-			$isFAL = ($type === 'inline' || $type === 'group') &&
+			$isFAL = ($type === 'inline' || $type === 'group' || $type === 'file') &&
 				(($config['foreign_table'] ?? '') === 'sys_file_reference' ||
 					($config['internal_type'] ?? '') === 'file_reference' ||
-					str_contains($config['MM'] ?? '', 'sys_file_reference'));
+					str_contains($config['MM'] ?? '', 'sys_file_reference') ||
+					$type === 'file');
 
 			if ($isFAL) {
 				return $this->resolveFileReferences($tableName, $fieldName, $uid);
 			}
 		}
 
+		if ($value === NULL) {
+			return NULL;
+		}
+
 		switch ($type) {
+			case 'text':
+				if (($config['enableRichtext'] ?? FALSE) || ($config['richtextConfiguration'] ?? '')) {
+					$value = $this->processRteContent((string) $value);
+				}
+
+				return $this->applyContentReplacer((string) $value);
 			case 'check':
 				return (bool) $value;
 			case 'input':
 				if (isset($config['eval']) && str_contains($config['eval'], 'int')) {
 					return (int) $value;
 				}
+
 				if (($config['renderType'] ?? '') === 'inputDateTime' ||
 					(isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))
 				) {
@@ -245,7 +268,8 @@ class TcaMapper implements SingletonInterface {
 					}
 					return $value;
 				}
-				return $value;
+
+				return $this->applyContentReplacer((string) $value);
 			case 'number':
 				return str_contains($config['format'] ?? '', 'decimal') ? (float) $value : (int) $value;
 			case 'select':
@@ -300,10 +324,10 @@ class TcaMapper implements SingletonInterface {
 	 * @return array
 	 */
 	protected function resolveFileReferences(string $tableName, string $fieldName, int $uid): array {
-		$fileReferences = $this->resourceFactory->getFileReferenceObjectsByElement(
-			$uid,
+		$fileReferences = $this->fileRepository->findByRelation(
 			$tableName,
-			$fieldName
+			$fieldName,
+			$uid
 		);
 
 		$resolvedFiles = [];
@@ -363,5 +387,60 @@ class TcaMapper implements SingletonInterface {
 			default:
 				return $value;
 		}
+	}
+
+	/**
+	 * Processes the RTE content to standard HTML
+	 *
+	 * @param string $content
+	 * @return string
+	 */
+	protected function processRteContent(string $content): string {
+		if ($content === '') {
+			return '';
+		}
+
+		/** @var ContentObjectRenderer $contentObject */
+		$contentObject = GeneralUtility::makeInstance(ContentObjectRenderer::class);
+		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+		if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+			$contentObject->setRequest($request);
+		}
+		$contentObject->start([]);
+
+		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
+		if ($request instanceof \Psr\Http\Message\ServerRequestInterface && (empty($parseFuncConf) || count($parseFuncConf) <= 1)) {
+			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
+			if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
+				$setup = $frontendTypoScript->getSetupArray();
+				$parseFuncConf = $setup['lib.']['parseFunc_RTE.'] ?? [];
+				if (empty($parseFuncConf)) {
+					$parseFuncConf = $setup['lib.']['parseFunc.'] ?? [];
+				}
+			}
+		}
+
+		if (empty($parseFuncConf)) {
+			return $content;
+		}
+
+		return $contentObject->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+	}
+
+	/**
+	 * Applies the content replacer to the given content if the extension is available
+	 *
+	 * @param string $content
+	 * @return string
+	 */
+	protected function applyContentReplacer(string $content): string {
+		if ($content === '' || !class_exists('SGalinski\Citypower\Service\ContentReplacementService')) {
+			return $content;
+		}
+
+		$contentReplacementService = GeneralUtility::makeInstance(
+			'SGalinski\Citypower\Service\ContentReplacementService'
+		);
+		return $contentReplacementService->replaceContent($content);
 	}
 }
