@@ -180,7 +180,7 @@ class TestController {
 		description: 'This endpoint returns a list of example items for demonstration purposes.',
 		tags: ['Examples']
 	)]
-	#[ApiQueryParam(name: 'offset', type: 'integer', description: 'The offset to start from')]
+	#[ApiQueryParam(name: 'page', type: 'integer', description: 'The page number (1-based)')]
 	#[ApiQueryParam(name: 'limit', type: 'integer', description: 'Maximum number of items to return')]
 	#[ApiResponse(status: 200, description: 'Success', schema: 'ExampleItem[]')]
 	public function listAction(ServerRequestInterface $request): ResponseInterface {

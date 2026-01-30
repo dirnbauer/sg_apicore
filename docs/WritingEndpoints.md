@@ -156,8 +156,11 @@ class MyController {
         protected ResponseService $responseService
     ) {}
 
+    #[ApiQueryParam(name: 'page', type: 'integer', description: 'The page number (1-based)')]
+    #[ApiQueryParam(name: 'limit', type: 'integer', description: 'Maximum number of items to return')]
     public function listAction(ServerRequestInterface $request): ResponseInterface {
         // 1. Get offset and limit from query parameters (with default/max values)
+        // Internally, this extracts 'page' and 'limit' and calculates the offset.
         $pagination = $this->paginationService->getPaginationParams($request);
         $offset = $pagination['offset'];
         $limit = $pagination['limit'];
