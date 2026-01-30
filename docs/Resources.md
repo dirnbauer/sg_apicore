@@ -47,6 +47,18 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `allowedOperations`: Array of enabled operations (`list`, `get`, `create`, `update`, `delete`).
 * `readFields`: Whitelist of fields for output mapping (empty = all except internal fields).
 * `writeFields`: Whitelist of fields accepted for `create` and `update`.
+* `fieldConfiguration`: Map of table names to their field configurations. Allows controlling `allowed` and `excluded` fields for both the main record and related records (when resolved).
+    * Example:
+      ```php
+      'fieldConfiguration' => [
+          'tx_myext_domain_model_item' => [
+              'allowed' => ['uid', 'header', 'related_item'],
+          ],
+          'tx_myext_domain_model_related' => [
+              'excluded' => ['internal_secret'],
+          ]
+      ]
+      ```
 * `deleteMode`: `soft` (default) uses DataHandler delete, `hard` deletes the DB record directly (no TYPO3 audit log).
 * `rateLimit`: Optional rate limit overrides for this resource (see `RateLimiting.md`).
 * `requiredScopes`: Associative array mapping operations to required scope arrays.

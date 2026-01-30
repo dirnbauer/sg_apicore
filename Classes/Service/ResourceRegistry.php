@@ -54,6 +54,7 @@ class ResourceRegistry implements SingletonInterface {
 			'allowedOperations' => ['list', 'get', 'create', 'update', 'delete'],
 			'readFields' => [], // Empty = all (respecting TcaMapper defaults)
 			'writeFields' => [],
+			'fieldConfiguration' => [], // Map of table names to their field configurations (allowed/excluded)
 			'tags' => [],
 			'deleteMode' => 'soft',
 			'rateLimit' => [],

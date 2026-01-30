@@ -163,7 +163,13 @@ class ResourceController {
 		$result = $queryBuilder->executeQuery();
 		$records = $result->fetchAllAssociative();
 
-		$mappedRecords = $this->tcaMapper->mapRecords($tableName, $records, $resourceConfig['readFields']);
+		$mappedRecords = $this->tcaMapper->mapRecords(
+			$tableName,
+			$records,
+			$resourceConfig['readFields'],
+			resolveDepth: 1, // Always resolve depth 1 for resource lists if possible? Or keep 0?
+			fieldConfiguration: $resourceConfig['fieldConfiguration'] ?? []
+		);
 
 		return $this->responseService->createSuccessResponse(
 			$mappedRecords,
@@ -203,7 +209,13 @@ class ResourceController {
 			return $this->responseService->createErrorResponse('Not Found', 'Resource not found.', 404);
 		}
 
-		$mappedRecord = $this->tcaMapper->mapRecord($tableName, $record, $resourceConfig['readFields']);
+		$mappedRecord = $this->tcaMapper->mapRecord(
+			$tableName,
+			$record,
+			$resourceConfig['readFields'],
+			resolveDepth: 1, // Always resolve depth 1 for resource details if possible?
+			fieldConfiguration: $resourceConfig['fieldConfiguration'] ?? []
+		);
 		return $this->responseService->createSuccessResponse($mappedRecord);
 	}
 

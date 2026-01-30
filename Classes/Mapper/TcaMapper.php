@@ -109,6 +109,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $allowedFields If empty, all fields except excluded ones are returned
 	 * @param array $excludedFields
 	 * @param int $resolveDepth Depth of relation resolution
+	 * @param array $fieldConfiguration Map of table names to their field configurations (allowed/excluded)
 	 * @return array
 	 */
 	public function mapRecord(
@@ -116,7 +117,8 @@ class TcaMapper implements SingletonInterface {
 		array $record,
 		array $allowedFields = [],
 		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
-		int $resolveDepth = 0
+		int $resolveDepth = 0,
+		array $fieldConfiguration = []
 	): array {
 		$mappedRecord = [];
 		$tca = $GLOBALS['TCA'][$tableName] ?? [];
@@ -125,6 +127,15 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$fieldsToMap = $allowedFields;
+		if (isset($fieldConfiguration[$tableName]['allowed']) && is_array($fieldConfiguration[$tableName]['allowed'])) {
+			$fieldsToMap = $fieldConfiguration[$tableName]['allowed'];
+		}
+
+		$currentExcludedFields = $excludedFields;
+		if (isset($fieldConfiguration[$tableName]['excluded']) && is_array($fieldConfiguration[$tableName]['excluded'])) {
+			$currentExcludedFields = array_merge($excludedFields, $fieldConfiguration[$tableName]['excluded']);
+		}
+
 		if (empty($fieldsToMap)) {
 			$fieldsToMap = array_keys($tca['columns'] ?? []);
 			// Always include uid
@@ -137,7 +148,7 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		foreach ($fieldsToMap as $fieldName) {
-			if (in_array($fieldName, $excludedFields, TRUE)) {
+			if (in_array($fieldName, $currentExcludedFields, TRUE)) {
 				continue;
 			}
 
@@ -148,7 +159,15 @@ class TcaMapper implements SingletonInterface {
 			$value = $record[$fieldName];
 			$columnConfig = $tca['columns'][$fieldName]['config'] ?? [];
 
-			$mappedRecord[$fieldName] = $this->transformValue($value, $columnConfig, $resolveDepth, $tableName, $record['uid'] ?? 0, $fieldName);
+			$mappedRecord[$fieldName] = $this->transformValue(
+				$value,
+				$columnConfig,
+				$resolveDepth,
+				$tableName,
+				$record['uid'] ?? 0,
+				$fieldName,
+				$fieldConfiguration
+			);
 		}
 
 		return $mappedRecord;
@@ -162,6 +181,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $allowedFields
 	 * @param array $excludedFields
 	 * @param int $resolveDepth
+	 * @param array $fieldConfiguration
 	 * @return array
 	 */
 	public function mapRecords(
@@ -169,11 +189,19 @@ class TcaMapper implements SingletonInterface {
 		array $records,
 		array $allowedFields = [],
 		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
-		int $resolveDepth = 0
+		int $resolveDepth = 0,
+		array $fieldConfiguration = []
 	): array {
 		$mappedRecords = [];
 		foreach ($records as $record) {
-			$mappedRecords[] = $this->mapRecord($tableName, $record, $allowedFields, $excludedFields, $resolveDepth);
+			$mappedRecords[] = $this->mapRecord(
+				$tableName,
+				$record,
+				$allowedFields,
+				$excludedFields,
+				$resolveDepth,
+				$fieldConfiguration
+			);
 		}
 		return $mappedRecords;
 	}
@@ -218,6 +246,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param string $tableName
 	 * @param int $uid
 	 * @param string $fieldName
+	 * @param array $fieldConfiguration
 	 * @return mixed
 	 */
 	protected function transformValue(
@@ -226,7 +255,8 @@ class TcaMapper implements SingletonInterface {
 		int $resolveDepth = 0,
 		string $tableName = '',
 		int $uid = 0,
-		string $fieldName = ''
+		string $fieldName = '',
+		array $fieldConfiguration = []
 	): mixed {
 		$type = $config['type'] ?? '';
 
@@ -296,7 +326,14 @@ class TcaMapper implements SingletonInterface {
 							->fetchAssociative();
 
 						if ($foreignRecord) {
-							$resolvedRecords[] = $this->mapRecord($foreignTable, $foreignRecord, [], [], $resolveDepth - 1);
+							$resolvedRecords[] = $this->mapRecord(
+								$foreignTable,
+								$foreignRecord,
+								[],
+								[],
+								$resolveDepth - 1,
+								$fieldConfiguration
+							);
 						}
 					}
 
