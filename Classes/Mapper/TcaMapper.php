@@ -118,7 +118,8 @@ class TcaMapper implements SingletonInterface {
 		array $allowedFields = [],
 		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
 		int $resolveDepth = 0,
-		array $fieldConfiguration = []
+		array $fieldConfiguration = [],
+		array $renamedFields = []
 	): array {
 		$mappedRecord = [];
 		$tca = $GLOBALS['TCA'][$tableName] ?? [];
@@ -159,7 +160,7 @@ class TcaMapper implements SingletonInterface {
 			$value = $record[$fieldName];
 			$columnConfig = $tca['columns'][$fieldName]['config'] ?? [];
 
-			$mappedRecord[$fieldName] = $this->transformValue(
+			$transformedValue = $this->transformValue(
 				$value,
 				$columnConfig,
 				$resolveDepth,
@@ -168,6 +169,9 @@ class TcaMapper implements SingletonInterface {
 				$fieldName,
 				$fieldConfiguration
 			);
+
+			$targetFieldName = $renamedFields[$fieldName] ?? $fieldName;
+			$mappedRecord[$targetFieldName] = $transformedValue;
 		}
 
 		return $mappedRecord;
@@ -182,6 +186,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $excludedFields
 	 * @param int $resolveDepth
 	 * @param array $fieldConfiguration
+	 * @param array $renamedFields
 	 * @return array
 	 */
 	public function mapRecords(
@@ -190,7 +195,8 @@ class TcaMapper implements SingletonInterface {
 		array $allowedFields = [],
 		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
 		int $resolveDepth = 0,
-		array $fieldConfiguration = []
+		array $fieldConfiguration = [],
+		array $renamedFields = []
 	): array {
 		$mappedRecords = [];
 		foreach ($records as $record) {
@@ -200,7 +206,8 @@ class TcaMapper implements SingletonInterface {
 				$allowedFields,
 				$excludedFields,
 				$resolveDepth,
-				$fieldConfiguration
+				$fieldConfiguration,
+				$renamedFields
 			);
 		}
 		return $mappedRecords;
