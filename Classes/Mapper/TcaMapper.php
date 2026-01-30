@@ -309,7 +309,40 @@ class TcaMapper implements SingletonInterface {
 					$foreignTable = $config['foreign_table'];
 					$resolvedRecords = [];
 
-					if (isset($config['foreign_field'])) {
+					if (isset($config['MM'])) {
+						// M:M relation via MM table
+						$queryBuilder = $this->connectionPool->getQueryBuilderForTable($config['MM']);
+						$results = $queryBuilder->select('uid_foreign')
+							->from($config['MM'])
+							->where($queryBuilder->expr()->eq('uid_local', $queryBuilder->createNamedParameter($uid)))
+							->executeQuery()
+							->fetchAllAssociative();
+
+						foreach ($results as $mmRecord) {
+							$foreignUid = (int) $mmRecord['uid_foreign'];
+							if ($foreignUid <= 0) {
+								continue;
+							}
+
+							$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+							$foreignRecord = $queryBuilder->select('*')
+								->from($foreignTable)
+								->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
+								->executeQuery()
+								->fetchAssociative();
+
+							if ($foreignRecord) {
+								$resolvedRecords[] = $this->mapRecord(
+									$foreignTable,
+									$foreignRecord,
+									[],
+									[],
+									$resolveDepth - 1,
+									$fieldConfiguration
+								);
+							}
+						}
+					} elseif (isset($config['foreign_field'])) {
 						// 1:n relation via foreign_field
 						$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 						$queryBuilder->select('*')
