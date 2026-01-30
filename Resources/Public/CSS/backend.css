@@ -46,3 +46,8 @@
 .form-inline.mb-3 .btn {
 	flex: 0 0 auto;
 }
+
+.apicore-duration-critical {
+	color: #dc3545 !important;
+	font-weight: 600;
+}

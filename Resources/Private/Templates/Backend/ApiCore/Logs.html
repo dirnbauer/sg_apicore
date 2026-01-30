@@ -263,7 +263,9 @@
 							<tr>
 								<td>{item.endpoint}</td>
 								<td>{item.status}</td>
-								<td>{item.durationMs -> f:format.number(decimals: 2)} ms</td>
+								<td class="{f:if(condition: item.durationIsCritical, then: 'apicore-duration-critical')}">
+									{item.durationLabel}
+								</td>
 							</tr>
 						</f:for>
 						</tbody>

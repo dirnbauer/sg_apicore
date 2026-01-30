@@ -16,6 +16,7 @@ namespace SGalinski\SgApiCore\Service;
 
 use Psr\Log\LogLevel;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Core\Environment;
@@ -31,6 +32,7 @@ class LogDashboardService {
 
 	public function __construct(
 		protected readonly ExtensionConfiguration $extensionConfiguration,
+		protected readonly ApiRegistry $apiRegistry,
 		CacheManager $cacheManager
 	) {
 		$this->cache = $cacheManager->getCache('sg_apicore_dashboard');
@@ -120,7 +122,13 @@ class LogDashboardService {
 		$timeBuckets = $this->buildTimeBuckets($requestEntries);
 		$topEndpoints = $this->buildTopList($requestEntries, 'endpoint');
 		$topTenants = $this->buildTopList($requestEntries, 'tenantId');
-		$topApis = $this->buildTopList($requestEntries, 'apiId', ['unknown', 'global']);
+		$registeredApis = array_keys($this->apiRegistry->getApis());
+		$topApis = $this->buildTopList(
+			$requestEntries,
+			'apiId',
+			['unknown', 'global'],
+			$registeredApis !== [] ? $registeredApis : NULL
+		);
 		$slowRequests = $this->buildSlowRequests($requestEntries);
 		$recentErrors = $this->buildRecentErrors($entries, $includeErrors);
 
@@ -390,17 +398,28 @@ class LogDashboardService {
 	/**
 	 * @param array<int, array<string, mixed>> $requests
 	 * @param string $field
+	 * @param array<int, string> $ignoreValues
+	 * @param array<int, string>|null $allowedValues
 	 * @return array<int, array<string, mixed>>
 	 */
-	protected function buildTopList(array $requests, string $field, array $ignoreValues = []): array {
+	protected function buildTopList(
+		array $requests,
+		string $field,
+		array $ignoreValues = [],
+		?array $allowedValues = NULL
+	): array {
 		$counts = [];
 		$ignoreLookup = array_flip($ignoreValues);
+		$allowedLookup = $allowedValues !== NULL ? array_flip($allowedValues) : [];
 		foreach ($requests as $entry) {
 			$value = $entry[$field] ?? 'unknown';
 			if ($value === NULL || $value === '') {
 				$value = 'unknown';
 			}
 			if (isset($ignoreLookup[$value])) {
+				continue;
+			}
+			if ($allowedValues !== NULL && !isset($allowedLookup[$value])) {
 				continue;
 			}
 			$counts[$value] = ($counts[$value] ?? 0) + 1;
@@ -428,7 +447,33 @@ class LogDashboardService {
 	protected function buildSlowRequests(array $requests): array {
 		$filtered = array_filter($requests, static fn (array $entry) => $entry['durationMs'] !== NULL);
 		usort($filtered, static fn (array $a, array $b) => $b['durationMs'] <=> $a['durationMs']);
-		return array_slice($filtered, 0, 10);
+		$top = array_slice($filtered, 0, 10);
+		foreach ($top as &$entry) {
+			$durationMs = (float) $entry['durationMs'];
+			$entry['durationLabel'] = $this->formatDurationLabel($durationMs);
+			$entry['durationIsCritical'] = $durationMs >= 10000;
+		}
+		unset($entry);
+		return $top;
+	}
+
+	/**
+	 * @param float $durationMs
+	 * @return string
+	 */
+	protected function formatDurationLabel(float $durationMs): string {
+		if ($durationMs >= 60000) {
+			$value = $durationMs / 60000;
+			$unit = 'min';
+		} elseif ($durationMs >= 1000) {
+			$value = $durationMs / 1000;
+			$unit = 's';
+		} else {
+			$value = $durationMs;
+			$unit = 'ms';
+		}
+
+		return number_format($value, 2, '.', '') . ' ' . $unit;
 	}
 
 	/**
