@@ -26,12 +26,54 @@
 
 namespace SGalinski\SgApiCore\Mapper;
 
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 
 /**
  * Service for mapping TYPO3 records to API responses based on TCA and vice versa
  */
 class TcaMapper implements SingletonInterface {
+	/**
+	 * @var PersistenceManager
+	 */
+	protected PersistenceManager $persistenceManager;
+
+	/**
+	 * @var ConnectionPool
+	 */
+	protected ConnectionPool $connectionPool;
+
+	/**
+	 * @param PersistenceManager $persistenceManager
+	 * @param ConnectionPool $connectionPool
+	 */
+	public function __construct(PersistenceManager $persistenceManager, ConnectionPool $connectionPool) {
+		$this->persistenceManager = $persistenceManager;
+		$this->connectionPool = $connectionPool;
+	}
+
+	/**
+	 * Converts an Extbase object to raw database data.
+	 *
+	 * @param object $object
+	 * @param string $tableName
+	 * @return array
+	 */
+	public function getRawData(object $object, string $tableName): array {
+		$uid = (int) $this->persistenceManager->getIdentifierByObject($object);
+		if ($uid <= 0) {
+			return [];
+		}
+
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		return (array) $queryBuilder->select('*')
+			->from($tableName)
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid)))
+			->executeQuery()
+			->fetchAssociative();
+	}
+
 	/**
 	 * Maps a single record to an array based on the allowed fields
 	 *
