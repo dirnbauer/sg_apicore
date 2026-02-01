@@ -38,17 +38,20 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 	use TokenExtractionTrait;
 
 	/**
-	 * @var TokenRepository
-	 */
-	protected TokenRepository $tokenRepository;
-
-	/**
 	 * @param TokenRepository $tokenRepository
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
-	public function __construct(TokenRepository $tokenRepository, ExtensionConfiguration $extensionConfiguration) {
-		$this->tokenRepository = $tokenRepository;
-		$this->extensionConfiguration = $extensionConfiguration;
+	public function __construct(
+		protected TokenRepository $tokenRepository,
+		protected ExtensionConfiguration $extensionConfiguration
+	) {
+	}
+
+	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		return $this->extensionConfiguration;
 	}
 
 	/**

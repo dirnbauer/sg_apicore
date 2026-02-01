@@ -31,6 +31,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -51,8 +52,9 @@ class ResourceController {
 		protected TcaMapper $tcaMapper,
 		protected ResponseService $responseService,
 		protected PaginationService $paginationService,
-		protected \SGalinski\SgApiCore\Service\LogService $logService,
-		protected ExtensionConfiguration $extensionConfiguration
+		protected LogService $logService,
+		protected ExtensionConfiguration $extensionConfiguration,
+		protected LanguageServiceFactory $languageServiceFactory
 	) {
 	}
 

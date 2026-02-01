@@ -39,6 +39,7 @@ use SGalinski\SgApiCore\Service\OpenApiService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -53,8 +54,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
-		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager);
+		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
 	}
 
 	protected function getOpenApiService(

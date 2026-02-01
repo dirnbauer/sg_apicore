@@ -53,14 +53,19 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 		protected ?JwtService $jwtService = NULL,
 		protected ?TokenRepository $tokenRepository = NULL,
 		protected ?ConnectionPool $connectionPool = NULL,
-		?ExtensionConfiguration $extensionConfiguration = NULL
+		protected ?ExtensionConfiguration $extensionConfiguration = NULL
 	) {
 		$this->jwtService ??= GeneralUtility::makeInstance(JwtService::class);
 		$this->tokenRepository ??= GeneralUtility::makeInstance(TokenRepository::class);
 		$this->connectionPool ??= GeneralUtility::makeInstance(ConnectionPool::class);
-		$this->extensionConfiguration = $extensionConfiguration ?? GeneralUtility::makeInstance(
-			ExtensionConfiguration::class
-		);
+		$this->extensionConfiguration ??= GeneralUtility::makeInstance(ExtensionConfiguration::class);
+	}
+
+	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		return $this->extensionConfiguration;
 	}
 
 	/**

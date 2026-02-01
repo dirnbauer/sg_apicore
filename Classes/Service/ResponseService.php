@@ -39,15 +39,13 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class ResponseService implements SingletonInterface {
 	/**
-	 * @var ExtensionConfiguration
-	 */
-	protected ExtensionConfiguration $extensionConfiguration;
-
-	/**
 	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @param LanguageServiceFactory $languageServiceFactory
 	 */
-	public function __construct(ExtensionConfiguration $extensionConfiguration) {
-		$this->extensionConfiguration = $extensionConfiguration;
+	public function __construct(
+		protected ExtensionConfiguration $extensionConfiguration,
+		protected LanguageServiceFactory $languageServiceFactory
+	) {
 	}
 
 	/**
@@ -119,17 +117,15 @@ class ResponseService implements SingletonInterface {
 		/** @var LanguageService|null $languageService */
 		$languageService = $GLOBALS['LANG'] ?? NULL;
 		if ($languageService === NULL) {
-			/** @var LanguageServiceFactory $languageServiceFactory */
-			$languageServiceFactory = GeneralUtility::makeInstance(LanguageServiceFactory::class);
 			$language = NULL;
 			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
 			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
 				$language = $request->getAttribute('language');
 			}
 			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
-				$languageService = $languageServiceFactory->createFromSiteLanguage($language);
+				$languageService = $this->languageServiceFactory->createFromSiteLanguage($language);
 			} else {
-				$languageService = $languageServiceFactory->create('default');
+				$languageService = $this->languageServiceFactory->create('default');
 			}
 		}
 

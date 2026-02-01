@@ -35,11 +35,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 trait TokenExtractionTrait {
 	/**
-	 * @var ExtensionConfiguration|null
-	 */
-	protected ?ExtensionConfiguration $extensionConfiguration = NULL;
-
-	/**
 	 * Extracts the token from various possible locations
 	 *
 	 * @param ServerRequestInterface $request
@@ -82,11 +77,5 @@ trait TokenExtractionTrait {
 	/**
 	 * @return ExtensionConfiguration
 	 */
-	protected function getExtensionConfiguration(): ExtensionConfiguration {
-		if ($this->extensionConfiguration === NULL) {
-			$this->extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
-		}
-
-		return $this->extensionConfiguration;
-	}
+	abstract protected function getExtensionConfiguration(): ExtensionConfiguration;
 }

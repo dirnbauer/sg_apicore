@@ -41,6 +41,7 @@ use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -66,8 +67,14 @@ class RouterTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
-		$discoveryService = new EndpointDiscoveryService($controllersIterator, $resourceRegistry, $cacheManager);
+		$discoveryService = new EndpointDiscoveryService(
+			$controllersIterator,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory
+		);
 		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
 		$responseService = $this->createStub(ResponseService::class);
 		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {

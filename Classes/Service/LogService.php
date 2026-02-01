@@ -191,10 +191,12 @@ class LogService implements SingletonInterface {
 	 * @return mixed
 	 */
 	public function redact(mixed $data, array $redactKeys): mixed {
+		if ($data === NULL || $data === '') {
+			return $data;
+		}
+
+		$redactKeys = array_map('strtolower', $redactKeys);
 		if (is_string($data)) {
-			if ($data === '') {
-				return '';
-			}
 			// Basic masking for strings if they look like JSON
 			if (str_starts_with($data, '{') || str_starts_with($data, '[')) {
 				try {
@@ -204,14 +206,30 @@ class LogService implements SingletonInterface {
 					return $data;
 				}
 			}
-			return $data;
+
+			// Redact potential Bearer tokens in strings
+			return (string) preg_replace('/(Bearer\s+)[a-zA-Z0-9\._\-]+/', '$1***REDACTED***', $data);
 		}
 
 		if (is_array($data)) {
 			foreach ($data as $key => $value) {
-				if (in_array(strtolower((string) $key), $redactKeys, TRUE)) {
-					$data[$key] = '***REDACTED***';
+				$stringKey = strtolower((string) $key);
+				$shouldRedact = in_array($stringKey, $redactKeys, TRUE);
+
+				// Special case for Authorization header or similar
+				if (!$shouldRedact && ($stringKey === 'authorization' || $stringKey === 'http_authorization')) {
+					$shouldRedact = TRUE;
+				}
+
+				if ($shouldRedact) {
+					if (is_array($value)) {
+						$data[$key] = ['***REDACTED***'];
+					} else {
+						$data[$key] = '***REDACTED***';
+					}
 				} elseif (is_array($value)) {
+					$data[$key] = $this->redact($value, $redactKeys);
+				} elseif (is_string($value)) {
 					$data[$key] = $this->redact($value, $redactKeys);
 				}
 			}

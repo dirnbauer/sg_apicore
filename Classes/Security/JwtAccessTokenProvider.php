@@ -37,17 +37,20 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	use TokenExtractionTrait;
 
 	/**
-	 * @var JwtService
-	 */
-	protected JwtService $jwtService;
-
-	/**
 	 * @param JwtService $jwtService
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
-	public function __construct(JwtService $jwtService, ExtensionConfiguration $extensionConfiguration) {
-		$this->jwtService = $jwtService;
-		$this->extensionConfiguration = $extensionConfiguration;
+	public function __construct(
+		protected JwtService $jwtService,
+		protected ExtensionConfiguration $extensionConfiguration
+	) {
+	}
+
+	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		return $this->extensionConfiguration;
 	}
 
 	/**

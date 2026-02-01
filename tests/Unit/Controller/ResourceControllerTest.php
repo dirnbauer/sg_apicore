@@ -33,6 +33,7 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\ResourceController;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
@@ -41,6 +42,7 @@ use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -55,8 +57,9 @@ class ResourceControllerTest extends UnitTestCase {
 	protected TcaMapper|MockObject $tcaMapper;
 	protected ResponseService|MockObject $responseService;
 	protected PaginationService|MockObject $paginationService;
-	protected \SGalinski\SgApiCore\Service\LogService|MockObject $logService;
+	protected LogService|MockObject $logService;
 	protected ExtensionConfiguration|MockObject $extensionConfiguration;
+	protected LanguageServiceFactory|MockObject $languageServiceFactory;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -67,6 +70,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->paginationService = $this->createStub(PaginationService::class);
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$this->extensionConfiguration->method('getApiResourceWriteBackendUserId')->willReturn(0);
+		$this->languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
 		// Mock LogManager to avoid singleton issues in tests
 		$logManager = $this->createStub(LogManager::class);
@@ -75,7 +79,7 @@ class ResourceControllerTest extends UnitTestCase {
 		// Mock BE_USER
 		$GLOBALS['BE_USER'] = $this->createStub(BackendUserAuthentication::class);
 
-		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
+		$this->logService = $this->createStub(LogService::class);
 
 		$this->controller = new ResourceController(
 			$this->connectionPool,
@@ -83,7 +87,8 @@ class ResourceControllerTest extends UnitTestCase {
 			$this->responseService,
 			$this->paginationService,
 			$this->logService,
-			$this->extensionConfiguration
+			$this->extensionConfiguration,
+			$this->languageServiceFactory
 		);
 	}
 

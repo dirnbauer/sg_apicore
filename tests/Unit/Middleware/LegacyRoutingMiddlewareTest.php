@@ -24,7 +24,6 @@
  *  This copyright notice MUST APPEAR in all copies of the script!
  ***************************************************************/
 
-declare(strict_types=1);
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 

@@ -37,6 +37,7 @@ use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -52,8 +53,9 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
-		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager);
+		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
 		$endpoints = $service->getAllEndpoints();
 
 		$this->assertCount(1, $endpoints);
@@ -93,6 +95,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
 		$resourceRegistryA = new ResourceRegistry();
 		$resourceRegistryA->registerResource('public', 'tt_content', '/contents', [
@@ -104,8 +107,8 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			'allowedOperations' => ['list', 'get'],
 		]);
 
-		$serviceA = new EndpointDiscoveryService($controllers, $resourceRegistryA, $cacheManager);
-		$serviceB = new EndpointDiscoveryService($controllers, $resourceRegistryB, $cacheManager);
+		$serviceA = new EndpointDiscoveryService($controllers, $resourceRegistryA, $cacheManager, $languageServiceFactory);
+		$serviceB = new EndpointDiscoveryService($controllers, $resourceRegistryB, $cacheManager, $languageServiceFactory);
 
 		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
 	}

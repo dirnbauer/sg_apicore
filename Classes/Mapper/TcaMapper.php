@@ -26,6 +26,7 @@
 
 namespace SGalinski\SgApiCore\Mapper;
 
+use Doctrine\DBAL\Exception;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\StreamFactory;
 use TYPO3\CMS\Core\Resource\FileInterface;
@@ -42,41 +43,24 @@ use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
  */
 class TcaMapper implements SingletonInterface {
 	/**
-	 * @var PersistenceManager
+	 * @var array
 	 */
-	protected PersistenceManager $persistenceManager;
-
-	/**
-	 * @var ConnectionPool
-	 */
-	protected ConnectionPool $connectionPool;
-
-	/**
-	 * @var ResourceFactory
-	 */
-	protected ResourceFactory $resourceFactory;
-
-	/**
-	 * @var FileRepository
-	 */
-	protected FileRepository $fileRepository;
+	protected array $recordCache = [];
 
 	/**
 	 * @param PersistenceManager $persistenceManager
 	 * @param ConnectionPool $connectionPool
 	 * @param ResourceFactory $resourceFactory
 	 * @param FileRepository $fileRepository
+	 * @param ContentObjectRenderer $contentObjectRenderer
 	 */
 	public function __construct(
-		PersistenceManager $persistenceManager,
-		ConnectionPool $connectionPool,
-		ResourceFactory $resourceFactory,
-		FileRepository $fileRepository
+		protected PersistenceManager $persistenceManager,
+		protected ConnectionPool $connectionPool,
+		protected ResourceFactory $resourceFactory,
+		protected FileRepository $fileRepository,
+		protected ContentObjectRenderer $contentObjectRenderer
 	) {
-		$this->persistenceManager = $persistenceManager;
-		$this->connectionPool = $connectionPool;
-		$this->resourceFactory = $resourceFactory;
-		$this->fileRepository = $fileRepository;
 	}
 
 	/**
@@ -255,6 +239,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param string $fieldName
 	 * @param array $fieldConfiguration
 	 * @return mixed
+	 * @throws Exception
 	 */
 	protected function transformValue(
 		mixed $value,
@@ -331,12 +316,18 @@ class TcaMapper implements SingletonInterface {
 								continue;
 							}
 
-							$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-							$foreignRecord = $queryBuilder->select('*')
-								->from($foreignTable)
-								->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
-								->executeQuery()
-								->fetchAssociative();
+							$cacheKey = $foreignTable . ':' . $foreignUid;
+							if (isset($this->recordCache[$cacheKey])) {
+								$foreignRecord = $this->recordCache[$cacheKey];
+							} else {
+								$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+								$foreignRecord = $queryBuilder->select('*')
+									->from($foreignTable)
+									->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
+									->executeQuery()
+									->fetchAssociative();
+								$this->recordCache[$cacheKey] = $foreignRecord;
+							}
 
 							if ($foreignRecord) {
 								$resolvedRecords[] = $this->mapRecord(
@@ -391,12 +382,19 @@ class TcaMapper implements SingletonInterface {
 							if ($foreignUid <= 0) {
 								continue;
 							}
-							$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
-							$foreignRecord = $queryBuilder->select('*')
-								->from($foreignTable)
-								->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
-								->executeQuery()
-								->fetchAssociative();
+
+							$cacheKey = $foreignTable . ':' . $foreignUid;
+							if (isset($this->recordCache[$cacheKey])) {
+								$foreignRecord = $this->recordCache[$cacheKey];
+							} else {
+								$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
+								$foreignRecord = $queryBuilder->select('*')
+									->from($foreignTable)
+									->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
+									->executeQuery()
+									->fetchAssociative();
+								$this->recordCache[$cacheKey] = $foreignRecord;
+							}
 
 							if ($foreignRecord) {
 								$resolvedRecords[] = $this->mapRecord(
@@ -511,13 +509,11 @@ class TcaMapper implements SingletonInterface {
 			return '';
 		}
 
-		/** @var ContentObjectRenderer $contentObject */
-		$contentObject = GeneralUtility::makeInstance(ContentObjectRenderer::class);
 		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
 		if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
-			$contentObject->setRequest($request);
+			$this->contentObjectRenderer->setRequest($request);
 		}
-		$contentObject->start([]);
+		$this->contentObjectRenderer->start([]);
 
 		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
 		if ($request instanceof \Psr\Http\Message\ServerRequestInterface && (empty($parseFuncConf) || count($parseFuncConf) <= 1)) {
@@ -535,7 +531,7 @@ class TcaMapper implements SingletonInterface {
 			return $content;
 		}
 
-		return $contentObject->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+		return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
 	}
 
 	/**
