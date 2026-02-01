@@ -94,6 +94,8 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $excludedFields
 	 * @param int $resolveDepth Depth of relation resolution
 	 * @param array $fieldConfiguration Map of table names to their field configurations (allowed/excluded)
+	 * @param array $renamedFields
+	 * @param array $customCallbacks
 	 * @return array
 	 */
 	public function mapRecord(
@@ -103,7 +105,8 @@ class TcaMapper implements SingletonInterface {
 		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
 		int $resolveDepth = 0,
 		array $fieldConfiguration = [],
-		array $renamedFields = []
+		array $renamedFields = [],
+		array $customCallbacks = []
 	): array {
 		$mappedRecord = [];
 		$tca = $GLOBALS['TCA'][$tableName] ?? [];
@@ -158,6 +161,12 @@ class TcaMapper implements SingletonInterface {
 			$mappedRecord[$targetFieldName] = $transformedValue;
 		}
 
+		foreach ($customCallbacks as $fieldName => $callback) {
+			if (is_callable($callback)) {
+				$mappedRecord[$fieldName] = $callback($record, $mappedRecord);
+			}
+		}
+
 		return $mappedRecord;
 	}
 
@@ -171,6 +180,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param int $resolveDepth
 	 * @param array $fieldConfiguration
 	 * @param array $renamedFields
+	 * @param array $customCallbacks
 	 * @return array
 	 */
 	public function mapRecords(
@@ -180,7 +190,8 @@ class TcaMapper implements SingletonInterface {
 		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
 		int $resolveDepth = 0,
 		array $fieldConfiguration = [],
-		array $renamedFields = []
+		array $renamedFields = [],
+		array $customCallbacks = []
 	): array {
 		$mappedRecords = [];
 		foreach ($records as $record) {
@@ -191,7 +202,8 @@ class TcaMapper implements SingletonInterface {
 				$excludedFields,
 				$resolveDepth,
 				$fieldConfiguration,
-				$renamedFields
+				$renamedFields,
+				$customCallbacks
 			);
 		}
 		return $mappedRecords;

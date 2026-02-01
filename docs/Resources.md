@@ -47,7 +47,8 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `allowedOperations`: Array of enabled operations (`list`, `get`, `create`, `update`, `delete`).
 * `readFields`: Whitelist of fields for output mapping (empty = all except internal fields).
 * `writeFields`: Whitelist of fields accepted for `create` and `update`.
-* `fieldConfiguration`: Map of table names to their field configurations. Allows controlling `allowed` and `excluded` fields for both the main record and related records (when resolved).
+* `fieldConfiguration`: Map of table names to their field configurations. Allows controlling `allowed` and `excluded`
+  fields for both the main record and related records (when resolved).
     * Example:
       ```php
       'fieldConfiguration' => [
@@ -62,6 +63,7 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `deleteMode`: `soft` (default) uses DataHandler delete, `hard` deletes the DB record directly (no TYPO3 audit log).
 * `rateLimit`: Optional rate limit overrides for this resource (see `RateLimiting.md`).
 * `requiredScopes`: Associative array mapping operations to required scope arrays.
+* `resolveDepth`: Default recursion depth for resolving relations (default: `1`).
 
 If `writeFields` is empty, the OpenAPI request body is generated from `readFields`. If both are empty, the request body
 is generated from the table TCA (excluding `uid`).
@@ -80,8 +82,10 @@ Based on the configuration, the following endpoints are automatically generated:
 
 ### Pagination
 
-Use `page` and `perPage` query parameters:
-`GET /api/public/v1/contents?page=2&perPage=20`
+Use `page` and `limit` query parameters:
+`GET /api/public/v1/contents?page=2&limit=20`
+
+**Note**: `perPage` is also supported as an alias for `limit` for backward compatibility.
 
 ### Sorting
 
@@ -97,7 +101,7 @@ Use the `filter` query parameter with field names:
 You can also use arrays for IN-queries:
 `GET /api/public/v1/contents?filter[uid][]=1&filter[uid][]=2`
 
-Only fields defined in `readFields` (or all if empty) can be used for filtering.
+Only fields defined in `readFields` (or whitelisted in `fieldConfiguration` or all if empty) can be used for filtering.
 
 ## Persistence & DataHandler
 

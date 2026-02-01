@@ -44,7 +44,7 @@ When registering, the following options can be passed in the third parameter:
     * `token`: A valid Opaque Bearer Token is required.
     * `user`: A user login (Access/Refresh Token) is required.
 * `authProviders`: List of allowed providers (e.g., `['beareropaquetokenprovider']`).
-Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
+  Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
 
 Use the fifth parameter for additional options:
 
