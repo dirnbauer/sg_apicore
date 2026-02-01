@@ -38,6 +38,7 @@ use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\ResourceController;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
@@ -72,7 +73,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 	public function __construct(
 		iterable $controllers,
 		protected ResourceRegistry $resourceRegistry,
-		CacheManager $cacheManager
+		CacheManager $cacheManager,
+		protected LanguageServiceFactory $languageServiceFactory
 	) {
 		$this->controllers = $controllers;
 		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
@@ -302,6 +304,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 		// Determine field metadata from TCA
 		$fieldMetadata = [];
+		$languageService = $this->languageServiceFactory->create('en');
 		foreach ($allFields as $fieldName) {
 			$type = 'string';
 			$description = 'Field: ' . $fieldName;
@@ -309,6 +312,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 			$pattern = NULL;
 			$min = NULL;
 			$max = NULL;
+
+			if ($fieldName === 'uid' || $fieldName === 'pid') {
+				$type = 'integer';
+			}
+
 			if (isset($tca['columns'][$fieldName]['config'])) {
 				$colConfig = $tca['columns'][$fieldName]['config'];
 				$tcaType = $colConfig['type'] ?? '';
@@ -337,8 +345,29 @@ class EndpointDiscoveryService implements SingletonInterface {
 							$pattern = '/^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$/';
 						}
 						break;
+					case 'group':
+					case 'inline':
+					case 'file':
+						if ($tcaType === 'file' ||
+							($colConfig['foreign_table'] ?? '') === 'sys_file_reference' ||
+							($colConfig['internal_type'] ?? '') === 'file_reference' ||
+							str_contains($colConfig['MM'] ?? '', 'sys_file_reference')
+						) {
+							$type = 'sys_file_reference';
+						} elseif (isset($colConfig['foreign_table'])) {
+							$type = $colConfig['foreign_table'];
+						}
+						break;
 					case 'select':
 						$type = 'string';
+						if (isset($colConfig['foreign_table'])) {
+							if ($colConfig['foreign_table'] === 'sys_file_reference') {
+								$type = 'sys_file_reference';
+							} else {
+								$type = $colConfig['foreign_table'];
+							}
+						}
+
 						if (isset($colConfig['items'])) {
 							$description .= ' (Possible values: ' . implode(
 								', ',
@@ -353,7 +382,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				}
 
 				if (isset($tca['columns'][$fieldName]['label'])) {
-					$description = $tca['columns'][$fieldName]['label'];
+					$description = $languageService->sL($tca['columns'][$fieldName]['label']);
 				}
 			}
 			$fieldMetadata[$fieldName] = [
