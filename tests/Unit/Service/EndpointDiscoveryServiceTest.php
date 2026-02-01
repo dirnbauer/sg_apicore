@@ -37,6 +37,7 @@ use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -97,20 +98,60 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
-		$resourceRegistryA = new ResourceRegistry();
-		$resourceRegistryA->registerResource('public', 'tt_content', '/contents', [
+		$resourceRegistry = new ResourceRegistry();
+		$resourceRegistry->registerResource('public', 'tt_content', '/contents', [
 			'allowedOperations' => ['list'],
 		]);
+
+		$serviceA = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
 
 		$resourceRegistryB = new ResourceRegistry();
 		$resourceRegistryB->registerResource('public', 'tt_content', '/contents', [
 			'allowedOperations' => ['list', 'get'],
 		]);
 
-		$serviceA = new EndpointDiscoveryService($controllers, $resourceRegistryA, $cacheManager, $languageServiceFactory);
 		$serviceB = new EndpointDiscoveryService($controllers, $resourceRegistryB, $cacheManager, $languageServiceFactory);
 
 		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
+	}
+
+	public function testGenerateResourceEndpointsUsesTcaLabels(): void {
+		$controllers = new \ArrayIterator([]);
+		$resourceRegistry = new ResourceRegistry();
+		$resourceRegistry->registerResource('public', 'tx_test', '/tests', [
+			'allowedOperations' => ['list'],
+			'readFields' => ['title']
+		]);
+
+		$GLOBALS['TCA']['tx_test'] = [
+			'columns' => [
+				'title' => [
+					'label' => 'LLL:EXT:test/Resources/Private/Language/locallang_db.xlf:tx_test.title',
+					'config' => ['type' => 'input']
+				]
+			]
+		];
+
+		$cache = $this->createMock(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$languageService = $this->createMock(LanguageService::class);
+		$languageService->method('sL')->with('LLL:EXT:test/Resources/Private/Language/locallang_db.xlf:tx_test.title')
+			->willReturn('Translated Title');
+
+		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
+
+		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
+		$endpoints = $service->getAllEndpoints();
+
+		$this->assertCount(1, $endpoints);
+		$fieldMetadata = $endpoints[0]['resource']['fieldMetadata'];
+		$this->assertEquals('Translated Title', $fieldMetadata['title']['description']);
+
+		unset($GLOBALS['TCA']['tx_test']);
 	}
 }
 

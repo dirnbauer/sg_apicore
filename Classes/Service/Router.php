@@ -427,11 +427,12 @@ class Router implements SingletonInterface {
 			: rtrim($varPath, '/') . '/cache/sg_apicore';
 
 		if (!is_dir($cacheDirectory)) {
-			$created = @mkdir($cacheDirectory, 0775, TRUE);
-			if (!$created && !is_dir($cacheDirectory)) {
+			if (!@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
 				$cacheDirectory = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_cache';
 				if (!is_dir($cacheDirectory)) {
-					@mkdir($cacheDirectory, 0775, TRUE);
+					if (!@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
+						// Fallback failed, but we can't do much more here
+					}
 				}
 			}
 		}

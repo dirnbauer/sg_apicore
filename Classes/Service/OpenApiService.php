@@ -425,14 +425,30 @@ class OpenApiService implements SingletonInterface {
 				'description' => (string) $response->description
 			];
 			if ($response->schema || $response->example !== NULL) {
+				$schema = $this->parseSchema(
+					$response->schema,
+					array_keys($spec['components']['schemas'] ?? [])
+				);
+
+				if ($response->example !== NULL && ($response->schema === NULL || $schema['type'] === 'object')) {
+					$generatedSchema = $this->generateSchemaFromExample($response->example, (string) $response->schema);
+					if ($response->schema === NULL) {
+						$schema = $generatedSchema;
+					} else {
+						// Merge properties if both exist and are objects
+						$schema['properties'] = array_merge(
+							$schema['properties'] ?? [],
+							$generatedSchema['properties'] ?? []
+						);
+					}
+				}
+
 				$resp['content'] = [
 					'application/json' => [
-						'schema' => $this->parseSchema(
-							$response->schema,
-							array_keys($spec['components']['schemas'] ?? [])
-						)
+						'schema' => $schema
 					]
 				];
+
 				if ($response->example !== NULL) {
 					$resp['content']['application/json']['example'] = $response->example;
 				}
@@ -513,6 +529,69 @@ class OpenApiService implements SingletonInterface {
 		}
 
 		return $schema;
+	}
+
+	/**
+	 * Generates a basic OpenAPI schema from a PHP example value
+	 *
+	 * @param mixed $example
+	 * @param string $tableName
+	 * @return array
+	 */
+	protected function generateSchemaFromExample(mixed $example, string $tableName = ''): array {
+		if (is_array($example)) {
+			// Check if it's an associative array (object) or sequential (array)
+			$isAssoc = count($example) > 0 && array_keys($example) !== range(0, count($example) - 1);
+			if ($isAssoc) {
+				$properties = [];
+				$tca = ($tableName !== '' && isset($GLOBALS['TCA'][$tableName])) ? $GLOBALS['TCA'][$tableName] : NULL;
+				$languageService = $this->endpointDiscoveryService->getLanguageService();
+
+				foreach ($example as $key => $value) {
+					$foreignTable = '';
+					if ($tca !== NULL && isset($tca['columns'][$key]['config']['foreign_table'])) {
+						$foreignTable = $tca['columns'][$key]['config']['foreign_table'];
+					}
+
+					$schema = $this->generateSchemaFromExample($value, $foreignTable);
+
+					if ($tca !== NULL && isset($tca['columns'][$key]['label'])) {
+						$label = (string) $languageService->sL($tca['columns'][$key]['label']);
+						if ($label !== '') {
+							$schema['description'] = $label;
+						}
+					}
+
+					$properties[$key] = $schema;
+				}
+
+				return [
+					'type' => 'object',
+					'properties' => $properties
+				];
+			}
+
+			$items = ['type' => 'object'];
+			if (count($example) > 0) {
+				$items = $this->generateSchemaFromExample(reset($example), $tableName);
+			}
+			return [
+				'type' => 'array',
+				'items' => $items
+			];
+		}
+
+		if (is_int($example)) {
+			return ['type' => 'integer'];
+		}
+		if (is_float($example)) {
+			return ['type' => 'number'];
+		}
+		if (is_bool($example)) {
+			return ['type' => 'boolean'];
+		}
+
+		return ['type' => 'string'];
 	}
 
 	/**

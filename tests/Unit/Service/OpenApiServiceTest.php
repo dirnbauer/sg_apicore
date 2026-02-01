@@ -54,7 +54,17 @@ class OpenApiServiceTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$languageService = $this->createMock(\TYPO3\CMS\Core\Localization\LanguageService::class);
+		$languageService->method('sL')->willReturnCallback(function ($key) {
+			if ($key === 'LLL:EXT:test/locallang.xlf:title') {
+				return 'Translated Title';
+			}
+			return $key;
+		});
+
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
 
 		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
 	}
@@ -200,6 +210,97 @@ class OpenApiServiceTest extends UnitTestCase {
 		// Response Example
 		$this->assertArrayHasKey('200', $operation['responses']);
 		$this->assertEquals(['foo' => 'bar'], $operation['responses']['200']['content']['application/json']['example']);
+
+		// Schema generated from Example
+		$schema = $operation['responses']['200']['content']['application/json']['schema'];
+		$this->assertEquals('object', $schema['type']);
+		$this->assertArrayHasKey('properties', $schema);
+		$this->assertEquals('string', $schema['properties']['foo']['type']);
+	}
+
+	public function testGenerateSpecGeneratesComplexSchemaFromExample(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockComplexExampleController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+		$operation = $spec['paths']['/complex']['get'];
+
+		$schema = $operation['responses']['200']['content']['application/json']['schema'];
+		$this->assertEquals('object', $schema['type']);
+		$this->assertEquals('string', $schema['properties']['title']['type']);
+		$this->assertEquals('integer', $schema['properties']['count']['type']);
+		$this->assertEquals('array', $schema['properties']['items']['type']);
+		$this->assertEquals('object', $schema['properties']['items']['items']['type']);
+		$this->assertEquals('integer', $schema['properties']['items']['items']['properties']['id']['type']);
+	}
+
+	public function testGenerateSpecUsesTcaLabelsForRegularEndpoints(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockTcaExampleController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$GLOBALS['TCA']['tx_test_table'] = [
+			'columns' => [
+				'title' => [
+					'label' => 'LLL:EXT:test/locallang.xlf:title'
+				]
+			]
+		];
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+		$operation = $spec['paths']['/tca-example']['get'];
+
+		$schema = $operation['responses']['200']['content']['application/json']['schema'];
+		$this->assertEquals('Translated Title', $schema['properties']['title']['description']);
+
+		unset($GLOBALS['TCA']['tx_test_table']);
+	}
+
+	public function testGenerateSpecUsesRecursiveTcaLabels(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockRecursiveTcaController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$GLOBALS['TCA']['tx_parent_table'] = [
+			'columns' => [
+				'child' => [
+					'label' => 'Parent Child Label',
+					'config' => [
+						'type' => 'inline',
+						'foreign_table' => 'tx_child_table'
+					]
+				]
+			]
+		];
+		$GLOBALS['TCA']['tx_child_table'] = [
+			'columns' => [
+				'name' => [
+					'label' => 'Child Name Label'
+				]
+			]
+		];
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+		$operation = $spec['paths']['/recursive-tca']['get'];
+
+		$schema = $operation['responses']['200']['content']['application/json']['schema'];
+		$this->assertEquals('Parent Child Label', $schema['properties']['child']['description']);
+		$this->assertEquals('Child Name Label', $schema['properties']['child']['properties']['name']['description']);
+
+		unset($GLOBALS['TCA']['tx_parent_table'], $GLOBALS['TCA']['tx_child_table']);
 	}
 
 	public function testGenerateSpecFixesMissingDescriptionAndMissingArrayItems(): void {
@@ -294,5 +395,38 @@ class MockExampleController {
 	#[ApiQueryParam(name: 'q', example: 'search-term')]
 	#[ApiResponse(status: 200, schema: 'object', example: ['foo' => 'bar'])]
 	public function exampleAction(): void {
+	}
+}
+
+/**
+ * Mock controller for TCA examples
+ */
+class MockTcaExampleController {
+	#[ApiRoute(path: '/tca-example', methods: ['GET'])]
+	#[ApiResponse(status: 200, schema: 'tx_test_table', example: ['title' => 'Test'])]
+	public function tcaAction(): void {
+	}
+}
+
+class MockRecursiveTcaController {
+	#[ApiRoute(path: '/recursive-tca', methods: ['GET'])]
+	#[ApiResponse(status: 200, schema: 'tx_parent_table', example: ['child' => ['name' => 'Test']])]
+	public function recursiveAction(): void {
+	}
+}
+
+/**
+ * Mock controller for complex examples
+ */
+class MockComplexExampleController {
+	#[ApiRoute(path: '/complex', methods: ['GET'])]
+	#[ApiResponse(status: 200, example: [
+		'title' => 'Complex',
+		'count' => 5,
+		'items' => [
+			['id' => 1]
+		]
+	])]
+	public function complexAction(): void {
 	}
 }

@@ -38,6 +38,7 @@ use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\ResourceController;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
 
@@ -78,6 +79,13 @@ class EndpointDiscoveryService implements SingletonInterface {
 	) {
 		$this->controllers = $controllers;
 		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
+	}
+
+	/**
+	 * @return LanguageService
+	 */
+	public function getLanguageService(): LanguageService {
+		return $this->languageServiceFactory->create('en');
 	}
 
 	/**
@@ -307,7 +315,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$languageService = $this->languageServiceFactory->create('en');
 		foreach ($allFields as $fieldName) {
 			$type = 'string';
-			$description = 'Field: ' . $fieldName;
+			$description = '';
 			$required = FALSE;
 			$pattern = NULL;
 			$min = NULL;
@@ -321,6 +329,15 @@ class EndpointDiscoveryService implements SingletonInterface {
 				$colConfig = $tca['columns'][$fieldName]['config'];
 				$tcaType = $colConfig['type'] ?? '';
 				$eval = $colConfig['eval'] ?? '';
+
+				if (isset($tca['columns'][$fieldName]['label'])) {
+					$description = $languageService->sL($tca['columns'][$fieldName]['label']);
+				}
+
+				if ($description === '') {
+					$description = 'Field: ' . $fieldName;
+				}
+
 				switch ($tcaType) {
 					case 'check':
 						$type = 'boolean';
@@ -380,11 +397,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 				if (str_contains($eval, 'required')) {
 					$required = TRUE;
 				}
-
-				if (isset($tca['columns'][$fieldName]['label'])) {
-					$description = $languageService->sL($tca['columns'][$fieldName]['label']);
-				}
 			}
+
+			if ($description === '') {
+				$description = 'Field: ' . $fieldName;
+			}
+
 			$fieldMetadata[$fieldName] = [
 				'name' => $fieldName,
 				'type' => $type,
