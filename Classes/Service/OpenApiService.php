@@ -549,7 +549,9 @@ class OpenApiService implements SingletonInterface {
 
 				foreach ($example as $key => $value) {
 					$foreignTable = '';
-					if ($tca !== NULL && isset($tca['columns'][$key]['config']['foreign_table'])) {
+					if ($key === 'data') {
+						$foreignTable = $tableName;
+					} elseif ($tca !== NULL && isset($tca['columns'][$key]['config']['foreign_table'])) {
 						$foreignTable = $tca['columns'][$key]['config']['foreign_table'];
 					}
 

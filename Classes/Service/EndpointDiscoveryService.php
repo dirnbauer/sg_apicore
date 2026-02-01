@@ -161,7 +161,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					$tags = $endpoint->tags ?? [];
 					if (empty($tags)) {
 						$pathSegments = explode('/', trim($route->path, '/'));
-						if (count($pathSegments) > 0) {
+						if ($pathSegments !== []) {
 							$tags = [$pathSegments[0]];
 						}
 					}

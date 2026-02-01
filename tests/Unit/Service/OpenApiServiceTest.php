@@ -339,6 +339,33 @@ class OpenApiServiceTest extends UnitTestCase {
 			$properties['tags']['items']['anyOf']
 		);
 	}
+
+	public function testGenerateSpecUsesTcaLabelsForEnvelopedRegularEndpoints(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockEnvelopedTcaExampleController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$GLOBALS['TCA']['tx_test_table'] = [
+			'columns' => [
+				'title' => [
+					'label' => 'LLL:EXT:test/locallang.xlf:title'
+				]
+			]
+		];
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+		$operation = $spec['paths']['/enveloped-tca-example']['get'];
+
+		$schema = $operation['responses']['200']['content']['application/json']['schema'];
+		// Current implementation will likely fail to find the label because it's inside 'data'
+		$this->assertEquals('Translated Title', $schema['properties']['data']['items']['properties']['title']['description']);
+
+		unset($GLOBALS['TCA']['tx_test_table']);
+	}
 }
 
 /**
@@ -404,6 +431,20 @@ class MockExampleController {
 class MockTcaExampleController {
 	#[ApiRoute(path: '/tca-example', methods: ['GET'])]
 	#[ApiResponse(status: 200, schema: 'tx_test_table', example: ['title' => 'Test'])]
+	public function tcaAction(): void {
+	}
+}
+
+/**
+ * Mock controller for enveloped TCA examples
+ */
+class MockEnvelopedTcaExampleController {
+	#[ApiRoute(path: '/enveloped-tca-example', methods: ['GET'])]
+	#[ApiResponse(status: 200, schema: 'tx_test_table', example: [
+		'data' => [
+			['title' => 'Test']
+		]
+	])]
 	public function tcaAction(): void {
 	}
 }
