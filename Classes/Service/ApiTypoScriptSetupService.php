@@ -114,28 +114,28 @@ class ApiTypoScriptSetupService {
 		}
 
 		$pageInformationClass = 'TYPO3\\CMS\\Frontend\\Page\\PageInformation';
-		if (!class_exists($pageInformationClass)) {
-			return $request;
-		}
-
-		/** @var \TYPO3\CMS\Frontend\Page\PageInformation $pageInformation */
-		$pageInformation = new $pageInformationClass();
-		if (method_exists($pageInformation, 'setId')) {
-			$pageInformation->setId($siteRootPageId);
-		}
-
 		$rootline = [];
-		try {
-			$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
-			$rootline = $rootlineUtility->get();
-		} catch (\Throwable) {
-			// Fallback if the rootline cannot be generated
-		}
-		if (method_exists($pageInformation, 'setRootLine')) {
-			$pageInformation->setRootLine($rootline);
-		}
+		if (class_exists($pageInformationClass)) {
+			/** @var \TYPO3\CMS\Frontend\Page\PageInformation $pageInformation */
+			$pageInformation = new $pageInformationClass();
+			if (method_exists($pageInformation, 'setId')) {
+				$pageInformation->setId($siteRootPageId);
+			}
 
-		$request = $request->withAttribute('frontend.page.information', $pageInformation);
+			try {
+				$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
+				$rootline = $rootlineUtility->get();
+			} catch (\Throwable) {
+				// Fallback if the rootline cannot be generated
+			}
+			if (method_exists($pageInformation, 'setRootLine')) {
+				$pageInformation->setRootLine($rootline);
+			}
+
+			$request = $request->withAttribute('frontend.page.information', $pageInformation);
+		} else {
+			$pageInformation = NULL;
+		}
 
 		$site = $request->getAttribute('site');
 		$language = $request->getAttribute('language');
@@ -167,6 +167,7 @@ class ApiTypoScriptSetupService {
 			/** @phpstan-ignore-next-line */
 			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], new RootNode());
 		} else {
+			/** @phpstan-ignore-next-line */
 			$frontendTypoScript = new FrontendTypoScript(new RootNode(), []);
 		}
 
