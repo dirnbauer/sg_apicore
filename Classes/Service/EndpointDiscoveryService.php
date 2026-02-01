@@ -489,7 +489,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'bodyParams' => [],
 				'queryParams' => [],
 				'pathParams' => [
-					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
+					new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')
 				],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName),
@@ -544,7 +544,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
 				'pathParams' => [
-					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
+					new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')
 				],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Updated', schema: $tableName),
@@ -577,7 +577,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'bodyParams' => [],
 				'queryParams' => [],
 				'pathParams' => [
-					new ApiPathParam(name: 'id', type: 'string', description: 'The resource ID')
+					new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')
 				],
 				'responses' => [
 					new ApiResponse(status: 204, description: 'Deleted (no content)'),
