@@ -169,9 +169,10 @@ class RateLimitMiddleware implements MiddlewareInterface {
 	protected function getClientIp(ServerRequestInterface $request): string {
 		$forwardedFor = $request->getHeaderLine('X-Forwarded-For');
 		if ($forwardedFor !== '') {
-			$parts = array_map('trim', explode(',', $forwardedFor));
-			if (count($parts) > 0 && $parts[0] !== '') {
-				return $parts[0];
+			$parts = explode(',', $forwardedFor);
+			$ip = trim($parts[0]);
+			if ($ip !== '') {
+				return $ip;
 			}
 		}
 

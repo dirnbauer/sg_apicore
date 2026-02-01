@@ -112,13 +112,11 @@ class Router implements SingletonInterface {
 	}
 
 	/**
-	 * Dispatches the request to the matching controller action
-	 *
 	 * @param ServerRequestInterface $request
 	 * @param string $apiId
 	 * @param string $version
 	 * @param string $path
-	 * @param string|null $authMode
+	 * @param mixed $authMode
 	 * @return ResponseInterface
 	 * @throws \ReflectionException
 	 * @throws AbstractServerErrorException
@@ -129,7 +127,7 @@ class Router implements SingletonInterface {
 		string $apiId,
 		string $version,
 		string $path,
-		?string $authMode = NULL
+		mixed $authMode = NULL
 	): ResponseInterface {
 		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
 		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode);
@@ -402,14 +400,14 @@ class Router implements SingletonInterface {
 	 * @param array $filteredEndpoints
 	 * @param string $apiId
 	 * @param string $version
-	 * @param string|null $authMode
+	 * @param mixed $authMode
 	 * @return Dispatcher
 	 */
 	protected function createDispatcher(
 		array $filteredEndpoints,
 		string $apiId,
 		string $version,
-		?string $authMode
+		mixed $authMode
 	): Dispatcher {
 		try {
 			$varPath = Environment::getVarPath();
@@ -426,14 +424,11 @@ class Router implements SingletonInterface {
 			? rtrim($varPath, '/') . '/sg_apicore_cache'
 			: rtrim($varPath, '/') . '/cache/sg_apicore';
 
-		if (!is_dir($cacheDirectory)) {
-			if (!@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
-				$cacheDirectory = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_cache';
-				if (!is_dir($cacheDirectory)) {
-					if (!@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
-						// Fallback failed, but we can't do much more here
-					}
-				}
+		if (!is_dir($cacheDirectory) && !@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
+			$cacheDirectory = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_cache';
+			/** @noinspection PhpStatementHasEmptyBodyInspection */
+			if (!is_dir($cacheDirectory) && !@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
+				// Fallback failed, but we can't do much more here
 			}
 		}
 

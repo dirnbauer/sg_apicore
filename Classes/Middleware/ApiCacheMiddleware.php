@@ -293,7 +293,8 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		}
 
 		foreach ($cacheAttr->additionalVary as $item) {
-			$vary['extra_' . $item] = $request->getQueryParams()[$item] ?? $request->getHeaderLine($item) ?? '';
+			$headerLine = $request->getHeaderLine($item);
+			$vary['extra_' . $item] = $request->getQueryParams()[$item] ?? ($headerLine !== '' ? $headerLine : '');
 		}
 
 		return hash('sha256', serialize($vary));

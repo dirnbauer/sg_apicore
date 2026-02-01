@@ -158,7 +158,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$requireTypoScript = TRUE;
 					}
 
-					$tags = $endpoint?->tags ?? [];
+					$tags = $endpoint->tags ?? [];
 					if (empty($tags)) {
 						$pathSegments = explode('/', trim($route->path, '/'));
 						if (count($pathSegments) > 0) {
@@ -166,6 +166,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 						}
 					}
 
+					$summary = $endpoint->summary ?? $method->getName();
+					$description = $endpoint->description ?? '';
 					$endpoints[] = [
 						'apiId' => is_array($route->apiId) ?
 							$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
@@ -175,8 +177,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 						'methods' => $route->methods,
 						'authMode' => is_array($route->authMode) ?
 							$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
-						'summary' => $endpoint?->summary ?? $method->getName(),
-						'description' => $endpoint?->description ?? '',
+						'summary' => $summary,
+						'description' => $description,
 						'tags' => $tags,
 						'scopes' => $requireScopes?->scopes ?? [],
 						'bodyParams' => $bodyParams,

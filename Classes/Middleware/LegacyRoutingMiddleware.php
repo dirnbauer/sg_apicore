@@ -65,11 +65,13 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
 		// Respect TYPO3 Language Prefix
-		/** @var \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language */
 		$language = $request->getAttribute('language');
-		$languagePrefix = $language?->getBase()->getPath();
+		$languagePrefix = null;
+		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+			$languagePrefix = $language->getBase()->getPath();
+		}
 		$hasLanguagePrefix = FALSE;
-		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
+		if ($languagePrefix !== null && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
 				$path = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');

@@ -77,11 +77,14 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
 		// Respect TYPO3 Language Prefix
-		/** @var \TYPO3\CMS\Core\Site\Entity\SiteLanguage $language */
 		$language = $request->getAttribute('language');
-		$languagePrefix = $language?->getBase()->getPath();
+		$languagePrefix = null;
+		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+			$languagePrefix = $language->getBase()->getPath();
+		}
+
 		$pathWithoutLanguage = $path;
-		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
+		if ($languagePrefix !== null && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
 				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');

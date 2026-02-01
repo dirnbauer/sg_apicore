@@ -413,7 +413,7 @@ class LogDashboardService {
 		$allowedLookup = $allowedValues !== NULL ? array_flip($allowedValues) : [];
 		foreach ($requests as $entry) {
 			$value = $entry[$field] ?? 'unknown';
-			if ($value === NULL || $value === '') {
+			if ($value === '') {
 				$value = 'unknown';
 			}
 			if (isset($ignoreLookup[$value])) {

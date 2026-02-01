@@ -118,10 +118,9 @@ class ApiTypoScriptSetupService {
 			return $request;
 		}
 
-		/** @var object $pageInformation */
+		/** @var \TYPO3\CMS\Frontend\Page\PageInformation $pageInformation */
 		$pageInformation = new $pageInformationClass();
 		if (method_exists($pageInformation, 'setId')) {
-			/** @phpstan-ignore-next-line */
 			$pageInformation->setId($siteRootPageId);
 		}
 
@@ -133,7 +132,6 @@ class ApiTypoScriptSetupService {
 			// Fallback if the rootline cannot be generated
 		}
 		if (method_exists($pageInformation, 'setRootLine')) {
-			/** @phpstan-ignore-next-line */
 			$pageInformation->setRootLine($rootline);
 		}
 
@@ -164,7 +162,14 @@ class ApiTypoScriptSetupService {
 			]
 		];
 
-		$frontendTypoScript = new FrontendTypoScript(new RootNode(), []);
+		$typo3Version = GeneralUtility::makeInstance(Typo3Version::class);
+		if ($typo3Version->getMajorVersion() >= 13) {
+			/** @phpstan-ignore-next-line */
+			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], new RootNode());
+		} else {
+			$frontendTypoScript = new FrontendTypoScript(new RootNode(), []);
+		}
+
 		$frontendTypoScript->setSetupArray($setupArray);
 		$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
 		$tsfe->page = [

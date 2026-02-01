@@ -81,11 +81,14 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 
 		// Respect TYPO3 Language Prefix
-		/** @var SiteLanguage $language */
 		$language = $request->getAttribute('language');
-		$languagePrefix = $language?->getBase()->getPath();
+		$languagePrefix = null;
+		if ($language instanceof SiteLanguage) {
+			$languagePrefix = $language->getBase()->getPath();
+		}
+
 		$pathWithoutLanguage = $path;
-		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
+		if ($languagePrefix !== null && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
 				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
@@ -120,7 +123,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
 
 		// Initialize Language Aspect in Context
-		if ($language) {
+		if ($language instanceof SiteLanguage) {
 			$languageAspect = LanguageAspectFactory::createFromSiteLanguage($language);
 			$this->context->setAspect('language', $languageAspect);
 
