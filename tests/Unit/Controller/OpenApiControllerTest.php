@@ -31,6 +31,7 @@ use SGalinski\SgApiCore\Controller\OpenApiController;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\OpenApiService;
+use SGalinski\SgApiCore\Service\SchemaRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\ServerRequest;
@@ -69,9 +70,12 @@ class OpenApiControllerTest extends UnitTestCase {
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$schemaRegistry = $this->createStub(SchemaRegistry::class);
+		$schemaRegistry->method('getSchemas')->willReturn([]);
 		$openApiService = new OpenApiService(
 			$endpointDiscovery,
 			$apiRegistry,
+			$schemaRegistry,
 			$extensionConfiguration,
 			$cacheManager
 		);

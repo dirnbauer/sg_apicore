@@ -71,7 +71,7 @@ class LegacyExampleController {
 	}
 
 	/**
-	 * Example error action to show legacy error format
+	 * Example error action to show a legacy error format
 	 *
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface

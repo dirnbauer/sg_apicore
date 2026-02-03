@@ -37,6 +37,7 @@ use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\OpenApiService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
+use SGalinski\SgApiCore\Service\SchemaRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
@@ -72,7 +73,8 @@ class OpenApiServiceTest extends UnitTestCase {
 	protected function getOpenApiService(
 		EndpointDiscoveryService $discoveryService,
 		ApiRegistry $apiRegistry,
-		ExtensionConfiguration $extensionConfiguration
+		ExtensionConfiguration $extensionConfiguration,
+		array $globalSchemas = []
 	): OpenApiService {
 		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
@@ -80,7 +82,116 @@ class OpenApiServiceTest extends UnitTestCase {
 		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		return new OpenApiService($discoveryService, $apiRegistry, $extensionConfiguration, $cacheManager);
+		$schemaRegistry = $this->createStub(SchemaRegistry::class);
+		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
+
+		return new OpenApiService($discoveryService, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);
+	}
+
+	public function testEnrichSchemaWithXTagField(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockGlobalSchemaController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$GLOBALS['TCA']['tx_test_table'] = [
+			'columns' => [
+				'original_field' => [
+					'label' => 'LLL:EXT:test/locallang.xlf:title'
+				]
+			]
+		];
+
+		$globalSchemas = [
+			'GlobalObject' => [
+				'type' => 'object',
+				'properties' => [
+					'remapped_field' => [
+						'type' => 'string',
+						'x-tca-field' => 'original_field'
+					]
+				]
+			]
+		];
+
+		$schemaRegistry = $this->createMock(SchemaRegistry::class);
+		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
+		$schemaRegistry->method('getTableNameForSchema')->with('GlobalObject')->willReturn('tx_test_table');
+
+		$cache = $this->createMock(FrontendInterface::class);
+		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$service = new OpenApiService($discoveryService, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);
+		$spec = $service->generateSpec('public', '1');
+
+		$schema = $spec['components']['schemas']['GlobalObject'];
+		$this->assertEquals('Translated Title', $schema['properties']['remapped_field']['description']);
+
+		unset($GLOBALS['TCA']['tx_test_table']);
+	}
+
+	public function testGenerateSchemaFromExampleEnrichesWithTca(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockTcaEnrichmentController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$GLOBALS['TCA']['tx_test_table'] = [
+			'columns' => [
+				'title' => [
+					'label' => 'LLL:EXT:test/locallang.xlf:title',
+					'description' => 'A descriptive text'
+				]
+			]
+		];
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+
+		$schema = $spec['paths']['/tca']['get']['responses']['200']['content']['application/json']['schema'];
+		$this->assertEquals('Translated Title', $schema['properties']['title']['description']);
+
+		unset($GLOBALS['TCA']['tx_test_table']);
+	}
+
+	public function testGenerateSpecWithGlobalSchema(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$controllers = new \ArrayIterator([new MockGlobalSchemaController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$globalSchemas = [
+			'GlobalObject' => [
+				'type' => 'object',
+				'properties' => ['id' => ['type' => 'integer']]
+			]
+		];
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration, $globalSchemas);
+		$spec = $service->generateSpec('public', '1');
+
+		$this->assertArrayHasKey('components', $spec);
+		$this->assertArrayHasKey('schemas', $spec['components']);
+		$this->assertArrayHasKey('GlobalObject', $spec['components']['schemas']);
+		$this->assertSame($globalSchemas['GlobalObject'], $spec['components']['schemas']['GlobalObject']);
+
+		$this->assertArrayHasKey('/global', $spec['paths']);
+		$this->assertArrayHasKey('get', $spec['paths']['/global']);
+		$responses = $spec['paths']['/global']['get']['responses'];
+		$this->assertArrayHasKey('200', $responses);
+		$this->assertArrayHasKey('content', $responses['200']);
+		$this->assertArrayHasKey('application/json', $responses['200']['content']);
+		$schema = $responses['200']['content']['application/json']['schema'];
+		$this->assertEquals('#/components/schemas/GlobalObject', $schema['$ref']);
 	}
 
 	public function testGenerateSpecContainsPaths(): void {
@@ -469,5 +580,19 @@ class MockComplexExampleController {
 		]
 	])]
 	public function complexAction(): void {
+	}
+}
+
+class MockGlobalSchemaController {
+	#[ApiRoute(path: '/global', methods: ['GET'])]
+	#[ApiResponse(status: 200, schema: 'GlobalObject')]
+	public function globalAction(): void {
+	}
+}
+
+class MockTcaEnrichmentController {
+	#[ApiRoute(path: '/tca', methods: ['GET'])]
+	#[ApiResponse(status: 200, schema: 'tx_test_table', example: ['title' => 'Test'])]
+	public function tcaAction(): void {
 	}
 }

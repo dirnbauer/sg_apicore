@@ -28,6 +28,7 @@ namespace SGalinski\SgApiCore\Mapper;
 
 use Doctrine\DBAL\Exception;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Http\ImmediateResponseException;
 use TYPO3\CMS\Core\Http\StreamFactory;
 use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\FileReference;
@@ -54,6 +55,13 @@ class TcaMapper implements SingletonInterface {
 	 * @param FileRepository $fileRepository
 	 * @param ContentObjectRenderer $contentObjectRenderer
 	 */
+	/**
+	 * @return ConnectionPool
+	 */
+	public function getConnectionPool(): ConnectionPool {
+		return $this->connectionPool;
+	}
+
 	public function __construct(
 		protected PersistenceManager $persistenceManager,
 		protected ConnectionPool $connectionPool,
@@ -69,7 +77,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param object $object
 	 * @param string $tableName
 	 * @return array
-	 * @throws \Doctrine\DBAL\Exception
+	 * @throws Exception
 	 */
 	public function getRawData(object $object, string $tableName): array {
 		$uid = (int) $this->persistenceManager->getIdentifierByObject($object);
@@ -97,6 +105,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $renamedFields
 	 * @param array $customCallbacks
 	 * @return array
+	 * @throws Exception
 	 */
 	public function mapRecord(
 		string $tableName,
@@ -182,6 +191,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $renamedFields
 	 * @param array $customCallbacks
 	 * @return array
+	 * @throws Exception
 	 */
 	public function mapRecords(
 		string $tableName,
@@ -383,7 +393,7 @@ class TcaMapper implements SingletonInterface {
 							);
 						}
 					} else {
-						// Relation via comma-separated list of UIDs
+						// Relation via a comma-separated list of UIDs
 						if (is_string($value) && str_contains($value, ',')) {
 							$uids = GeneralUtility::intExplode(',', $value, TRUE);
 						} else {
@@ -444,7 +454,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param int $uid
 	 * @return array
 	 */
-	protected function resolveFileReferences(string $tableName, string $fieldName, int $uid): array {
+	public function resolveFileReferences(string $tableName, string $fieldName, int $uid): array {
 		$fileReferences = $this->fileRepository->findByRelation(
 			$tableName,
 			$fieldName,
@@ -455,6 +465,7 @@ class TcaMapper implements SingletonInterface {
 		foreach ($fileReferences as $fileReference) {
 			/** @var FileReference $fileReference */
 			$file = $fileReference->getOriginalFile();
+			/** @noinspection NestedTernaryOperatorInspection */
 			$resolvedFiles[] = [
 				'uid' => $fileReference->getUid(),
 				'title' => $fileReference->getTitle() ?: ($file->getProperty('title') ?: $file->getName()),
@@ -551,6 +562,7 @@ class TcaMapper implements SingletonInterface {
 	 *
 	 * @param string $content
 	 * @return string
+	 * @throws ImmediateResponseException
 	 */
 	protected function applyContentReplacer(string $content): string {
 		if ($content === '' || !class_exists('SGalinski\Citypower\Service\ContentReplacementService')) {

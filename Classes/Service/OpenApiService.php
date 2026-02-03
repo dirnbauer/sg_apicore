@@ -55,6 +55,11 @@ class OpenApiService implements SingletonInterface {
 	protected ExtensionConfiguration $extensionConfiguration;
 
 	/**
+	 * @var SchemaRegistry
+	 */
+	protected SchemaRegistry $schemaRegistry;
+
+	/**
 	 * @var FrontendInterface
 	 */
 	protected FrontendInterface $cache;
@@ -62,17 +67,20 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param ApiRegistry $apiRegistry
+	 * @param SchemaRegistry $schemaRegistry
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @param CacheManager $cacheManager
 	 */
 	public function __construct(
 		EndpointDiscoveryService $endpointDiscoveryService,
 		ApiRegistry $apiRegistry,
+		SchemaRegistry $schemaRegistry,
 		ExtensionConfiguration $extensionConfiguration,
 		CacheManager $cacheManager
 	) {
 		$this->endpointDiscoveryService = $endpointDiscoveryService;
 		$this->apiRegistry = $apiRegistry;
+		$this->schemaRegistry = $schemaRegistry;
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
 	}
@@ -121,7 +129,7 @@ class OpenApiService implements SingletonInterface {
 						'scheme' => 'bearer'
 					]
 				],
-				'schemas' => []
+				'schemas' => $this->enrichGlobalSchemas()
 			]
 		];
 
@@ -427,20 +435,59 @@ class OpenApiService implements SingletonInterface {
 			if ($response->schema || $response->example !== NULL) {
 				$schema = $this->parseSchema(
 					$response->schema,
-					array_keys($spec['components']['schemas'] ?? [])
+					array_merge(
+						array_keys($spec['components']['schemas'] ?? []),
+						array_keys($this->schemaRegistry->getSchemas())
+					)
 				);
 
-				if ($response->example !== NULL && ($response->schema === NULL || $schema['type'] === 'object')) {
-					$generatedSchema = $this->generateSchemaFromExample($response->example, (string) $response->schema);
-					if ($response->schema === NULL) {
-						$schema = $generatedSchema;
-					} else {
-						// Merge properties if both exist and are objects
-						$schema['properties'] = array_merge(
-							$schema['properties'] ?? [],
-							$generatedSchema['properties'] ?? []
+				$example = $response->example;
+				if ($example !== NULL) {
+					if ($response->schema === NULL || ($schema['type'] ?? NULL) === 'object' || isset($schema['$ref'])) {
+						$tableName = '';
+						$refSchema = NULL;
+						if (isset($schema['$ref'])) {
+							$refName = basename($schema['$ref']);
+							$refSchema = $this->schemaRegistry->getSchema($refName);
+							$tableName = $this->schemaRegistry->getTableNameForSchema($refName);
+						}
+
+						$generatedSchema = $this->generateSchemaFromExample(
+							$example,
+							$tableName !== '' ? $tableName : (string) $response->schema
 						);
+
+						if ($response->schema === NULL) {
+							$schema = $generatedSchema;
+						} else {
+							$baseSchema = $refSchema ?? $schema;
+							if (($baseSchema['type'] ?? '') === 'array' && isset($baseSchema['items']['$ref'])) {
+								$refName = basename($baseSchema['items']['$ref']);
+								$baseSchema['items'] = $this->schemaRegistry->getSchema($refName) ?? $baseSchema['items'];
+							}
+
+							// Merge properties, prioritizing the defined schema's structure
+							// but allowing the example to add/override if necessary.
+							$schema = $baseSchema;
+							if (($schema['type'] ?? '') === 'array' && isset($schema['items']['properties'])) {
+								$schema['items']['properties'] = array_merge(
+									$schema['items']['properties'],
+									$generatedSchema['items']['properties'] ?? []
+								);
+							} elseif (isset($schema['properties'])) {
+								$schema['properties'] = array_merge(
+									$schema['properties'],
+									$generatedSchema['properties'] ?? []
+								);
+							} elseif (($schema['type'] ?? '') === 'object' && isset($generatedSchema['properties'])) {
+								// Case where base schema was just {type: object} without properties
+								$schema['properties'] = $generatedSchema['properties'];
+							}
+						}
 					}
+
+					// Resolve placeholders in example for documentation display
+					$example = $this->resolveExamplePlaceholders($example);
 				}
 
 				$resp['content'] = [
@@ -449,8 +496,8 @@ class OpenApiService implements SingletonInterface {
 					]
 				];
 
-				if ($response->example !== NULL) {
-					$resp['content']['application/json']['example'] = $response->example;
+				if ($example !== NULL) {
+					$resp['content']['application/json']['example'] = $example;
 				}
 			}
 			$operation['responses'][(string) $response->status] = $resp;
@@ -464,6 +511,170 @@ class OpenApiService implements SingletonInterface {
 		foreach ($endpoint['methods'] as $httpMethod) {
 			$spec['paths'][$path][strtolower($httpMethod)] = $operation;
 		}
+	}
+
+	/**
+	 * Resolves 'schema:...' placeholders in example data with dummy/stub values
+	 *
+	 * @param mixed $example
+	 * @return mixed
+	 */
+	protected function resolveExamplePlaceholders(mixed $example): mixed {
+		if (is_string($example) && str_starts_with($example, 'schema:')) {
+			$schemaStr = substr($example, 7);
+			$isArray = str_ends_with($schemaStr, '[]');
+			$schemaName = $isArray ? substr($schemaStr, 0, -2) : $schemaStr;
+
+			$schema = $this->schemaRegistry->getSchema($schemaName);
+			if ($schema === NULL) {
+				// Try to generate a stub from table name if it's not a registered schema
+				return $isArray ? [[]] : [];
+			}
+
+			$stub = $this->generateStubFromSchema($schema);
+			return $isArray ? [$stub] : $stub;
+		}
+
+		if (is_array($example)) {
+			foreach ($example as $key => $value) {
+				$example[$key] = $this->resolveExamplePlaceholders($value);
+			}
+		}
+
+		return $example;
+	}
+
+	/**
+	 * Generates a stub object with example values from a schema
+	 *
+	 * @param array $schema
+	 * @return mixed
+	 */
+	protected function generateStubFromSchema(array $schema): mixed {
+		if (isset($schema['$ref'])) {
+			$refName = basename($schema['$ref']);
+			$refSchema = $this->schemaRegistry->getSchema($refName);
+			return $refSchema ? $this->generateStubFromSchema($refSchema) : [];
+		}
+
+		$type = $schema['type'] ?? 'object';
+		if ($type === 'array') {
+			return [$this->generateStubFromSchema($schema['items'] ?? [])];
+		}
+
+		if ($type === 'object' && isset($schema['properties'])) {
+			$stub = [];
+			foreach ($schema['properties'] as $name => $prop) {
+				if (isset($prop['$ref'])) {
+					$refName = basename($prop['$ref']);
+					$refSchema = $this->schemaRegistry->getSchema($refName);
+					$stub[$name] = $refSchema ? $this->generateStubFromSchema($refSchema) : [];
+				} else {
+					$stub[$name] = $this->generateStubFromProp($prop);
+				}
+			}
+			return $stub;
+		}
+
+		return $this->generateStubFromProp($schema);
+	}
+
+	/**
+	 * Generates a stub value for a property
+	 *
+	 * @param array $prop
+	 * @return mixed
+	 */
+	protected function generateStubFromProp(array $prop): mixed {
+		if (isset($prop['example'])) {
+			return $prop['example'];
+		}
+
+		$type = $prop['type'] ?? 'string';
+		return match ($type) {
+			'integer' => 1,
+			'number' => 1.0,
+			'boolean' => TRUE,
+			'array' => isset($prop['items']) ? [$this->generateStubFromSchema($prop['items'])] : [],
+			'object' => isset($prop['properties']) ? $this->generateStubFromSchema($prop) : [],
+			default => 'string',
+		};
+	}
+
+	/**
+	 * Enriches all global schemas with TCA metadata
+	 *
+	 * @return array
+	 */
+	protected function enrichGlobalSchemas(): array {
+		$schemas = $this->schemaRegistry->getSchemas();
+		foreach ($schemas as $schemaName => &$schema) {
+			$tableName = $this->schemaRegistry->getTableNameForSchema($schemaName);
+			if ($tableName !== '') {
+				$schema = $this->enrichSchemaWithTca($schema, $tableName);
+			}
+		}
+		return $schemas;
+	}
+
+	/**
+	 * Recursively enriches a schema with labels and descriptions from TCA
+	 *
+	 * @param array $schema
+	 * @param string $tableName
+	 * @return array
+	 */
+	protected function enrichSchemaWithTca(array $schema, string $tableName): array {
+		if (isset($schema['$ref'])) {
+			$refName = basename($schema['$ref']);
+			$refSchema = $this->schemaRegistry->getSchema($refName);
+			if ($refSchema) {
+				$table = $this->schemaRegistry->getTableNameForSchema($refName);
+				$schema = array_merge($schema, $this->enrichSchemaWithTca($refSchema, $table !== '' ? $table : $tableName));
+				unset($schema['$ref']); // Inline resolved schema for enrichment
+			}
+			return $schema;
+		}
+
+		if (($schema['type'] ?? '') === 'array' && isset($schema['items'])) {
+			$schema['items'] = $this->enrichSchemaWithTca($schema['items'], $tableName);
+			return $schema;
+		}
+
+		if (($schema['type'] ?? '') !== 'object' || !isset($schema['properties'])) {
+			return $schema;
+		}
+
+		$tca = (isset($GLOBALS['TCA'][$tableName])) ? $GLOBALS['TCA'][$tableName] : NULL;
+		if ($tca === NULL) {
+			return $schema;
+		}
+
+		$languageService = $this->endpointDiscoveryService->getLanguageService();
+		foreach ($schema['properties'] as $fieldName => &$property) {
+			$tcaFieldName = $property['x-tca-field'] ?? $fieldName;
+			$columnConfig = $tca['columns'][$tcaFieldName] ?? NULL;
+			if ($columnConfig !== NULL) {
+				if (isset($columnConfig['label'])) {
+					$label = (string) $languageService->sL($columnConfig['label']);
+					if ($label !== '') {
+						$property['description'] = $label;
+					}
+				}
+
+				// Handle nested objects if there's a foreign_table
+				$foreignTable = $columnConfig['config']['foreign_table'] ?? '';
+				if ($foreignTable !== '') {
+					if (($property['type'] ?? '') === 'array' && isset($property['items'])) {
+						$property['items'] = $this->enrichSchemaWithTca($property['items'], $foreignTable);
+					} else {
+						$property = $this->enrichSchemaWithTca($property, $foreignTable);
+					}
+				}
+			}
+		}
+
+		return $schema;
 	}
 
 	/**
@@ -539,7 +750,25 @@ class OpenApiService implements SingletonInterface {
 	 * @return array
 	 */
 	protected function generateSchemaFromExample(mixed $example, string $tableName = ''): array {
+		if (is_string($example) && str_starts_with($example, 'schema:')) {
+			$schemaStr = substr($example, 7);
+			return $this->parseSchema(
+				$schemaStr,
+				array_merge(
+					array_keys($this->schemaRegistry->getSchemas())
+				)
+			);
+		}
+
 		if (is_array($example)) {
+			// Try to map global schema name to table name for TCA enrichment
+			if ($tableName !== '' && !isset($GLOBALS['TCA'][$tableName])) {
+				$mappedTableName = $this->schemaRegistry->getTableNameForSchema($tableName);
+				if ($mappedTableName !== '') {
+					$tableName = $mappedTableName;
+				}
+			}
+
 			// Check if it's an associative array (object) or sequential (array)
 			$isAssoc = count($example) > 0 && array_keys($example) !== range(0, count($example) - 1);
 			if ($isAssoc) {
@@ -557,10 +786,38 @@ class OpenApiService implements SingletonInterface {
 
 					$schema = $this->generateSchemaFromExample($value, $foreignTable);
 
-					if ($tca !== NULL && isset($tca['columns'][$key]['label'])) {
-						$label = (string) $languageService->sL($tca['columns'][$key]['label']);
-						if ($label !== '') {
-							$schema['description'] = $label;
+					// If the value was a schema placeholder, we might want to update the example value itself
+					// to a more descriptive stub if it's not a $ref.
+					// But more importantly, if it IS a $ref, the example should probably be updated too?
+					// Actually, the example in $resp['content'][...]['example'] remains the original one.
+					// If we want the Swagger UI to show a nice example, we should maybe resolve the placeholder in the example too.
+
+					if ($tca !== NULL) {
+						$tcaFieldName = $key;
+						// Try to find the original field name if it was remapped
+						// In generateSchemaFromExample, we don't have the remapped list easily,
+						// but we can check if any field has a matching label or check renamed list.
+						// Actually, we can check the TCA columns directly.
+						if (!isset($tca['columns'][$key]) && isset($tca['columns'])) {
+							// Check if it's one of our known remapped fields in Citypower
+							$knownRemaps = [
+								'tags' => 'offertags',
+								'business_card_exclusive' => 'business_card',
+								'text' => 'bodytext',
+								'disturber' => 'tx_mask_citypower_slide_disturber',
+								'fallback_link' => 'tx_mask_app_link',
+								'app_link' => 'tx_mask_app_exclusive_link'
+							];
+							if (isset($knownRemaps[$key])) {
+								$tcaFieldName = $knownRemaps[$key];
+							}
+						}
+
+						if (isset($tca['columns'][$tcaFieldName]['label'])) {
+							$label = (string) $languageService->sL($tca['columns'][$tcaFieldName]['label']);
+							if ($label !== '') {
+								$schema['description'] = $label;
+							}
 						}
 					}
 
@@ -577,6 +834,7 @@ class OpenApiService implements SingletonInterface {
 			if (count($example) > 0) {
 				$items = $this->generateSchemaFromExample(reset($example), $tableName);
 			}
+
 			return [
 				'type' => 'array',
 				'items' => $items

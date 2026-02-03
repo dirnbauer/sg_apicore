@@ -21,6 +21,62 @@ To make the specification meaningful, use the following attributes on your contr
 * `#[ApiPathParam]`: Describes a parameter in the URL path.
 * `#[ApiResponse]`: Describes possible responses (status code, description, schema).
 
+### Global Schemata
+
+You can define global schemas that can be reused across multiple endpoints. This is useful for complex objects like "
+Offer" or "User".
+
+```php
+use SGalinski\SgApiCore\Service\SchemaRegistry;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+$schemaRegistry = GeneralUtility::makeInstance(SchemaRegistry::class);
+$schemaRegistry->registerSchema('MyObject', [
+    'type' => 'object',
+    'properties' => [
+        'id' => ['type' => 'integer'],
+        'name' => ['type' => 'string']
+    ]
+], 'tx_my_table'); // Optional: Map to TCA table for enrichment
+```
+
+Referencing a schema in an attribute:
+
+```php
+#[ApiResponse(status: 200, schema: 'MyObject')]
+#[ApiResponse(status: 200, schema: 'MyObject[]')] // Array of objects
+```
+
+### TCA Enrichment
+
+`sg_apicore` automatically enriches schemas with labels from the TYPO3 TCA.
+
+1. **Global Schemas**: If a `$tableName` is provided during `registerSchema()`, all properties in the schema that match
+   TCA columns will automatically receive the translated `label` as their OpenAPI `description`. This
+   works recursively for nested objects with `foreign_table` relations.
+2. **Ad-hoc Schemas**: If you provide a `schema` name (table name) in the `#[ApiResponse]` attribute without a global
+   definition, it will also be enriched.
+3. **Merging with Examples**: When combining a `schema` (reference or table) with an `example`, the generator merges the
+   structures. Properties from the schema are preserved, and example values are used to infer types or provide sample
+   data.
+4. **Remapped Fields**: If a property in your schema does not match the TCA column name (e.g., it was remapped in your
+   API), you can add a custom `x-tca-field` property to the schema property definition to specify the original TCA
+   column name.
+
+   Example:
+   ```php
+   $schemaRegistry->registerSchema('Offer', [
+       'type' => 'object',
+       'properties' => [
+           'tags' => [
+               'type' => 'array',
+               'x-tca-field' => 'offertags', // Original TCA column name
+               'items' => [...]
+           ]
+       ]
+   ], 'tx_citypower_domain_model_offer');
+   ```
+
 ### Automatic Schema Generation
 
 `sg_apicore` can automatically generate schemas from your example data. If you provide an `example` in the
@@ -43,6 +99,30 @@ Example:
 In this case, the generator will check `tx_my_table` for the `title` label and use it as a description. For the nested
 `child` object, it will look at the `foreign_table` configuration in the TCA of `tx_my_table` to resolve labels for the
 `child`'s properties.
+
+### Schema Placeholders in Examples
+
+If you provide an `example` in the `#[ApiResponse]` attribute, you can use placeholders to reference global schemas
+within your example structure. This is extremely useful for paginated responses where you want to show the full
+structure
+of the items without repeating the schema definition.
+
+The format is `schema:SchemaName` or `schema:SchemaName[]` (for an array).
+
+Example:
+
+```php
+#[ApiResponse(status: 200, description: 'List of offers', schema: 'Offer[]', example: [
+    'data' => 'schema:Offer[]',
+    'meta' => [
+        'total' => 100,
+        'page' => 1
+    ]
+])]
+```
+
+The generator will automatically replace the placeholder with a generated stub based on the "Offer" schema's properties
+and their example values or types.
 
 ## CLI Export
 
