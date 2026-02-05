@@ -538,6 +538,7 @@ class TcaMapper implements SingletonInterface {
 		}
 		$this->contentObjectRenderer->start([]);
 
+		$this->ensureParseFuncConfiguration();
 		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
 		if ($request instanceof \Psr\Http\Message\ServerRequestInterface && (empty($parseFuncConf) || count($parseFuncConf) <= 1)) {
 			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
@@ -555,6 +556,30 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+	}
+
+	/**
+	 * Ensures that a minimal parseFunc configuration is available in $GLOBALS['TSFE'].
+	 * This prevents crashes in sg_apicore's TcaMapper when processing RTE fields.
+	 *
+	 * @return void
+	 */
+	protected function ensureParseFuncConfiguration(): void {
+		if (isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
+			return;
+		}
+
+		if (!isset($GLOBALS['TSFE']->tmpl->setup['lib.'])) {
+			$GLOBALS['TSFE']->tmpl->setup['lib.'] = [];
+		}
+
+		$GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] = [
+			'externalBlocks' => 'table, blockquote, ol, ul, div, dl, header, section, footer, address, article, aside, figure, figcaption',
+			'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
+			'proc.' => [
+				'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
+			]
+		];
 	}
 
 	/**
