@@ -51,12 +51,12 @@ class OpenApiServiceTest extends UnitTestCase {
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$languageService = $this->createMock(\TYPO3\CMS\Core\Localization\LanguageService::class);
+		$languageService = $this->createStub(\TYPO3\CMS\Core\Localization\LanguageService::class);
 		$languageService->method('sL')->willReturnCallback(function ($key) {
 			if ($key === 'LLL:EXT:test/locallang.xlf:title') {
 				return 'Translated Title';
@@ -76,10 +76,10 @@ class OpenApiServiceTest extends UnitTestCase {
 		ExtensionConfiguration $extensionConfiguration,
 		array $globalSchemas = []
 	): OpenApiService {
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
 
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
 		$schemaRegistry = $this->createStub(SchemaRegistry::class);
@@ -116,12 +116,12 @@ class OpenApiServiceTest extends UnitTestCase {
 			]
 		];
 
-		$schemaRegistry = $this->createMock(SchemaRegistry::class);
+		$schemaRegistry = $this->createStub(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
 		$schemaRegistry->method('getTableNameForSchema')->with('GlobalObject')->willReturn('tx_test_table');
 
-		$cache = $this->createMock(FrontendInterface::class);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cache = $this->createStub(FrontendInterface::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
 		$service = new OpenApiService($discoveryService, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);

@@ -37,13 +37,13 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 class RateLimitServiceTest extends UnitTestCase {
 	public function testConsumeCreatesNewWindow(): void {
 		$connection = $this->createMock(Connection::class);
-		$state = NULL;
+		$state = FALSE;
 
 		$connection->expects($this->once())->method('beginTransaction');
 		$connection->expects($this->once())->method('commit');
 		$connection->expects($this->never())->method('rollBack');
 
-		$connection->method('fetchAssociative')->willReturnCallback(function () use (&$state) {
+		$connection->method('fetchAssociative')->willReturnCallback(function ($query, $params) use (&$state) {
 			return $state;
 		});
 		$connection->method('insert')->willReturnCallback(function ($table, array $data) use (&$state) {
@@ -98,13 +98,13 @@ class RateLimitServiceTest extends UnitTestCase {
 
 	public function testConsumeAllowsBurstCapacity(): void {
 		$connection = $this->createMock(Connection::class);
-		$state = NULL;
+		$state = FALSE;
 
 		$connection->expects($this->once())->method('beginTransaction');
 		$connection->expects($this->once())->method('commit');
 		$connection->expects($this->never())->method('rollBack');
 
-		$connection->method('fetchAssociative')->willReturnCallback(function () use (&$state) {
+		$connection->method('fetchAssociative')->willReturnCallback(function ($query, $params) use (&$state) {
 			return $state;
 		});
 		$connection->method('insert')->willReturnCallback(function ($table, array $data) use (&$state) {

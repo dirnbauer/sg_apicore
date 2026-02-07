@@ -26,6 +26,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
 use TYPO3\CMS\Core\Log\LogManager;
@@ -51,6 +52,11 @@ class LogServiceTest extends UnitTestCase {
 	protected $logger;
 
 	/**
+	 * @var \Psr\Log\LoggerInterface|\PHPUnit\Framework\MockObject\Stub
+	 */
+	protected $loggerStub;
+
+	/**
 	 * @var ExtensionConfiguration|\PHPUnit\Framework\MockObject\MockObject
 	 */
 	protected $extensionConfiguration;
@@ -59,11 +65,13 @@ class LogServiceTest extends UnitTestCase {
 		parent::setUp();
 		$this->logManager = $this->createStub(LogManager::class);
 		$this->logger = $this->createMock(\Psr\Log\LoggerInterface::class);
-		$this->logManager->method('getLogger')->willReturn($this->logger);
+		$this->loggerStub = $this->createStub(\Psr\Log\LoggerInterface::class);
+		$this->logManager->method('getLogger')->willReturn($this->loggerStub);
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$this->service = new LogService($this->logManager, $this->extensionConfiguration);
 	}
 
+	#[AllowMockObjectsWithoutExpectations]
 	public function testRedactMasksSensitiveKeysInArray(): void {
 		$data = [
 			'username' => 'user123',
@@ -85,6 +93,7 @@ class LogServiceTest extends UnitTestCase {
 		$this->assertEquals('ok', $result['nested']['safe']);
 	}
 
+	#[AllowMockObjectsWithoutExpectations]
 	public function testRedactHandlesJsonStrings(): void {
 		$data = '{"password":"123","safe":"ok"}';
 		$redactKeys = ['password'];
@@ -98,6 +107,7 @@ class LogServiceTest extends UnitTestCase {
 		$this->assertEquals('***REDACTED***', $decoded['password']);
 	}
 
+	#[AllowMockObjectsWithoutExpectations]
 	public function testRedactReturnsOriginalOnInvalidJson(): void {
 		$data = 'not a json { "foo"';
 		$redactKeys = ['foo'];
@@ -108,6 +118,11 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testLogErrorCallsLoggerWhenEnabled(): void {
+		$reflection = new \ReflectionClass(LogService::class);
+		$property = $reflection->getProperty('logger');
+		$property->setAccessible(TRUE);
+		$property->setValue($this->service, $this->logger);
+
 		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
 
 		$this->logger->expects($this->once())->method('error')->with('Test Error', []);
@@ -116,6 +131,11 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testLogExceptionCallsLoggerWithContext(): void {
+		$reflection = new \ReflectionClass(LogService::class);
+		$property = $reflection->getProperty('logger');
+		$property->setAccessible(TRUE);
+		$property->setValue($this->service, $this->logger);
+
 		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
 
 		$exception = new \Exception('Test Exception');
@@ -138,6 +158,11 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testLogRequestResponseCallsLoggerWithRedactedData(): void {
+		$reflection = new \ReflectionClass(LogService::class);
+		$property = $reflection->getProperty('logger');
+		$property->setAccessible(TRUE);
+		$property->setValue($this->service, $this->logger);
+
 		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
 		$this->extensionConfiguration->method('getRedactKeys')->willReturn(['password']);
 		$this->extensionConfiguration->method('isLogBodyEnabled')->willReturn(TRUE);

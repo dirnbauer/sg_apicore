@@ -50,9 +50,9 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
@@ -92,9 +92,9 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 
 	public function testDiscoverySignatureChangesOnResourceChange(): void {
 		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
@@ -132,16 +132,16 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			]
 		];
 
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$languageService = $this->createMock(LanguageService::class);
+		$languageService = $this->createStub(LanguageService::class);
 		$languageService->method('sL')->with('LLL:EXT:test/Resources/Private/Language/locallang_db.xlf:tx_test.title')
 			->willReturn('Translated Title');
 
-		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
 
 		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);

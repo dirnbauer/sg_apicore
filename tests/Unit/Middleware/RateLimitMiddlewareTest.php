@@ -61,7 +61,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
-		$responseService = $this->createMock(ResponseService::class);
+		$responseService = $this->createStub(ResponseService::class);
 		$responseService->method('createErrorResponse')->willReturn(new JsonResponse(['status' => 429], 429));
 		$logService = $this->createStub(LogService::class);
 

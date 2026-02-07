@@ -51,8 +51,8 @@ class PlaceholderTest extends UnitTestCase {
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 
-		$cache = $this->createMock(FrontendInterface::class);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cache = $this->createStub(FrontendInterface::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
 
 		$service = new OpenApiService($discovery, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);
@@ -72,8 +72,8 @@ class PlaceholderTest extends UnitTestCase {
 	protected function getDiscoveryService(iterable $controllers): EndpointDiscoveryService {
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
-		$cache = $this->createMock(FrontendInterface::class);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cache = $this->createStub(FrontendInterface::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);

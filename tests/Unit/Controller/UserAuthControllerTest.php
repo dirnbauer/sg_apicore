@@ -85,7 +85,7 @@ class UserAuthControllerTest extends UnitTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->tokenRepository = $this->createStub(TokenRepository::class);
-		$this->tokenService = $this->createMock(TokenService::class);
+		$this->tokenService = $this->createStub(TokenService::class);
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->passwordHashFactory = $this->createStub(PasswordHashFactory::class);
 		$this->connectionPool = $this->createStub(ConnectionPool::class);
@@ -102,6 +102,15 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testLoginSuccessful(): void {
+		$tokenServiceMock = $this->createMock(TokenService::class);
+		$this->controller = new UserAuthController(
+			$this->tokenRepository,
+			$tokenServiceMock,
+			$this->apiRegistry,
+			$this->passwordHashFactory,
+			$this->connectionPool,
+			$this->responseService
+		);
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
 		$tenantContext = new TenantContext('test-tenant');
@@ -132,8 +141,8 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
 
-		$this->tokenService->method('generateRandomToken')->willReturn('random-token');
-		$this->tokenService->expects($this->exactly(2))->method('createToken');
+		$tokenServiceMock->method('generateRandomToken')->willReturn('random-token');
+		$tokenServiceMock->expects($this->exactly(2))->method('createToken');
 
 		$this->responseService->method('createSuccessResponse')->willReturnCallback(
 			fn ($data) => new JsonResponse($data)
@@ -304,8 +313,8 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testLegacyLoginFailsWithAuthenticatedFrontendUserSession(): void {
-		$request = $this->createMock(ServerRequestInterface::class);
-		$feUser = $this->createMock(\TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication::class);
+		$request = $this->createStub(ServerRequestInterface::class);
+		$feUser = $this->createStub(\TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication::class);
 		$feUser->user = ['uid' => 123, 'username' => 'testuser'];
 
 		$tenantContext = new TenantContext('test-tenant');

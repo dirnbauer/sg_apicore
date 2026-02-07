@@ -57,9 +57,9 @@ class OpenApiControllerTest extends UnitTestCase {
 			]
 		];
 
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn($cachedSpec);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
 		$endpointDiscovery = $this->createMock(EndpointDiscoveryService::class);
