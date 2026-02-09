@@ -26,7 +26,6 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
-use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
 use TYPO3\CMS\Core\Log\LogManager;
@@ -71,7 +70,6 @@ class LogServiceTest extends UnitTestCase {
 		$this->service = new LogService($this->logManager, $this->extensionConfiguration);
 	}
 
-	#[AllowMockObjectsWithoutExpectations]
 	public function testRedactMasksSensitiveKeysInArray(): void {
 		$data = [
 			'username' => 'user123',
@@ -93,7 +91,6 @@ class LogServiceTest extends UnitTestCase {
 		$this->assertEquals('ok', $result['nested']['safe']);
 	}
 
-	#[AllowMockObjectsWithoutExpectations]
 	public function testRedactHandlesJsonStrings(): void {
 		$data = '{"password":"123","safe":"ok"}';
 		$redactKeys = ['password'];
@@ -107,7 +104,6 @@ class LogServiceTest extends UnitTestCase {
 		$this->assertEquals('***REDACTED***', $decoded['password']);
 	}
 
-	#[AllowMockObjectsWithoutExpectations]
 	public function testRedactReturnsOriginalOnInvalidJson(): void {
 		$data = 'not a json { "foo"';
 		$redactKeys = ['foo'];
