@@ -168,12 +168,17 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 					$summary = $endpoint->summary ?? $method->getName();
 					$description = $endpoint->description ?? '';
+					$path = $route->path !== '/' ? rtrim($route->path, '/') : $route->path;
+					if ($path === '') {
+						$path = '/';
+					}
+
 					$endpoints[] = [
 						'apiId' => is_array($route->apiId) ?
 							$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
 						'version' => is_array($route->version) ?
 							$route->version : ($route->version !== NULL ? [$route->version] : []),
-						'path' => $route->path,
+						'path' => $path,
 						'methods' => $route->methods,
 						'authMode' => is_array($route->authMode) ?
 							$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
@@ -290,7 +295,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 */
 	protected function generateResourceEndpoints(string $apiId, array $config): array {
 		$endpoints = [];
-		$basePath = '/' . ltrim($config['basePath'], '/');
+		$basePath = $config['basePath'] !== '/' ? rtrim($config['basePath'], '/') : $config['basePath'];
+		$basePath = '/' . ltrim($basePath, '/');
+		if ($basePath === '') {
+			$basePath = '/';
+		}
 		$tableName = $config['table'];
 		$allowedOps = $config['allowedOperations'];
 		$scopes = $config['requiredScopes'] ?? [];

@@ -129,6 +129,11 @@ class Router implements SingletonInterface {
 		string $path,
 		mixed $authMode = NULL
 	): ResponseInterface {
+		$path = $path !== '/' ? rtrim($path, '/') : $path;
+		if ($path === '') {
+			$path = '/';
+		}
+
 		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
 		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode);
 
@@ -271,6 +276,11 @@ class Router implements SingletonInterface {
 		string $path,
 		?string $authMode = NULL
 	): ?array {
+		$path = $path !== '/' ? rtrim($path, '/') : $path;
+		if ($path === '') {
+			$path = '/';
+		}
+
 		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
 		if (count($filteredEndpoints) === 0) {
 			return NULL;
