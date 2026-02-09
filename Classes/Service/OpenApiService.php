@@ -365,8 +365,8 @@ class OpenApiService implements SingletonInterface {
 				'description' => $description,
 				'schema' => $schema
 			];
-			if ($type === 'array' || ($param->type === 'string' && (str_ends_with($param->name, '[]') || is_array($param->example)))) {
-				$parameterSpec['explode'] = TRUE;
+			if ($type === 'array' || str_ends_with($param->name, '[]') || is_array($param->example)) {
+				$parameterSpec['explode'] = str_ends_with($param->name, '[]');
 				$parameterSpec['style'] = 'form';
 			}
 			$operation['parameters'][] = $parameterSpec;

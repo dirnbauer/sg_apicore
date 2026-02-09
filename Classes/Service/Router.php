@@ -291,7 +291,7 @@ class Router implements SingletonInterface {
 			}
 
 			$name = $parameter->getName();
-			$value = $pathParams[$name] ?? $queryParams[$name] ?? $bodyParams[$name] ?? NULL;
+			$value = $pathParams[$name] ?? $queryParams[$name] ?? $queryParams[$name . '[]'] ?? $bodyParams[$name] ?? NULL;
 
 			if ($value === NULL && $parameter->isDefaultValueAvailable()) {
 				$value = $parameter->getDefaultValue();
@@ -315,7 +315,7 @@ class Router implements SingletonInterface {
 					'int', 'integer' => (int) $value,
 					'float', 'double', 'number' => (float) $value,
 					'bool', 'boolean' => in_array($value, ['1', 'true', 1, TRUE, 'on', 'yes'], TRUE),
-					'array' => is_array($value) ? $value : [$value],
+					'array' => is_array($value) ? $value : GeneralUtility::trimExplode(',', (string) $value, TRUE),
 					default => $value,
 				};
 			}
