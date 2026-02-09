@@ -38,15 +38,21 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class CacheController {
 	/**
+	 * @var \SGalinski\SgApiCore\Service\CachePathService
+	 */
+	protected \SGalinski\SgApiCore\Service\CachePathService $cachePathService;
+	/**
 	 * @var CacheManager
 	 */
 	protected CacheManager $cacheManager;
 
 	/**
 	 * @param CacheManager|null $cacheManager
+	 * @param \SGalinski\SgApiCore\Service\CachePathService|null $cachePathService
 	 */
-	public function __construct(?CacheManager $cacheManager = NULL) {
+	public function __construct(?CacheManager $cacheManager = NULL, ?\SGalinski\SgApiCore\Service\CachePathService $cachePathService = NULL) {
 		$this->cacheManager = $cacheManager ?? GeneralUtility::makeInstance(CacheManager::class);
+		$this->cachePathService = $cachePathService ?? new \SGalinski\SgApiCore\Service\CachePathService();
 	}
 
 	/**
@@ -59,6 +65,15 @@ class CacheController {
 		try {
 			$cache = $this->cacheManager->getCache('sg_apicore_responses');
 			$cache->flush();
+
+			// Also clear FastRoute cached routes to avoid stale routing definitions (centralized)
+			$cacheDirectories = $this->cachePathService->getCacheDirectoriesToClear();
+			foreach ($cacheDirectories as $cacheDirectory) {
+				if (is_dir($cacheDirectory)) {
+					\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($cacheDirectory, TRUE);
+				}
+			}
+
 			return new NullResponse();
 		} catch (\Exception $e) {
 			return new JsonResponse(['success' => FALSE, 'error' => $e->getMessage()], 500);

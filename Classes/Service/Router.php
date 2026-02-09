@@ -45,29 +45,13 @@ use function FastRoute\cachedDispatcher;
  */
 class Router implements SingletonInterface {
 	/**
+	 * @var CachePathService
+	 */
+	protected CachePathService $cachePathService;
+	/**
 	 * @var iterable
 	 */
 	protected iterable $controllers;
-
-	/**
-	 * @var EndpointDiscoveryService
-	 */
-	protected EndpointDiscoveryService $endpointDiscoveryService;
-
-	/**
-	 * @var RequestValidator
-	 */
-	protected RequestValidator $requestValidator;
-
-	/**
-	 * @var ResponseService
-	 */
-	protected ResponseService $responseService;
-
-	/**
-	 * @var LogService
-	 */
-	protected LogService $logService;
 
 	/**
 	 * @var array|null
@@ -80,19 +64,18 @@ class Router implements SingletonInterface {
 	 * @param RequestValidator $requestValidator
 	 * @param ResponseService $responseService
 	 * @param LogService $logService
+	 * @param CachePathService|null $cachePathService
 	 */
 	public function __construct(
 		iterable $controllers,
-		EndpointDiscoveryService $endpointDiscoveryService,
-		RequestValidator $requestValidator,
-		ResponseService $responseService,
-		LogService $logService
+		protected EndpointDiscoveryService $endpointDiscoveryService,
+		protected RequestValidator $requestValidator,
+		protected ResponseService $responseService,
+		protected LogService $logService,
+		?CachePathService $cachePathService = NULL
 	) {
 		$this->controllers = $controllers;
-		$this->endpointDiscoveryService = $endpointDiscoveryService;
-		$this->requestValidator = $requestValidator;
-		$this->responseService = $responseService;
-		$this->logService = $logService;
+		$this->cachePathService = $cachePathService ?? new CachePathService();
 	}
 
 	/**
@@ -419,28 +402,7 @@ class Router implements SingletonInterface {
 		string $version,
 		mixed $authMode
 	): Dispatcher {
-		try {
-			$varPath = Environment::getVarPath();
-		} catch (\Throwable) {
-			$varPath = '';
-		}
-
-		$useTempPath = $varPath === '';
-		if ($useTempPath) {
-			$varPath = sys_get_temp_dir();
-		}
-
-		$cacheDirectory = $useTempPath
-			? rtrim($varPath, '/') . '/sg_apicore_cache'
-			: rtrim($varPath, '/') . '/cache/sg_apicore';
-
-		if (!is_dir($cacheDirectory) && !@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
-			$cacheDirectory = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_cache';
-			/** @noinspection PhpStatementHasEmptyBodyInspection */
-			if (!is_dir($cacheDirectory) && !@mkdir($cacheDirectory, 0775, TRUE) && !is_dir($cacheDirectory)) {
-				// Fallback failed, but we can't do much more here
-			}
-		}
+		$cacheDirectory = $this->cachePathService->getFastRouteCacheDirectory();
 
 		$authKey = is_array($authMode) ? implode(',', $authMode) : (string) $authMode;
 		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey) . '.php';
