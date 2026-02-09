@@ -469,8 +469,6 @@ class ResourceController {
 			return;
 		}
 
-		/** @var LanguageServiceFactory $languageServiceFactory */
-		$languageServiceFactory = GeneralUtility::makeInstance(LanguageServiceFactory::class);
-		$GLOBALS['LANG'] = $languageServiceFactory->create('default');
+		$GLOBALS['LANG'] = $this->languageServiceFactory->create('default');
 	}
 }

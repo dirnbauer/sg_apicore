@@ -37,17 +37,17 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-	 * Creates a successful JSON response, optionally wrapped in a data envelope
+	 * Creates a success response
 	 *
-	 * @param mixed $data The data to return
-	 * @param array $meta Optional metadata
+	 * @param mixed $data The response data
+	 * @param array $meta Optional metadata (e.g., pagination)
 	 * @param int $status HTTP status code
 	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
 	 * @param \SGalinski\SgApiCore\Attribute\ApiCache|null $apiCache
 	 * @return ResponseInterface
 	 */
 	public function createSuccessResponse(
-		mixed $data,
+		mixed $data = [],
 		array $meta = [],
 		int $status = 200,
 		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL,
@@ -84,10 +84,10 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-	 * Creates a Problem JSON error response (RFC 7807) with localized title and detail
+	 * Creates a localized error response
 	 *
-	 * @param string $title LLL key or raw string
-	 * @param string $detail LLL key or raw string
+	 * @param string $title
+	 * @param string $detail
 	 * @param int $status
 	 * @param string $type
 	 * @param array $additionalData
@@ -131,7 +131,7 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-	 * Creates a Problem JSON error response (RFC 7807)
+	 * Creates an error response (RFC 7807)
 	 *
 	 * @param string $title
 	 * @param string $detail
