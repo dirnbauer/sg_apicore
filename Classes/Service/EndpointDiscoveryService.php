@@ -303,10 +303,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 		if (empty($writeFieldCandidates)) {
 			$writeFieldCandidates = !empty($readFields) ? $readFields : $availableFields;
 		}
-		$writeFieldCandidates = array_values(array_filter(
-			$writeFieldCandidates,
-			static fn (string $fieldName): bool => $fieldName !== 'uid'
-		));
+		$writeFieldCandidates = array_values(
+			array_filter(
+				$writeFieldCandidates,
+				static fn (string $fieldName): bool => $fieldName !== 'uid'
+			)
+		);
 		$allFields = array_unique(array_merge($readFields, $writeFieldCandidates));
 
 		// Determine field metadata from TCA

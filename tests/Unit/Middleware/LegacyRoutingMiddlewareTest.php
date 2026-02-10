@@ -12,7 +12,6 @@
  *  of the License or any later version.
  ***************************************************************/
 
-
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
 use PHPUnit\Framework\MockObject\MockObject;

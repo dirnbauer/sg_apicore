@@ -22,7 +22,6 @@ use SGalinski\SgApiCore\Service\TokenService;
 use SGalinski\SgApiCore\Service\UserAuthService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashInterface;
-use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
@@ -80,7 +79,9 @@ class UserAuthServiceTest extends UnitTestCase {
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->tokenService = $this->createStub(TokenService::class);
 		$this->tokenRepository = $this->createStub(TokenRepository::class);
-		$this->extensionConfiguration = $this->createStub(\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class);
+		$this->extensionConfiguration = $this->createStub(
+			\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
+		);
 		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
 
 		$this->service = new UserAuthService(

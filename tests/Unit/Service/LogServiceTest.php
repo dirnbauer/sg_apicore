@@ -134,9 +134,12 @@ class LogServiceTest extends UnitTestCase {
 
 		$this->logger->expects($this->once())
 			->method('critical')
-			->with('Test Exception', $this->callback(function ($context) {
-				return $context['requestId'] === 'req-123' && $context['method'] === 'GET';
-			}));
+			->with(
+				'Test Exception',
+				$this->callback(function ($context) {
+					return $context['requestId'] === 'req-123' && $context['method'] === 'GET';
+				})
+			);
 
 		$this->service->logException($exception, $request);
 	}
@@ -167,9 +170,12 @@ class LogServiceTest extends UnitTestCase {
 
 		$this->logger->expects($this->once())
 			->method('info')
-			->with($this->anything(), $this->callback(function ($context) {
-				return $context['requestBody']['password'] === '***REDACTED***';
-			}));
+			->with(
+				$this->anything(),
+				$this->callback(function ($context) {
+					return $context['requestBody']['password'] === '***REDACTED***';
+				})
+			);
 
 		$this->service->logRequestResponse($request, $response, 0.5);
 	}

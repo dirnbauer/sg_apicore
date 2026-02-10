@@ -16,7 +16,6 @@ namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
-use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\UserAuthController;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
@@ -111,7 +110,7 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
 		$this->assertEquals(200, $response->getStatusCode());
-		$data = json_decode((string)$response->getBody(), TRUE);
+		$data = json_decode((string) $response->getBody(), TRUE);
 		$this->assertEquals('access-token', $data['access_token']);
 		$this->assertEquals('refresh-token', $data['refresh_token']);
 	}
@@ -193,7 +192,7 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
 		$this->assertEquals(200, $response->getStatusCode());
-		$data = json_decode((string)$response->getBody(), TRUE);
+		$data = json_decode((string) $response->getBody(), TRUE);
 		$this->assertEquals('new-access-token', $data['access_token']);
 	}
 
@@ -206,7 +205,9 @@ class UserAuthControllerTest extends UnitTestCase {
 			['api.version', NULL, '1']
 		]);
 
-		$this->userAuthService->method('refreshTokens')->willThrowException(new \RuntimeException('Invalid refresh token.', 401));
+		$this->userAuthService->method('refreshTokens')->willThrowException(
+			new \RuntimeException('Invalid refresh token.', 401)
+		);
 
 		$this->responseService->method('createErrorResponse')->willReturnCallback(
 			fn ($title, $detail, $status) => new JsonResponse(['title' => $title], $status)
@@ -256,7 +257,7 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
 		$this->assertEquals(200, $response->getStatusCode());
-		$data = json_decode((string)$response->getBody(), TRUE);
+		$data = json_decode((string) $response->getBody(), TRUE);
 		$this->assertEquals('access-token', $data['bearerToken']);
 	}
 

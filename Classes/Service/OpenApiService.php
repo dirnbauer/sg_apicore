@@ -451,7 +451,9 @@ class OpenApiService implements SingletonInterface {
 							$baseSchema = $refSchema ?? $schema;
 							if (($baseSchema['type'] ?? '') === 'array' && isset($baseSchema['items']['$ref'])) {
 								$refName = basename($baseSchema['items']['$ref']);
-								$baseSchema['items'] = $this->schemaRegistry->getSchema($refName) ?? $baseSchema['items'];
+								$baseSchema['items'] = $this->schemaRegistry->getSchema(
+									$refName
+								) ?? $baseSchema['items'];
 							}
 
 							// Merge properties, prioritizing the defined schema's structure
@@ -618,7 +620,10 @@ class OpenApiService implements SingletonInterface {
 			$refSchema = $this->schemaRegistry->getSchema($refName);
 			if ($refSchema) {
 				$table = $this->schemaRegistry->getTableNameForSchema($refName);
-				$schema = array_merge($schema, $this->enrichSchemaWithTca($refSchema, $table !== '' ? $table : $tableName));
+				$schema = array_merge(
+					$schema,
+					$this->enrichSchemaWithTca($refSchema, $table !== '' ? $table : $tableName)
+				);
 				unset($schema['$ref']); // Inline resolved schema for enrichment
 			}
 			return $schema;

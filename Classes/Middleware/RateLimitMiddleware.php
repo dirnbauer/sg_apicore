@@ -57,12 +57,16 @@ class RateLimitMiddleware implements MiddlewareInterface {
 		}
 
 		$rateLimitConfig = $this->resolveRateLimitConfig($request, $apiId);
-		if (is_array($rateLimitConfig) && array_key_exists('enabled', $rateLimitConfig) && !$rateLimitConfig['enabled']) {
+		if (is_array($rateLimitConfig) && array_key_exists(
+			'enabled',
+			$rateLimitConfig
+		) && !$rateLimitConfig['enabled']) {
 			return $handler->handle($request);
 		}
 
 		$limit = (int) ($rateLimitConfig['limit'] ?? $this->extensionConfiguration->getRateLimitDefaultLimit());
-		$windowSeconds = (int) ($rateLimitConfig['windowSeconds'] ?? $this->extensionConfiguration->getRateLimitWindowSeconds());
+		$windowSeconds = (int) ($rateLimitConfig['windowSeconds'] ?? $this->extensionConfiguration->getRateLimitWindowSeconds(
+		));
 		$burst = (int) ($rateLimitConfig['burst'] ?? $this->extensionConfiguration->getRateLimitDefaultBurst());
 		if ($limit <= 0 || $windowSeconds <= 0) {
 			return $handler->handle($request);
@@ -128,7 +132,9 @@ class RateLimitMiddleware implements MiddlewareInterface {
 	 */
 	protected function resolveRateLimitConfig(ServerRequestInterface $request, string $apiId): ?array {
 		$resourceConfig = $this->resolveResourceConfig($request, $apiId);
-		if (is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && is_array($resourceConfig['rateLimit'])) {
+		if (is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && is_array(
+			$resourceConfig['rateLimit']
+		)) {
 			return $resourceConfig['rateLimit'];
 		}
 
@@ -154,7 +160,10 @@ class RateLimitMiddleware implements MiddlewareInterface {
 
 		foreach ($this->resourceRegistry->getResources($apiId) as $resource) {
 			$basePath = '/' . trim((string) ($resource['basePath'] ?? ''), '/');
-			if ($basePath !== '/' && ($normalizedPath === $basePath || str_starts_with($normalizedPath, $basePath . '/'))) {
+			if ($basePath !== '/' && ($normalizedPath === $basePath || str_starts_with(
+				$normalizedPath,
+				$basePath . '/'
+			))) {
 				return $resource;
 			}
 		}

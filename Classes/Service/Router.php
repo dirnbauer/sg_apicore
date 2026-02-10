@@ -21,7 +21,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
-use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Error\Http\AbstractServerErrorException;
 use TYPO3\CMS\Core\Http\PropagateResponseException;
 use TYPO3\CMS\Core\SingletonInterface;

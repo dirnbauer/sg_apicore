@@ -16,7 +16,6 @@ namespace SGalinski\SgApiCore\Security;
 
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Trait for shared token extraction logic

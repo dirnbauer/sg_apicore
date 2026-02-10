@@ -89,7 +89,12 @@ class ResponseServiceTest extends UnitTestCase {
 
 		// Test for sg_rest legacy format
 		$legacyModeSgRest = new ApiLegacyMode(source: 'sg_rest', legacyErrorFormat: TRUE);
-		$responseSgRest = $service->createErrorResponse('Test Error', 'Detailed message', 401, legacyMode: $legacyModeSgRest);
+		$responseSgRest = $service->createErrorResponse(
+			'Test Error',
+			'Detailed message',
+			401,
+			legacyMode: $legacyModeSgRest
+		);
 		$bodySgRest = json_decode((string) $responseSgRest->getBody(), TRUE);
 		$this->assertEquals('Detailed message', $bodySgRest['message']);
 		$this->assertArrayNotHasKey('error', $bodySgRest);

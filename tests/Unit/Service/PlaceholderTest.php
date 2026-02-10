@@ -67,7 +67,13 @@ class PlaceholderTest extends UnitTestCase {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
 
-		$service = new OpenApiService($discovery, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);
+		$service = new OpenApiService(
+			$discovery,
+			$apiRegistry,
+			$schemaRegistry,
+			$extensionConfiguration,
+			$cacheManager
+		);
 		$spec = $service->generateSpec('public', '1');
 
 		$response = $spec['paths']['/placeholder']['get']['responses']['200'];

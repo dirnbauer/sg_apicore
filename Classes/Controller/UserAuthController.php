@@ -19,7 +19,6 @@ use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
-use RuntimeException;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
@@ -91,7 +90,7 @@ class UserAuthController {
 	 * @return ResponseInterface
 	 * @throws Exception
 	 * @throws RandomException
-	 * @throws \JsonException
+	 * @throws JsonException
 	 * @throws InvalidPasswordHashException
 	 */
 	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: ['user', 'public'])]
@@ -122,7 +121,7 @@ class UserAuthController {
 	 * @throws Exception
 	 * @throws InvalidPasswordHashException
 	 * @throws RandomException
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'Legacy User login', description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.', tags: ['Legacy'])]
@@ -159,7 +158,7 @@ class UserAuthController {
 	 * @throws Exception
 	 * @throws InvalidPasswordHashException
 	 * @throws RandomException
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	protected function handleLogin(ServerRequestInterface $request): ResponseInterface {
 		$params = $request->getParsedBody();
@@ -195,14 +194,26 @@ class UserAuthController {
 					$hash = hash('sha256', $bearer);
 					$tenantId = $tenantContext?->getTenantId() ?? '';
 					$siteRootPageId = $tenantContext?->getSiteRootPageId();
-					$tokenRecord = $this->tokenRepository->findByHashApiAndTenant($hash, $apiId, $tenantId, $siteRootPageId, TRUE);
+					$tokenRecord = $this->tokenRepository->findByHashApiAndTenant(
+						$hash,
+						$apiId,
+						$tenantId,
+						$siteRootPageId,
+						TRUE
+					);
 					if ($tokenRecord !== NULL) {
-						$expired = ((int) ($tokenRecord['expires_at'] ?? 0) > 0) && ((int) $tokenRecord['expires_at'] < time());
+						$expired = ((int) ($tokenRecord['expires_at'] ?? 0) > 0) && ((int) $tokenRecord['expires_at'] < time(
+						));
 						if (!$expired) {
 							$inherited = [];
 							if (!empty($tokenRecord['scopes'])) {
 								try {
-									$inherited = json_decode((string) $tokenRecord['scopes'], TRUE, 512, JSON_THROW_ON_ERROR) ?: [];
+									$inherited = json_decode(
+										(string) $tokenRecord['scopes'],
+										TRUE,
+										512,
+										JSON_THROW_ON_ERROR
+									) ?: [];
 								} catch (JsonException) {
 									$inherited = [];
 								}
@@ -232,7 +243,7 @@ class UserAuthController {
 	 * @return ResponseInterface
 	 * @throws Exception
 	 * @throws RandomException
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).', tags: ['Authentication'])]

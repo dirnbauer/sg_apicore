@@ -60,12 +60,15 @@ class TokenServiceTest extends UnitTestCase {
 
 		$connection->expects($this->once())
 			->method('insert')
-			->with('tx_apicore_token', $this->callback(function ($data) use ($tokenHash) {
-				return $data['token_hash'] === $tokenHash &&
-					$data['api_id'] === 'test-api' &&
-					$data['tenant_id'] === 'tenant-1' &&
-					$data['scopes'] === '["read"]';
-			}));
+			->with(
+				'tx_apicore_token',
+				$this->callback(function ($data) use ($tokenHash) {
+					return $data['token_hash'] === $tokenHash &&
+						$data['api_id'] === 'test-api' &&
+						$data['tenant_id'] === 'tenant-1' &&
+						$data['scopes'] === '["read"]';
+				})
+			);
 
 		$connection->method('lastInsertId')->willReturn('123');
 
@@ -84,14 +87,16 @@ class TokenServiceTest extends UnitTestCase {
 		$this->extensionConfiguration->method('getTokenExpirationTime')->willReturn(3600);
 		$this->jwtService->expects($this->once())
 			->method('encode')
-			->with($this->callback(function ($payload) {
-				return $payload['userId'] === 1 &&
-					$payload['apiId'] === 'test-api' &&
-					$payload['tenantId'] === 'tenant-1' &&
-					$payload['scopes'] === ['user'] &&
-					isset($payload['exp']) &&
-					$payload['jti'] === 'test-jti';
-			}))
+			->with(
+				$this->callback(function ($payload) {
+					return $payload['userId'] === 1 &&
+						$payload['apiId'] === 'test-api' &&
+						$payload['tenantId'] === 'tenant-1' &&
+						$payload['scopes'] === ['user'] &&
+						isset($payload['exp']) &&
+						$payload['jti'] === 'test-jti';
+				})
+			)
 			->willReturn('mocked-jwt');
 
 		$result = $this->service->generateJwtAccessToken(1, 'test-api', 'tenant-1', ['user'], 'test-jti');

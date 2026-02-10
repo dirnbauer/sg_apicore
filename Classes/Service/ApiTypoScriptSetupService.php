@@ -43,7 +43,10 @@ class ApiTypoScriptSetupService {
 	 * @param TenantContext|null $tenantContext
 	 * @return ServerRequestInterface
 	 */
-	public function ensureTypoScript(ServerRequestInterface $request, ?TenantContext $tenantContext): ServerRequestInterface {
+	public function ensureTypoScript(
+		ServerRequestInterface $request,
+		?TenantContext $tenantContext
+	): ServerRequestInterface {
 		$siteRootPageId = $tenantContext?->getSiteRootPageId() ?? 0;
 		if ($siteRootPageId <= 0) {
 			return $request;
@@ -106,7 +109,10 @@ class ApiTypoScriptSetupService {
 	 * @param int $siteRootPageId
 	 * @return ServerRequestInterface
 	 */
-	protected function initializeTypoScriptV13(ServerRequestInterface $request, int $siteRootPageId): ServerRequestInterface {
+	protected function initializeTypoScriptV13(
+		ServerRequestInterface $request,
+		int $siteRootPageId
+	): ServerRequestInterface {
 		/** @phpstan-ignore-next-line */
 		$pageInformationAttribute = $request->getAttribute('frontend.page.information');
 		if ($pageInformationAttribute || isset($GLOBALS['TSFE'])) {
@@ -198,7 +204,10 @@ class ApiTypoScriptSetupService {
 	 * @param int $siteRootPageId
 	 * @return ServerRequestInterface
 	 */
-	protected function initializeTypoScriptV12(ServerRequestInterface $request, int $siteRootPageId): ServerRequestInterface {
+	protected function initializeTypoScriptV12(
+		ServerRequestInterface $request,
+		int $siteRootPageId
+	): ServerRequestInterface {
 		if (isset($GLOBALS['TSFE'])) {
 			return $request;
 		}

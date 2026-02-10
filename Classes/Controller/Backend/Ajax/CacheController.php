@@ -38,7 +38,10 @@ class CacheController {
 	 * @param CacheManager|null $cacheManager
 	 * @param \SGalinski\SgApiCore\Service\CachePathService|null $cachePathService
 	 */
-	public function __construct(?CacheManager $cacheManager = NULL, ?\SGalinski\SgApiCore\Service\CachePathService $cachePathService = NULL) {
+	public function __construct(
+		?CacheManager $cacheManager = NULL,
+		?\SGalinski\SgApiCore\Service\CachePathService $cachePathService = NULL
+	) {
 		$this->cacheManager = $cacheManager ?? GeneralUtility::makeInstance(CacheManager::class);
 		$this->cachePathService = $cachePathService ?? new \SGalinski\SgApiCore\Service\CachePathService();
 	}
@@ -58,7 +61,7 @@ class CacheController {
 			$cacheDirectories = $this->cachePathService->getCacheDirectoriesToClear();
 			foreach ($cacheDirectories as $cacheDirectory) {
 				if (is_dir($cacheDirectory)) {
-					\TYPO3\CMS\Core\Utility\GeneralUtility::rmdir($cacheDirectory, TRUE);
+					GeneralUtility::rmdir($cacheDirectory, TRUE);
 				}
 			}
 

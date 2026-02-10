@@ -16,7 +16,6 @@ namespace SGalinski\SgApiCore\Service;
 
 use Psr\Log\LogLevel;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Service\ApiRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Core\Environment;

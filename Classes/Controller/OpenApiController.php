@@ -21,7 +21,6 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Service\OpenApiService;
 use TYPO3\CMS\Core\Http\HtmlResponse;
 use TYPO3\CMS\Core\Http\JsonResponse;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 
 /**
@@ -82,8 +81,12 @@ class OpenApiController {
 		$logoPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Images/sgalinski-logo.svg');
 		$tokensCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/tokens.css');
 		$ciCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/swagger-ci.css');
-		$poweredByCssPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/Stylesheet/powered-by.css');
-		$poweredByJsPath = PathUtility::getPublicResourceWebPath('EXT:sg_apicore/Resources/Public/JavaScript/powered-by.js');
+		$poweredByCssPath = PathUtility::getPublicResourceWebPath(
+			'EXT:sg_apicore/Resources/Public/Stylesheet/powered-by.css'
+		);
+		$poweredByJsPath = PathUtility::getPublicResourceWebPath(
+			'EXT:sg_apicore/Resources/Public/JavaScript/powered-by.js'
+		);
 
 		// Build the path to the docs.json relative to the current URL
 		$path = rtrim($request->getUri()->getPath(), '/');

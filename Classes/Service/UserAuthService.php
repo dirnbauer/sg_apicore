@@ -15,14 +15,10 @@
 namespace SGalinski\SgApiCore\Service;
 
 use Doctrine\DBAL\Exception;
-use JsonException;
-use Random\RandomException;
-use RuntimeException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
-use Throwable;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
@@ -139,7 +135,10 @@ class UserAuthService implements SingletonInterface {
 			$refreshTtl > 0 ? (time() + $refreshTtl) : 0,
 			'Refresh Token for ' . ($user['username'] ?? $user['uid'])
 		);
-		$this->logService->logInfo('user_login_success', ['userId' => (int) $user['uid'], 'apiId' => $apiId, 'tenantId' => $tenantId]);
+		$this->logService->logInfo(
+			'user_login_success',
+			['userId' => (int) $user['uid'], 'apiId' => $apiId, 'tenantId' => $tenantId]
+		);
 
 		$accessTokenData = $this->generateAccessToken(
 			(int) $user['uid'],
@@ -291,7 +290,10 @@ class UserAuthService implements SingletonInterface {
 			'Refresh Token (rotated) for user ' . $userId
 		);
 
-		$this->logService->logInfo('user_refresh_success', ['userId' => $userId, 'apiId' => $apiId, 'tenantId' => $tenantId]);
+		$this->logService->logInfo(
+			'user_refresh_success',
+			['userId' => $userId, 'apiId' => $apiId, 'tenantId' => $tenantId]
+		);
 
 		return [
 			'access_token' => $accessTokenData['access_token'],

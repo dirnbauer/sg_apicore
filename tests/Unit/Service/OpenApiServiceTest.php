@@ -73,7 +73,13 @@ class OpenApiServiceTest extends UnitTestCase {
 		$schemaRegistry = $this->createStub(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
 
-		return new OpenApiService($discoveryService, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);
+		return new OpenApiService(
+			$discoveryService,
+			$apiRegistry,
+			$schemaRegistry,
+			$extensionConfiguration,
+			$cacheManager
+		);
 	}
 
 	public function testEnrichSchemaWithXTagField(): void {
@@ -112,7 +118,13 @@ class OpenApiServiceTest extends UnitTestCase {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$service = new OpenApiService($discoveryService, $apiRegistry, $schemaRegistry, $extensionConfiguration, $cacheManager);
+		$service = new OpenApiService(
+			$discoveryService,
+			$apiRegistry,
+			$schemaRegistry,
+			$extensionConfiguration,
+			$cacheManager
+		);
 		$spec = $service->generateSpec('public', '1');
 
 		$schema = $spec['components']['schemas']['GlobalObject'];
@@ -461,7 +473,10 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$schema = $operation['responses']['200']['content']['application/json']['schema'];
 		// Current implementation will likely fail to find the label because it's inside 'data'
-		$this->assertEquals('Translated Title', $schema['properties']['data']['items']['properties']['title']['description']);
+		$this->assertEquals(
+			'Translated Title',
+			$schema['properties']['data']['items']['properties']['title']['description']
+		);
 
 		unset($GLOBALS['TCA']['tx_test_table']);
 	}

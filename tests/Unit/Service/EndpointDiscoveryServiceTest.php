@@ -44,7 +44,12 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 
-		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
+		$service = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory
+		);
 		$endpoints = $service->getAllEndpoints();
 
 		$this->assertCount(1, $endpoints);
@@ -91,14 +96,24 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			'allowedOperations' => ['list'],
 		]);
 
-		$serviceA = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
+		$serviceA = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory
+		);
 
 		$resourceRegistryB = new ResourceRegistry();
 		$resourceRegistryB->registerResource('public', 'tt_content', '/contents', [
 			'allowedOperations' => ['list', 'get'],
 		]);
 
-		$serviceB = new EndpointDiscoveryService($controllers, $resourceRegistryB, $cacheManager, $languageServiceFactory);
+		$serviceB = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistryB,
+			$cacheManager,
+			$languageServiceFactory
+		);
 
 		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
 	}
@@ -132,7 +147,12 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
 
-		$service = new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
+		$service = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory
+		);
 		$endpoints = $service->getAllEndpoints();
 
 		$this->assertCount(1, $endpoints);

@@ -28,7 +28,6 @@ use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\LanguageAspectFactory;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Middleware to setup API request context (Tenant, TSFE, etc.)

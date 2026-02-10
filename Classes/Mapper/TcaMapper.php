@@ -17,8 +17,6 @@ namespace SGalinski\SgApiCore\Mapper;
 use Doctrine\DBAL\Exception;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ImmediateResponseException;
-use TYPO3\CMS\Core\Http\StreamFactory;
-use TYPO3\CMS\Core\Resource\FileInterface;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
@@ -117,7 +115,9 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$currentExcludedFields = $excludedFields;
-		if (isset($fieldConfiguration[$tableName]['excluded']) && is_array($fieldConfiguration[$tableName]['excluded'])) {
+		if (isset($fieldConfiguration[$tableName]['excluded']) && is_array(
+			$fieldConfiguration[$tableName]['excluded']
+		)) {
 			$currentExcludedFields = array_merge($excludedFields, $fieldConfiguration[$tableName]['excluded']);
 		}
 
@@ -333,7 +333,12 @@ class TcaMapper implements SingletonInterface {
 								$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 								$foreignRecord = $queryBuilder->select('*')
 									->from($foreignTable)
-									->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
+									->where(
+										$queryBuilder->expr()->eq(
+											'uid',
+											$queryBuilder->createNamedParameter($foreignUid)
+										)
+									)
 									->executeQuery()
 									->fetchAssociative();
 								$this->recordCache[$cacheKey] = $foreignRecord;
@@ -355,11 +360,19 @@ class TcaMapper implements SingletonInterface {
 						$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 						$queryBuilder->select('*')
 							->from($foreignTable)
-							->where($queryBuilder->expr()->eq($config['foreign_field'], $queryBuilder->createNamedParameter($uid)));
+							->where(
+								$queryBuilder->expr()->eq(
+									$config['foreign_field'],
+									$queryBuilder->createNamedParameter($uid)
+								)
+							);
 
 						if (isset($config['foreign_table_field']) && $tableName !== '') {
 							$queryBuilder->andWhere(
-								$queryBuilder->expr()->eq($config['foreign_table_field'], $queryBuilder->createNamedParameter($tableName))
+								$queryBuilder->expr()->eq(
+									$config['foreign_table_field'],
+									$queryBuilder->createNamedParameter($tableName)
+								)
 							);
 						}
 
@@ -400,7 +413,12 @@ class TcaMapper implements SingletonInterface {
 								$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 								$foreignRecord = $queryBuilder->select('*')
 									->from($foreignTable)
-									->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
+									->where(
+										$queryBuilder->expr()->eq(
+											'uid',
+											$queryBuilder->createNamedParameter($foreignUid)
+										)
+									)
 									->executeQuery()
 									->fetchAssociative();
 								$this->recordCache[$cacheKey] = $foreignRecord;
@@ -528,7 +546,9 @@ class TcaMapper implements SingletonInterface {
 
 		$this->ensureParseFuncConfiguration();
 		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		if ($request instanceof \Psr\Http\Message\ServerRequestInterface && (empty($parseFuncConf) || count($parseFuncConf) <= 1)) {
+		if ($request instanceof \Psr\Http\Message\ServerRequestInterface && (empty($parseFuncConf) || count(
+			$parseFuncConf
+		) <= 1)) {
 			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
 			if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
 				$setup = $frontendTypoScript->getSetupArray();
