@@ -33,6 +33,12 @@ class ApiTypoScriptMiddleware implements MiddlewareInterface {
 	) {
 	}
 
+	/**
+	 * @param ServerRequestInterface $request
+	 * @param RequestHandlerInterface $handler
+	 * @return ResponseInterface
+	 * @throws \ReflectionException
+	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) $request->getAttribute('api.version');

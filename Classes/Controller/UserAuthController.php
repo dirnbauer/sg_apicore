@@ -248,8 +248,13 @@ class UserAuthController {
 		$activeProviders = $securityConfig['authProviders'] ?? [];
 		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
-		// Default scopes (maybe from user record or API config?)
-		$scopes = ['user']; // Default scope for user login
+		// Scope Handling
+		$scopes = ['user'];
+		/** @var \SGalinski\SgApiCore\Security\AuthContext|null $authContext */
+		$authContext = $request->getAttribute('api.auth');
+		if ($authContext instanceof \SGalinski\SgApiCore\Security\AuthContext) {
+			$scopes = array_unique(array_merge($scopes, $authContext->getScopes()));
+		}
 
 		// Create Refresh Token (Opaque)
 		$refreshToken = $this->tokenService->generateRandomToken();
