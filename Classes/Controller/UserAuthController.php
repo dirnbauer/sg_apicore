@@ -189,7 +189,7 @@ class UserAuthController {
 			// Fallback: If Authorization header contains a valid bearer for this API/tenant, merge its scopes
 			$authorization = $request->getHeaderLine('Authorization');
 			if (stripos($authorization, 'Bearer ') === 0) {
-				$bearer = trim(substr($authorization, 7));
+				$bearer = substr($authorization, 7);
 				if ($bearer !== '') {
 					$hash = hash('sha256', $bearer);
 					$tenantId = $tenantContext?->getTenantId() ?? '';

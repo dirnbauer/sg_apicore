@@ -135,11 +135,12 @@ class UserAuthServiceTest extends UnitTestCase {
 		// Expect filters for disable=0 and deleted=0
 		$exprBuilder->expects($this->any())
 			->method('eq')
-			->willReturn($this->createStub(\TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression::class));
+			->willReturn('1=1');
 
 		$queryBuilder->method('select')->willReturn($queryBuilder);
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('where')->willReturn($queryBuilder);
+		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
 
 		$result = $this->createStub(\Doctrine\DBAL\Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);

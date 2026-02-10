@@ -109,7 +109,7 @@ class LogServiceTest extends UnitTestCase {
 
 		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
 
-		$this->logger->expects($this->once())->method('error')->with('Test Error', []);
+		$this->logger->expects($this->once())->method('log')->with('error', 'Test Error', []);
 
 		$this->service->logError('Test Error');
 	}

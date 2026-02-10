@@ -89,10 +89,14 @@ class JwtService implements SingletonInterface {
 		}
 
 		// Use hash_equals for signature comparison
-		if (!hash_equals(
-			$signature,
-			$this->sign("$jwtHeaderEncoded.$jwtPayloadEncoded", $this->privateKey, $header['alg'])
-		)) {
+		$expectedSignature = $this->sign("$jwtHeaderEncoded.$jwtPayloadEncoded", $this->privateKey, $header['alg']);
+		if (!hash_equals($signature, $expectedSignature)) {
+			return NULL;
+		}
+
+		// Ensure that the JWT string does not contain any extra characters after the third segment
+		$recalculatedToken = "$jwtHeaderEncoded.$jwtPayloadEncoded." . $this->urlsafeB64Encode($signature);
+		if ($jwt !== $recalculatedToken) {
 			return NULL;
 		}
 
