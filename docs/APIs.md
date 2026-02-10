@@ -39,12 +39,21 @@ $apiRegistry->registerApi(
 
 When registering, the following options can be passed in the third parameter:
 
-* `authMode`: Defines the default authentication mode for all endpoints of this API.
+* `authMode` (**string**): Defines the default authentication mode for all endpoints of this API.
     * `public`: No token required (unless explicitly required via attribute).
     * `token`: A valid Opaque Bearer Token is required.
     * `user`: A user login (Access/Refresh Token) is required.
 * `authProviders`: List of allowed providers (e.g., `['beareropaquetokenprovider']`).
   Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
+
+### Endpoint Overrides
+
+While the API-level `authMode` must be a string, individual endpoints can define multiple modes using an array in the `#[ApiRoute]` attribute:
+
+```php
+// Available via public access OR with a valid user token
+#[ApiRoute(path: '/login', methods: ['POST'], authMode: ['public', 'user'])]
+```
 
 Use the fifth parameter for additional options:
 

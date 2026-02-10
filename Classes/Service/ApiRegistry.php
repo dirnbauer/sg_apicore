@@ -30,7 +30,7 @@ class ApiRegistry implements SingletonInterface {
 	 *
 	 * @param string $apiId Unique identifier for the API
 	 * @param array $versions Supported versions (e.g., ['1', '2'])
-	 * @param array $security Security configuration
+	 * @param array $security Security configuration. The key 'authMode' should be a string ('public', 'token' or 'user').
 	 * @param string|null $basePath Optional base path override
 	 * @param array $options Additional options
 	 */

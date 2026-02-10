@@ -4,11 +4,16 @@
 
 ## Authentication Modes
 
-The mode is defined per API in the `ApiRegistry` (see [APIs.md](APIs.md)).
+The default mode is defined per API in the `ApiRegistry` as a **string** (see [APIs.md](APIs.md)). Individual endpoints can override or extend this using the `#[ApiRoute]` attribute (supporting both **string** and **array**).
 
 1. **Public**: No authentication required.
 2. **Token (Opaque Bearer)**: Requires an API key in the header: `Authorization: Bearer <token>`.
 3. **User**: Requires a user login. Supports access and refresh tokens.
+
+Example for an endpoint that is both public and user-accessible:
+```php
+#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: ['public', 'user'])]
+```
 
 ## Scopes (Permissions)
 

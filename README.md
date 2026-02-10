@@ -159,7 +159,11 @@ See [Tenants Documentation](docs/Tenants.md).
 
 ## Security & Authentication
 
-Supports multiple auth modes (public, token, user) and scope-based authorization.
+Supports multiple auth modes (`public`, `token`, `user`) and scope-based authorization.
+
+- **API Level**: Define the default `authMode` as a **string** in the `ApiRegistry`.
+- **Endpoint Level**: Override or extend the `authMode` using the `#[ApiRoute]` attribute (supports **string** or **array**, e.g., `['public', 'user']`).
+
 See [Authentication & Scopes](docs/AuthScopes.md).
 
 ### Known Issues & Troubleshooting
