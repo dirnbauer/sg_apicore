@@ -52,11 +52,34 @@ class LogService implements SingletonInterface {
 	 * @return void
 	 */
 	public function logError(string $message, array $context = []): void {
+		$this->log($message, $context, 'error');
+	}
+
+	/**
+	 * Logs an info message
+	 *
+	 * @param string $message
+	 * @param array $context
+	 * @return void
+	 */
+	public function logInfo(string $message, array $context = []): void {
+		$this->log($message, $context, 'info');
+	}
+
+	/**
+	 * Internal log method
+	 *
+	 * @param string $message
+	 * @param array $context
+	 * @param string $level
+	 * @return void
+	 */
+	protected function log(string $message, array $context = [], string $level = 'info'): void {
 		if (!$this->extensionConfiguration->isLoggingEnabled()) {
 			return;
 		}
 
-		$this->logger->error($message, $context);
+		$this->logger->log($level, $message, $context);
 	}
 
 	/**

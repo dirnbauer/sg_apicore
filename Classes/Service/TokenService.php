@@ -108,15 +108,19 @@ class TokenService implements SingletonInterface {
 		array $scopes,
 		int|string $jti
 	): string {
-		$ttl = $this->extensionConfiguration->getTokenExpirationTime();
+		$now = time();
+		$ttl = $this->extensionConfiguration->getJwtAccessTokenTtlSeconds();
 		$payload = [
 			'userId' => $userId,
 			'apiId' => $apiId,
 			'tenantId' => $tenantId,
 			'scopes' => $scopes,
-			'iat' => time(),
-			'exp' => time() + $ttl,
-			'jti' => $jti
+			'iat' => $now,
+			'nbf' => $now,
+			'exp' => $now + $ttl,
+			'jti' => $jti,
+			'iss' => 'sg_apicore',
+			'aud' => $apiId
 		];
 
 		return $this->jwtService->encode($payload);

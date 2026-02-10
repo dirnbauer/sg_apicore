@@ -25,8 +25,14 @@ logBodyMaxLength = 4096
 # cat=basic/cache; type=boolean; label=Enable API caching:Globally enable or disable response caching for the API
 enableCaching = 1
 
-# cat=basic/expiration; type=int; label=Time in seconds until a JWT / Bearer-Token expires
-tokenExpirationTime = 86400
+# cat=basic/expiration; type=int; label=JWT Access Token TTL:Time in seconds until a JWT Access Token expires (falls back to tokenExpirationTime)
+jwtAccessTokenTtlSeconds = 0
+
+# cat=basic/expiration; type=int; label=Opaque Access Token TTL:Time in seconds until an opaque (database) access token expires
+opaqueAccessTokenTtlSeconds = 3600
+
+# cat=basic/expiration; type=int; label=Refresh Token TTL:Time in seconds until a refresh token expires (default 30 days)
+refreshTokenTtlSeconds = 2592000
 
 # cat=basic/path; type=string; label=The path prefix for the API (default: /api/)
 apiPathPrefix = /api/

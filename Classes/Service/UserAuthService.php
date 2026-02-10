@@ -15,9 +15,14 @@
 namespace SGalinski\SgApiCore\Service;
 
 use Doctrine\DBAL\Exception;
+use JsonException;
+use Random\RandomException;
+use RuntimeException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
+use Throwable;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
@@ -34,7 +39,9 @@ class UserAuthService implements SingletonInterface {
 		protected PasswordHashFactory $passwordHashFactory,
 		protected ApiRegistry $apiRegistry,
 		protected TokenService $tokenService,
-		protected TokenRepository $tokenRepository
+		protected TokenRepository $tokenRepository,
+		protected ExtensionConfiguration $extensionConfiguration,
+		protected LogService $logService
 	) {
 	}
 
@@ -120,6 +127,7 @@ class UserAuthService implements SingletonInterface {
 
 		// Create Refresh Token (Opaque)
 		$refreshToken = $this->tokenService->generateRandomToken();
+		$refreshTtl = $this->extensionConfiguration->getRefreshTokenTtlSeconds();
 		$this->tokenService->createToken(
 			$refreshToken,
 			$apiId,
@@ -128,9 +136,10 @@ class UserAuthService implements SingletonInterface {
 			$scopes,
 			(int) $user['uid'],
 			TRUE,
-			time() + (30 * 24 * 3600), // 30 days TTL for refresh token
+			$refreshTtl > 0 ? (time() + $refreshTtl) : 0,
 			'Refresh Token for ' . ($user['username'] ?? $user['uid'])
 		);
+		$this->logService->logInfo('user_login_success', ['userId' => (int) $user['uid'], 'apiId' => $apiId, 'tenantId' => $tenantId]);
 
 		$accessTokenData = $this->generateAccessToken(
 			(int) $user['uid'],
@@ -176,7 +185,11 @@ class UserAuthService implements SingletonInterface {
 		$activeProviders = $securityConfig['authProviders'] ?? [];
 		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
-		$expiresIn = 3600; // Default 1 hour
+		// Determine TTL dynamically based on provider
+		$expiresIn = $useJwt
+			? $this->extensionConfiguration->getJwtAccessTokenTtlSeconds()
+			: $this->extensionConfiguration->getOpaqueAccessTokenTtlSeconds();
+
 		if ($useJwt) {
 			$accessToken = $this->tokenService->generateJwtAccessToken(
 				$userId,
@@ -195,7 +208,7 @@ class UserAuthService implements SingletonInterface {
 				$scopes,
 				$userId,
 				FALSE,
-				time() + $expiresIn,
+				$expiresIn > 0 ? (time() + $expiresIn) : 0,
 				'Access Token for user ' . $userId
 			);
 		}
@@ -261,11 +274,28 @@ class UserAuthService implements SingletonInterface {
 			'refresh-' . $tokenRecord['uid'] . '-' . time()
 		);
 
-		// Update last used on the refresh token
-		$this->tokenRepository->updateLastUsed((int) $tokenRecord['uid']);
+		// Rotation: revoke old refresh token and issue a new one
+		$this->tokenRepository->revoke((int) $tokenRecord['uid']);
+
+		$newRefreshToken = $this->tokenService->generateRandomToken();
+		$refreshTtl = $this->extensionConfiguration->getRefreshTokenTtlSeconds();
+		$this->tokenService->createToken(
+			$newRefreshToken,
+			$apiId,
+			$tenantId,
+			(int) ($siteRootPageId ?? 0),
+			$scopes,
+			$userId,
+			TRUE,
+			$refreshTtl > 0 ? (time() + $refreshTtl) : 0,
+			'Refresh Token (rotated) for user ' . $userId
+		);
+
+		$this->logService->logInfo('user_refresh_success', ['userId' => $userId, 'apiId' => $apiId, 'tenantId' => $tenantId]);
 
 		return [
 			'access_token' => $accessTokenData['access_token'],
+			'refresh_token' => $newRefreshToken,
 			'token_type' => 'Bearer',
 			'expires_in' => $accessTokenData['expires_in']
 		];

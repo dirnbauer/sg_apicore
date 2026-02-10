@@ -16,10 +16,10 @@ namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use SGalinski\SgApiCore\Context\TenantContext;
+use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\TokenService;
 use SGalinski\SgApiCore\Service\UserAuthService;
-use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashInterface;
 use TYPO3\CMS\Core\Database\Connection;
@@ -63,6 +63,16 @@ class UserAuthServiceTest extends UnitTestCase {
 	 */
 	protected $tokenRepository;
 
+	/**
+	 * @var \SGalinski\SgApiCore\Configuration\ExtensionConfiguration|MockObject
+	 */
+	protected $extensionConfiguration;
+
+	/**
+	 * @var \SGalinski\SgApiCore\Service\LogService|MockObject
+	 */
+	protected $logService;
+
 	protected function setUp(): void {
 		parent::setUp();
 		$this->connectionPool = $this->createStub(ConnectionPool::class);
@@ -70,13 +80,17 @@ class UserAuthServiceTest extends UnitTestCase {
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->tokenService = $this->createStub(TokenService::class);
 		$this->tokenRepository = $this->createStub(TokenRepository::class);
+		$this->extensionConfiguration = $this->createStub(\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class);
+		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
 
 		$this->service = new UserAuthService(
 			$this->connectionPool,
 			$this->passwordHashFactory,
 			$this->apiRegistry,
 			$this->tokenService,
-			$this->tokenRepository
+			$this->tokenRepository,
+			$this->extensionConfiguration,
+			$this->logService
 		);
 	}
 
@@ -105,6 +119,33 @@ class UserAuthServiceTest extends UnitTestCase {
 
 		$resultUser = $this->service->authenticateUser($username, $password, $tenantContext);
 		$this->assertEquals($userRecord, $resultUser);
+	}
+
+	public function testFindUserByUsernameIgnoresDisabledOrDeleted(): void {
+		$username = 'disableduser';
+		$tenantContext = new TenantContext('test-tenant');
+
+		$queryBuilder = $this->createMock(QueryBuilder::class);
+		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
+
+		$exprBuilder = $this->createMock(ExpressionBuilder::class);
+		$queryBuilder->method('expr')->willReturn($exprBuilder);
+
+		// Expect filters for disable=0 and deleted=0
+		$exprBuilder->expects($this->any())
+			->method('eq')
+			->willReturn($this->createStub(\TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression::class));
+
+		$queryBuilder->method('select')->willReturn($queryBuilder);
+		$queryBuilder->method('from')->willReturn($queryBuilder);
+		$queryBuilder->method('where')->willReturn($queryBuilder);
+
+		$result = $this->createStub(\Doctrine\DBAL\Result::class);
+		$queryBuilder->method('executeQuery')->willReturn($result);
+		$result->method('fetchAssociative')->willReturn(FALSE);
+
+		$resultUser = $this->service->findUserByUsername($username, $tenantContext);
+		$this->assertNull($resultUser);
 	}
 
 	public function testResolveUserStoragePidsFromSiteConfig(): void {
@@ -160,11 +201,11 @@ class UserAuthServiceTest extends UnitTestCase {
 		];
 		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
 
-		$thrown = false;
+		$thrown = FALSE;
 		try {
 			$this->service->refreshTokens('expired-refresh-token', 'public', '1', $tenantContext);
 		} catch (\RuntimeException $e) {
-			$thrown = true;
+			$thrown = TRUE;
 			$this->assertSame('Refresh token expired.', $e->getMessage());
 		}
 		$this->assertTrue($thrown, 'Expected RuntimeException not thrown.');

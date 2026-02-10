@@ -48,7 +48,8 @@ When registering, the following options can be passed in the third parameter:
 
 ### Endpoint Overrides
 
-While the API-level `authMode` must be a string, individual endpoints can define multiple modes using an array in the `#[ApiRoute]` attribute:
+While the API-level `authMode` must be a string, individual endpoints can define multiple modes using an array in the
+`#[ApiRoute]` attribute:
 
 ```php
 // Available via public access OR with a valid user token

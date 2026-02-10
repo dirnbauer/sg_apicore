@@ -116,6 +116,44 @@ class UserAuthControllerTest extends UnitTestCase {
 		$this->assertEquals('refresh-token', $data['refresh_token']);
 	}
 
+	public function testLoginInheritsScopesFromBearerFallback(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
+		$tenantContext = new TenantContext('test-tenant', 'test-site', 1);
+		$request->method('getAttribute')->willReturnMap([
+			['api.tenant', NULL, $tenantContext],
+			['api.id', NULL, 'public'],
+			['api.version', NULL, '1'],
+			['api.auth', NULL, NULL]
+		]);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer valid-token');
+
+		$userRecord = ['uid' => 123, 'username' => 'testuser'];
+		$this->userAuthService->method('authenticateUser')->willReturn($userRecord);
+
+		$tokenRecord = [
+			'scopes' => json_encode(['partner:read', 'user']),
+			'expires_at' => time() + 3600
+		];
+		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
+
+		// Verify that generateTokensForUser is called with the inherited scopes
+		$this->userAuthService->expects($this->once())
+			->method('generateTokensForUser')
+			->with(
+				$userRecord,
+				'public',
+				'1',
+				$tenantContext,
+				['user', 'partner:read']
+			)
+			->willReturn(['access_token' => 'new-token']);
+
+		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));
+
+		$this->controller->login($request);
+	}
+
 	public function testLoginInvalidCredentials(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'wrongpass']);

@@ -118,6 +118,28 @@ class ExtensionConfiguration implements SingletonInterface {
 	}
 
 	/**
+	 * Returns the JWT access token TTL in seconds
+	 * If not set, falls back to tokenExpirationTime (backward compatibility)
+	 */
+	public function getJwtAccessTokenTtlSeconds(): int {
+		return (int) $this->get('jwtAccessTokenTtlSeconds', $this->getTokenExpirationTime());
+	}
+
+	/**
+	 * Returns the opaque (DB-backed) access token TTL in seconds
+	 */
+	public function getOpaqueAccessTokenTtlSeconds(): int {
+		return (int) $this->get('opaqueAccessTokenTtlSeconds', 3600);
+	}
+
+	/**
+	 * Returns the refresh token TTL in seconds
+	 */
+	public function getRefreshTokenTtlSeconds(): int {
+		return (int) $this->get('refreshTokenTtlSeconds', 30 * 24 * 3600);
+	}
+
+	/**
 	 * Returns the path prefix for the API
 	 *
 	 * @return string
