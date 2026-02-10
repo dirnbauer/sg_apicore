@@ -18,7 +18,6 @@ use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
-use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
@@ -28,11 +27,8 @@ use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\TokenService;
+use SGalinski\SgApiCore\Service\UserAuthService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
-use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
-use TYPO3\CMS\Core\Database\Connection;
-use TYPO3\CMS\Core\Database\ConnectionPool;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Controller for User Authentication (Login & Refresh)
@@ -54,14 +50,9 @@ class UserAuthController {
 	protected ApiRegistry $apiRegistry;
 
 	/**
-	 * @var PasswordHashFactory
+	 * @var UserAuthService
 	 */
-	protected PasswordHashFactory $passwordHashFactory;
-
-	/**
-	 * @var ConnectionPool
-	 */
-	protected ConnectionPool $connectionPool;
+	protected UserAuthService $userAuthService;
 
 	/**
 	 * @var ResponseService
@@ -72,24 +63,21 @@ class UserAuthController {
 	 * @param TokenRepository $tokenRepository
 	 * @param TokenService $tokenService
 	 * @param ApiRegistry $apiRegistry
-	 * @param PasswordHashFactory $passwordHashFactory
-	 * @param ConnectionPool $connectionPool
 	 * @param ResponseService $responseService
+	 * @param UserAuthService $userAuthService
 	 */
 	public function __construct(
 		TokenRepository $tokenRepository,
 		TokenService $tokenService,
 		ApiRegistry $apiRegistry,
-		PasswordHashFactory $passwordHashFactory,
-		ConnectionPool $connectionPool,
-		ResponseService $responseService
+		ResponseService $responseService,
+		UserAuthService $userAuthService
 	) {
 		$this->tokenRepository = $tokenRepository;
 		$this->tokenService = $tokenService;
 		$this->apiRegistry = $apiRegistry;
-		$this->passwordHashFactory = $passwordHashFactory;
-		$this->connectionPool = $connectionPool;
 		$this->responseService = $responseService;
+		$this->userAuthService = $userAuthService;
 	}
 
 	/**
@@ -119,9 +107,9 @@ class UserAuthController {
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
 	 * @throws Exception
+	 * @throws InvalidPasswordHashException
 	 * @throws RandomException
 	 * @throws \JsonException
-	 * @throws InvalidPasswordHashException
 	 */
 	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'Legacy User login', description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.', tags: ['Legacy'])]
@@ -171,82 +159,13 @@ class UserAuthController {
 
 		/** @var \SGalinski\SgApiCore\Context\TenantContext|null $tenantContext */
 		$tenantContext = $request->getAttribute('api.tenant');
-		$siteRootPageId = $tenantContext?->getSiteRootPageId();
 		$apiId = (string) $request->getAttribute('api.id');
-		$version = $request->getAttribute('api.version') ?? '1';
+		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
-		$storagePids = [];
-		if ($siteRootPageId > 0) {
-			$storagePids[] = (int) $siteRootPageId;
-		}
-
-		// EXT:sg_account support
-		if (class_exists(ConfigurationFactory::class)) {
-			try {
-				$accountConfiguration = ConfigurationFactory::getMainConfiguration(0, (int) $siteRootPageId);
-				if ($accountConfiguration) {
-					$settings = $accountConfiguration->getSettings();
-					if (isset($settings['frontendUserStoragePage']) && (int) $settings['frontendUserStoragePage'] > 0) {
-						$storagePids = GeneralUtility::intExplode(
-							',',
-							(string) $settings['frontendUserStoragePage'],
-							TRUE
-						);
-					}
-				}
-			} catch (\Throwable) {
-				// Fallback to site root if sg_account fails
-			}
-		}
-
-		// Support Site Configuration overrides
-		$site = $tenantContext?->getSite();
-		if ($site) {
-			$siteConfig = $site->getConfiguration();
-			if (isset($siteConfig['apicore']['userStoragePids'])) {
-				$storagePids = GeneralUtility::intExplode(
-					',',
-					(string) $siteConfig['apicore']['userStoragePids'],
-					TRUE
-				);
-			}
-		}
-
-		// Find user in fe_users
-		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
-		$queryBuilder->select('*')
-			->from('fe_users')
-			->where(
-				$queryBuilder->expr()->eq('username', $queryBuilder->createNamedParameter($username)),
-				$queryBuilder->expr()->eq('disable', 0),
-				$queryBuilder->expr()->eq('deleted', 0)
-			);
-
-		if (count($storagePids) > 0) {
-			$queryBuilder->andWhere(
-				$queryBuilder->expr()->in(
-					'pid',
-					$queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY)
-				)
-			);
-		}
-
-		$user = $queryBuilder->executeQuery()->fetchAssociative();
+		$user = $this->userAuthService->authenticateUser($username, $password, $tenantContext);
 		if (!$user) {
 			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
-
-		// Verify password
-		$hashInstance = $this->passwordHashFactory->get($user['password'], 'FE');
-		if (!$hashInstance->checkPassword($password, $user['password'])) {
-			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
-		}
-
-		// Success! Generate tokens
-		$tenantId = $tenantContext?->getTenantId() ?? '';
-		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, (string) $version);
-		$activeProviders = $securityConfig['authProviders'] ?? [];
-		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
 		// Scope Handling
 		$scopes = ['user'];
@@ -256,50 +175,15 @@ class UserAuthController {
 			$scopes = array_unique(array_merge($scopes, $authContext->getScopes()));
 		}
 
-		// Create Refresh Token (Opaque)
-		$refreshToken = $this->tokenService->generateRandomToken();
-		$this->tokenService->createToken(
-			$refreshToken,
+		$tokens = $this->userAuthService->generateTokensForUser(
+			$user,
 			$apiId,
-			$tenantId,
-			(int) $siteRootPageId,
-			$scopes,
-			(int) $user['uid'],
-			TRUE,
-			time() + (30 * 24 * 3600), // 30 days TTL for refresh token
-			'Refresh Token for ' . $user['username']
+			$version,
+			$tenantContext,
+			$scopes
 		);
 
-		// Create Access Token
-		if ($useJwt) {
-			$accessToken = $this->tokenService->generateJwtAccessToken(
-				(int) $user['uid'],
-				$apiId,
-				$tenantId,
-				$scopes,
-				'login-' . $user['uid'] . '-' . time()
-			);
-		} else {
-			$accessToken = $this->tokenService->generateRandomToken();
-			$this->tokenService->createToken(
-				$accessToken,
-				$apiId,
-				$tenantId,
-				(int) $siteRootPageId,
-				$scopes,
-				(int) $user['uid'],
-				FALSE,
-				time() + 3600, // 1-hour TTL for opaque access token
-				'Access Token for ' . $user['username']
-			);
-		}
-
-		return $this->responseService->createSuccessResponse([
-			'access_token' => $accessToken,
-			'refresh_token' => $refreshToken,
-			'token_type' => 'Bearer',
-			'expires_in' => 3600
-		]);
+		return $this->responseService->createSuccessResponse($tokens);
 	}
 
 	/**
@@ -328,70 +212,19 @@ class UserAuthController {
 		/** @var \SGalinski\SgApiCore\Context\TenantContext|null $tenantContext */
 		$tenantContext = $request->getAttribute('api.tenant');
 		$apiId = (string) $request->getAttribute('api.id');
-		$tenantId = $tenantContext?->getTenantId() ?? '';
-		$siteRootPageId = $tenantContext?->getSiteRootPageId();
+		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
-		$refreshTokenHash = hash('sha256', $refreshToken);
-		$tokenRecord = $this->tokenRepository->findByHashApiAndTenant(
-			$refreshTokenHash,
-			$apiId,
-			$tenantId,
-			$siteRootPageId,
-			TRUE
-		);
-
-		if ($tokenRecord === NULL || !$tokenRecord['is_refresh_token']) {
-			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid refresh token.', 401);
-		}
-
-		// Check expiry
-		if ((int) $tokenRecord['expires_at'] > 0 && (int) $tokenRecord['expires_at'] < time()) {
-			return $this->responseService->createErrorResponse('Unauthorized', 'Refresh token expired.', 401);
-		}
-
-		$scopes = [];
-		if ($tokenRecord['scopes']) {
-			$scopes = json_decode($tokenRecord['scopes'], TRUE, 512, JSON_THROW_ON_ERROR);
-		}
-
-		$userId = (int) $tokenRecord['user_id'];
-		$version = $request->getAttribute('api.version') ?? '1';
-
-		// Check if we should use JWT or Opaque Access Token
-		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, (string) $version);
-		$activeProviders = $securityConfig['authProviders'] ?? [];
-		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
-
-		if ($useJwt) {
-			$accessToken = $this->tokenService->generateJwtAccessToken(
-				$userId,
+		try {
+			$tokens = $this->userAuthService->refreshTokens(
+				$refreshToken,
 				$apiId,
-				$tenantId,
-				$scopes,
-				'refresh-' . $tokenRecord['uid'] . '-' . time()
+				$version,
+				$tenantContext
 			);
-		} else {
-			$accessToken = $this->tokenService->generateRandomToken();
-			$this->tokenService->createToken(
-				$accessToken,
-				$apiId,
-				$tenantId,
-				(int) $siteRootPageId,
-				$scopes,
-				$userId,
-				FALSE,
-				time() + 3600, // 1-hour TTL for opaque access token
-				'Access Token (Refreshed from ' . $tokenRecord['uid'] . ')'
-			);
+		} catch (\RuntimeException $e) {
+			return $this->responseService->createErrorResponse('Unauthorized', $e->getMessage(), 401);
 		}
 
-		// Update last used on the refresh token
-		$this->tokenRepository->updateLastUsed((int) $tokenRecord['uid']);
-
-		return $this->responseService->createSuccessResponse([
-			'access_token' => $accessToken,
-			'token_type' => 'Bearer',
-			'expires_in' => 3600
-		]);
+		return $this->responseService->createSuccessResponse($tokens);
 	}
 }
