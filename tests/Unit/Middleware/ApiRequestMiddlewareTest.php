@@ -25,6 +25,7 @@ use SGalinski\SgApiCore\Service\PathAnalysisService;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -36,6 +37,7 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	protected $router;
 	protected $pathAnalysisService;
 	protected $responseService;
+	protected $persistenceManager;
 	protected $middleware;
 
 	protected function setUp(): void {
@@ -47,13 +49,15 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 		$this->router = $this->createStub(Router::class);
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
 		$this->responseService = $this->createStub(ResponseService::class);
+		$this->persistenceManager = $this->createStub(PersistenceManagerInterface::class);
 
 		$this->middleware = new ApiRequestMiddleware(
 			$this->extensionConfiguration,
 			$this->apiRegistry,
 			$this->router,
 			$this->pathAnalysisService,
-			$this->responseService
+			$this->responseService,
+			$this->persistenceManager
 		);
 	}
 
@@ -103,7 +107,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$this->apiRegistry,
 			$this->router,
 			$this->pathAnalysisService,
-			$this->responseService
+			$this->responseService,
+			$this->persistenceManager
 		);
 
 		$middleware->process($request, $this->createStub(RequestHandlerInterface::class));
@@ -148,7 +153,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$this->apiRegistry,
 			$this->router,
 			$this->pathAnalysisService,
-			$this->responseService
+			$this->responseService,
+			$this->persistenceManager
 		);
 
 		$middleware->process($request, $this->createStub(RequestHandlerInterface::class));
@@ -208,7 +214,8 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 			$this->apiRegistry,
 			$router,
 			$this->pathAnalysisService,
-			$this->responseService
+			$this->responseService,
+			$this->persistenceManager
 		);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);

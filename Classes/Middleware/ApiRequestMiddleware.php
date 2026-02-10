@@ -26,6 +26,7 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 
 /**
  * Middleware to handle API request dispatching
@@ -36,19 +37,22 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	protected Router $router;
 	protected PathAnalysisService $pathAnalysisService;
 	protected ResponseService $responseService;
+	protected PersistenceManagerInterface $persistenceManager;
 
 	public function __construct(
 		ExtensionConfiguration $extensionConfiguration,
 		ApiRegistry $apiRegistry,
 		Router $router,
 		PathAnalysisService $pathAnalysisService,
-		ResponseService $responseService
+		ResponseService $responseService,
+		PersistenceManagerInterface $persistenceManager
 	) {
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->apiRegistry = $apiRegistry;
 		$this->router = $router;
 		$this->pathAnalysisService = $pathAnalysisService;
 		$this->responseService = $responseService;
+		$this->persistenceManager = $persistenceManager;
 	}
 
 	/**
@@ -137,7 +141,9 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 				}
 				$authMode = (string) $authMode;
 
-				return $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
+				$response = $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
+				$this->persistenceManager->persistAll();
+				return $response;
 			}
 		}
 
