@@ -112,6 +112,51 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	/**
 	 * @test
 	 */
+	public function testProcessCastsAuthModeToString(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api/test/v1/foo');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('getAttribute')->willReturnCallback(static function ($name) {
+			if ($name === 'api.id') {
+				return 'test';
+			}
+			if ($name === 'api.version') {
+				return '1';
+			}
+			if ($name === 'api.remainingPath') {
+				return '/foo';
+			}
+			return NULL;
+		});
+		$request->method('hasHeader')->willReturn(FALSE);
+
+		$this->apiRegistry->method('hasApi')->with('test')->willReturn(TRUE);
+		$this->apiRegistry->method('getApi')->with('test')->willReturn(['versions' => ['1']]);
+
+		// Simulate invalid config: authMode is an array (should be string on API level)
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => ['user']]);
+
+		$this->router = $this->createMock(Router::class);
+		$this->router->expects($this->once())
+			->method('dispatch')
+			->with($this->anything(), $this->anything(), $this->anything(), $this->anything(), 'user')
+			->willReturn($this->createStub(ResponseInterface::class));
+
+		$middleware = new ApiRequestMiddleware(
+			$this->extensionConfiguration,
+			$this->apiRegistry,
+			$this->router,
+			$this->pathAnalysisService,
+			$this->responseService
+		);
+
+		$middleware->process($request, $this->createStub(RequestHandlerInterface::class));
+	}
+
+	/**
+	 * @test
+	 */
 	public function testProcessReturnsJsonResponseForHealthEndpoint(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$uri = $this->createStub(UriInterface::class);

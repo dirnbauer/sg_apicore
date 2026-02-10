@@ -190,6 +190,25 @@ class RouterTest extends UnitTestCase {
 		$this->assertEquals(200, $response->getStatusCode());
 	}
 
+	public function testDispatchFiltersMixedAuthModeCorrectly(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('GET');
+
+		$router = $this->createRouter([MockMixedRouterController::class]);
+
+		// 1. 'public' api should NOT match /mixed
+		$response = $router->dispatch($request, 'public', '1', '/mixed', 'public');
+		$this->assertEquals(404, $response->getStatusCode());
+
+		// 2. 'token' api SHOULD match /mixed
+		$response = $router->dispatch($request, 'token-api', '1', '/mixed', 'token');
+		$this->assertEquals(401, $response->getStatusCode()); // Matches but no auth
+
+		// 3. 'user' api SHOULD match /mixed
+		$response = $router->dispatch($request, 'user-api', '1', '/mixed', 'user');
+		$this->assertEquals(401, $response->getStatusCode()); // Matches but no auth
+	}
+
 	public function testDispatchEnforcesRequireUser(): void {
 		$request = new ServerRequest('https://example.com/api/public/v1/user-required', 'GET');
 		$router = $this->createRouter([MockController::class]);
@@ -255,6 +274,16 @@ class MockController {
 class MockHybridRouterController {
 	#[ApiRoute(path: '/hybrid', methods: ['GET'], authMode: ['user', 'public'])]
 	public function hybridAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse(['matched' => TRUE]);
+	}
+}
+
+/**
+ * Mock controller for mixed token/user auth
+ */
+class MockMixedRouterController {
+	#[ApiRoute(path: '/mixed', methods: ['GET'], authMode: ['token', 'user'])]
+	public function mixedAction(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse(['matched' => TRUE]);
 	}
 }

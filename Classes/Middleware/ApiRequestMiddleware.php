@@ -131,7 +131,11 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 				}
 
 				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
-				$authMode = (string) ($securityConfig['authMode'] ?? 'token');
+				$authMode = $securityConfig['authMode'] ?? 'token';
+				if (is_array($authMode)) {
+					$authMode = (string) reset($authMode);
+				}
+				$authMode = (string) $authMode;
 
 				return $this->router->dispatch($request, $apiId, $version, $remainingPath, $authMode);
 			}

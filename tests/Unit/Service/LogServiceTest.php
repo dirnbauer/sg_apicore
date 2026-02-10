@@ -173,4 +173,42 @@ class LogServiceTest extends UnitTestCase {
 
 		$this->service->logRequestResponse($request, $response, 0.5);
 	}
+
+	public function testTruncateString(): void {
+		$reflection = new \ReflectionClass(LogService::class);
+		$method = $reflection->getMethod('truncateString');
+		$method->setAccessible(TRUE);
+
+		$longString = str_repeat('a', 100);
+		$result = $method->invoke($this->service, $longString, 50);
+
+		$this->assertEquals(50 + strlen('... [truncated]'), strlen($result));
+		$this->assertStringContainsString('... [truncated]', $result);
+		$this->assertEquals(0, strpos(strrev($result), strrev('... [truncated]')));
+	}
+
+	public function testTruncateLogDataWithArray(): void {
+		$reflection = new \ReflectionClass(LogService::class);
+		$method = $reflection->getMethod('truncateLogData');
+		$method->setAccessible(TRUE);
+
+		$data = ['foo' => str_repeat('b', 100)];
+		$result = $method->invoke($this->service, $data, 50);
+
+		$this->assertIsString($result);
+		$this->assertStringContainsString('... [truncated]', $result);
+		$this->assertEquals(0, strpos(strrev($result), strrev('... [truncated]')));
+	}
+
+	public function testRedactBearerToken(): void {
+		$data = 'Bearer some-secret-token';
+		$result = $this->service->redact($data, []);
+		$this->assertEquals('Bearer ***REDACTED***', $result);
+	}
+
+	public function testRedactAuthorizationHeader(): void {
+		$data = ['Authorization' => 'Bearer some-secret-token'];
+		$result = $this->service->redact($data, []);
+		$this->assertEquals('***REDACTED***', $result['Authorization']);
+	}
 }
