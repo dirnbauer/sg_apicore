@@ -135,6 +135,19 @@ class UserAuthService implements SingletonInterface {
 			$refreshTtl > 0 ? (time() + $refreshTtl) : 0,
 			'Refresh Token for ' . ($user['username'] ?? $user['uid'])
 		);
+
+		// Update lastlogin
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
+		$queryBuilder->update('fe_users')
+			->set('lastlogin', time())
+			->where(
+				$queryBuilder->expr()->eq(
+					'uid',
+					$queryBuilder->createNamedParameter($user['uid'], Connection::PARAM_INT)
+				)
+			)
+			->executeStatement();
+
 		$this->logService->logInfo(
 			'user_login_success',
 			['userId' => (int) $user['uid'], 'apiId' => $apiId, 'tenantId' => $tenantId]
