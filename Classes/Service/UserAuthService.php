@@ -15,10 +15,12 @@
 namespace SGalinski\SgApiCore\Service;
 
 use Doctrine\DBAL\Exception;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
+use SGalinski\SgApiCore\Event\AfterUserAuthenticationEvent;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
@@ -37,7 +39,8 @@ class UserAuthService implements SingletonInterface {
 		protected TokenService $tokenService,
 		protected TokenRepository $tokenRepository,
 		protected ExtensionConfiguration $extensionConfiguration,
-		protected LogService $logService
+		protected LogService $logService,
+		protected EventDispatcherInterface $eventDispatcher
 	) {
 	}
 
@@ -62,6 +65,9 @@ class UserAuthService implements SingletonInterface {
 		if (!$hashInstance->checkPassword($password, $user['password'])) {
 			return NULL;
 		}
+
+		$event = new AfterUserAuthenticationEvent($user, $tenantContext);
+		$this->eventDispatcher->dispatch($event);
 
 		return $user;
 	}

@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
@@ -72,6 +73,11 @@ class UserAuthServiceTest extends UnitTestCase {
 	 */
 	protected $logService;
 
+	/**
+	 * @var EventDispatcherInterface|MockObject
+	 */
+	protected $eventDispatcher;
+
 	protected function setUp(): void {
 		parent::setUp();
 		$this->connectionPool = $this->createStub(ConnectionPool::class);
@@ -83,6 +89,7 @@ class UserAuthServiceTest extends UnitTestCase {
 			\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
 		);
 		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
+		$this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
 		$this->service = new UserAuthService(
 			$this->connectionPool,
@@ -91,7 +98,8 @@ class UserAuthServiceTest extends UnitTestCase {
 			$this->tokenService,
 			$this->tokenRepository,
 			$this->extensionConfiguration,
-			$this->logService
+			$this->logService,
+			$this->eventDispatcher
 		);
 	}
 

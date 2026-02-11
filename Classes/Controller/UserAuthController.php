@@ -26,6 +26,7 @@ use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
+use SGalinski\SgApiCore\Exception\AuthenticationException;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
@@ -174,7 +175,12 @@ class UserAuthController {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
-		$user = $this->userAuthService->authenticateUser($username, $password, $tenantContext);
+		try {
+			$user = $this->userAuthService->authenticateUser($username, $password, $tenantContext);
+		} catch (AuthenticationException $e) {
+			return $this->responseService->createErrorResponse('Unauthorized', $e->getMessage(), 401);
+		}
+
 		if (!$user) {
 			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
@@ -241,9 +247,8 @@ class UserAuthController {
 	 *
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
-	 * @throws Exception
-	 * @throws RandomException
 	 * @throws JsonException
+	 * @throws RandomException
 	 */
 	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: ['user', 'public'])]
 	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).', tags: ['Authentication'])]

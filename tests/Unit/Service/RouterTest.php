@@ -21,7 +21,6 @@ use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
-use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
@@ -68,8 +67,7 @@ class RouterTest extends UnitTestCase {
 		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {
 			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
 		});
-		$logService = $this->createStub(LogService::class);
-		return new Router($controllersIterator, $discoveryService, $validator, $responseService, $logService);
+		return new Router($controllersIterator, $discoveryService, $validator, $responseService);
 	}
 
 	public function testDispatchMatchesRouteAndCallsController(): void {

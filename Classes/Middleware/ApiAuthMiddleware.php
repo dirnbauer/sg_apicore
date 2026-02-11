@@ -20,7 +20,6 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
-use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
 
 /**
@@ -30,18 +29,15 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 	protected ApiRegistry $apiRegistry;
 	protected LoginProviderInterface $loginProvider;
 	protected PathAnalysisService $pathAnalysisService;
-	protected LogService $logService;
 
 	public function __construct(
 		ApiRegistry $apiRegistry,
 		LoginProviderInterface $loginProvider,
-		PathAnalysisService $pathAnalysisService,
-		LogService $logService
+		PathAnalysisService $pathAnalysisService
 	) {
 		$this->apiRegistry = $apiRegistry;
 		$this->loginProvider = $loginProvider;
 		$this->pathAnalysisService = $pathAnalysisService;
-		$this->logService = $logService;
 	}
 
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {

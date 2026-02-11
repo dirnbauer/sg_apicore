@@ -50,7 +50,6 @@ class Router implements SingletonInterface {
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param RequestValidator $requestValidator
 	 * @param ResponseService $responseService
-	 * @param LogService $logService
 	 * @param CachePathService|null $cachePathService
 	 */
 	public function __construct(
@@ -58,7 +57,6 @@ class Router implements SingletonInterface {
 		protected EndpointDiscoveryService $endpointDiscoveryService,
 		protected RequestValidator $requestValidator,
 		protected ResponseService $responseService,
-		protected LogService $logService,
 		?CachePathService $cachePathService = NULL
 	) {
 		$this->controllers = $controllers;

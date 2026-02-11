@@ -68,6 +68,28 @@ public function profileAction(...) {
 }
 ```
 
+## Events
+
+The extension provides PSR-14 events to hook into various processes.
+
+### AfterUserAuthenticationEvent
+
+This event is triggered after a user has successfully authenticated (e.g., password check passed), but before tokens are generated and the response is sent. It allows you to perform additional checks (like account expiration) and block the login.
+
+* **Payload**: `getUser()` (array), `getTenantContext()` (?TenantContext).
+* **Blocking Login**: Throw an `SGalinski\SgApiCore\Exception\AuthenticationException` within your listener to abort the login process with a custom message.
+
+**Example Listener:**
+
+```php
+public function __invoke(AfterUserAuthenticationEvent $event): void {
+    $user = $event->getUser();
+    if ($user['is_blocked']) {
+        throw new AuthenticationException('Your account is blocked.');
+    }
+}
+```
+
 ## Authentication Error Responses
 
 Authentication failures return RFC 7807 Problem JSON, include `requestId` for tracing, and set `X-Request-ID`.

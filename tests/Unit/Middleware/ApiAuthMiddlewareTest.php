@@ -22,7 +22,6 @@ use SGalinski\SgApiCore\Middleware\ApiAuthMiddleware;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
-use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -33,7 +32,6 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 	protected $apiRegistry;
 	protected $loginProvider;
 	protected $pathAnalysisService;
-	protected $logService;
 	protected $middleware;
 
 	protected function setUp(): void {
@@ -41,13 +39,11 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 		$this->apiRegistry = $this->createStub(ApiRegistry::class);
 		$this->loginProvider = $this->createMock(LoginProviderInterface::class);
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
-		$this->logService = $this->createStub(LogService::class);
 
 		$this->middleware = new ApiAuthMiddleware(
 			$this->apiRegistry,
 			$this->loginProvider,
-			$this->pathAnalysisService,
-			$this->logService
+			$this->pathAnalysisService
 		);
 	}
 
