@@ -546,9 +546,7 @@ class TcaMapper implements SingletonInterface {
 
 		$this->ensureParseFuncConfiguration();
 		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		if ($request instanceof \Psr\Http\Message\ServerRequestInterface && (empty($parseFuncConf) || count(
-			$parseFuncConf
-		) <= 1)) {
+		if (empty($parseFuncConf) && $request instanceof \Psr\Http\Message\ServerRequestInterface) {
 			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
 			if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
 				$setup = $frontendTypoScript->getSetupArray();
@@ -573,7 +571,7 @@ class TcaMapper implements SingletonInterface {
 	 * @return void
 	 */
 	protected function ensureParseFuncConfiguration(): void {
-		if (isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
+		if (!isset($GLOBALS['TSFE']) || isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
 			return;
 		}
 

@@ -185,58 +185,11 @@ class UserAuthController {
 			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
 
-		// Scope Handling
-		$scopes = ['user'];
-		/** @var AuthContext|null $authContext */
-		$authContext = $request->getAttribute('api.auth');
-		if ($authContext instanceof AuthContext) {
-			$scopes = array_unique(array_merge($scopes, $authContext->getScopes()));
-		} else {
-			// Fallback: If Authorization header contains a valid bearer for this API/tenant, merge its scopes
-			$authorization = $request->getHeaderLine('Authorization');
-			if (stripos($authorization, 'Bearer ') === 0) {
-				$bearer = substr($authorization, 7);
-				if ($bearer !== '') {
-					$hash = hash('sha256', $bearer);
-					$tenantId = $tenantContext?->getTenantId() ?? '';
-					$siteRootPageId = $tenantContext?->getSiteRootPageId();
-					$tokenRecord = $this->tokenRepository->findByHashApiAndTenant(
-						$hash,
-						$apiId,
-						$tenantId,
-						$siteRootPageId,
-						TRUE
-					);
-					if ($tokenRecord !== NULL) {
-						$expired = ((int) ($tokenRecord['expires_at'] ?? 0) > 0) && ((int) $tokenRecord['expires_at'] < time(
-						));
-						if (!$expired) {
-							$inherited = [];
-							if (!empty($tokenRecord['scopes'])) {
-								try {
-									$inherited = json_decode(
-										(string) $tokenRecord['scopes'],
-										TRUE,
-										512,
-										JSON_THROW_ON_ERROR
-									) ?: [];
-								} catch (JsonException) {
-									$inherited = [];
-								}
-							}
-							$scopes = array_values(array_unique(array_merge($scopes, $inherited)));
-						}
-					}
-				}
-			}
-		}
-
-		$tokens = $this->userAuthService->generateTokensForUser(
+		$tokens = $this->userAuthService->generateTokensForUserWithScopeHandling(
 			$user,
+			$request,
 			$apiId,
-			$version,
-			$tenantContext,
-			$scopes
+			$version
 		);
 
 		return $this->responseService->createSuccessResponse($tokens);

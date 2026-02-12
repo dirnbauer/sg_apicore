@@ -16,11 +16,13 @@ namespace SGalinski\SgApiCore\Service;
 
 use Doctrine\DBAL\Exception;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Event\AfterUserAuthenticationEvent;
+use SGalinski\SgApiCore\Security\AuthContext;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
@@ -103,6 +105,81 @@ class UserAuthService implements SingletonInterface {
 		}
 
 		return $queryBuilder->executeQuery()->fetchAssociative() ?: NULL;
+	}
+
+	/**
+	 * Generates a set of access and refresh tokens for a user, resolving scopes from the request.
+	 *
+	 * @param array $user
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @param string $version
+	 * @return array
+	 * @throws \JsonException
+	 * @throws \Random\RandomException
+	 */
+	public function generateTokensForUserWithScopeHandling(
+		array $user,
+		ServerRequestInterface $request,
+		string $apiId,
+		string $version = '1'
+	): array {
+		/** @var TenantContext|null $tenantContext */
+		$tenantContext = $request->getAttribute('api.tenant');
+
+		// Scope Handling
+		$scopes = ['user'];
+		/** @var AuthContext|null $authContext */
+		$authContext = $request->getAttribute('api.auth');
+		if ($authContext instanceof AuthContext) {
+			$scopes = array_unique(array_merge($scopes, $authContext->getScopes()));
+		} else {
+			// Fallback: If the Authorization header contains a valid bearer for this API/tenant, merge its scopes
+			$authorization = $request->getHeaderLine('Authorization');
+			if (stripos($authorization, 'Bearer ') === 0) {
+				$bearer = substr($authorization, 7);
+				if ($bearer !== '') {
+					$hash = hash('sha256', $bearer);
+					$tenantId = $tenantContext?->getTenantId() ?? '';
+					$siteRootPageId = $tenantContext?->getSiteRootPageId();
+					$tokenRecord = $this->tokenRepository->findByHashApiAndTenant(
+						$hash,
+						$apiId,
+						$tenantId,
+						$siteRootPageId,
+						TRUE
+					);
+					if ($tokenRecord !== NULL) {
+						$expired = ((int) ($tokenRecord['expires_at'] ?? 0) > 0) &&
+							((int) $tokenRecord['expires_at'] < time());
+						if (!$expired) {
+							$inherited = [];
+							if (!empty($tokenRecord['scopes'])) {
+								try {
+									$inherited = json_decode(
+										(string) $tokenRecord['scopes'],
+										TRUE,
+										512,
+										JSON_THROW_ON_ERROR
+									) ?: [];
+								} catch (\JsonException) {
+									$inherited = [];
+								}
+							}
+							$scopes = array_values(array_unique(array_merge($scopes, $inherited)));
+						}
+					}
+				}
+			}
+		}
+
+		return $this->generateTokensForUser(
+			$user,
+			$apiId,
+			$version,
+			$tenantContext,
+			$scopes
+		);
 	}
 
 	/**
