@@ -30,6 +30,7 @@ use TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder;
 use TYPO3\CMS\Core\Database\Query\QueryBuilder;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Site\Entity\Site;
@@ -48,6 +49,7 @@ class ResourceControllerTest extends UnitTestCase {
 	protected LogService|MockObject $logService;
 	protected ExtensionConfiguration|MockObject $extensionConfiguration;
 	protected LanguageServiceFactory|MockObject $languageServiceFactory;
+	protected Typo3Version|MockObject $typo3Version;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -59,6 +61,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$this->extensionConfiguration->method('getApiResourceWriteBackendUserId')->willReturn(0);
 		$this->languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$this->typo3Version = $this->createStub(Typo3Version::class);
 
 		// Mock LogManager to avoid singleton issues in tests
 		$logManager = $this->createStub(LogManager::class);
@@ -76,7 +79,8 @@ class ResourceControllerTest extends UnitTestCase {
 			$this->paginationService,
 			$this->logService,
 			$this->extensionConfiguration,
-			$this->languageServiceFactory
+			$this->languageServiceFactory,
+			$this->typo3Version
 		);
 	}
 

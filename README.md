@@ -154,7 +154,8 @@ See [Logging Documentation](docs/Logging.md).
 
 ## Multi-Tenancy
 
-Every API request runs in a `TenantContext`, usually derived from the TYPO3 Site.
+Every API request runs in a `TenantContext`, usually derived from the TYPO3 Site. Endpoints can be filtered by
+tenants using the `tenants` property in the `#[ApiRoute]` attribute.
 See [Tenants Documentation](docs/Tenants.md).
 
 ## Security & Authentication

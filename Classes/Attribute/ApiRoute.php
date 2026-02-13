@@ -27,13 +27,15 @@ class ApiRoute {
 	 * @param string|array|null $apiId Optional API ID restriction (string or array of strings)
 	 * @param string|array|null $version Optional version restriction (string or array of strings)
 	 * @param string|array|null $authMode Optional auth mode restriction (e.g., 'user', 'token', 'public')
+	 * @param string|array|null $tenants Optional tenant restriction (string or array of strings)
 	 */
 	public function __construct(
 		public string $path,
 		public array $methods = ['GET'],
 		public string|array|NULL $apiId = NULL,
 		public string|array|NULL $version = NULL,
-		public string|array|NULL $authMode = NULL
+		public string|array|NULL $authMode = NULL,
+		public string|array|NULL $tenants = NULL
 	) {
 	}
 }

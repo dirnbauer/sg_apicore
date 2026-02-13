@@ -74,10 +74,13 @@ The extension provides PSR-14 events to hook into various processes.
 
 ### AfterUserAuthenticationEvent
 
-This event is triggered after a user has successfully authenticated (e.g., password check passed), but before tokens are generated and the response is sent. It allows you to perform additional checks (like account expiration) and block the login.
+This event is triggered after a user has successfully authenticated (e.g., password check passed), but before tokens are
+generated and the response is sent. It allows you to perform additional checks (like account expiration) and block the
+login.
 
 * **Payload**: `getUser()` (array), `getTenantContext()` (?TenantContext).
-* **Blocking Login**: Throw an `SGalinski\SgApiCore\Exception\AuthenticationException` within your listener to abort the login process with a custom message.
+* **Blocking Login**: Throw an `SGalinski\SgApiCore\Exception\AuthenticationException` within your listener to abort the
+  login process with a custom message.
 
 **Example Listener:**
 

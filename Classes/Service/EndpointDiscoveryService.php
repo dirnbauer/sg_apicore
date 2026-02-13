@@ -170,6 +170,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 						'methods' => $route->methods,
 						'authMode' => is_array($route->authMode) ?
 							$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
+						'tenants' => is_array($route->tenants) ?
+							$route->tenants : ($route->tenants !== NULL ? [$route->tenants] : []),
 						'summary' => $summary,
 						'description' => $description,
 						'tags' => $tags,

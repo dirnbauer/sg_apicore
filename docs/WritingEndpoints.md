@@ -30,7 +30,7 @@ class MyController {
         protected ResponseService $responseService
     ) {}
 
-    #[ApiRoute(path: '/my-action/{id}', methods: ['GET'], apiId: 'public', version: '1')]
+    #[ApiRoute(path: '/my-action/{id}', methods: ['GET'], apiId: 'public', version: '1', tenants: 'my-tenant')]
     #[ApiEndpoint(summary: 'Short description', tags: ['MyCategory'])]
     #[ApiResponse(status: 200, description: 'Success')]
     public function myAction(ServerRequestInterface $request, string $id): ResponseInterface {
@@ -43,11 +43,15 @@ class MyController {
 ### Endpoint Filtering
 
 By default, an endpoint is available for all registered APIs and versions. You can restrict an endpoint to specific
-APIs, versions, or auth modes by using the properties of the `ApiRoute` attribute:
+APIs, versions, tenants, or auth modes by using the properties of the `ApiRoute` attribute:
 
 ```php
 // Only available for /api/public/v1/...
 #[ApiRoute(path: '/public-only', methods: ['GET'], apiId: 'public', version: '1')]
+
+// Only available for specific tenants (Site-ID by default)
+#[ApiRoute(path: '/tenant-specific', methods: ['GET'], tenants: 'citypower-tenant')]
+#[ApiRoute(path: '/multi-tenant', methods: ['GET'], tenants: ['tenant-a', 'tenant-b'])]
 
 // Available for both public and partner APIs in version 1
 #[ApiRoute(path: '/v1-shared', methods: ['GET'], apiId: ['public', 'partner'], version: '1')]

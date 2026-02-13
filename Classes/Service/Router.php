@@ -102,8 +102,11 @@ class Router implements SingletonInterface {
 			$path = '/';
 		}
 
-		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
-		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode);
+		$tenantContext = $request->getAttribute('api.tenant');
+		$tenantId = $tenantContext?->getTenantId() ?? '';
+
+		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode, $tenantId);
+		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode, $tenantId);
 
 		$routeInfo = $dispatcher->dispatch($request->getMethod(), $path);
 
@@ -249,12 +252,15 @@ class Router implements SingletonInterface {
 			$path = '/';
 		}
 
-		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode);
+		$tenantContext = $request->getAttribute('api.tenant');
+		$tenantId = $tenantContext?->getTenantId() ?? '';
+
+		$filteredEndpoints = $this->getFilteredEndpoints($apiId, $version, $authMode, $tenantId);
 		if (count($filteredEndpoints) === 0) {
 			return NULL;
 		}
 
-		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode);
+		$dispatcher = $this->createDispatcher($filteredEndpoints, $apiId, $version, $authMode, $tenantId);
 		$routeInfo = $dispatcher->dispatch($request->getMethod(), $path);
 		if ($routeInfo[0] !== Dispatcher::FOUND) {
 			return NULL;
@@ -327,10 +333,11 @@ class Router implements SingletonInterface {
 	 * @param string $apiId
 	 * @param string $version
 	 * @param string|null $authMode
+	 * @param string $tenantId
 	 * @return array
 	 * @throws \ReflectionException
 	 */
-	protected function getFilteredEndpoints(string $apiId, string $version, ?string $authMode): array {
+	protected function getFilteredEndpoints(string $apiId, string $version, ?string $authMode, string $tenantId = ''): array {
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
 		$filteredEndpoints = [];
 
@@ -339,6 +346,9 @@ class Router implements SingletonInterface {
 				continue;
 			}
 			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+				continue;
+			}
+			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
 				continue;
 			}
 			if (!empty($endpoint['authMode'])) {
@@ -385,12 +395,13 @@ class Router implements SingletonInterface {
 		array $filteredEndpoints,
 		string $apiId,
 		string $version,
-		mixed $authMode
+		mixed $authMode,
+		string $tenantId = ''
 	): Dispatcher {
 		$cacheDirectory = $this->cachePathService->getFastRouteCacheDirectory();
 
 		$authKey = is_array($authMode) ? implode(',', $authMode) : (string) $authMode;
-		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey) . '.php';
+		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey . '|' . $tenantId) . '.php';
 
 		return cachedDispatcher(function (RouteCollector $r) use ($filteredEndpoints) {
 			foreach ($filteredEndpoints as $endpoint) {

@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
+use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
@@ -107,11 +108,17 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchEnforcesScopesSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
+		$tenantContext = new TenantContext('tenant-1');
+		$authContext = new AuthContext('public', 'tenant-1', 1, ['read', 'write']);
 
-		$authContext = new AuthContext('public', 'tenant-1', 1, ['read']);
-		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
+		$request->method('getAttribute')->willReturnCallback(function ($name) use ($tenantContext, $authContext) {
+			if ($name === 'api.tenant') return $tenantContext;
+			if ($name === 'api.auth') return $authContext;
+			return NULL;
+		});
+		$request->method('withAttribute')->willReturn($request);
 
 		$router = $this->createRouter([MockController::class]);
 
@@ -142,8 +149,16 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchFiltersByAuthMode(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
+		$tenantContext = new TenantContext('tenant-1');
+		$request->method('getAttribute')->willReturnCallback(function ($name) use ($tenantContext) {
+			if ($name === 'api.tenant') {
+				return $tenantContext;
+			}
+			return NULL;
+		});
+		$request->method('withAttribute')->willReturn($request);
 
 		$router = $this->createRouter([MockController::class]);
 
@@ -157,7 +172,14 @@ class RouterTest extends UnitTestCase {
 
 		// With auth, it works
 		$authContext = new AuthContext('public', 'tenant-1', 1);
-		$request->method('getAttribute')->with('api.auth')->willReturn($authContext);
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getMethod')->willReturn('GET');
+		$request->method('getAttribute')->willReturnCallback(function ($name) use ($tenantContext, $authContext) {
+			if ($name === 'api.tenant') return $tenantContext;
+			if ($name === 'api.auth') return $authContext;
+			return NULL;
+		});
+		$request->method('withAttribute')->willReturn($request);
 		$response = $router->dispatch($request, 'public', '1', '/user-only', 'user');
 		$this->assertEquals(200, $response->getStatusCode());
 	}

@@ -40,6 +40,27 @@ public function myAction(ServerRequestInterface $request): ResponseInterface {
 }
 ```
 
+## Endpoint Filtering by Tenant
+
+You can restrict specific endpoints to certain tenants using the `tenants` property of the `#[ApiRoute]` attribute.
+This is useful for extending an existing API for a specific tenant without affecting others.
+
+```php
+use SGalinski\SgApiCore\Attribute\ApiRoute;
+
+// Only available for the tenant 'citypower-tenant'
+#[ApiRoute(path: '/custom-data', methods: ['GET'], tenants: 'citypower-tenant')]
+public function customDataAction(): ResponseInterface {
+    // ...
+}
+
+// Available for multiple specific tenants
+#[ApiRoute(path: '/shared-data', methods: ['GET'], tenants: ['tenant-a', 'tenant-b'])]
+public function sharedAction(): ResponseInterface {
+    // ...
+}
+```
+
 ## Multi-Language Handling
 
 The `TenantContext` also captures the current language. By default, `sg_apicore` is fully language-aware:

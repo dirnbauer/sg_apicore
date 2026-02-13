@@ -56,7 +56,11 @@ class OpenApiController {
 		$baseUrl = (string) $request->getUri()->withPath(
 			str_replace('/docs.json', '', $path)
 		);
-		$spec = $this->openApiService->generateSpec($apiId, $version, $baseUrl);
+
+		$tenantContext = $request->getAttribute('api.tenant');
+		$tenantId = $tenantContext?->getTenantId() ?? '';
+
+		$spec = $this->openApiService->generateSpec($apiId, $version, $baseUrl, $tenantId);
 		return new JsonResponse($spec);
 	}
 
@@ -101,7 +105,9 @@ class OpenApiController {
 		$debugFlag = $request->getQueryParams()['debug'] ?? '';
 		$debugFlag = strtolower((string) $debugFlag);
 		if (in_array($debugFlag, ['1', 'true', 'yes'], TRUE)) {
-			$cacheInfo = $this->openApiService->getCacheDebugInfo($apiId, $version, $baseUrl);
+			$tenantContext = $request->getAttribute('api.tenant');
+			$tenantId = $tenantContext?->getTenantId() ?? '';
+			$cacheInfo = $this->openApiService->getCacheDebugInfo($apiId, $version, $baseUrl, $tenantId);
 			$cacheKey = htmlspecialchars($cacheInfo['cacheKey'] ?? '', ENT_QUOTES);
 			$signature = htmlspecialchars($cacheInfo['signature'] ?? '', ENT_QUOTES);
 			$debugInfo = '<div class="swagger-debug">Cache key: ' . $cacheKey

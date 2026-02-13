@@ -82,9 +82,9 @@ class UserAuthControllerTest extends UnitTestCase {
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
 		$tenantContext = new TenantContext('test-tenant');
 		$request->method('getAttribute')->willReturnMap([
-			['api.tenant', NULL, $tenantContext],
-			['api.id', NULL, 'public'],
-			['api.version', NULL, '1']
+			['api.tenant', $tenantContext],
+			['api.id', 'public'],
+			['api.version', '1']
 		]);
 
 		$userRecord = [
@@ -100,7 +100,7 @@ class UserAuthControllerTest extends UnitTestCase {
 			'token_type' => 'Bearer',
 			'expires_in' => 3600
 		];
-		$this->userAuthService->method('generateTokensForUser')->willReturn($tokens);
+		$this->userAuthService->method('generateTokensForUserWithScopeHandling')->willReturn($tokens);
 
 		$this->responseService->method('createSuccessResponse')->willReturnCallback(
 			fn ($data) => new JsonResponse($data)
@@ -219,45 +219,35 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testLegacyLoginSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
 		$tenantContext = new TenantContext('test-tenant');
-		$request->method('getAttribute')->willReturnMap([
-			['api.tenant', NULL, $tenantContext],
-			['api.id', NULL, 'legacy'],
-			['api.version', NULL, '1']
-		]);
+		$request->method('getAttribute')->willReturnCallback(function($name) use ($tenantContext) {
+			return match($name) {
+				'api.tenant' => $tenantContext,
+				'api.id' => 'legacy',
+				'api.version' => '1',
+				'api.legacyMode' => new \SGalinski\SgApiCore\Attribute\ApiLegacyMode(wrapData: FALSE),
+				default => NULL
+			};
+		});
 
-		$userRecord = [
-			'uid' => 123,
-			'username' => 'testuser',
-			'password' => 'hashed-password'
-		];
+		$userRecord = ['uid' => 123, 'username' => 'testuser'];
 		$this->userAuthService->method('authenticateUser')->willReturn($userRecord);
 
-		$tokens = [
-			'access_token' => 'access-token',
-			'refresh_token' => 'refresh-token',
-			'token_type' => 'Bearer',
-			'expires_in' => 3600
-		];
-		$this->userAuthService->method('generateTokensForUser')->willReturn($tokens);
+		$tokens = ['access_token' => 'access-token'];
+		$this->userAuthService->method('generateTokensForUserWithScopeHandling')->willReturn($tokens);
 
 		$this->responseService->method('createSuccessResponse')->willReturnCallback(
-			function ($data, $meta, $status, $legacyMode) {
-				if ($legacyMode && $legacyMode->wrapData === FALSE && isset($data['bearerToken'])) {
-					return new JsonResponse($data, $status);
-				}
-				// Default behavior for mock
-				return new JsonResponse($data, $status);
+			function($data) {
+				return new \TYPO3\CMS\Core\Http\JsonResponse($data, 200);
 			}
 		);
 
-		$response = $this->controller->legacyLogin($request);
+		$actualResponse = $this->controller->legacyLogin($request);
 
-		$this->assertInstanceOf(JsonResponse::class, $response);
-		$this->assertEquals(200, $response->getStatusCode());
-		$data = json_decode((string) $response->getBody(), TRUE);
+		$this->assertEquals(200, $actualResponse->getStatusCode());
+		$data = json_decode((string) $actualResponse->getBody(), TRUE);
 		$this->assertEquals('access-token', $data['bearerToken']);
 	}
 
