@@ -34,7 +34,8 @@ use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 class ApiTypoScriptSetupService {
 	public function __construct(
 		protected readonly Context $context,
-		protected readonly LogService $logService
+		protected readonly LogService $logService,
+		protected readonly Typo3Version $typo3Version
 	) {
 	}
 
@@ -52,8 +53,7 @@ class ApiTypoScriptSetupService {
 			return $request;
 		}
 
-		$typo3Version = GeneralUtility::makeInstance(Typo3Version::class);
-		if ($typo3Version->getMajorVersion() >= 13) {
+		if ($this->typo3Version->getMajorVersion() >= 13) {
 			$request = $this->initializeTypoScriptV13($request, $siteRootPageId);
 		} else {
 			$request = $this->initializeTypoScriptV12($request, $siteRootPageId);
@@ -168,8 +168,7 @@ class ApiTypoScriptSetupService {
 			]
 		];
 
-		$typo3Version = GeneralUtility::makeInstance(Typo3Version::class);
-		if ($typo3Version->getMajorVersion() >= 13) {
+		if ($this->typo3Version->getMajorVersion() >= 13) {
 			/** @phpstan-ignore-next-line */
 			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], new RootNode());
 		} else {

@@ -26,13 +26,15 @@ use TYPO3\CMS\Core\SingletonInterface;
  */
 class ResponseService implements SingletonInterface {
 	/**
-	 * @param ExtensionConfiguration $extensionConfiguration
-	 * @param LanguageServiceFactory $languageServiceFactory
+	 * @param ExtensionConfiguration|null $extensionConfiguration
+	 * @param LanguageServiceFactory|null $languageServiceFactory
 	 */
 	public function __construct(
-		protected ExtensionConfiguration $extensionConfiguration,
-		protected LanguageServiceFactory $languageServiceFactory
+		protected ?ExtensionConfiguration $extensionConfiguration = NULL,
+		protected ?LanguageServiceFactory $languageServiceFactory = NULL
 	) {
+		$this->extensionConfiguration ??= GeneralUtility::makeInstance(ExtensionConfiguration::class);
+		$this->languageServiceFactory ??= GeneralUtility::makeInstance(LanguageServiceFactory::class);
 	}
 
 	/**

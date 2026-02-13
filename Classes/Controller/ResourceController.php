@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\Response;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -42,7 +43,8 @@ class ResourceController {
 		protected PaginationService $paginationService,
 		protected LogService $logService,
 		protected ExtensionConfiguration $extensionConfiguration,
-		protected LanguageServiceFactory $languageServiceFactory
+		protected LanguageServiceFactory $languageServiceFactory,
+		protected Typo3Version $typo3Version
 	) {
 	}
 
