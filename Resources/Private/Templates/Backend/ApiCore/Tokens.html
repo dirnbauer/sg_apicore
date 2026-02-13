@@ -1,5 +1,6 @@
-<f:layout name="Backend/Default"/>
 {namespace sg=SGalinski\SgApiCore\ViewHelpers}
+
+<f:layout name="Backend/Default"/>
 
 <f:section name="Content">
 	<h1>Token Management</h1>
@@ -16,8 +17,20 @@
 							   options="{active: 'Active', expired: 'Expired', revoked: 'Revoked'}"
 							   prependOptionLabel="-- All Status --" class="form-control mr-2"
 							   value="{filters.status}"/>
-				<f:form.select name="filters[isUserToken]" options="{0: 'System/M2M Tokens', 1: 'User Tokens'}"
-							   class="form-control mr-2" value="{filters.isUserToken}"/>
+				<f:comment><!--
+					We only show the "User Access Tokens" category if there are actually any such tokens in the database.
+					In many cases, these are JWTs and not stored at all.
+				--></f:comment>
+				<f:variable name="tokenCategories"
+							value="{m2m: 'System/M2M Tokens', user: 'User Access Tokens', refresh: 'User Refresh Tokens'}"/>
+				<f:if condition="!{hasUserAccessTokens} && {filters.tokenCategory} != 'user'">
+					<f:variable name="tokenCategories"
+								value="{m2m: 'System/M2M Tokens', refresh: 'User Refresh Tokens'}"/>
+				</f:if>
+
+				<f:form.select name="filters[tokenCategory]"
+							   options="{tokenCategories}"
+							   class="form-control mr-2" value="{filters.tokenCategory}"/>
 				<f:form.submit value="Filter" class="btn btn-default"/>
 			</f:form>
 

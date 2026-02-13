@@ -46,6 +46,9 @@ class ApiCoreController extends ActionController {
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param ModuleTemplateFactory $moduleTemplateFactory
 	 * @param IconFactory $iconFactory
+	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @param RateLimitDashboardService $rateLimitDashboardService
+	 * @param LogDashboardService $logDashboardService
 	 */
 	public function __construct(
 		protected readonly ApiRegistry $apiRegistry,
@@ -84,11 +87,31 @@ class ApiCoreController extends ActionController {
 	 * @throws \Doctrine\DBAL\Exception
 	 */
 	public function tokensAction(array $filters = []): ResponseInterface {
-		if (!isset($filters['isUserToken'])) {
+		if (!isset($filters['tokenCategory'])) {
+			$filters['tokenCategory'] = 'm2m';
+		}
+
+		if ($filters['tokenCategory'] === 'm2m') {
 			$filters['isUserToken'] = 0;
+			$filters['isRefreshToken'] = 0;
+		} elseif ($filters['tokenCategory'] === 'user') {
+			$filters['isUserToken'] = 1;
+			$filters['isRefreshToken'] = 0;
+		} elseif ($filters['tokenCategory'] === 'refresh') {
+			$filters['isRefreshToken'] = 1;
+			unset($filters['isUserToken']);
 		}
 
 		$tokens = $this->tokenRepository->findAllWithFilters($filters);
+		if ($filters['tokenCategory'] === 'user') {
+			$hasUserAccessTokens = count($tokens) > 0;
+		} else {
+			$userTokenFilters = $filters;
+			$userTokenFilters['isUserToken'] = 1;
+			$userTokenFilters['isRefreshToken'] = 0;
+			$hasUserAccessTokens = count($this->tokenRepository->findAllWithFilters($userTokenFilters)) > 0;
+		}
+
 		$apis = $this->apiRegistry->getApis();
 		$apiOptions = array_combine(array_keys($apis), array_keys($apis));
 
@@ -98,6 +121,7 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->assign('tokens', $tokens);
 		$moduleTemplate->assign('apis', $apiOptions);
 		$moduleTemplate->assign('filters', $filters);
+		$moduleTemplate->assign('hasUserAccessTokens', $hasUserAccessTokens);
 		$moduleTemplate->assign('currentTab', 'tokens');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Tokens');
 	}
