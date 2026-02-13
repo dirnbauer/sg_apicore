@@ -182,6 +182,24 @@ class OpenApiService implements SingletonInterface {
 		}
 		$spec['tags'] = array_merge($sortedTags, $tagsToPutAtBottom);
 
+		// Sort endpoints by tag and path for better readability in the documentation.
+		// The original order from EndpointDiscoveryService is optimized for routing (specific before generic).
+		usort($filteredEndpoints, static function ($a, $b) {
+			$tagA = $a['tags'][0] ?? '';
+			$tagB = $b['tags'][0] ?? '';
+			$tagCompare = strcasecmp($tagA, $tagB);
+			if ($tagCompare !== 0) {
+				return $tagCompare;
+			}
+
+			$pathCompare = strcasecmp($a['path'], $b['path']);
+			if ($pathCompare !== 0) {
+				return $pathCompare;
+			}
+
+			return strcasecmp(implode(',', $a['methods']), implode(',', $b['methods']));
+		});
+
 		foreach ($filteredEndpoints as $endpoint) {
 			$this->addRouteToSpec($spec, $endpoint);
 		}
