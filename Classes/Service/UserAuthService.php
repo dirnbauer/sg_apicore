@@ -17,6 +17,7 @@ namespace SGalinski\SgApiCore\Service;
 use Doctrine\DBAL\Exception;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Random\RandomException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
@@ -42,8 +43,10 @@ class UserAuthService implements SingletonInterface {
 		protected TokenRepository $tokenRepository,
 		protected ExtensionConfiguration $extensionConfiguration,
 		protected LogService $logService,
-		protected EventDispatcherInterface $eventDispatcher
+		protected EventDispatcherInterface $eventDispatcher,
+		protected ?JwtService $jwtService = NULL
 	) {
+		$this->jwtService ??= GeneralUtility::makeInstance(JwtService::class);
 	}
 
 	/**
@@ -280,18 +283,33 @@ class UserAuthService implements SingletonInterface {
 		$activeProviders = $securityConfig['authProviders'] ?? [];
 		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
-		// Determine TTL dynamically based on provider
+		// Determine TTL dynamically based on the provider
 		$expiresIn = $useJwt
 			? $this->extensionConfiguration->getJwtAccessTokenTtlSeconds()
 			: $this->extensionConfiguration->getOpaqueAccessTokenTtlSeconds();
 
 		if ($useJwt) {
+			$jti = $jti ?: 'access-' . $userId . '-' . time();
 			$accessToken = $this->tokenService->generateJwtAccessToken(
 				$userId,
 				$apiId,
 				$tenantId,
 				$scopes,
-				$jti ?: 'access-' . $userId . '-' . time()
+				$jti
+			);
+
+			// Also create a database record for the JWT so it can be revoked via jti
+			$this->tokenService->createToken(
+				$jti,
+				$apiId,
+				$tenantId,
+				$siteRootPageId,
+				$scopes,
+				$userId,
+				FALSE,
+				$expiresIn > 0 ? (time() + $expiresIn) : 0,
+				'Access Token (JWT) for user ' . $userId,
+				TRUE
 			);
 		} else {
 			$accessToken = $this->tokenService->generateRandomToken();
@@ -299,7 +317,7 @@ class UserAuthService implements SingletonInterface {
 				$accessToken,
 				$apiId,
 				$tenantId,
-				(int) $siteRootPageId,
+				$siteRootPageId,
 				$scopes,
 				$userId,
 				FALSE,
@@ -323,9 +341,9 @@ class UserAuthService implements SingletonInterface {
 	 * @param string $version
 	 * @param TenantContext|null $tenantContext
 	 * @return array
+	 * @throws Exception
 	 * @throws \JsonException
-	 * @throws \Random\RandomException
-	 * @throws \RuntimeException if token is invalid or expired
+	 * @throws RandomException
 	 */
 	public function refreshTokens(
 		string $refreshToken,
@@ -369,7 +387,7 @@ class UserAuthService implements SingletonInterface {
 			'refresh-' . $tokenRecord['uid'] . '-' . time()
 		);
 
-		// Rotation: revoke old refresh token and issue a new one
+		// Rotation: revoke the old refresh token and issue a new one
 		$this->tokenRepository->revoke((int) $tokenRecord['uid']);
 
 		$newRefreshToken = $this->tokenService->generateRandomToken();
@@ -397,6 +415,50 @@ class UserAuthService implements SingletonInterface {
 			'token_type' => 'Bearer',
 			'expires_in' => $accessTokenData['expires_in']
 		];
+	}
+
+	/**
+	 * Revokes a user token (access or refresh) and its associated refresh tokens if it's an access token.
+	 *
+	 * @param string $token
+	 * @return void
+	 * @throws Exception
+	 * @throws \JsonException
+	 */
+	public function revokeUserToken(string $token): void {
+		$tokenHash = hash('sha256', $token);
+		$tokenRecord = $this->tokenRepository->findByHashGlobally($tokenHash);
+
+		// If not found by hash, it might be a JWT
+		if ($tokenRecord === NULL && count(explode('.', $token)) === 3) {
+			$payload = $this->jwtService->decode($token);
+			$jti = $payload['jti'] ?? '';
+			if ($jti !== '') {
+				$tokenRecord = $this->tokenRepository->findByHashGlobally($jti);
+			}
+		}
+
+		if ($tokenRecord && (int) ($tokenRecord['user_id'] ?? 0) > 0) {
+			$this->tokenRepository->revoke((int) $tokenRecord['uid']);
+
+			// If it's an access token (is_refresh_token = 0), we also want to revoke any refresh tokens for this user,
+			// api and tenant to ensure a full logout.
+			if (!(int) $tokenRecord['is_refresh_token']) {
+				$filters = [
+					'apiId' => $tokenRecord['api_id'],
+					'tenantId' => $tokenRecord['tenant_id'],
+					'isRefreshToken' => 1,
+					'isUserToken' => 1,
+					'status' => 'active'
+				];
+				$activeRefreshTokens = $this->tokenRepository->findAllWithFilters($filters);
+				foreach ($activeRefreshTokens as $refreshTokenRecord) {
+					if ((int) $refreshTokenRecord['user_id'] === (int) $tokenRecord['user_id']) {
+						$this->tokenRepository->revoke((int) $refreshTokenRecord['uid']);
+					}
+				}
+			}
+		}
 	}
 
 	/**

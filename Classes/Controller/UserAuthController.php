@@ -24,10 +24,10 @@ use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Exception\AuthenticationException;
-use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\TokenService;
@@ -243,5 +243,26 @@ class UserAuthController {
 		}
 
 		return $this->responseService->createSuccessResponse($tokens);
+	}
+
+	/**
+	 * Logs out the user by revoking the current access token.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws Exception
+	 */
+	#[ApiRoute(path: '/auth/logout', methods: ['POST'], authMode: ['user', 'public'])]
+	#[ApiEndpoint(summary: 'Logout', description: 'Revokes the current Access/Refresh token (User Auth).', tags: ['Authentication'])]
+	#[ApiResponse(status: 200, description: 'Success response')]
+	#[RequireUser]
+	public function logout(ServerRequestInterface $request): ResponseInterface {
+		$authorizationHeader = $request->getHeaderLine('Authorization');
+		if (str_starts_with($authorizationHeader, 'Bearer ')) {
+			$token = substr($authorizationHeader, 7);
+			$this->userAuthService->revokeUserToken($token);
+		}
+
+		return $this->responseService->createSuccessResponse(['message' => 'Logged out successfully']);
 	}
 }

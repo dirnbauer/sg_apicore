@@ -83,6 +83,35 @@ class TokenServiceTest extends UnitTestCase {
 		$this->assertEquals(123, $result);
 	}
 
+	public function testCreateTokenWithJwtDoesNotHash(): void {
+		$connection = $this->createMock(Connection::class);
+		$this->connectionPool->method('getConnectionForTable')->with('tx_apicore_token')->willReturn($connection);
+
+		$jti = 'test-jti';
+
+		$connection->expects($this->once())
+			->method('insert')
+			->with(
+				'tx_apicore_token',
+				$this->callback(function ($data) use ($jti) {
+					return $data['token_hash'] === $jti;
+				})
+			);
+
+		$this->service->createToken(
+			$jti,
+			'test-api',
+			'tenant-1',
+			0,
+			['read'],
+			NULL,
+			FALSE,
+			NULL,
+			'',
+			TRUE
+		);
+	}
+
 	public function testGenerateJwtAccessTokenCallsJwtService(): void {
 		$this->extensionConfiguration->method('getTokenExpirationTime')->willReturn(3600);
 		$this->jwtService->expects($this->once())

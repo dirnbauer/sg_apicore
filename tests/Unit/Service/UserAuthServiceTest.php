@@ -19,6 +19,7 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\JwtService;
 use SGalinski\SgApiCore\Service\TokenService;
 use SGalinski\SgApiCore\Service\UserAuthService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
@@ -74,6 +75,11 @@ class UserAuthServiceTest extends UnitTestCase {
 	protected $logService;
 
 	/**
+	 * @var JwtService|MockObject
+	 */
+	protected $jwtService;
+
+	/**
 	 * @var EventDispatcherInterface|MockObject
 	 */
 	protected $eventDispatcher;
@@ -89,6 +95,7 @@ class UserAuthServiceTest extends UnitTestCase {
 			\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
 		);
 		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
+		$this->jwtService = $this->createStub(JwtService::class);
 		$this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
 		$this->service = new UserAuthService(
@@ -99,7 +106,8 @@ class UserAuthServiceTest extends UnitTestCase {
 			$this->tokenRepository,
 			$this->extensionConfiguration,
 			$this->logService,
-			$this->eventDispatcher
+			$this->eventDispatcher,
+			$this->jwtService
 		);
 	}
 
@@ -219,5 +227,92 @@ class UserAuthServiceTest extends UnitTestCase {
 			$this->assertSame('Refresh token expired.', $e->getMessage());
 		}
 		$this->assertTrue($thrown, 'Expected RuntimeException not thrown.');
+	}
+
+	public function testRevokeUserTokenCallsRepositoryIfUserTokenFound(): void {
+		$token = 'test-token';
+		$tokenHash = hash('sha256', $token);
+		$tokenRecord = [
+			'uid' => 999,
+			'user_id' => 123,
+			'is_refresh_token' => 0,
+			'api_id' => 'public',
+			'tenant_id' => 'test-tenant'
+		];
+
+		$this->tokenRepository->expects($this->once())
+			->method('findByHashGlobally')
+			->with($tokenHash)
+			->willReturn($tokenRecord);
+
+		$this->tokenRepository->expects($this->exactly(2))
+			->method('revoke')
+			->willReturnCallback(function($uid) {
+				static $count = 0;
+				$expectedUids = [999, 1000];
+				$this->assertEquals($expectedUids[$count], $uid);
+				$count++;
+			});
+
+		$this->tokenRepository->expects($this->once())
+			->method('findAllWithFilters')
+			->willReturn([['uid' => 1000, 'user_id' => 123]]);
+
+		$this->service->revokeUserToken($token);
+	}
+
+	public function testRevokeUserTokenDoesNothingIfNonUserTokenFound(): void {
+		$token = 'm2m-token';
+		$tokenHash = hash('sha256', $token);
+		$tokenRecord = ['uid' => 999, 'user_id' => 0];
+
+		$this->tokenRepository->expects($this->once())
+			->method('findByHashGlobally')
+			->with($tokenHash)
+			->willReturn($tokenRecord);
+
+		$this->tokenRepository->expects($this->never())
+			->method('revoke');
+
+		$this->service->revokeUserToken($token);
+	}
+
+	public function testRevokeUserTokenDoesNothingIfTokenNotFound(): void {
+		$token = 'non-existent-token';
+		$tokenHash = hash('sha256', $token);
+
+		$this->tokenRepository->expects($this->once())
+			->method('findByHashGlobally')
+			->with($tokenHash)
+			->willReturn(NULL);
+
+		$this->tokenRepository->expects($this->never())
+			->method('revoke');
+
+		$this->service->revokeUserToken($token);
+	}
+
+	public function testRevokeUserTokenCallsRepositoryIfJwtTokenFound(): void {
+		$token = 'header.payload.signature';
+		$tokenHash = hash('sha256', $token);
+		$jti = 'test-jti';
+
+		// First try by hash
+		$this->tokenRepository->method('findByHashGlobally')
+			->willReturnMap([
+				[$tokenHash, NULL],
+				[$jti, ['uid' => 999, 'user_id' => 123, 'is_refresh_token' => 0]]
+			]);
+
+		$this->jwtService->expects($this->once())
+			->method('decode')
+			->with($token)
+			->willReturn(['jti' => $jti]);
+
+		$this->tokenRepository->expects($this->once())
+			->method('revoke')
+			->with(999);
+
+		$this->service->revokeUserToken($token);
 	}
 }

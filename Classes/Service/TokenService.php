@@ -49,7 +49,7 @@ class TokenService implements SingletonInterface {
 	/**
 	 * Creates a new token record in the database
 	 *
-	 * @param string $token The plaintext token
+	 * @param string $token The plaintext token OR a JWT ID (jti)
 	 * @param string $apiId
 	 * @param string $tenantId
 	 * @param int $pid
@@ -58,6 +58,7 @@ class TokenService implements SingletonInterface {
 	 * @param bool $isRefreshToken
 	 * @param int|null $expiresAt
 	 * @param string $label
+	 * @param bool $isJwt (If true, $token is treated as a jti, not hashed)
 	 * @return int The UID of the new token record
 	 * @throws \JsonException
 	 */
@@ -70,9 +71,10 @@ class TokenService implements SingletonInterface {
 		?int $userId = NULL,
 		bool $isRefreshToken = FALSE,
 		?int $expiresAt = NULL,
-		string $label = ''
+		string $label = '',
+		bool $isJwt = FALSE
 	): int {
-		$tokenHash = hash('sha256', $token);
+		$tokenHash = $isJwt ? $token : hash('sha256', $token);
 		$connection = $this->connectionPool->getConnectionForTable('tx_apicore_token');
 
 		$connection->insert('tx_apicore_token', [

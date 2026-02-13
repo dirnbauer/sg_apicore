@@ -262,4 +262,34 @@ class UserAuthControllerTest extends UnitTestCase {
 		$response = $this->controller->legacyLogin($request);
 		$this->assertEquals(403, $response->getStatusCode());
 	}
+
+	public function testLogoutCallsUserAuthServiceWithBearerToken(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer test-token');
+
+		$this->userAuthService->expects($this->once())
+			->method('revokeUserToken')
+			->with('test-token');
+
+		$this->responseService->expects($this->once())
+			->method('createSuccessResponse')
+			->with(['message' => 'Logged out successfully'])
+			->willReturn(new JsonResponse([]));
+
+		$this->controller->logout($request);
+	}
+
+	public function testLogoutDoesNotCallUserAuthServiceWithoutBearerToken(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('Basic auth');
+
+		$this->userAuthService->expects($this->never())
+			->method('revokeUserToken');
+
+		$this->responseService->expects($this->once())
+			->method('createSuccessResponse')
+			->willReturn(new JsonResponse([]));
+
+		$this->controller->logout($request);
+	}
 }

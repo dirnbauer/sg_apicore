@@ -14,8 +14,10 @@
 
 namespace SGalinski\SgApiCore\Security;
 
+use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\JwtService;
 
 /**
@@ -26,10 +28,12 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 
 	/**
 	 * @param JwtService $jwtService
+	 * @param TokenRepository $tokenRepository
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
 	public function __construct(
 		protected JwtService $jwtService,
+		protected TokenRepository $tokenRepository,
 		protected ExtensionConfiguration $extensionConfiguration
 	) {
 	}
@@ -50,6 +54,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	 * @param array $activeProviders
 	 * @return AuthContext|null
 	 * @throws \JsonException
+	 * @throws Exception
 	 */
 	public function authenticate(
 		ServerRequestInterface $request,
@@ -72,6 +77,35 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 			return NULL;
 		}
 
+		// Check if the jti is revoked in the database
+		$jti = $payload['jti'] ?? '';
+		if ($jti !== '') {
+			$tokenRecord = $this->tokenRepository->findByHashGlobally($jti);
+			if ($tokenRecord === NULL) {
+				// If we don't find it globally (non-revoked), it's either missing OR revoked.
+				// To be sure, we could check if it exists in a revoked state.
+				// For now, if it's missing from "active" tokens, we treat it as potentially revoked
+				// ONLY IF we know we should have a record for it.
+				// Since we just introduced storing JTIs, old tokens won't have a record.
+				// But findByHashGlobally only returns tokens where revoked_at = 0.
+				// If a token was revoked, findByHashGlobally returns NULL.
+				// If a token never existed in DB, findByHashGlobally also returns NULL.
+
+				// Let's do a more specific check: Does it exist and is it revoked?
+				$connection = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Database\ConnectionPool::class)
+					?->getConnectionForTable('tx_apicore_token');
+				$revokedRecord = $connection->select(
+					['uid'],
+					'tx_apicore_token',
+					['token_hash' => $jti]
+				)->fetchAssociative();
+
+				if ($revokedRecord && $this->isTokenRevoked($revokedRecord)) {
+					return NULL;
+				}
+			}
+		}
+
 		return new AuthContext(
 			apiId: $apiId,
 			tenantId: $tenantId,
@@ -79,5 +113,22 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 			scopes: $payload['scopes'] ?? [],
 			userId: $payload['userId'] ?? NULL
 		);
+	}
+
+	/**
+	 * @param array $tokenRecord
+	 * @return bool
+	 * @throws Exception
+	 */
+	protected function isTokenRevoked(array $tokenRecord): bool {
+		$connection = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Database\ConnectionPool::class)
+			?->getConnectionForTable('tx_apicore_token');
+		$record = $connection->select(
+			['revoked_at'],
+			'tx_apicore_token',
+			['uid' => (int) $tokenRecord['uid']]
+		)->fetchAssociative();
+
+		return $record && (int) $record['revoked_at'] > 0;
 	}
 }
