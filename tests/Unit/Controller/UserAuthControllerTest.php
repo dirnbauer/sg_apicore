@@ -222,8 +222,8 @@ class UserAuthControllerTest extends UnitTestCase {
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
 		$tenantContext = new TenantContext('test-tenant');
-		$request->method('getAttribute')->willReturnCallback(function($name) use ($tenantContext) {
-			return match($name) {
+		$request->method('getAttribute')->willReturnCallback(function ($name) use ($tenantContext) {
+			return match ($name) {
 				'api.tenant' => $tenantContext,
 				'api.id' => 'legacy',
 				'api.version' => '1',
@@ -239,7 +239,7 @@ class UserAuthControllerTest extends UnitTestCase {
 		$this->userAuthService->method('generateTokensForUserWithScopeHandling')->willReturn($tokens);
 
 		$this->responseService->method('createSuccessResponse')->willReturnCallback(
-			function($data) {
+			function ($data) {
 				return new \TYPO3\CMS\Core\Http\JsonResponse($data, 200);
 			}
 		);

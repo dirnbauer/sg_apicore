@@ -114,8 +114,12 @@ class RouterTest extends UnitTestCase {
 		$authContext = new AuthContext('public', 'tenant-1', 1, ['read', 'write']);
 
 		$request->method('getAttribute')->willReturnCallback(function ($name) use ($tenantContext, $authContext) {
-			if ($name === 'api.tenant') return $tenantContext;
-			if ($name === 'api.auth') return $authContext;
+			if ($name === 'api.tenant') {
+				return $tenantContext;
+			}
+			if ($name === 'api.auth') {
+				return $authContext;
+			}
 			return NULL;
 		});
 		$request->method('withAttribute')->willReturn($request);
@@ -175,8 +179,12 @@ class RouterTest extends UnitTestCase {
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 		$request->method('getAttribute')->willReturnCallback(function ($name) use ($tenantContext, $authContext) {
-			if ($name === 'api.tenant') return $tenantContext;
-			if ($name === 'api.auth') return $authContext;
+			if ($name === 'api.tenant') {
+				return $tenantContext;
+			}
+			if ($name === 'api.auth') {
+				return $authContext;
+			}
 			return NULL;
 		});
 		$request->method('withAttribute')->willReturn($request);
