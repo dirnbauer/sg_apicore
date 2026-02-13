@@ -26,7 +26,7 @@ logBodyMaxLength = 4096
 enableCaching = 1
 
 # cat=basic/expiration; type=int; label=JWT Access Token TTL:Time in seconds until a JWT Access Token expires (falls back to tokenExpirationTime)
-jwtAccessTokenTtlSeconds = 0
+jwtAccessTokenTtlSeconds = 86400
 
 # cat=basic/expiration; type=int; label=Opaque Access Token TTL:Time in seconds until an opaque (database) access token expires
 opaqueAccessTokenTtlSeconds = 3600
