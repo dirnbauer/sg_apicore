@@ -247,7 +247,7 @@ class UserAuthServiceTest extends UnitTestCase {
 
 		$this->tokenRepository->expects($this->exactly(2))
 			->method('revoke')
-			->willReturnCallback(function($uid) {
+			->willReturnCallback(function ($uid) {
 				static $count = 0;
 				$expectedUids = [999, 1000];
 				$this->assertEquals($expectedUids[$count], $uid);
