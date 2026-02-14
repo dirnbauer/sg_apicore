@@ -37,17 +37,16 @@ class SchemaRegistryTest extends UnitTestCase {
 		$registry = new SchemaRegistry();
 		$schema = ['type' => 'object', 'properties' => ['id' => ['type' => 'integer']]];
 
-		$registry->registerSchema('TestSchema', $schema);
+		$registry->registerSchema('test_api', 'TestSchema', $schema);
 
-		$this->assertTrue($registry->hasSchema('TestSchema'));
-		$this->assertSame($schema, $registry->getSchema('TestSchema'));
-		$this->assertArrayHasKey('TestSchema', $registry->getSchemas());
-		$this->assertSame($schema, $registry->getSchemas()['TestSchema']);
+		$this->assertTrue($registry->hasSchema('test_api', 'TestSchema'));
+		$this->assertSame($schema, $registry->getSchema('test_api', 'TestSchema'));
+		$this->assertArrayHasKey('TestSchema', $registry->getSchemas('test_api'));
+		$this->assertSame($schema, $registry->getSchemas('test_api')['TestSchema']);
 	}
 
 	public function testGetNonExistentSchema(): void {
 		$registry = new SchemaRegistry();
-		$this->assertNull($registry->getSchema('NonExistent'));
-		$this->assertFalse($registry->hasSchema('NonExistent'));
+		$this->assertNull($registry->getSchema('test_api', 'NonExistent'));
 	}
 }

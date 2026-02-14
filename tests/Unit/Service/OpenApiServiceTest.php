@@ -72,6 +72,9 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$schemaRegistry = $this->createStub(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
+		$schemaRegistry->method('getSchema')->willReturnCallback(function ($apiId, $schemaName) use ($globalSchemas) {
+			return $globalSchemas[$schemaName] ?? NULL;
+		});
 
 		return new OpenApiService(
 			$discoveryService,
@@ -112,7 +115,7 @@ class OpenApiServiceTest extends UnitTestCase {
 
 		$schemaRegistry = $this->createStub(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
-		$schemaRegistry->method('getTableNameForSchema')->with('GlobalObject')->willReturn('tx_test_table');
+		$schemaRegistry->method('getTableNameForSchema')->with('public', 'GlobalObject')->willReturn('tx_test_table');
 
 		$cache = $this->createStub(FrontendInterface::class);
 		$cacheManager = $this->createStub(CacheManager::class);

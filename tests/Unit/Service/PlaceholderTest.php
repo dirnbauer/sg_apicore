@@ -31,7 +31,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 class PlaceholderTest extends UnitTestCase {
 	public function testSchemaPlaceholderInExample(): void {
 		$schemaRegistry = new SchemaRegistry();
-		$schemaRegistry->registerSchema('TestObj', [
+		$schemaRegistry->registerSchema('test_api', 'TestObj', [
 			'type' => 'object',
 			'properties' => [
 				'id' => ['type' => 'integer', 'example' => 123],
@@ -74,7 +74,7 @@ class PlaceholderTest extends UnitTestCase {
 			$extensionConfiguration,
 			$cacheManager
 		);
-		$spec = $service->generateSpec('public', '1');
+		$spec = $service->generateSpec('test_api', '1');
 
 		$response = $spec['paths']['/placeholder']['get']['responses']['200'];
 		$example = $response['content']['application/json']['example'];

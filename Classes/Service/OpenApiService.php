@@ -118,7 +118,7 @@ class OpenApiService implements SingletonInterface {
 						'scheme' => 'bearer'
 					]
 				],
-				'schemas' => $this->enrichGlobalSchemas()
+				'schemas' => $this->enrichGlobalSchemas($apiId)
 			]
 		];
 
@@ -161,7 +161,7 @@ class OpenApiService implements SingletonInterface {
 			if (isset($endpoint['resource'])) {
 				$tableName = $endpoint['resource']['table'];
 				if (!isset($spec['components']['schemas'][$tableName])) {
-					$spec['components']['schemas'][$tableName] = $this->generateResourceSchema($endpoint);
+					$spec['components']['schemas'][$tableName] = $this->generateResourceSchema($apiId, $endpoint);
 				}
 			}
 		}
@@ -201,7 +201,7 @@ class OpenApiService implements SingletonInterface {
 		});
 
 		foreach ($filteredEndpoints as $endpoint) {
-			$this->addRouteToSpec($spec, $endpoint);
+			$this->addRouteToSpec($apiId, $spec, $endpoint);
 		}
 
 		$this->cache->set($cacheKey, $spec);
@@ -251,10 +251,11 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Adds a route and its metadata to the OpenAPI spec
 	 *
+	 * @param string $apiId
 	 * @param array &$spec
 	 * @param array $endpoint
 	 */
-	protected function addRouteToSpec(array &$spec, array $endpoint): void {
+	protected function addRouteToSpec(string $apiId, array &$spec, array $endpoint): void {
 		$path = '/' . ltrim($endpoint['path'], '/');
 
 		if (!isset($spec['paths'][$path])) {
@@ -446,10 +447,11 @@ class OpenApiService implements SingletonInterface {
 			];
 			if ($response->schema || $response->example !== NULL) {
 				$schema = $this->parseSchema(
+					$apiId,
 					$response->schema,
 					array_merge(
 						array_keys($spec['components']['schemas'] ?? []),
-						array_keys($this->schemaRegistry->getSchemas())
+						array_keys($this->schemaRegistry->getSchemas($apiId))
 					)
 				);
 
@@ -460,11 +462,12 @@ class OpenApiService implements SingletonInterface {
 						$refSchema = NULL;
 						if (isset($schema['$ref'])) {
 							$refName = basename($schema['$ref']);
-							$refSchema = $this->schemaRegistry->getSchema($refName);
-							$tableName = $this->schemaRegistry->getTableNameForSchema($refName);
+							$refSchema = $this->schemaRegistry->getSchema($apiId, $refName);
+							$tableName = $this->schemaRegistry->getTableNameForSchema($apiId, $refName);
 						}
 
 						$generatedSchema = $this->generateSchemaFromExample(
+							$apiId,
 							$example,
 							$tableName !== '' ? $tableName : (string) $response->schema
 						);
@@ -476,6 +479,7 @@ class OpenApiService implements SingletonInterface {
 							if (($baseSchema['type'] ?? '') === 'array' && isset($baseSchema['items']['$ref'])) {
 								$refName = basename($baseSchema['items']['$ref']);
 								$baseSchema['items'] = $this->schemaRegistry->getSchema(
+									$apiId,
 									$refName
 								) ?? $baseSchema['items'];
 							}
@@ -501,7 +505,7 @@ class OpenApiService implements SingletonInterface {
 					}
 
 					// Resolve placeholders in example for documentation display
-					$example = $this->resolveExamplePlaceholders($example);
+					$example = $this->resolveExamplePlaceholders($apiId, $example);
 				}
 
 				$resp['content'] = [
@@ -530,28 +534,29 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Resolves 'schema:...' placeholders in example data with dummy/stub values
 	 *
+	 * @param string $apiId
 	 * @param mixed $example
 	 * @return mixed
 	 */
-	protected function resolveExamplePlaceholders(mixed $example): mixed {
+	protected function resolveExamplePlaceholders(string $apiId, mixed $example): mixed {
 		if (is_string($example) && str_starts_with($example, 'schema:')) {
 			$schemaStr = substr($example, 7);
 			$isArray = str_ends_with($schemaStr, '[]');
 			$schemaName = $isArray ? substr($schemaStr, 0, -2) : $schemaStr;
 
-			$schema = $this->schemaRegistry->getSchema($schemaName);
+			$schema = $this->schemaRegistry->getSchema($apiId, $schemaName);
 			if ($schema === NULL) {
 				// Try to generate a stub from table name if it's not a registered schema
 				return $isArray ? [[]] : [];
 			}
 
-			$stub = $this->generateStubFromSchema($schema);
+			$stub = $this->generateStubFromSchema($apiId, $schema);
 			return $isArray ? [$stub] : $stub;
 		}
 
 		if (is_array($example)) {
 			foreach ($example as $key => $value) {
-				$example[$key] = $this->resolveExamplePlaceholders($value);
+				$example[$key] = $this->resolveExamplePlaceholders($apiId, $value);
 			}
 		}
 
@@ -561,19 +566,20 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Generates a stub object with example values from a schema
 	 *
+	 * @param string $apiId
 	 * @param array $schema
 	 * @return mixed
 	 */
-	protected function generateStubFromSchema(array $schema): mixed {
+	protected function generateStubFromSchema(string $apiId, array $schema): mixed {
 		if (isset($schema['$ref'])) {
 			$refName = basename($schema['$ref']);
-			$refSchema = $this->schemaRegistry->getSchema($refName);
-			return $refSchema ? $this->generateStubFromSchema($refSchema) : [];
+			$refSchema = $this->schemaRegistry->getSchema($apiId, $refName);
+			return $refSchema ? $this->generateStubFromSchema($apiId, $refSchema) : [];
 		}
 
 		$type = $schema['type'] ?? 'object';
 		if ($type === 'array') {
-			return [$this->generateStubFromSchema($schema['items'] ?? [])];
+			return [$this->generateStubFromSchema($apiId, $schema['items'] ?? [])];
 		}
 
 		if ($type === 'object' && isset($schema['properties'])) {
@@ -581,25 +587,26 @@ class OpenApiService implements SingletonInterface {
 			foreach ($schema['properties'] as $name => $prop) {
 				if (isset($prop['$ref'])) {
 					$refName = basename($prop['$ref']);
-					$refSchema = $this->schemaRegistry->getSchema($refName);
-					$stub[$name] = $refSchema ? $this->generateStubFromSchema($refSchema) : [];
+					$refSchema = $this->schemaRegistry->getSchema($apiId, $refName);
+					$stub[$name] = $refSchema ? $this->generateStubFromSchema($apiId, $refSchema) : [];
 				} else {
-					$stub[$name] = $this->generateStubFromProp($prop);
+					$stub[$name] = $this->generateStubFromProp($apiId, $prop);
 				}
 			}
 			return $stub;
 		}
 
-		return $this->generateStubFromProp($schema);
+		return $this->generateStubFromProp($apiId, $schema);
 	}
 
 	/**
 	 * Generates a stub value for a property
 	 *
+	 * @param string $apiId
 	 * @param array $prop
 	 * @return mixed
 	 */
-	protected function generateStubFromProp(array $prop): mixed {
+	protected function generateStubFromProp(string $apiId, array $prop): mixed {
 		if (isset($prop['example'])) {
 			return $prop['example'];
 		}
@@ -609,8 +616,8 @@ class OpenApiService implements SingletonInterface {
 			'integer' => 1,
 			'number' => 1.0,
 			'boolean' => TRUE,
-			'array' => isset($prop['items']) ? [$this->generateStubFromSchema($prop['items'])] : [],
-			'object' => isset($prop['properties']) ? $this->generateStubFromSchema($prop) : [],
+			'array' => isset($prop['items']) ? [$this->generateStubFromSchema($apiId, $prop['items'])] : [],
+			'object' => isset($prop['properties']) ? $this->generateStubFromSchema($apiId, $prop) : [],
 			default => 'string',
 		};
 	}
@@ -618,14 +625,15 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Enriches all global schemas with TCA metadata
 	 *
+	 * @param string $apiId
 	 * @return array
 	 */
-	protected function enrichGlobalSchemas(): array {
-		$schemas = $this->schemaRegistry->getSchemas();
+	protected function enrichGlobalSchemas(string $apiId): array {
+		$schemas = $this->schemaRegistry->getSchemas($apiId);
 		foreach ($schemas as $schemaName => &$schema) {
-			$tableName = $this->schemaRegistry->getTableNameForSchema($schemaName);
+			$tableName = $this->schemaRegistry->getTableNameForSchema($apiId, $schemaName);
 			if ($tableName !== '') {
-				$schema = $this->enrichSchemaWithTca($schema, $tableName);
+				$schema = $this->enrichSchemaWithTca($apiId, $schema, $tableName);
 			}
 		}
 		return $schemas;
@@ -634,19 +642,20 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Recursively enriches a schema with labels and descriptions from TCA
 	 *
+	 * @param string $apiId
 	 * @param array $schema
 	 * @param string $tableName
 	 * @return array
 	 */
-	protected function enrichSchemaWithTca(array $schema, string $tableName): array {
+	protected function enrichSchemaWithTca(string $apiId, array $schema, string $tableName): array {
 		if (isset($schema['$ref'])) {
 			$refName = basename($schema['$ref']);
-			$refSchema = $this->schemaRegistry->getSchema($refName);
+			$refSchema = $this->schemaRegistry->getSchema($apiId, $refName);
 			if ($refSchema) {
-				$table = $this->schemaRegistry->getTableNameForSchema($refName);
+				$table = $this->schemaRegistry->getTableNameForSchema($apiId, $refName);
 				$schema = array_merge(
 					$schema,
-					$this->enrichSchemaWithTca($refSchema, $table !== '' ? $table : $tableName)
+					$this->enrichSchemaWithTca($apiId, $refSchema, $table !== '' ? $table : $tableName)
 				);
 				unset($schema['$ref']); // Inline resolved schema for enrichment
 			}
@@ -654,7 +663,7 @@ class OpenApiService implements SingletonInterface {
 		}
 
 		if (($schema['type'] ?? '') === 'array' && isset($schema['items'])) {
-			$schema['items'] = $this->enrichSchemaWithTca($schema['items'], $tableName);
+			$schema['items'] = $this->enrichSchemaWithTca($apiId, $schema['items'], $tableName);
 			return $schema;
 		}
 
@@ -683,9 +692,9 @@ class OpenApiService implements SingletonInterface {
 				$foreignTable = $columnConfig['config']['foreign_table'] ?? '';
 				if ($foreignTable !== '') {
 					if (($property['type'] ?? '') === 'array' && isset($property['items'])) {
-						$property['items'] = $this->enrichSchemaWithTca($property['items'], $foreignTable);
+						$property['items'] = $this->enrichSchemaWithTca($apiId, $property['items'], $foreignTable);
 					} else {
-						$property = $this->enrichSchemaWithTca($property, $foreignTable);
+						$property = $this->enrichSchemaWithTca($apiId, $property, $foreignTable);
 					}
 				}
 			}
@@ -697,10 +706,11 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Generates an OpenAPI schema for a resource based on the endpoint metadata
 	 *
+	 * @param string $apiId
 	 * @param array $endpoint
 	 * @return array
 	 */
-	protected function generateResourceSchema(array $endpoint): array {
+	protected function generateResourceSchema(string $apiId, array $endpoint): array {
 		$properties = [];
 		$required = [];
 
@@ -762,17 +772,19 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Generates a basic OpenAPI schema from a PHP example value
 	 *
+	 * @param string $apiId
 	 * @param mixed $example
 	 * @param string $tableName
 	 * @return array
 	 */
-	protected function generateSchemaFromExample(mixed $example, string $tableName = ''): array {
+	protected function generateSchemaFromExample(string $apiId, mixed $example, string $tableName = ''): array {
 		if (is_string($example) && str_starts_with($example, 'schema:')) {
 			$schemaStr = substr($example, 7);
 			return $this->parseSchema(
+				$apiId,
 				$schemaStr,
 				array_merge(
-					array_keys($this->schemaRegistry->getSchemas())
+					array_keys($this->schemaRegistry->getSchemas($apiId))
 				)
 			);
 		}
@@ -780,7 +792,7 @@ class OpenApiService implements SingletonInterface {
 		if (is_array($example)) {
 			// Try to map global schema name to table name for TCA enrichment
 			if ($tableName !== '' && !isset($GLOBALS['TCA'][$tableName])) {
-				$mappedTableName = $this->schemaRegistry->getTableNameForSchema($tableName);
+				$mappedTableName = $this->schemaRegistry->getTableNameForSchema($apiId, $tableName);
 				if ($mappedTableName !== '') {
 					$tableName = $mappedTableName;
 				}
@@ -801,7 +813,7 @@ class OpenApiService implements SingletonInterface {
 						$foreignTable = $tca['columns'][$key]['config']['foreign_table'];
 					}
 
-					$schema = $this->generateSchemaFromExample($value, $foreignTable);
+					$schema = $this->generateSchemaFromExample($apiId, $value, $foreignTable);
 
 					// If the value was a schema placeholder, we might want to update the example value itself
 					// to a more descriptive stub if it's not a $ref.
@@ -849,7 +861,7 @@ class OpenApiService implements SingletonInterface {
 
 			$items = ['type' => 'object'];
 			if (count($example) > 0) {
-				$items = $this->generateSchemaFromExample(reset($example), $tableName);
+				$items = $this->generateSchemaFromExample($apiId, reset($example), $tableName);
 			}
 
 			return [
@@ -908,11 +920,12 @@ class OpenApiService implements SingletonInterface {
 	/**
 	 * Very basic schema parser (handles primitives and "Item[]" for arrays)
 	 *
+	 * @param string $apiId
 	 * @param string|null $schemaStr
 	 * @param array $knownSchemas
 	 * @return array
 	 */
-	protected function parseSchema(?string $schemaStr, array $knownSchemas = []): array {
+	protected function parseSchema(string $apiId, ?string $schemaStr, array $knownSchemas = []): array {
 		if ($schemaStr === NULL) {
 			return ['type' => 'object', 'description' => ''];
 		}

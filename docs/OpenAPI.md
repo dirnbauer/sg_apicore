@@ -31,7 +31,7 @@ use SGalinski\SgApiCore\Service\SchemaRegistry;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 $schemaRegistry = GeneralUtility::makeInstance(SchemaRegistry::class);
-$schemaRegistry->registerSchema('MyObject', [
+$schemaRegistry->registerSchema('public', 'MyObject', [
     'type' => 'object',
     'properties' => [
         'id' => ['type' => 'integer'],
@@ -65,7 +65,7 @@ Referencing a schema in an attribute:
 
    Example:
    ```php
-   $schemaRegistry->registerSchema('Offer', [
+   $schemaRegistry->registerSchema('partner', 'Offer', [
        'type' => 'object',
        'properties' => [
            'tags' => [
