@@ -168,17 +168,9 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 					$apiIds = is_array($route->apiId) ?
 						$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []);
-					$authModes = is_array($route->authMode) ?
-						$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []);
-
-					if ($authModes === [] && $apiIds !== []) {
-						foreach ($apiIds as $apiId) {
-							$securityConfig = $this->apiRegistry->getSecurityConfig((string) $apiId, '');
-							$defaultMode = (string) ($securityConfig['authMode'] ?? 'token');
-							if (!in_array($defaultMode, $authModes, TRUE)) {
-								$authModes[] = $defaultMode;
-							}
-						}
+					$authModes = [];
+					if ($route->authMode !== NULL) {
+						$authModes = (array) $route->authMode;
 					}
 
 					$endpoints[] = [

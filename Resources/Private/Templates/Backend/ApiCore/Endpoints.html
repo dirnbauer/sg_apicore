@@ -1,4 +1,5 @@
 <f:layout name="Backend/Default"/>
+{namespace sg=SGalinski\SgApiCore\ViewHelpers}
 
 <f:section name="Content">
 	<h1>API Endpoints Overview</h1>
@@ -70,7 +71,9 @@
 							</f:for>
 						</f:then>
 						<f:else>
-							default
+							<f:for each="{endpoint.apiId}" as="apiId" iteration="it">
+								<sg:effectiveAuthMode apiId="{apiId}"/>{f:if(condition: it.isLast, else: ', ')}
+							</f:for>
 						</f:else>
 					</f:if>
 				</code></small>

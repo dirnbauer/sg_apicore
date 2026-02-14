@@ -148,11 +148,10 @@ class OpenApiService implements SingletonInterface {
 				continue;
 			}
 
-			// Filter by auth mode if specified.
-			// Endpoints with specific authMode restrictions are only visible in APIs that match one of those modes.
-			// Endpoints without explicit authMode are always visible in the APIs they are registered for.
-			if (!empty($endpoint['authMode']) && !in_array($authMode, $endpoint['authMode'], TRUE)) {
-				continue;
+			if (!empty($endpoint['authMode'])) {
+				if (!in_array($authMode, $endpoint['authMode'], TRUE)) {
+					continue;
+				}
 			}
 
 			$filteredEndpoints[] = $endpoint;

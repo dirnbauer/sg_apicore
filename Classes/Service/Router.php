@@ -352,12 +352,9 @@ class Router implements SingletonInterface {
 				continue;
 			}
 			if (!empty($endpoint['authMode'])) {
-				$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
-				if (!empty($restrictedTo)) {
-					if (!in_array($authMode, $restrictedTo, TRUE)) {
-						continue;
-					}
-				} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
+				// Visibility logic: if the endpoint defines specific modes, the current API's mode must be one of them.
+				// Exception: if 'public' is allowed, it's always visible in any API.
+				if (!in_array($authMode, $endpoint['authMode'], TRUE) && !in_array('public', $endpoint['authMode'], TRUE)) {
 					continue;
 				}
 			}
