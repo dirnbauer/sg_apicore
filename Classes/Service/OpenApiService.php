@@ -116,13 +116,20 @@ class OpenApiService implements SingletonInterface {
 					'bearerAuth' => [
 						'type' => 'http',
 						'scheme' => 'bearer'
+					],
+					'cookieAuth' => [
+						'type' => 'apiKey',
+						'in' => 'cookie',
+						'name' => 'be_typo_user'
 					]
 				],
 				'schemas' => $this->enrichGlobalSchemas($apiId)
 			]
 		];
 
-		if ($authMode !== 'public') {
+		if ($authMode === 'backend') {
+			$spec['security'] = [['cookieAuth' => []]];
+		} elseif ($authMode !== 'public') {
 			$spec['security'] = [['bearerAuth' => []]];
 		}
 
@@ -130,7 +137,7 @@ class OpenApiService implements SingletonInterface {
 		$filteredEndpoints = [];
 		$allTags = [];
 		foreach ($endpoints as $endpoint) {
-			// Filter by API ID, version and auth mode if specified
+			// Filter by API ID and version if specified
 			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
 				continue;
 			}
@@ -140,16 +147,12 @@ class OpenApiService implements SingletonInterface {
 			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
 				continue;
 			}
-			if (!empty($endpoint['authMode'])) {
-				// Visibility logic
-				$restrictedTo = array_filter($endpoint['authMode'], static fn ($m) => $m !== 'public');
-				if (!empty($restrictedTo)) {
-					if (!in_array($authMode, $restrictedTo, TRUE)) {
-						continue;
-					}
-				} elseif (!in_array('public', $endpoint['authMode'], TRUE)) {
-					continue;
-				}
+
+			// Filter by auth mode if specified.
+			// Endpoints with specific authMode restrictions are only visible in APIs that match one of those modes.
+			// Endpoints without explicit authMode are always visible in the APIs they are registered for.
+			if (!empty($endpoint['authMode']) && !in_array($authMode, $endpoint['authMode'], TRUE)) {
+				continue;
 			}
 
 			$filteredEndpoints[] = $endpoint;
@@ -266,8 +269,32 @@ class OpenApiService implements SingletonInterface {
 			'summary' => $endpoint['summary'],
 			'description' => $endpoint['description'],
 			'tags' => $endpoint['tags'],
-			'responses' => []
+			'responses' => [],
+			'security' => []
 		];
+
+		$authModes = $endpoint['authMode'] ?? [];
+		if (empty($authModes)) {
+			$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, '');
+			$authModes = (array) ($securityConfig['authMode'] ?? 'token');
+		}
+
+		foreach ($authModes as $mode) {
+			if ($mode === 'public') {
+				$operation['security'] = [];
+				break;
+			}
+
+			if ($mode === 'backend') {
+				$operation['security'][] = ['cookieAuth' => []];
+			} else {
+				$operation['security'][] = ['bearerAuth' => []];
+			}
+		}
+
+		if (empty($operation['security'])) {
+			unset($operation['security']);
+		}
 
 		if (count($endpoint['scopes']) > 0) {
 			$operation['description'] .= "\n\n**Required Scopes:** " . implode(', ', $endpoint['scopes']);

@@ -24,6 +24,8 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireFullTypoScript;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\ResourceController;
+use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Localization\LanguageService;
@@ -58,12 +60,15 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @param iterable $controllers
 	 * @param ResourceRegistry $resourceRegistry
 	 * @param CacheManager $cacheManager
+	 * @param LanguageServiceFactory $languageServiceFactory
+	 * @param ApiRegistry $apiRegistry
 	 */
 	public function __construct(
 		iterable $controllers,
 		protected ResourceRegistry $resourceRegistry,
 		CacheManager $cacheManager,
-		protected LanguageServiceFactory $languageServiceFactory
+		protected LanguageServiceFactory $languageServiceFactory,
+		protected ApiRegistry $apiRegistry
 	) {
 		$this->controllers = $controllers;
 		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
@@ -161,15 +166,28 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$path = '/';
 					}
 
+					$apiIds = is_array($route->apiId) ?
+						$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []);
+					$authModes = is_array($route->authMode) ?
+						$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []);
+
+					if ($authModes === [] && $apiIds !== []) {
+						foreach ($apiIds as $apiId) {
+							$securityConfig = $this->apiRegistry->getSecurityConfig((string) $apiId, '');
+							$defaultMode = (string) ($securityConfig['authMode'] ?? 'token');
+							if (!in_array($defaultMode, $authModes, TRUE)) {
+								$authModes[] = $defaultMode;
+							}
+						}
+					}
+
 					$endpoints[] = [
-						'apiId' => is_array($route->apiId) ?
-							$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []),
+						'apiId' => $apiIds,
 						'version' => is_array($route->version) ?
 							$route->version : ($route->version !== NULL ? [$route->version] : []),
 						'path' => $path,
 						'methods' => $route->methods,
-						'authMode' => is_array($route->authMode) ?
-							$route->authMode : ($route->authMode !== NULL ? [$route->authMode] : []),
+						'authMode' => $authModes,
 						'tenants' => is_array($route->tenants) ?
 							$route->tenants : ($route->tenants !== NULL ? [$route->tenants] : []),
 						'summary' => $summary,

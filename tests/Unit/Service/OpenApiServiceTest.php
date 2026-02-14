@@ -35,7 +35,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for OpenApiService
  */
 class OpenApiServiceTest extends UnitTestCase {
-	protected function getDiscoveryService(iterable $controllers): EndpointDiscoveryService {
+	protected function getDiscoveryService(iterable $controllers, ?ApiRegistry $apiRegistry = NULL): EndpointDiscoveryService {
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
@@ -55,7 +55,17 @@ class OpenApiServiceTest extends UnitTestCase {
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
 
-		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
+		if ($apiRegistry === NULL) {
+			$apiRegistry = $this->createStub(ApiRegistry::class);
+		}
+
+		return new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
 	}
 
 	protected function getOpenApiService(
@@ -255,22 +265,49 @@ class OpenApiServiceTest extends UnitTestCase {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturnMap([
 			['public', '1', ['authMode' => 'public']],
-			['user', '1', ['authMode' => 'user']],
+			['public', '', ['authMode' => 'public']],
+			['partner', '1', ['authMode' => 'user']],
+			['partner', '', ['authMode' => 'user']],
+			['backend', '1', ['authMode' => 'backend']],
+			['backend', '', ['authMode' => 'backend']]
 		]);
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
-		$controllers = new \ArrayIterator([new MockHybridController()]);
+		$controllers = new \ArrayIterator([
+			new MockHybridController(),
+			new MockUserOnlyController(),
+			new MockBackendOnlyController(),
+			new MockDefaultController(),
+			new MockOpenApiController()
+		]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
-		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$openApiService = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
 
-		// 'public' api should NOT have /hybrid
-		$specPublic = $service->generateSpec('public', '1');
-		$this->assertArrayNotHasKey('/hybrid', $specPublic['paths']);
+		// 1. Public API (authMode: public)
+		$specPublic = $openApiService->generateSpec('public', '1');
+		$this->assertArrayHasKey('/hybrid', $specPublic['paths'], 'Public API should contain hybrid endpoint');
+		$this->assertArrayNotHasKey('/user-only', $specPublic['paths'], 'Public API should NOT contain user-only endpoint');
+		$this->assertArrayNotHasKey('/backend-only', $specPublic['paths'], 'Public API should NOT contain backend-only endpoint');
+		$this->assertArrayHasKey('/default', $specPublic['paths'], 'Public API should contain default endpoint');
+		$this->assertArrayHasKey('/test', $specPublic['paths'], 'Public API should contain OpenAPI docs endpoint (registered for public)');
 
-		// 'user' api SHOULD have /hybrid
-		$specUser = $service->generateSpec('user', '1');
-		$this->assertArrayHasKey('/hybrid', $specUser['paths']);
+		// 2. Partner API (authMode: user)
+		$specPartner = $openApiService->generateSpec('partner', '1');
+		$this->assertArrayHasKey('/hybrid', $specPartner['paths'], 'Partner API should contain hybrid endpoint');
+		$this->assertArrayHasKey('/user-only', $specPartner['paths'], 'Partner API should contain user-only endpoint');
+		$this->assertArrayNotHasKey('/backend-only', $specPartner['paths'], 'Partner API should NOT contain backend-only endpoint');
+		$this->assertArrayHasKey('/default', $specPartner['paths'], 'Partner API should contain default endpoint');
+		// Note: /test is only registered for apiId: 'public' in MockOpenApiController
+		$this->assertArrayNotHasKey('/test', $specPartner['paths'], 'Partner API should NOT contain OpenAPI docs endpoint (only registered for public)');
+
+		// 3. Backend API (authMode: backend)
+		$specBackend = $openApiService->generateSpec('backend', '1');
+		$this->assertArrayNotHasKey('/hybrid', $specBackend['paths'], 'Backend API should NOT contain hybrid endpoint');
+		$this->assertArrayNotHasKey('/user-only', $specBackend['paths'], 'Backend API should NOT contain user-only endpoint');
+		$this->assertArrayHasKey('/backend-only', $specBackend['paths'], 'Backend API should contain backend-only endpoint');
+		$this->assertArrayHasKey('/default', $specBackend['paths'], 'Backend API should contain default endpoint');
+		$this->assertArrayNotHasKey('/test', $specBackend['paths'], 'Backend API should NOT contain OpenAPI docs endpoint (only registered for public)');
 	}
 
 	public function testGenerateSpecContainsRequestBody(): void {
@@ -351,6 +388,61 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertEquals('array', $schema['properties']['items']['type']);
 		$this->assertEquals('object', $schema['properties']['items']['items']['type']);
 		$this->assertEquals('integer', $schema['properties']['items']['items']['properties']['id']['type']);
+	}
+
+	public function testGenerateSpecContainsSecurity(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'backend']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockOpenApiController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$openApiService = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $openApiService->generateSpec('partner', '1');
+
+		$this->assertArrayHasKey('securitySchemes', $spec['components']);
+		$this->assertArrayHasKey('cookieAuth', $spec['components']['securitySchemes']);
+		$this->assertArrayHasKey('security', $spec);
+		$this->assertEquals([['cookieAuth' => []]], $spec['security']);
+
+		// Check route-level security
+		$this->assertArrayHasKey('security', $spec['paths']['/partner-only']['get']);
+		$this->assertEquals([['cookieAuth' => []]], $spec['paths']['/partner-only']['get']['security']);
+	}
+
+	public function testGenerateSpecWithHybridAuthMode(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockHybridController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$openApiService = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $openApiService->generateSpec('public', '1');
+
+		// Hybrid controller has authMode: ['user', 'public']
+		// It should NOT have security field because 'public' is one of the options
+		$this->assertArrayHasKey('/hybrid', $spec['paths']);
+		$this->assertArrayNotHasKey('security', $spec['paths']['/hybrid']['get']);
+	}
+
+	public function testGenerateSpecWithTokenAuth(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockOpenApiController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$openApiService = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $openApiService->generateSpec('partner', '1');
+
+		$this->assertEquals([['bearerAuth' => []]], $spec['security']);
+		// The mock controller has apiId: partner for /partner-only
+		$this->assertArrayHasKey('security', $spec['paths']['/partner-only']['get']);
+		$this->assertEquals([['bearerAuth' => []]], $spec['paths']['/partner-only']['get']['security']);
 	}
 
 	public function testGenerateSpecUsesTcaLabelsForRegularEndpoints(): void {
@@ -515,8 +607,35 @@ class MockSchemaErrorController {
  * Mock controller for hybrid auth
  */
 class MockHybridController {
-	#[ApiRoute(path: '/hybrid', methods: ['GET'], authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/hybrid', methods: ['GET'], apiId: ['public', 'partner'], version: '1', authMode: ['user', 'public'])]
 	public function hybridAction(): void {
+	}
+}
+
+/**
+ * Mock controller for user-only auth
+ */
+class MockUserOnlyController {
+	#[ApiRoute(path: '/user-only', methods: ['GET'], apiId: 'partner', version: '1', authMode: 'user')]
+	public function userAction(): void {
+	}
+}
+
+/**
+ * Mock controller for backend-only auth
+ */
+class MockBackendOnlyController {
+	#[ApiRoute(path: '/backend-only', methods: ['GET'], apiId: 'backend', version: '1', authMode: 'backend')]
+	public function backendAction(): void {
+	}
+}
+
+/**
+ * Mock controller for default auth (inherited)
+ */
+class MockDefaultController {
+	#[ApiRoute(path: '/default', methods: ['GET'], apiId: ['public', 'partner', 'backend'], version: '1')]
+	public function defaultAction(): void {
 	}
 }
 

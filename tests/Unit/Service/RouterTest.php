@@ -21,6 +21,7 @@ use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Security\AuthContext;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
@@ -56,12 +57,14 @@ class RouterTest extends UnitTestCase {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$discoveryService = new EndpointDiscoveryService(
 			$controllersIterator,
 			$resourceRegistry,
 			$cacheManager,
-			$languageServiceFactory
+			$languageServiceFactory,
+			$apiRegistry
 		);
 		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
 		$responseService = $this->createStub(ResponseService::class);

@@ -94,7 +94,7 @@ class UserAuthController {
 	 * @throws JsonException
 	 * @throws InvalidPasswordHashException
 	 */
-	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'user')]
 	#[ApiEndpoint(summary: 'User login', description: 'Authenticates a user with username and password and returns access and refresh tokens.', tags: ['Authentication'])]
 	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user', example: 'jane.doe@example.com')]
 	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user', example: 'password123')]
@@ -124,7 +124,7 @@ class UserAuthController {
 	 * @throws RandomException
 	 * @throws JsonException
 	 */
-	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: 'user')]
 	#[ApiEndpoint(summary: 'Legacy User login', description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.', tags: ['Legacy'])]
 	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user')]
 	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user')]
@@ -203,7 +203,7 @@ class UserAuthController {
 	 * @throws JsonException
 	 * @throws RandomException
 	 */
-	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: 'user')]
 	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).', tags: ['Authentication'])]
 	#[ApiBodyParam(name: 'refresh_token', type: 'string', description: 'The refresh token obtained during login', example: '7f8e9a0b1c2d3e4f5g6h7i8j9k0l1m2n...')]
 	#[ApiResponse(
@@ -252,7 +252,7 @@ class UserAuthController {
 	 * @return ResponseInterface
 	 * @throws Exception
 	 */
-	#[ApiRoute(path: '/auth/logout', methods: ['POST'], authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/auth/logout', methods: ['POST'], authMode: 'user')]
 	#[ApiEndpoint(summary: 'Logout', description: 'Revokes the current Access/Refresh token (User Auth).', tags: ['Authentication'])]
 	#[ApiResponse(status: 200, description: 'Success response')]
 	#[RequireUser]

@@ -21,6 +21,7 @@ use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
@@ -43,12 +44,14 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$service = new EndpointDiscoveryService(
 			$controllers,
 			$resourceRegistry,
 			$cacheManager,
-			$languageServiceFactory
+			$languageServiceFactory,
+			$apiRegistry
 		);
 		$endpoints = $service->getAllEndpoints();
 
@@ -90,6 +93,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$resourceRegistry = new ResourceRegistry();
 		$resourceRegistry->registerResource('public', 'tt_content', '/contents', [
@@ -100,7 +104,8 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			$controllers,
 			$resourceRegistry,
 			$cacheManager,
-			$languageServiceFactory
+			$languageServiceFactory,
+			$apiRegistry
 		);
 
 		$resourceRegistryB = new ResourceRegistry();
@@ -112,7 +117,8 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			$controllers,
 			$resourceRegistryB,
 			$cacheManager,
-			$languageServiceFactory
+			$languageServiceFactory,
+			$apiRegistry
 		);
 
 		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
@@ -146,12 +152,14 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$service = new EndpointDiscoveryService(
 			$controllers,
 			$resourceRegistry,
 			$cacheManager,
-			$languageServiceFactory
+			$languageServiceFactory,
+			$apiRegistry
 		);
 		$endpoints = $service->getAllEndpoints();
 

@@ -69,6 +69,9 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 	$services->set(JwtAccessTokenProvider::class)
 		->tag('sg_apicore.login_provider');
 
+	$services->set(SGalinski\SgApiCore\Security\BackendUserProvider::class)
+		->tag('sg_apicore.login_provider');
+
 	$services->set(SGalinski\SgApiCore\EventListener\ClearCacheEventListener::class)
 		->tag('event.listener', ['identifier' => 'sg_apicore_clear_cache']);
 

@@ -43,8 +43,25 @@ When registering, the following options can be passed in the third parameter:
     * `public`: No token required (unless explicitly required via attribute).
     * `token`: A valid Opaque Bearer Token is required.
     * `user`: A user login (Access/Refresh Token) is required.
-* `authProviders`: List of allowed providers (e.g., `['beareropaquetokenprovider']`).
-  Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
+    * `backend`: A valid TYPO3 backend user session is required.
+* `authProviders`: List of allowed providers (e.g., `['beareropaquetokenprovider', 'backenduserprovider']`).
+
+### Backend API Example
+
+For internal APIs that should only be accessible to logged-in TYPO3 backend users, you can use the `backend` authMode:
+
+```php
+$apiRegistry->registerApi('backend', ['1'], [
+	'authMode' => 'backend',
+	'authProviders' => ['backenduserprovider'],
+]);
+```
+
+This configuration ensures that the API is only accessible if a valid backend user session exists. The
+`backenduserprovider` automatically resolves the user and provides standard scopes like `backend`, `partner:read`,
+`partner:write`, and `user`.
+
+Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
 
 ### Endpoint Overrides
 

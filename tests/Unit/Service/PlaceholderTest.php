@@ -94,7 +94,14 @@ class PlaceholderTest extends UnitTestCase {
 		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
 		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		return new EndpointDiscoveryService($controllers, $resourceRegistry, $cacheManager, $languageServiceFactory);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		return new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
 	}
 }
 
