@@ -443,10 +443,10 @@ class UserAuthService implements SingletonInterface {
 
 			// If it's an access token (is_refresh_token = 0), we also want to revoke any refresh tokens for this user,
 			// api and tenant to ensure a full logout.
-			if (!(int) $tokenRecord['is_refresh_token']) {
+			if (!(int) ($tokenRecord['is_refresh_token'] ?? 0)) {
 				$filters = [
-					'apiId' => $tokenRecord['api_id'],
-					'tenantId' => $tokenRecord['tenant_id'],
+					'apiId' => $tokenRecord['api_id'] ?? '',
+					'tenantId' => $tokenRecord['tenant_id'] ?? '',
 					'isRefreshToken' => 1,
 					'isUserToken' => 1,
 					'status' => 'active'
