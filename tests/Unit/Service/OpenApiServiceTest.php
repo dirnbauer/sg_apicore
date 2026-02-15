@@ -445,6 +445,27 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertEquals([['bearerAuth' => []]], $spec['paths']['/partner-only']['get']['security']);
 	}
 
+	public function testGenerateSpecWithPublicAuthMode(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$controllers = new \ArrayIterator([new MockOpenApiController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+
+		$openApiService = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $openApiService->generateSpec('public', '1');
+
+		// Public API should NOT have any security schemes or global security
+		$this->assertArrayNotHasKey('bearerAuth', $spec['components']['securitySchemes'] ?? []);
+		$this->assertArrayNotHasKey('cookieAuth', $spec['components']['securitySchemes'] ?? []);
+		$this->assertArrayNotHasKey('security', $spec);
+
+		// Check route-level security for /test (MockOpenApiController testAction is registered for public)
+		$this->assertArrayHasKey('/test', $spec['paths']);
+		$this->assertArrayNotHasKey('security', $spec['paths']['/test']['get']);
+	}
+
 	public function testGenerateSpecUsesTcaLabelsForRegularEndpoints(): void {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);

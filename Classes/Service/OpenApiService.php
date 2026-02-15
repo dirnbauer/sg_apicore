@@ -97,6 +97,20 @@ class OpenApiService implements SingletonInterface {
 			return $cachedSpec;
 		}
 
+		$securitySchemes = [];
+		if ($authMode === 'backend') {
+			$securitySchemes['cookieAuth'] = [
+				'type' => 'apiKey',
+				'in' => 'cookie',
+				'name' => 'be_typo_user'
+			];
+		} elseif ($authMode !== 'public') {
+			$securitySchemes['bearerAuth'] = [
+				'type' => 'http',
+				'scheme' => 'bearer'
+			];
+		}
+
 		$spec = [
 			'openapi' => '3.0.3',
 			'info' => [
@@ -112,17 +126,7 @@ class OpenApiService implements SingletonInterface {
 			],
 			'paths' => [],
 			'components' => [
-				'securitySchemes' => [
-					'bearerAuth' => [
-						'type' => 'http',
-						'scheme' => 'bearer'
-					],
-					'cookieAuth' => [
-						'type' => 'apiKey',
-						'in' => 'cookie',
-						'name' => 'be_typo_user'
-					]
-				],
+				'securitySchemes' => $securitySchemes,
 				'schemas' => $this->enrichGlobalSchemas($apiId)
 			]
 		];
@@ -284,9 +288,9 @@ class OpenApiService implements SingletonInterface {
 				break;
 			}
 
-			if ($mode === 'backend') {
+			if ($mode === 'backend' && isset($spec['components']['securitySchemes']['cookieAuth'])) {
 				$operation['security'][] = ['cookieAuth' => []];
-			} else {
+			} elseif (isset($spec['components']['securitySchemes']['bearerAuth'])) {
 				$operation['security'][] = ['bearerAuth' => []];
 			}
 		}
