@@ -137,28 +137,9 @@ class OpenApiService implements SingletonInterface {
 			$spec['security'] = [['bearerAuth' => []]];
 		}
 
-		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
-		$filteredEndpoints = [];
+		$filteredEndpoints = $this->endpointDiscoveryService->getEndpointsForApi($apiId, $version, $authMode, $tenantId);
 		$allTags = [];
-		foreach ($endpoints as $endpoint) {
-			// Filter by API ID and version if specified
-			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
-				continue;
-			}
-			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
-				continue;
-			}
-			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
-				continue;
-			}
-
-			if (!empty($endpoint['authMode'])) {
-				if (!in_array($authMode, $endpoint['authMode'], TRUE)) {
-					continue;
-				}
-			}
-
-			$filteredEndpoints[] = $endpoint;
+		foreach ($filteredEndpoints as $endpoint) {
 			foreach ($endpoint['tags'] as $tag) {
 				$allTags[$tag] = TRUE;
 			}

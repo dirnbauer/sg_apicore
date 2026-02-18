@@ -620,24 +620,49 @@ class EndpointDiscoveryService implements SingletonInterface {
 	}
 
 	/**
-	 * Returns discovered endpoints for a specific API and version
+	 * Returns discovered endpoints for a specific API and version, considering authentication mode and tenant context.
 	 *
 	 * @param string $apiId
 	 * @param string|null $version
+	 * @param string|null $authMode
+	 * @param string $tenantId
 	 * @return array
 	 * @throws \ReflectionException
 	 */
-	public function getEndpointsForApi(string $apiId, ?string $version = NULL): array {
+	public function getEndpointsForApi(
+		string $apiId,
+		?string $version = NULL,
+		?string $authMode = NULL,
+		string $tenantId = ''
+	): array {
 		$endpoints = $this->getAllEndpoints();
-		return array_filter($endpoints, static function (array $endpoint) use ($apiId, $version) {
-			$apiMatch = count($endpoint['apiId']) === 0 || in_array($apiId, $endpoint['apiId'], TRUE);
-			$versionMatch = $version === NULL || count($endpoint['version']) === 0 || in_array(
-				$version,
-				$endpoint['version'],
-				TRUE
-			);
-			return $apiMatch && $versionMatch;
-		});
+		$filteredEndpoints = [];
+
+		foreach ($endpoints as $endpoint) {
+			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+				continue;
+			}
+
+			if ($version !== NULL && !empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+				continue;
+			}
+
+			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
+				continue;
+			}
+
+			if (!empty($endpoint['authMode'])) {
+				// Visibility logic: if the endpoint defines specific modes, the current API's mode must be one of them.
+				// Exception: if 'public' is allowed, it's always visible in any API.
+				if (!in_array($authMode, $endpoint['authMode'], TRUE) && !in_array('public', $endpoint['authMode'], TRUE)) {
+					continue;
+				}
+			}
+
+			$filteredEndpoints[] = $endpoint;
+		}
+
+		return $filteredEndpoints;
 	}
 
 	/**

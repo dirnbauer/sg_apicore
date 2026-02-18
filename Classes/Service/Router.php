@@ -332,28 +332,7 @@ class Router implements SingletonInterface {
 	 * @throws \ReflectionException
 	 */
 	protected function getFilteredEndpoints(string $apiId, string $version, ?string $authMode, string $tenantId = ''): array {
-		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
-		$filteredEndpoints = [];
-
-		foreach ($endpoints as $endpoint) {
-			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
-				continue;
-			}
-			if (!empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
-				continue;
-			}
-			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
-				continue;
-			}
-			if (!empty($endpoint['authMode'])) {
-				// Visibility logic: if the endpoint defines specific modes, the current API's mode must be one of them.
-				// Exception: if 'public' is allowed, it's always visible in any API.
-				if (!in_array($authMode, $endpoint['authMode'], TRUE) && !in_array('public', $endpoint['authMode'], TRUE)) {
-					continue;
-				}
-			}
-			$filteredEndpoints[] = $endpoint;
-		}
+		$filteredEndpoints = $this->endpointDiscoveryService->getEndpointsForApi($apiId, $version, $authMode, $tenantId);
 
 		usort($filteredEndpoints, static function ($a, $b) {
 			$pathA = $a['path'];
