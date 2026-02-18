@@ -24,16 +24,18 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  * Service for managing API tokens
  */
 class TokenService implements SingletonInterface {
+	/**
+	 * @param TokenRepository $tokenRepository
+	 * @param JwtService $jwtService
+	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @param ConnectionPool $connectionPool
+	 */
 	public function __construct(
-		protected ?TokenRepository $tokenRepository = NULL,
-		protected ?JwtService $jwtService = NULL,
-		protected ?ExtensionConfiguration $extensionConfiguration = NULL,
-		protected ?ConnectionPool $connectionPool = NULL
+		protected TokenRepository $tokenRepository,
+		protected JwtService $jwtService,
+		protected ExtensionConfiguration $extensionConfiguration,
+		protected ConnectionPool $connectionPool
 	) {
-		$this->tokenRepository ??= GeneralUtility::makeInstance(TokenRepository::class);
-		$this->jwtService ??= GeneralUtility::makeInstance(JwtService::class);
-		$this->extensionConfiguration ??= GeneralUtility::makeInstance(ExtensionConfiguration::class);
-		$this->connectionPool ??= GeneralUtility::makeInstance(ConnectionPool::class);
 	}
 
 	/**

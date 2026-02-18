@@ -32,18 +32,14 @@ class LogService implements SingletonInterface {
 	protected LoggerInterface $logger;
 
 	/**
-	 * @var ExtensionConfiguration
+	 * @param LogManager $logManager
+	 * @param ExtensionConfiguration $extensionConfiguration
 	 */
-	protected ExtensionConfiguration $extensionConfiguration;
-
-	/**
-	 * @param LogManager|null $logManager
-	 * @param ExtensionConfiguration|null $extensionConfiguration
-	 */
-	public function __construct(?LogManager $logManager = NULL, ?ExtensionConfiguration $extensionConfiguration = NULL) {
-		$logManager ??= GeneralUtility::makeInstance(LogManager::class);
+	public function __construct(
+		LogManager $logManager,
+		protected ExtensionConfiguration $extensionConfiguration
+	) {
 		$this->logger = $logManager->getLogger(__CLASS__);
-		$this->extensionConfiguration = $extensionConfiguration ?? GeneralUtility::makeInstance(ExtensionConfiguration::class);
 	}
 
 	/**

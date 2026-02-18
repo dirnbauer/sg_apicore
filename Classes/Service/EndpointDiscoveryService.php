@@ -37,11 +37,6 @@ use TYPO3\CMS\Core\SingletonInterface;
  */
 class EndpointDiscoveryService implements SingletonInterface {
 	/**
-	 * @var iterable
-	 */
-	protected iterable $controllers;
-
-	/**
 	 * @var array|null
 	 */
 	protected ?array $controllerClasses = NULL;
@@ -64,13 +59,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @param ApiRegistry $apiRegistry
 	 */
 	public function __construct(
-		iterable $controllers,
+		protected iterable $controllers,
 		protected ResourceRegistry $resourceRegistry,
 		CacheManager $cacheManager,
 		protected LanguageServiceFactory $languageServiceFactory,
 		protected ApiRegistry $apiRegistry
 	) {
-		$this->controllers = $controllers;
 		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
 	}
 

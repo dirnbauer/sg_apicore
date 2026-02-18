@@ -36,16 +36,6 @@ class Router implements SingletonInterface {
 	 */
 	protected CachePathService $cachePathService;
 	/**
-	 * @var iterable
-	 */
-	protected iterable $controllers;
-
-	/**
-	 * @var array|null
-	 */
-	protected ?array $controllerInstances = NULL;
-
-	/**
 	 * @param iterable $controllers
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param RequestValidator $requestValidator
@@ -53,15 +43,19 @@ class Router implements SingletonInterface {
 	 * @param CachePathService|null $cachePathService
 	 */
 	public function __construct(
-		iterable $controllers,
+		protected iterable $controllers,
 		protected EndpointDiscoveryService $endpointDiscoveryService,
 		protected RequestValidator $requestValidator,
 		protected ResponseService $responseService,
 		?CachePathService $cachePathService = NULL
 	) {
-		$this->controllers = $controllers;
 		$this->cachePathService = $cachePathService ?? new CachePathService();
 	}
+
+	/**
+	 * @var array|null
+	 */
+	protected ?array $controllerInstances = NULL;
 
 	/**
 	 * Returns all registered controller instances
