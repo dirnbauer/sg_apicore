@@ -1,6 +1,8 @@
 <f:layout name="Backend/Default"/>
 
 <f:section name="Content">
+	<f:asset.script identifier="sg-apicore-token-copy" src="EXT:sg_apicore/Resources/Public/JavaScript/token-copy.js"/>
+	<f:variable name="resolvedReturnUrl" value="{returnUrl}"/>
 	<f:if condition="{isRegenerated}">
 		<f:then><h1>Token Regenerated</h1></f:then>
 		<f:else><h1>Token Created</h1></f:else>
@@ -14,11 +16,13 @@
 			it.</p>
 		<hr>
 		<div class="input-group">
-			<input type="text" class="form-control form-control-lg" value="{tokenKey}" readonly id="tokenKey">
+			<input type="text" class="form-control form-control-lg" value="{tokenKey}" readonly id="tokenKey"
+				   data-token-copy-input>
 			<div class="input-group-append">
-				<button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">Copy</button>
+				<button class="btn btn-outline-secondary" type="button" data-token-copy-button>Copy</button>
 			</div>
 		</div>
+		<div class="mt-2 text-success" data-token-copy-feedback hidden>Token copied to clipboard.</div>
 	</div>
 
 	<f:if condition="!{isRegenerated}">
@@ -35,16 +39,6 @@
 		</table>
 	</f:if>
 
-	<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'tokens'})}" class="btn btn-primary">Back to
+	<a href="{resolvedReturnUrl}" class="btn btn-primary">Back to
 		Token Management</a>
-
-	<script>
-		function copyToClipboard() {
-			var copyText = document.getElementById("tokenKey");
-			copyText.select();
-			copyText.setSelectionRange(0, 99999);
-			document.execCommand("copy");
-			alert("Copied to clipboard");
-		}
-	</script>
 </f:section>

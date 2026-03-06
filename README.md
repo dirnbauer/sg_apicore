@@ -143,6 +143,8 @@ The extension provides a TYPO3 Backend Module under **System > API Core**.
 
 - **APIs & Versions**: Overview and Swagger UI links.
 - **Token Management**: Create and manage Opaque and Refresh tokens.
+  - Supports optional FE-user bound tokens (`user_id` mapped to `fe_users`) for per-user API key flows.
+  - Token list keeps current filter state while editing/revoking/regenerating.
 - **Endpoints**: List of all registered endpoints and their requirements.
 
 See [Authentication & Scopes - Backend](docs/AuthScopes.md#token-management-in-the-backend) for details.

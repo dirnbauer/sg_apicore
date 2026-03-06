@@ -151,52 +151,63 @@ class TokenRepository implements SingletonInterface {
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$query = $queryBuilder
-			->select('*')
-			->from(self::TABLE_NAME);
+			->select(
+				'token.*',
+				'fe.uid AS fe_user_uid',
+				'fe.username AS fe_user_username',
+				'fe.email AS fe_user_email'
+			)
+			->from(self::TABLE_NAME, 'token')
+			->leftJoin(
+				'token',
+				'fe_users',
+				'fe',
+				$queryBuilder->expr()->eq('token.user_id', 'fe.uid')
+			);
 
 		if (isset($filters['apiId']) && $filters['apiId'] !== '') {
 			$query->andWhere(
-				$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($filters['apiId']))
+				$queryBuilder->expr()->eq('token.api_id', $queryBuilder->createNamedParameter($filters['apiId']))
 			);
 		}
 		if (isset($filters['tenantId']) && $filters['tenantId'] !== '') {
 			$query->andWhere(
-				$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($filters['tenantId']))
+				$queryBuilder->expr()->eq('token.tenant_id', $queryBuilder->createNamedParameter($filters['tenantId']))
 			);
 		}
 		if (isset($filters['isRefreshToken'])) {
 			$query->andWhere(
 				$queryBuilder->expr()->eq(
-					'is_refresh_token',
+					'token.is_refresh_token',
 					$queryBuilder->createNamedParameter((int) $filters['isRefreshToken'], Connection::PARAM_INT)
 				)
 			);
 		}
 		if (isset($filters['isUserToken'])) {
 			if ((int) $filters['isUserToken'] === 1) {
-				$query->andWhere($queryBuilder->expr()->gt('user_id', 0));
+				$query->andWhere($queryBuilder->expr()->gt('token.user_id', 0));
 			} else {
-				$query->andWhere($queryBuilder->expr()->eq('user_id', 0));
+				$query->andWhere($queryBuilder->expr()->eq('token.user_id', 0));
 			}
 		}
 		if (isset($filters['status']) && $filters['status'] !== '') {
 			if ($filters['status'] === 'revoked') {
-				$query->andWhere($queryBuilder->expr()->gt('revoked_at', 0));
+				$query->andWhere($queryBuilder->expr()->gt('token.revoked_at', 0));
 			} elseif ($filters['status'] === 'expired') {
-				$query->andWhere($queryBuilder->expr()->gt('expires_at', 0));
-				$query->andWhere($queryBuilder->expr()->lt('expires_at', time()));
+				$query->andWhere($queryBuilder->expr()->gt('token.expires_at', 0));
+				$query->andWhere($queryBuilder->expr()->lt('token.expires_at', time()));
 			} elseif ($filters['status'] === 'active') {
-				$query->andWhere($queryBuilder->expr()->eq('revoked_at', 0));
+				$query->andWhere($queryBuilder->expr()->eq('token.revoked_at', 0));
 				$query->andWhere(
 					$queryBuilder->expr()->or(
-						$queryBuilder->expr()->eq('expires_at', 0),
-						$queryBuilder->expr()->gt('expires_at', time())
+						$queryBuilder->expr()->eq('token.expires_at', 0),
+						$queryBuilder->expr()->gt('token.expires_at', time())
 					)
 				);
 			}
 		}
 
-		return $query->orderBy('uid', 'DESC')->executeQuery()->fetchAllAssociative();
+		return $query->orderBy('token.uid', 'DESC')->executeQuery()->fetchAllAssociative();
 	}
 
 	/**

@@ -3,6 +3,7 @@
 <f:layout name="Backend/Default"/>
 
 <f:section name="Content">
+	<f:variable name="resolvedTokenListReturnUrl" value="{tokenListReturnUrl}"/>
 	<h1>Token Management</h1>
 
 	<div class="row">
@@ -41,6 +42,7 @@
 					<th>Label</th>
 					<th>API / Tenant</th>
 					<th>Type</th>
+					<th>FE User</th>
 					<th>Status</th>
 					<th>Expires</th>
 					<th>Last Used</th>
@@ -61,6 +63,18 @@
 						</td>
 						<td>
 							{f:if(condition: token.is_refresh_token, then: 'Refresh', else: 'Access')}
+						</td>
+						<td>
+							<f:if condition="{token.fe_user_uid}">
+								<f:then>
+									<span class="badge badge-light">#{token.fe_user_uid}</span>
+									<br/><small>{token.fe_user_username}</small>
+									<f:if condition="{token.fe_user_email}">
+										<br/><small class="text-muted">{token.fe_user_email}</small>
+									</f:if>
+								</f:then>
+								<f:else>-</f:else>
+							</f:if>
 						</td>
 						<td>
 							<f:if condition="{token.revoked_at}">
@@ -92,20 +106,20 @@
 							</f:if>
 						</td>
 						<td>
-							<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: '{f:be.uri(route: \'system_SgApiCore\', parameters: {action: \'tokens\'})}')}"
+							<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: resolvedTokenListReturnUrl)}"
 							   class="btn btn-default btn-sm" title="Edit Scopes/Metadata">
 								<core:icon identifier="actions-open" size="small"/>
 								Edit
 							</a>
 							<f:if condition="!{token.revoked_at}">
-								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'regenerateToken', uid: token.uid})}"
+								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'regenerateToken', uid: token.uid, returnUrl: resolvedTokenListReturnUrl})}"
 								   class="btn btn-primary btn-sm"
 								   onclick="return confirm('Are you sure you want to regenerate the key? The old key will stop working immediately!')"
 								   title="Generate new plaintext key">
 									<core:icon identifier="actions-refresh" size="small"/>
 									Re-generate
 								</a>
-								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'revokeToken', uid: token.uid})}"
+								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'revokeToken', uid: token.uid, returnUrl: resolvedTokenListReturnUrl})}"
 								   class="btn btn-danger btn-sm"
 								   onclick="return confirm('Are you sure you want to revoke this token?')"
 								   title="Deactivate token">
@@ -136,13 +150,16 @@
 				<div class="card-header">Create New Opaque Token</div>
 				<div class="card-body">
 					<f:form action="createToken" name="newToken" method="POST">
+						<f:form.hidden name="returnUrl" value="{resolvedTokenListReturnUrl}"/>
 						<div class="form-group">
 							<label for="apiId">API ID</label>
 							<f:form.select name="apiId" options="{apis}" class="form-control"/>
 						</div>
 						<div class="form-group">
 							<label for="tenantId">Tenant ID</label>
-							<f:form.textfield name="tenantId" value="default" class="form-control" required="true"/>
+							<f:form.textfield name="tenantId"
+											  value="{f:if(condition: filters.tenantId, then: filters.tenantId, else: 'default')}"
+											  class="form-control" required="true"/>
 						</div>
 						<div class="form-group">
 							<label for="label">Label</label>
@@ -160,6 +177,14 @@
 						<div class="form-group">
 							<label for="expiresDays">Expires in (days, 0 = never)</label>
 							<f:form.textfield name="expiresDays" value="0" type="number" class="form-control"/>
+						</div>
+						<div class="form-group">
+							<label for="feUserId">FE User UID (optional)</label>
+							<f:form.textfield name="feUserId" value="0" type="number" min="0" class="form-control"/>
+							<small class="form-text text-muted">
+								For SG AI protected endpoints, set a valid FE user UID. Otherwise the token authenticates,
+								but SG AI account-bound endpoints reject it.
+							</small>
 						</div>
 						<f:form.submit value="Create Token" class="btn btn-primary"/>
 					</f:form>
