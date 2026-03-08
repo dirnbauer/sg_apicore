@@ -128,5 +128,7 @@ optionally provide a `rateLimit` object in the response body.
 In the TYPO3 backend under **System > API Core**, you can:
 
 * Create new Opaque tokens (M2M).
+* Optionally bind tokens to a specific FE user (`fe_users.uid` via `user_id`).
 * View and revoke existing tokens.
 * Manage scopes and expiration dates.
+* Keep and reuse the current token filters while performing token actions.

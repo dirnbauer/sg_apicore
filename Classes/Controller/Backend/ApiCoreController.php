@@ -24,10 +24,12 @@ use SGalinski\SgApiCore\Service\LogDashboardService;
 use SGalinski\SgApiCore\Service\RateLimitDashboardService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Backend\Attribute\AsController;
+use TYPO3\CMS\Backend\Routing\UriBuilder as BackendUriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Imaging\Icon;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -39,6 +41,9 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
  */
 #[AsController]
 class ApiCoreController extends ActionController {
+	private const string TOKEN_FILTER_STATE_KEY = 'sg_apicore_tokens_filters';
+	private const string TOKEN_MODULE_PATH = '/typo3/module/system/sgapicore';
+
 	/**
 	 * @param ApiRegistry $apiRegistry
 	 * @param TokenRepository $tokenRepository
@@ -56,6 +61,7 @@ class ApiCoreController extends ActionController {
 		protected readonly TokenService $tokenService,
 		protected readonly EndpointDiscoveryService $endpointDiscoveryService,
 		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
+		protected readonly BackendUriBuilder $backendUriBuilder,
 		protected readonly IconFactory $iconFactory,
 		protected readonly ExtensionConfiguration $extensionConfiguration,
 		protected readonly RateLimitDashboardService $rateLimitDashboardService,
@@ -87,9 +93,7 @@ class ApiCoreController extends ActionController {
 	 * @throws \Doctrine\DBAL\Exception
 	 */
 	public function tokensAction(array $filters = []): ResponseInterface {
-		if (!isset($filters['tokenCategory'])) {
-			$filters['tokenCategory'] = 'm2m';
-		}
+		$filters = $this->resolveAndPersistTokenFilters($filters);
 
 		if ($filters['tokenCategory'] === 'm2m') {
 			$filters['isUserToken'] = 0;
@@ -122,6 +126,7 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->assign('apis', $apiOptions);
 		$moduleTemplate->assign('filters', $filters);
 		$moduleTemplate->assign('hasUserAccessTokens', $hasUserAccessTokens);
+		$moduleTemplate->assign('tokenListReturnUrl', $this->buildTokensModuleUrl($filters));
 		$moduleTemplate->assign('currentTab', 'tokens');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Tokens');
 	}
@@ -145,10 +150,13 @@ class ApiCoreController extends ActionController {
 		string $label,
 		string $tokenKey = '',
 		string $scopes = '',
-		int $expiresDays = 0
+		int $expiresDays = 0,
+		int $feUserId = 0,
+		string $returnUrl = ''
 	): ResponseInterface {
 		$newTokenKey = $tokenKey !== '' ? $tokenKey : $this->tokenService->generateRandomToken();
 		$expiresAt = $expiresDays > 0 ? time() + ($expiresDays * 24 * 3600) : 0;
+		$userId = $feUserId > 0 ? $feUserId : NULL;
 
 		$scopeArray = [];
 		if ($scopes !== '') {
@@ -161,7 +169,7 @@ class ApiCoreController extends ActionController {
 			$tenantId,
 			0, // root level for manual tokens
 			$scopeArray,
-			NULL, // no user for manual M2M tokens
+			$userId, // optional FE user-bound token
 			FALSE, // not a refresh token
 			$expiresAt,
 			$label
@@ -175,6 +183,7 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->assign('tokenKey', $newTokenKey);
 		$moduleTemplate->assign('apiId', $apiId);
 		$moduleTemplate->assign('tenantId', $tenantId);
+		$moduleTemplate->assign('returnUrl', $this->resolveTokenReturnUrl($returnUrl));
 		$moduleTemplate->assign('currentTab', 'tokens');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/TokenCreated');
 	}
@@ -185,10 +194,10 @@ class ApiCoreController extends ActionController {
 	 * @param int $uid
 	 * @return ResponseInterface
 	 */
-	public function revokeTokenAction(int $uid): ResponseInterface {
+	public function revokeTokenAction(int $uid, string $returnUrl = ''): ResponseInterface {
 		$this->tokenRepository->revoke($uid);
 		$this->addFlashMessage('Token revoked successfully.');
-		return $this->redirect('tokens');
+		return $this->redirectToUri($this->resolveTokenReturnUrl($returnUrl));
 	}
 
 	/**
@@ -198,7 +207,7 @@ class ApiCoreController extends ActionController {
 	 * @return ResponseInterface
 	 * @throws RandomException
 	 */
-	public function regenerateTokenAction(int $uid): ResponseInterface {
+	public function regenerateTokenAction(int $uid, string $returnUrl = ''): ResponseInterface {
 		$newTokenKey = $this->tokenService->generateRandomToken();
 		$this->tokenRepository->updateTokenHash($uid, hash('sha256', $newTokenKey));
 
@@ -209,8 +218,72 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->setTitle('API Core - Token Regenerated');
 		$moduleTemplate->assign('tokenKey', $newTokenKey);
 		$moduleTemplate->assign('isRegenerated', TRUE);
+		$moduleTemplate->assign('returnUrl', $this->resolveTokenReturnUrl($returnUrl));
 		$moduleTemplate->assign('currentTab', 'tokens');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/TokenCreated');
+	}
+
+	/**
+	 * @param array<string,mixed> $filters
+	 * @return array<string,mixed>
+	 */
+	private function resolveAndPersistTokenFilters(array $filters): array {
+		$beUser = $GLOBALS['BE_USER'] ?? NULL;
+		$storedFilters = $beUser instanceof BackendUserAuthentication
+			? $beUser->getModuleData(self::TOKEN_FILTER_STATE_KEY, 'ses')
+			: NULL;
+		if ((!is_array($filters) || $filters === []) && is_array($storedFilters)) {
+			$filters = $storedFilters;
+		}
+
+		$normalizedFilters = [
+			'apiId' => trim((string) ($filters['apiId'] ?? '')),
+			'tenantId' => trim((string) ($filters['tenantId'] ?? '')),
+			'status' => trim((string) ($filters['status'] ?? '')),
+			'tokenCategory' => trim((string) ($filters['tokenCategory'] ?? 'm2m')),
+		];
+
+		if (!in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
+			$normalizedFilters['tokenCategory'] = 'm2m';
+		}
+		if (
+			$normalizedFilters['status'] !== ''
+			&& !in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
+		) {
+			$normalizedFilters['status'] = '';
+		}
+
+		if ($beUser instanceof BackendUserAuthentication) {
+			$beUser->pushModuleData(self::TOKEN_FILTER_STATE_KEY, $normalizedFilters);
+		}
+
+		return $normalizedFilters;
+	}
+
+	/**
+	 * @param array<string,mixed> $filters
+	 */
+	private function buildTokensModuleUrl(array $filters = []): string {
+		$parameters = ['action' => 'tokens'];
+		if ($filters !== []) {
+			$parameters['filters'] = $filters;
+		}
+
+		return (string) $this->backendUriBuilder->buildUriFromRoute('system_SgApiCore', $parameters);
+	}
+
+	private function resolveTokenReturnUrl(string $returnUrl): string {
+		$trimmedReturnUrl = trim($returnUrl);
+		if ($trimmedReturnUrl === '') {
+			return $this->buildTokensModuleUrl($this->resolveAndPersistTokenFilters([]));
+		}
+
+		$path = (string) (parse_url($trimmedReturnUrl, PHP_URL_PATH) ?? '');
+		if (!str_starts_with($path, self::TOKEN_MODULE_PATH)) {
+			return $this->buildTokensModuleUrl($this->resolveAndPersistTokenFilters([]));
+		}
+
+		return $trimmedReturnUrl;
 	}
 
 	/**
