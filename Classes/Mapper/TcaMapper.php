@@ -578,7 +578,37 @@ class TcaMapper implements SingletonInterface {
 			return $content;
 		}
 
-		return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+		if ($this->hasUsableParseFuncReferenceConfiguration()) {
+			try {
+				return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+			} catch (\LogicException $exception) {
+				if ($exception->getCode() !== 1641989097) {
+					throw $exception;
+				}
+			}
+		}
+
+		try {
+			return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf);
+		} catch (\LogicException $exception) {
+			if ($exception->getCode() !== 1641989097) {
+				throw $exception;
+			}
+		}
+
+		return $content;
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function hasUsableParseFuncReferenceConfiguration(): bool {
+		if (!isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
+			return FALSE;
+		}
+
+		$parseFuncReference = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
+		return is_array($parseFuncReference) && count($parseFuncReference) > 1;
 	}
 
 	/**
