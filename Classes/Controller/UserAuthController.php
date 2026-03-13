@@ -98,10 +98,8 @@ class UserAuthController {
 	#[ApiEndpoint(
 		summary: 'User login',
 		description: 'Authenticates a user with username and password and returns access and refresh tokens.',
-		tags: [
-		'Authentication'
-	
-	])]
+		tags: ['Authentication']
+	)]
 	#[ApiBodyParam(
 		name: 'username',
 		type: 'string',
@@ -139,10 +137,8 @@ class UserAuthController {
 	#[ApiEndpoint(
 		summary: 'Legacy User login',
 		description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.',
-		tags: [
-		'Legacy'
-	
-	])]
+		tags: ['Legacy']
+	)]
 	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user')]
 	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user')]
 	#[ApiResponse(status: 200, description: 'Login successful, returns bearerToken')]
@@ -180,10 +176,8 @@ class UserAuthController {
 	#[ApiEndpoint(
 		summary: 'Refresh access token',
 		description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).',
-		tags: [
-		'Authentication'
-	
-	])]
+		tags: ['Authentication']
+	)]
 	#[ApiBodyParam(
 		name: 'refresh_token',
 		type: 'string',
