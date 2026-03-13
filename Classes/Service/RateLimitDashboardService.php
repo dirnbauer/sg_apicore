@@ -23,6 +23,9 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
  */
 class RateLimitDashboardService {
 	protected const string TABLE_NAME = 'tx_apicore_rate_limit';
+	protected const int HISTORY_WINDOW_SECONDS = 86400;
+	protected const int DEFAULT_PER_PAGE = 50;
+	protected const array ALLOWED_PER_PAGE = [25, 50, 100];
 
 	public function __construct(
 		protected readonly ExtensionConfiguration $extensionConfiguration,
@@ -33,9 +36,10 @@ class RateLimitDashboardService {
 	}
 
 	/**
+	 * @param array<string, mixed> $filters
 	 * @return array<string, mixed>
 	 */
-	public function getDashboardData(): array {
+	public function getDashboardData(array $filters = []): array {
 		$config = [
 			'enabled' => $this->extensionConfiguration->isRateLimitEnabled(),
 			'defaultLimit' => $this->extensionConfiguration->getRateLimitDefaultLimit(),
@@ -46,18 +50,27 @@ class RateLimitDashboardService {
 		$defaultEffectiveLimit = $config['defaultLimit'] + $config['defaultBurst'];
 		$apiOverrides = $this->buildApiOverrides($config);
 		$resourceOverrides = $this->buildResourceOverrides($config);
-		$counters = $this->buildCounters($apiOverrides, $defaultEffectiveLimit);
-		$topClients = $this->buildTopClients($counters);
-		$windowSummary = $this->buildWindowSummary($counters);
+		$normalizedFilters = $this->normalizeFilters($filters);
+		$allCounters = $this->buildCounters($apiOverrides, $defaultEffectiveLimit, $normalizedFilters);
+		$paginationResult = $this->paginateCounters(
+			$allCounters,
+			$normalizedFilters['page'],
+			$normalizedFilters['perPage']
+		);
+		$topClients = $this->buildTopClients($allCounters, $normalizedFilters['includeHistory']);
+		$windowSummary = $this->buildWindowSummary($allCounters);
 
 		return [
 			'config' => $config,
 			'apiOverrides' => $apiOverrides,
 			'resourceOverrides' => $resourceOverrides,
-			'counters' => $counters,
+			'counters' => $paginationResult['items'],
 			'topClients' => $topClients,
 			'windowSummary' => $windowSummary,
 			'defaultEffectiveLimit' => $defaultEffectiveLimit,
+			'filters' => $normalizedFilters,
+			'filterOptions' => $this->buildFilterOptions($apiOverrides),
+			'pagination' => $paginationResult['pagination'],
 		];
 	}
 
@@ -115,9 +128,11 @@ class RateLimitDashboardService {
 	/**
 	 * @param array<int, array<string, mixed>> $apiOverrides
 	 * @param int $defaultEffectiveLimit
+	 * @param array<string, mixed> $filters
 	 * @return array<int, array<string, mixed>>
 	 */
-	protected function buildCounters(array $apiOverrides, int $defaultEffectiveLimit): array {
+	protected function buildCounters(array $apiOverrides, int $defaultEffectiveLimit, array $filters = []): array {
+		$normalizedFilters = $this->normalizeFilters($filters);
 		$apiLimits = [];
 		foreach ($apiOverrides as $override) {
 			$normalized = $override['normalized'] ?? [];
@@ -127,16 +142,21 @@ class RateLimitDashboardService {
 		}
 
 		$now = time();
-		$rows = $this->fetchRateLimitRows($now);
+		$minExpiresAt = $normalizedFilters['includeHistory'] ? $now - self::HISTORY_WINDOW_SECONDS : $now;
+		$rows = $this->fetchRateLimitRows($minExpiresAt);
 		$counters = [];
 		foreach ($rows as $row) {
 			$expiresAt = (int) $row['expires_at'];
-			if ($expiresAt > 0 && $expiresAt < $now) {
+			$isExpired = $expiresAt > 0 && $expiresAt < $now;
+			if (!$normalizedFilters['includeHistory'] && $isExpired) {
 				continue;
 			}
 
 			$identifier = (string) $row['identifier'];
 			$parsed = $this->parseIdentifier($identifier);
+			if (!$this->matchesCounterFilters($parsed, $normalizedFilters)) {
+				continue;
+			}
 			$apiId = $parsed['apiId'];
 			$limitConfig = $apiLimits[$apiId] ?? NULL;
 			$effectiveLimit = $limitConfig['effectiveLimit'] ?? $defaultEffectiveLimit;
@@ -153,12 +173,26 @@ class RateLimitDashboardService {
 				'hits' => $hits,
 				'windowStart' => (int) $row['window_start'],
 				'expiresAt' => $expiresAt,
-				'remaining' => $remaining,
-				'effectiveLimit' => $effectiveLimit,
-				'limitSource' => $limitConfig ? 'api' : 'global',
-				'isExpired' => $expiresAt > 0 ? $expiresAt < $now : FALSE,
-			];
+					'remaining' => $remaining,
+					'effectiveLimit' => $effectiveLimit,
+					'limitSource' => $limitConfig ? 'api' : 'global',
+					'isExpired' => $isExpired,
+				];
 		}
+
+		usort($counters, static function (array $a, array $b): int {
+			$remainingComparison = (int) $a['remaining'] <=> (int) $b['remaining'];
+			if ($remainingComparison !== 0) {
+				return $remainingComparison;
+			}
+
+			$hitsComparison = (int) $b['hits'] <=> (int) $a['hits'];
+			if ($hitsComparison !== 0) {
+				return $hitsComparison;
+			}
+
+			return (int) $a['expiresAt'] <=> (int) $b['expiresAt'];
+		});
 
 		return $counters;
 	}
@@ -186,12 +220,16 @@ class RateLimitDashboardService {
 
 	/**
 	 * @param array<int, array<string, mixed>> $counters
+	 * @param bool $includeHistory
 	 * @return array<int, array<string, mixed>>
 	 */
-	protected function buildTopClients(array $counters): array {
-		$activeCounters = array_filter($counters, static fn (array $counter) => !$counter['isExpired']);
-		usort($activeCounters, static fn (array $a, array $b) => $b['hits'] <=> $a['hits']);
-		return array_slice($activeCounters, 0, 10);
+	protected function buildTopClients(array $counters, bool $includeHistory = FALSE): array {
+		$relevantCounters = $includeHistory
+			? $counters
+			: array_filter($counters, static fn (array $counter) => !$counter['isExpired']);
+
+		usort($relevantCounters, static fn (array $a, array $b) => $b['hits'] <=> $a['hits']);
+		return array_slice($relevantCounters, 0, 10);
 	}
 
 	/**
@@ -302,6 +340,123 @@ class RateLimitDashboardService {
 			'tenantId' => $tenantId,
 			'subject' => $subject,
 			'subjectType' => $subjectType,
+		];
+	}
+
+	/**
+	 * @param array<string, mixed> $filters
+	 * @return array{apiId: string, tenantId: string, subjectType: string, includeHistory: bool, page: int, perPage: int}
+	 */
+	protected function normalizeFilters(array $filters): array {
+		$normalized = [
+			'apiId' => trim((string) ($filters['apiId'] ?? '')),
+			'tenantId' => trim((string) ($filters['tenantId'] ?? '')),
+			'subjectType' => trim((string) ($filters['subjectType'] ?? '')),
+			'includeHistory' => (int) ($filters['includeHistory'] ?? 0) === 1,
+			'page' => max(1, (int) ($filters['page'] ?? 1)),
+			'perPage' => (int) ($filters['perPage'] ?? self::DEFAULT_PER_PAGE),
+		];
+
+		if (!in_array($normalized['subjectType'], ['', 'token', 'user', 'ip', 'unknown'], TRUE)) {
+			$normalized['subjectType'] = '';
+		}
+		if (!in_array($normalized['perPage'], self::ALLOWED_PER_PAGE, TRUE)) {
+			$normalized['perPage'] = self::DEFAULT_PER_PAGE;
+		}
+
+		return $normalized;
+	}
+
+	/**
+	 * @param array{apiId: string, tenantId: string, subjectType: string, includeHistory: bool, page: int, perPage: int} $filters
+	 * @return bool
+	 */
+	protected function matchesCounterFilters(array $parsedIdentifier, array $filters): bool {
+		if ($filters['apiId'] !== '' && $parsedIdentifier['apiId'] !== $filters['apiId']) {
+			return FALSE;
+		}
+
+		if (
+			$filters['tenantId'] !== ''
+			&& !str_contains(strtolower((string) $parsedIdentifier['tenantId']), strtolower($filters['tenantId']))
+		) {
+			return FALSE;
+		}
+
+		if ($filters['subjectType'] !== '' && $parsedIdentifier['subjectType'] !== $filters['subjectType']) {
+			return FALSE;
+		}
+
+		return TRUE;
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $counters
+	 * @param int $page
+	 * @param int $perPage
+	 * @return array{items: array<int, array<string, mixed>>, pagination: array<string, int|bool>}
+	 */
+	protected function paginateCounters(array $counters, int $page, int $perPage): array {
+		$totalItems = count($counters);
+		$totalPages = max(1, (int) ceil($totalItems / $perPage));
+		$currentPage = max(1, min($page, $totalPages));
+		$offset = ($currentPage - 1) * $perPage;
+		$items = array_slice($counters, $offset, $perPage);
+
+		$fromItem = $totalItems > 0 ? ($offset + 1) : 0;
+		$toItem = $totalItems > 0 ? ($offset + count($items)) : 0;
+
+		return [
+			'items' => $items,
+			'pagination' => [
+				'currentPage' => $currentPage,
+				'totalPages' => $totalPages,
+				'totalItems' => $totalItems,
+				'perPage' => $perPage,
+				'fromItem' => $fromItem,
+				'toItem' => $toItem,
+				'hasPrevious' => $currentPage > 1,
+				'hasNext' => $currentPage < $totalPages,
+				'previousPage' => max(1, $currentPage - 1),
+				'nextPage' => min($totalPages, $currentPage + 1),
+				'hasMultiplePages' => $totalPages > 1,
+			],
+		];
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $apiOverrides
+	 * @return array<string, array<string, string>>
+	 */
+	protected function buildFilterOptions(array $apiOverrides): array {
+		$apiOptions = ['' => 'All APIs'];
+		foreach ($apiOverrides as $apiOverride) {
+			$apiId = (string) ($apiOverride['apiId'] ?? '');
+			if ($apiId !== '') {
+				$apiOptions[$apiId] = $apiId;
+			}
+		}
+
+		$perPageOptions = [];
+		foreach (self::ALLOWED_PER_PAGE as $size) {
+			$key = (string) $size;
+			$perPageOptions[$key] = $key;
+		}
+
+		return [
+			'apiId' => $apiOptions,
+			'subjectType' => [
+				'' => 'All subjects',
+				'token' => 'Token',
+				'user' => 'User',
+				'ip' => 'IP',
+				'unknown' => 'Unknown',
+			],
+			'includeHistory' => [
+				'0' => 'Active only',
+				'1' => 'Active + last 24h history',
+			],
+			'perPage' => $perPageOptions,
 		];
 	}
 }

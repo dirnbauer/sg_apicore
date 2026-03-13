@@ -99,3 +99,6 @@ Rate limit counters are registered with TYPO3's table garbage collection task an
 
 The backend module "Rate Limits" focuses on active sessions (`expires_at >= now`) to keep the dashboard actionable.
 Historic/expired rows remain available for cleanup and operational analysis until TYPO3 garbage collection removes them.
+
+The dashboard supports filtering by API, tenant, and subject type, is sorted by remaining quota (ascending), and
+uses pagination for large session lists. A history toggle can include entries that expired within the last 24 hours.

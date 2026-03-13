@@ -51,3 +51,129 @@
 	color: #dc3545 !important;
 	font-weight: 600;
 }
+
+.apicore-logs-view .card,
+.apicore-rate-limits-view .card {
+	margin-bottom: 0.875rem;
+}
+
+.apicore-logs-view .card-header,
+.apicore-rate-limits-view .card-header {
+	padding: 0.5rem 0.75rem;
+	font-size: 0.875rem;
+}
+
+.apicore-logs-view .card-body,
+.apicore-rate-limits-view .card-body {
+	padding: 0.75rem;
+}
+
+.apicore-logs-view h2,
+.apicore-rate-limits-view h2 {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+	font-size: 1.15rem;
+}
+
+.apicore-filter-form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 0.75rem;
+	align-items: flex-end;
+}
+
+.apicore-filter-item {
+	min-width: 150px;
+	flex: 0 1 220px;
+}
+
+.apicore-filter-item label {
+	display: block;
+	margin-bottom: 0.2rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: #3a3f44;
+}
+
+.apicore-filter-item .form-control {
+	height: calc(1.85rem + 2px);
+	padding: 0.15rem 0.5rem;
+	font-size: 0.85rem;
+}
+
+.apicore-filter-actions {
+	display: flex;
+	align-items: flex-end;
+}
+
+.apicore-kpi-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.5rem;
+}
+
+.apicore-kpi-item {
+	padding: 0.45rem 0.6rem;
+	border: 1px solid #d7d9dd;
+	border-radius: 4px;
+	background: #fafbfc;
+}
+
+.apicore-kpi-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: #3a3f44;
+	margin-bottom: 0.15rem;
+}
+
+.apicore-kpi-value {
+	font-size: 1.05rem;
+	font-weight: 700;
+	line-height: 1.1;
+}
+
+.apicore-kpi-item .text-muted {
+	font-size: 0.72rem;
+	line-height: 1.1;
+}
+
+.apicore-info-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	gap: 0.25rem 0.75rem;
+}
+
+.apicore-pagination {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.apicore-pagination-label {
+	font-size: 0.8rem;
+	color: #5f6871;
+}
+
+.apicore-pagination-actions {
+	display: flex;
+	gap: 0.4rem;
+}
+
+@media (max-width: 1200px) {
+	.apicore-kpi-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (max-width: 700px) {
+	.apicore-filter-item {
+		flex-basis: 100%;
+	}
+
+	.apicore-kpi-grid {
+		grid-template-columns: 1fr;
+	}
+}

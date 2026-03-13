@@ -61,14 +61,97 @@ class RateLimitDashboardServiceTest extends UnitTestCase {
 
 		$this->assertTrue(abs($service->lastCutoff - $now) < 3);
 	}
+
+	public function testBuildCountersAppliesFiltersAndSortsByRemainingAscending(): void {
+		$service = $this->createDashboardService();
+		$now = time();
+		$service->rows = [
+			[
+				'identifier' => 'partner:tenant-a:ip:127.0.0.10',
+				'hits' => 9,
+				'window_start' => $now - 120,
+				'expires_at' => $now + 120,
+			],
+			[
+				'identifier' => 'partner:tenant-a:ip:127.0.0.11',
+				'hits' => 2,
+				'window_start' => $now - 120,
+				'expires_at' => $now + 120,
+			],
+			[
+				'identifier' => 'partner:tenant-b:ip:127.0.0.12',
+				'hits' => 7,
+				'window_start' => $now - 120,
+				'expires_at' => $now + 120,
+			],
+		];
+
+		$counters = $service->buildCountersForTest([], 10, [
+			'apiId' => 'partner',
+			'tenantId' => 'tenant-a',
+			'subjectType' => 'ip',
+		]);
+
+		$this->assertCount(2, $counters);
+		$this->assertSame('partner:tenant-a:ip:127.0.0.10', $counters[0]['identifier']);
+		$this->assertSame('partner:tenant-a:ip:127.0.0.11', $counters[1]['identifier']);
+		$this->assertSame(1, $counters[0]['remaining']);
+		$this->assertSame(8, $counters[1]['remaining']);
+	}
+
+	public function testBuildCountersUsesHistoryCutoffWhenEnabled(): void {
+		$service = $this->createDashboardService();
+		$service->rows = [];
+		$now = time();
+
+		$service->buildCountersForTest([], 10, ['includeHistory' => TRUE]);
+
+		$expectedCutoff = $now - 86400;
+		$this->assertTrue(abs($service->lastCutoff - $expectedCutoff) < 3);
+	}
+
+	public function testPaginateCountersReturnsExpectedSliceAndMetadata(): void {
+		$service = $this->createDashboardService();
+		$counters = [
+			['identifier' => 'a'],
+			['identifier' => 'b'],
+			['identifier' => 'c'],
+		];
+
+		$result = $service->paginateCountersForTest($counters, 2, 1);
+
+		$this->assertCount(1, $result['items']);
+		$this->assertSame('b', $result['items'][0]['identifier']);
+		$this->assertSame(2, $result['pagination']['currentPage']);
+		$this->assertSame(3, $result['pagination']['totalPages']);
+		$this->assertSame(2, $result['pagination']['fromItem']);
+		$this->assertSame(2, $result['pagination']['toItem']);
+	}
+
+	protected function createDashboardService(): TestableRateLimitDashboardService {
+		return new TestableRateLimitDashboardService(
+			$this->createStub(ExtensionConfiguration::class),
+			$this->createStub(ApiRegistry::class),
+			$this->createStub(ResourceRegistry::class),
+			$this->createStub(ConnectionPool::class)
+		);
+	}
 }
 
 class TestableRateLimitDashboardService extends RateLimitDashboardService {
 	public array $rows = [];
 	public ?int $lastCutoff = NULL;
 
-	public function buildCountersForTest(array $apiOverrides, int $defaultEffectiveLimit): array {
-		return $this->buildCounters($apiOverrides, $defaultEffectiveLimit);
+	public function buildCountersForTest(array $apiOverrides, int $defaultEffectiveLimit, array $filters = []): array {
+		return $this->buildCounters($apiOverrides, $defaultEffectiveLimit, $filters);
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $counters
+	 * @return array{items: array<int, array<string, mixed>>, pagination: array<string, int|bool>}
+	 */
+	public function paginateCountersForTest(array $counters, int $page, int $perPage): array {
+		return $this->paginateCounters($counters, $page, $perPage);
 	}
 
 	protected function fetchRateLimitRows(int $cutoff): array {

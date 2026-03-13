@@ -2,232 +2,352 @@
 
 <f:section name="Content">
 	<h1>Rate Limits</h1>
-	<p>Overview of rate limit configuration and current counters.</p>
+	<p>Overview of rate limit configuration and active sessions.</p>
 
-	<div class="row mb-4">
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">Global Status</div>
-				<div class="card-body">
-					<f:if condition="{config.enabled}">
-						<f:then><span class="badge badge-success">Enabled</span></f:then>
-						<f:else><span class="badge badge-secondary">Disabled</span></f:else>
-					</f:if>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">Default Limit</div>
-				<div class="card-body">
-					<strong>{config.defaultLimit}</strong> / {config.windowSeconds}s
-					<br/>
-					Burst: <strong>{config.defaultBurst}</strong>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">Effective Limit</div>
-				<div class="card-body">
-					<strong>{defaultEffectiveLimit}</strong> per window
-				</div>
-			</div>
-		</div>
-	</div>
+	<div class="apicore-rate-limits-view">
 
-	<h2>API Overrides</h2>
-	<table class="table table-striped table-hover">
-		<thead>
-		<tr>
-			<th>API</th>
-			<th>Enabled</th>
-			<th>Limit</th>
-			<th>Window</th>
-			<th>Burst</th>
-			<th>Effective</th>
-			<th>Version Overrides</th>
-		</tr>
-		</thead>
-		<tbody>
-		<f:for each="{apiOverrides}" as="apiOverride">
+		<div class="row mb-4">
+			<div class="col-md-3">
+				<div class="card">
+					<div class="card-header">Global Status</div>
+					<div class="card-body">
+						<f:if condition="{config.enabled}">
+							<f:then><span class="badge badge-success">Enabled</span></f:then>
+							<f:else><span class="badge badge-secondary">Disabled</span></f:else>
+						</f:if>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card">
+					<div class="card-header">Default Limit</div>
+					<div class="card-body">
+						<strong>{config.defaultLimit}</strong> / {config.windowSeconds}s
+						<br/>
+						Burst: <strong>{config.defaultBurst}</strong>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card">
+					<div class="card-header">Effective Limit</div>
+					<div class="card-body">
+						<strong>{defaultEffectiveLimit}</strong> per window
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-3">
+			<div class="card-header">Session Filters</div>
+			<div class="card-body">
+				<f:form action="rateLimits" method="POST" class="apicore-filter-form">
+					<div class="apicore-filter-item">
+						<label for="rate-limits-api-id">API</label>
+						<f:form.select
+							id="rate-limits-api-id"
+							name="filters[apiId]"
+							options="{filterOptions.apiId}"
+							value="{filters.apiId}"
+							class="form-control"
+						/>
+					</div>
+					<div class="apicore-filter-item">
+						<label for="rate-limits-tenant-id">Tenant</label>
+						<f:form.textfield
+							id="rate-limits-tenant-id"
+							name="filters[tenantId]"
+							value="{filters.tenantId}"
+							class="form-control"
+							placeholder="tenant id contains..."
+						/>
+					</div>
+					<div class="apicore-filter-item">
+						<label for="rate-limits-subject-type">Subject Type</label>
+						<f:form.select
+							id="rate-limits-subject-type"
+							name="filters[subjectType]"
+							options="{filterOptions.subjectType}"
+							value="{filters.subjectType}"
+							class="form-control"
+						/>
+					</div>
+					<div class="apicore-filter-item">
+						<label for="rate-limits-history">History</label>
+						<f:form.select
+							id="rate-limits-history"
+							name="filters[includeHistory]"
+							options="{filterOptions.includeHistory}"
+							value="{f:if(condition: filters.includeHistory, then: '1', else: '0')}"
+							class="form-control"
+						/>
+					</div>
+					<div class="apicore-filter-item">
+						<label for="rate-limits-per-page">Per Page</label>
+						<f:form.select
+							id="rate-limits-per-page"
+							name="filters[perPage]"
+							options="{filterOptions.perPage}"
+							value="{filters.perPage}"
+							class="form-control"
+						/>
+					</div>
+					<div class="apicore-filter-actions">
+						<f:form.submit value="Apply" class="btn btn-primary"/>
+					</div>
+				</f:form>
+			</div>
+		</div>
+
+		<h2>API Overrides</h2>
+		<table class="table table-striped table-hover">
+			<thead>
 			<tr>
-				<td><strong>{apiOverride.apiId}</strong></td>
-				<td>
-					<f:if condition="{apiOverride.normalized.enabled}">
-						<f:then><span class="badge badge-success">Yes</span></f:then>
-						<f:else><span class="badge badge-secondary">No</span></f:else>
-					</f:if>
-				</td>
-				<td>{apiOverride.normalized.limit}</td>
-				<td>{apiOverride.normalized.windowSeconds}s</td>
-				<td>{apiOverride.normalized.burst}</td>
-				<td>{apiOverride.normalized.effectiveLimit}</td>
-				<td>
-					<f:if condition="{apiOverride.versionOverrides}">
-						<f:then>
-							<f:for each="{apiOverride.versionOverrides}" as="versionOverride">
-								<div>
-									v{versionOverride.version}:
-									{versionOverride.normalized.limit}/{versionOverride.normalized.windowSeconds}s
-									(Burst {versionOverride.normalized.burst})
-								</div>
-							</f:for>
-						</f:then>
-						<f:else>-</f:else>
-					</f:if>
-				</td>
+				<th>API</th>
+				<th>Enabled</th>
+				<th>Limit</th>
+				<th>Window</th>
+				<th>Burst</th>
+				<th>Effective</th>
+				<th>Version Overrides</th>
 			</tr>
-		</f:for>
-		</tbody>
-	</table>
-
-	<h2>Resource Overrides</h2>
-	<f:if condition="{resourceOverrides}">
-		<f:then>
-			<table class="table table-striped table-hover">
-				<thead>
+			</thead>
+			<tbody>
+			<f:for each="{apiOverrides}" as="apiOverride">
 				<tr>
-					<th>API</th>
-					<th>Table</th>
-					<th>Base Path</th>
-					<th>Enabled</th>
-					<th>Limit</th>
-					<th>Window</th>
-					<th>Burst</th>
-					<th>Effective</th>
+					<td><strong>{apiOverride.apiId}</strong></td>
+					<td>
+						<f:if condition="{apiOverride.normalized.enabled}">
+							<f:then><span class="badge badge-success">Yes</span></f:then>
+							<f:else><span class="badge badge-secondary">No</span></f:else>
+						</f:if>
+					</td>
+					<td>{apiOverride.normalized.limit}</td>
+					<td>{apiOverride.normalized.windowSeconds}s</td>
+					<td>{apiOverride.normalized.burst}</td>
+					<td>{apiOverride.normalized.effectiveLimit}</td>
+					<td>
+						<f:if condition="{apiOverride.versionOverrides}">
+							<f:then>
+								<f:for each="{apiOverride.versionOverrides}" as="versionOverride">
+									<div>
+										v{versionOverride.version}:
+										{versionOverride.normalized.limit}/{versionOverride.normalized.windowSeconds}s
+										(Burst {versionOverride.normalized.burst})
+									</div>
+								</f:for>
+							</f:then>
+							<f:else>-</f:else>
+						</f:if>
+					</td>
 				</tr>
-				</thead>
-				<tbody>
-				<f:for each="{resourceOverrides}" as="resourceOverride">
-					<tr>
-						<td><strong>{resourceOverride.apiId}</strong></td>
-						<td><code>{resourceOverride.table}</code></td>
-						<td><code>{resourceOverride.basePath}</code></td>
-						<td>
-							<f:if condition="{resourceOverride.normalized.enabled}">
-								<f:then><span class="badge badge-success">Yes</span></f:then>
-								<f:else><span class="badge badge-secondary">No</span></f:else>
-							</f:if>
-						</td>
-						<td>{resourceOverride.normalized.limit}</td>
-						<td>{resourceOverride.normalized.windowSeconds}s</td>
-						<td>{resourceOverride.normalized.burst}</td>
-						<td>{resourceOverride.normalized.effectiveLimit}</td>
-					</tr>
-				</f:for>
-				</tbody>
-			</table>
-		</f:then>
-		<f:else>
-			<p>No resource overrides configured.</p>
-		</f:else>
-	</f:if>
+			</f:for>
+			</tbody>
+		</table>
 
-		<h2>Active Sessions</h2>
-		<p class="text-muted">
-			Only active rate-limit sessions are shown. Resource-specific limits are not visible in this table.
-		</p>
-		<f:if condition="{counters}">
+		<h2>Resource Overrides</h2>
+		<f:if condition="{resourceOverrides}">
 			<f:then>
 				<table class="table table-striped table-hover">
 					<thead>
 					<tr>
-					<th>API</th>
-					<th>Tenant</th>
-					<th>Subject</th>
-					<th>Hits</th>
+						<th>API</th>
+						<th>Table</th>
+						<th>Base Path</th>
+						<th>Enabled</th>
 						<th>Limit</th>
-						<th>Remaining</th>
-						<th>Window Start</th>
-						<th>Reset</th>
+						<th>Window</th>
+						<th>Burst</th>
+						<th>Effective</th>
 					</tr>
 					</thead>
 					<tbody>
-					<f:for each="{counters}" as="counter">
+					<f:for each="{resourceOverrides}" as="resourceOverride">
 						<tr>
-							<td><strong>{counter.apiId}</strong></td>
-							<td>{counter.tenantId}</td>
-							<td>{counter.subject}</td>
-							<td>{counter.hits}</td>
-							<td>{counter.effectiveLimit}</td>
-							<td>{counter.remaining}</td>
-							<td>{f:format.date(date: counter.windowStart, format: 'Y-m-d H:i:s')}</td>
-							<td>{f:format.date(date: counter.expiresAt, format: 'Y-m-d H:i:s')}</td>
+							<td><strong>{resourceOverride.apiId}</strong></td>
+							<td><code>{resourceOverride.table}</code></td>
+							<td><code>{resourceOverride.basePath}</code></td>
+							<td>
+								<f:if condition="{resourceOverride.normalized.enabled}">
+									<f:then><span class="badge badge-success">Yes</span></f:then>
+									<f:else><span class="badge badge-secondary">No</span></f:else>
+								</f:if>
+							</td>
+							<td>{resourceOverride.normalized.limit}</td>
+							<td>{resourceOverride.normalized.windowSeconds}s</td>
+							<td>{resourceOverride.normalized.burst}</td>
+							<td>{resourceOverride.normalized.effectiveLimit}</td>
 						</tr>
 					</f:for>
 					</tbody>
 				</table>
 			</f:then>
 			<f:else>
-				<p>No active sessions recorded.</p>
+				<p>No resource overrides configured.</p>
 			</f:else>
 		</f:if>
 
-	<div class="row">
-		<div class="col-md-6">
-			<h2>Top Clients</h2>
-			<f:if condition="{topClients}">
+		<h2>Active Sessions</h2>
+		<p class="text-muted">
+			<f:if condition="{filters.includeHistory}">
 				<f:then>
-					<table class="table table-striped table-hover">
-						<thead>
-						<tr>
-							<th>Subject</th>
-							<th>API</th>
-							<th>Hits</th>
-							<th>Limit</th>
-							<th>Remaining</th>
-						</tr>
-						</thead>
-						<tbody>
-						<f:for each="{topClients}" as="counter">
-							<tr>
-								<td>{counter.subject}</td>
-								<td>{counter.apiId}</td>
-								<td>{counter.hits}</td>
-								<td>{counter.effectiveLimit}</td>
-								<td>{counter.remaining}</td>
-							</tr>
-						</f:for>
-						</tbody>
-					</table>
+					Showing active sessions plus entries expired in the last 24 hours. Sorted by remaining quota ascending.
 				</f:then>
 				<f:else>
-					<p>No active counters.</p>
+					Showing active sessions only. Sorted by remaining quota ascending.
 				</f:else>
 			</f:if>
-		</div>
-		<div class="col-md-6">
-			<h2>Window Summary</h2>
-			<f:if condition="{windowSummary}">
-				<f:then>
-					<table class="table table-striped table-hover">
-						<thead>
-						<tr>
-							<th>Window Start</th>
-							<th>Reset</th>
-							<th>Entries</th>
-							<th>Active</th>
-							<th>Total Hits</th>
+		</p>
+		<f:if condition="{counters}">
+			<f:then>
+				<table class="table table-striped table-hover">
+					<thead>
+					<tr>
+						<th>API</th>
+						<th>Tenant</th>
+						<th>Subject</th>
+						<th>Subject Type</th>
+						<th>Hits</th>
+						<th>Limit</th>
+						<th>Remaining</th>
+						<th>Window Start</th>
+						<th>Reset</th>
+						<th>Status</th>
+					</tr>
+					</thead>
+					<tbody>
+					<f:for each="{counters}" as="counter">
+						<tr class="{f:if(condition: counter.isExpired, then: 'text-muted')}">
+							<td><strong>{counter.apiId}</strong></td>
+							<td>{counter.tenantId}</td>
+							<td>{counter.subject}</td>
+							<td>{counter.subjectType}</td>
+							<td>{counter.hits}</td>
+							<td>{counter.effectiveLimit}</td>
+							<td>{counter.remaining}</td>
+							<td>{f:format.date(date: counter.windowStart, format: 'Y-m-d H:i:s')}</td>
+							<td>{f:format.date(date: counter.expiresAt, format: 'Y-m-d H:i:s')}</td>
+							<td>
+								<f:if condition="{counter.isExpired}">
+									<f:then><span class="badge badge-secondary">Expired</span></f:then>
+									<f:else><span class="badge badge-success">Active</span></f:else>
+								</f:if>
+							</td>
 						</tr>
-						</thead>
-						<tbody>
-						<f:for each="{windowSummary}" as="window">
+					</f:for>
+					</tbody>
+				</table>
+
+				<div class="apicore-pagination">
+					<div class="apicore-pagination-label">
+						Showing {pagination.fromItem}-{pagination.toItem} of {pagination.totalItems} sessions.
+						Page {pagination.currentPage}/{pagination.totalPages}.
+					</div>
+					<f:if condition="{pagination.hasMultiplePages}">
+						<div class="apicore-pagination-actions">
+							<f:if condition="{pagination.hasPrevious}">
+								<f:form action="rateLimits" method="POST" class="d-inline-block">
+									<f:form.hidden name="filters[apiId]" value="{filters.apiId}"/>
+									<f:form.hidden name="filters[tenantId]" value="{filters.tenantId}"/>
+									<f:form.hidden name="filters[subjectType]" value="{filters.subjectType}"/>
+									<f:form.hidden name="filters[includeHistory]" value="{f:if(condition: filters.includeHistory, then: '1', else: '0')}"/>
+									<f:form.hidden name="filters[perPage]" value="{filters.perPage}"/>
+									<f:form.hidden name="filters[page]" value="{pagination.previousPage}"/>
+									<f:form.submit value="Previous" class="btn btn-default btn-sm"/>
+								</f:form>
+							</f:if>
+							<f:if condition="{pagination.hasNext}">
+								<f:form action="rateLimits" method="POST" class="d-inline-block">
+									<f:form.hidden name="filters[apiId]" value="{filters.apiId}"/>
+									<f:form.hidden name="filters[tenantId]" value="{filters.tenantId}"/>
+									<f:form.hidden name="filters[subjectType]" value="{filters.subjectType}"/>
+									<f:form.hidden name="filters[includeHistory]" value="{f:if(condition: filters.includeHistory, then: '1', else: '0')}"/>
+									<f:form.hidden name="filters[perPage]" value="{filters.perPage}"/>
+									<f:form.hidden name="filters[page]" value="{pagination.nextPage}"/>
+									<f:form.submit value="Next" class="btn btn-default btn-sm"/>
+								</f:form>
+							</f:if>
+						</div>
+					</f:if>
+				</div>
+			</f:then>
+			<f:else>
+				<f:if condition="{filters.includeHistory}">
+					<f:then>
+						<p>No active or recent sessions recorded.</p>
+					</f:then>
+					<f:else>
+						<p>No active sessions recorded.</p>
+					</f:else>
+				</f:if>
+			</f:else>
+		</f:if>
+
+		<div class="row">
+			<div class="col-md-6">
+				<h2>Top Clients</h2>
+				<f:if condition="{topClients}">
+					<f:then>
+						<table class="table table-striped table-hover">
+							<thead>
 							<tr>
-								<td>{f:format.date(date: window.windowStart, format: 'Y-m-d H:i:s')}</td>
-								<td>{f:format.date(date: window.expiresAt, format: 'Y-m-d H:i:s')}</td>
-								<td>{window.entries}</td>
-								<td>{window.activeEntries}</td>
-								<td>{window.totalHits}</td>
+								<th>Subject</th>
+								<th>API</th>
+								<th>Hits</th>
+								<th>Limit</th>
+								<th>Remaining</th>
 							</tr>
-						</f:for>
-						</tbody>
-					</table>
-				</f:then>
-				<f:else>
-					<p>No window data available.</p>
-				</f:else>
-			</f:if>
+							</thead>
+							<tbody>
+							<f:for each="{topClients}" as="counter">
+								<tr>
+									<td>{counter.subject}</td>
+									<td>{counter.apiId}</td>
+									<td>{counter.hits}</td>
+									<td>{counter.effectiveLimit}</td>
+									<td>{counter.remaining}</td>
+								</tr>
+							</f:for>
+							</tbody>
+						</table>
+					</f:then>
+					<f:else>
+						<p>No matching client data.</p>
+					</f:else>
+				</f:if>
+			</div>
+			<div class="col-md-6">
+				<h2>Window Summary</h2>
+				<f:if condition="{windowSummary}">
+					<f:then>
+						<table class="table table-striped table-hover">
+							<thead>
+							<tr>
+								<th>Window Start</th>
+								<th>Reset</th>
+								<th>Entries</th>
+								<th>Active</th>
+								<th>Total Hits</th>
+							</tr>
+							</thead>
+							<tbody>
+							<f:for each="{windowSummary}" as="window">
+								<tr>
+									<td>{f:format.date(date: window.windowStart, format: 'Y-m-d H:i:s')}</td>
+									<td>{f:format.date(date: window.expiresAt, format: 'Y-m-d H:i:s')}</td>
+									<td>{window.entries}</td>
+									<td>{window.activeEntries}</td>
+									<td>{window.totalHits}</td>
+								</tr>
+							</f:for>
+							</tbody>
+						</table>
+					</f:then>
+					<f:else>
+						<p>No window data available.</p>
+					</f:else>
+				</f:if>
+			</div>
 		</div>
 	</div>
 </f:section>

@@ -4,83 +4,86 @@
 	<h1>Logs</h1>
 	<p>Visualization of API request logs from the sg_apicore log file.</p>
 
-	<f:if condition="!{loggingEnabled}">
-		<div class="alert alert-warning">
-			<strong>Logging is disabled.</strong> Enable it via extension configuration to populate the dashboard.
-		</div>
-	</f:if>
+	<div class="apicore-logs-view">
 
-	<f:if condition="{errorMessage}">
-		<div class="alert alert-danger">
-			<strong>Log file error:</strong> {errorMessage}
-		</div>
-	</f:if>
+		<f:if condition="!{loggingEnabled}">
+			<div class="alert alert-warning">
+				<strong>Logging is disabled.</strong> Enable it via extension configuration to populate the dashboard.
+			</div>
+		</f:if>
 
-	<div class="card mb-3">
-		<div class="card-header">Filters</div>
-		<div class="card-body">
-			<f:form action="logs" name="filters" object="{filters}" method="POST" class="form-inline">
-				<label class="mr-2">Hours</label>
-				<f:form.select name="filters[hours]"
-							   options="{1: '1', 6: '6', 12: '12', 24: '24', 48: '48', 72: '72', 168: '168'}"
-							   class="form-control mr-3" value="{filters.hours}"/>
-				<label class="mr-2">Max lines</label>
-				<f:form.select name="filters[maxLines]"
-							   options="{1000: '1000', 2500: '2500', 5000: '5000', 10000: '10000', 20000: '20000'}"
-							   class="form-control mr-3" value="{filters.maxLines}"/>
-				<label class="mr-2">Errors</label>
-				<f:form.select name="filters[includeErrors]"
-							   options="{1: 'Include error entries', 0: 'Requests only'}"
-							   class="form-control mr-3" value="{filters.includeErrors}"/>
-				<f:form.submit value="Apply" class="btn btn-primary"/>
-			</f:form>
-		</div>
-	</div>
+		<f:if condition="{errorMessage}">
+			<div class="alert alert-danger">
+				<strong>Log file error:</strong> {errorMessage}
+			</div>
+		</f:if>
 
-	<div class="row mb-4">
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">Requests</div>
-				<div class="card-body">
-					<strong>{summary.totalRequests}</strong>
-					<div class="text-muted">Last {filters.hours} hours</div>
+		<div class="card mb-3">
+			<div class="card-header">Filters</div>
+			<div class="card-body">
+				<f:form action="logs" name="filters" object="{filters}" method="POST" class="apicore-filter-form">
+					<div class="apicore-filter-item">
+						<label for="logs-hours">Hours</label>
+						<f:form.select id="logs-hours" name="filters[hours]"
+									   options="{1: '1', 6: '6', 12: '12', 24: '24', 48: '48', 72: '72', 168: '168'}"
+									   class="form-control" value="{filters.hours}"/>
+					</div>
+					<div class="apicore-filter-item">
+						<label for="logs-max-lines">Max lines</label>
+						<f:form.select id="logs-max-lines" name="filters[maxLines]"
+									   options="{1000: '1000', 2500: '2500', 5000: '5000', 10000: '10000', 20000: '20000'}"
+									   class="form-control" value="{filters.maxLines}"/>
+					</div>
+					<div class="apicore-filter-item">
+						<label for="logs-errors">Errors</label>
+						<f:form.select id="logs-errors" name="filters[includeErrors]"
+									   options="{1: 'Include error entries', 0: 'Requests only'}"
+									   class="form-control" value="{filters.includeErrors}"/>
+					</div>
+					<div class="apicore-filter-actions">
+						<f:form.submit value="Apply" class="btn btn-primary"/>
+					</div>
+				</f:form>
+			</div>
+		</div>
+
+		<div class="card mb-3">
+			<div class="card-header">Overview</div>
+			<div class="card-body">
+				<div class="apicore-kpi-grid">
+					<div class="apicore-kpi-item">
+						<div class="apicore-kpi-label">Requests</div>
+						<div class="apicore-kpi-value">{summary.totalRequests}</div>
+						<div class="text-muted">Last {filters.hours} hours</div>
+					</div>
+					<div class="apicore-kpi-item">
+						<div class="apicore-kpi-label">Errors</div>
+						<div class="apicore-kpi-value">{summary.errorRequests}</div>
+						<div class="text-muted">Status 4xx/5xx</div>
+					</div>
+					<div class="apicore-kpi-item">
+						<div class="apicore-kpi-label">Avg Duration</div>
+						<div class="apicore-kpi-value">
+							<f:if condition="{summary.avgDuration}">
+								<f:then>{summary.avgDuration -> f:format.number(decimals: 2)} ms</f:then>
+								<f:else>-</f:else>
+							</f:if>
+						</div>
+						<div class="text-muted">Average</div>
+					</div>
+					<div class="apicore-kpi-item">
+						<div class="apicore-kpi-label">P95 Duration</div>
+						<div class="apicore-kpi-value">
+							<f:if condition="{summary.p95Duration}">
+								<f:then>{summary.p95Duration -> f:format.number(decimals: 2)} ms</f:then>
+								<f:else>-</f:else>
+							</f:if>
+						</div>
+						<div class="text-muted">95th percentile</div>
+					</div>
 				</div>
 			</div>
 		</div>
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">Errors</div>
-				<div class="card-body">
-					<strong>{summary.errorRequests}</strong>
-					<div class="text-muted">Status 4xx/5xx</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">Avg Duration</div>
-				<div class="card-body">
-					<f:if condition="{summary.avgDuration}">
-						<f:then><strong>{summary.avgDuration -> f:format.number(decimals: 2)} ms</strong></f:then>
-						<f:else>-</f:else>
-					</f:if>
-					<div class="text-muted">Average</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="card">
-				<div class="card-header">P95 Duration</div>
-				<div class="card-body">
-					<f:if condition="{summary.p95Duration}">
-						<f:then><strong>{summary.p95Duration -> f:format.number(decimals: 2)} ms</strong></f:then>
-						<f:else>-</f:else>
-					</f:if>
-					<div class="text-muted">95th percentile</div>
-				</div>
-			</div>
-		</div>
-	</div>
 
 	<h2>Requests per Hour</h2>
 	<f:if condition="{timeBuckets}">
@@ -309,20 +312,21 @@
 		</f:else>
 	</f:if>
 
-	<div class="card mt-4">
-		<div class="card-header">Log File Info</div>
-		<div class="card-body">
-			<div><strong>Path:</strong> {logFilePath}</div>
-			<div><strong>Readable:</strong> {f:if(condition: logFileReadable, then: 'Yes', else: 'No')}</div>
-			<div><strong>Size:</strong> {logFileSize} bytes</div>
-			<div><strong>Lines processed:</strong> {processedLines}</div>
-			<div><strong>Cache hit:</strong> {f:if(condition: metrics.cacheHit, then: 'Yes', else: 'No')}</div>
-			<f:if condition="{metrics.cacheAgeSeconds}">
-				<div><strong>Cache age:</strong> {metrics.cacheAgeSeconds} s</div>
-			</f:if>
-			<f:if condition="{metrics.parseDurationMs}">
-				<div><strong>Parse time:</strong> {metrics.parseDurationMs -> f:format.number(decimals: 2)} ms</div>
-			</f:if>
+		<div class="card mt-4">
+			<div class="card-header">Log File Info</div>
+			<div class="card-body apicore-info-grid">
+				<div><strong>Path:</strong> {logFilePath}</div>
+				<div><strong>Readable:</strong> {f:if(condition: logFileReadable, then: 'Yes', else: 'No')}</div>
+				<div><strong>Size:</strong> {logFileSize} bytes</div>
+				<div><strong>Lines processed:</strong> {processedLines}</div>
+				<div><strong>Cache hit:</strong> {f:if(condition: metrics.cacheHit, then: 'Yes', else: 'No')}</div>
+				<f:if condition="{metrics.cacheAgeSeconds}">
+					<div><strong>Cache age:</strong> {metrics.cacheAgeSeconds} s</div>
+				</f:if>
+				<f:if condition="{metrics.parseDurationMs}">
+					<div><strong>Parse time:</strong> {metrics.parseDurationMs -> f:format.number(decimals: 2)} ms</div>
+				</f:if>
+			</div>
 		</div>
 	</div>
 </f:section>
