@@ -65,22 +65,6 @@ class LogService implements SingletonInterface {
 	}
 
 	/**
-	 * Internal log method
-	 *
-	 * @param string $message
-	 * @param array $context
-	 * @param string $level
-	 * @return void
-	 */
-	protected function log(string $message, array $context = [], string $level = 'info'): void {
-		if (!$this->extensionConfiguration->isLoggingEnabled()) {
-			return;
-		}
-
-		$this->logger->log($level, $message, $context);
-	}
-
-	/**
 	 * Logs an exception
 	 *
 	 * @param \Throwable $exception
@@ -162,10 +146,7 @@ class LogService implements SingletonInterface {
 			} else {
 				$rawBody = (string) $request->getBody();
 				if ($rawBody !== '') {
-					$context['requestBody'] = $this->truncateLogData(
-						$this->redact($rawBody, $redactKeys),
-						$maxBodyLength
-					);
+					$context['requestBody'] = $this->truncateLogData($this->redact($rawBody, $redactKeys), $maxBodyLength);
 				}
 			}
 		}
@@ -173,10 +154,7 @@ class LogService implements SingletonInterface {
 		if ($this->extensionConfiguration->isLogResponseEnabled()) {
 			$responseBody = (string) $response->getBody();
 			if ($responseBody !== '') {
-				$context['responseBody'] = $this->truncateLogData(
-					$this->redact($responseBody, $redactKeys),
-					$maxBodyLength
-				);
+				$context['responseBody'] = $this->truncateLogData($this->redact($responseBody, $redactKeys), $maxBodyLength);
 			}
 		}
 
@@ -245,6 +223,22 @@ class LogService implements SingletonInterface {
 		}
 
 		return $data;
+	}
+
+	/**
+	 * Internal log method
+	 *
+	 * @param string $message
+	 * @param array $context
+	 * @param string $level
+	 * @return void
+	 */
+	protected function log(string $message, array $context = [], string $level = 'info'): void {
+		if (!$this->extensionConfiguration->isLoggingEnabled()) {
+			return;
+		}
+
+		$this->logger->log($level, $message, $context);
 	}
 
 	/**

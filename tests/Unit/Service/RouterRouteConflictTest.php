@@ -44,12 +44,7 @@ class RouterRouteConflictTest extends UnitTestCase {
 		$responseService = $this->createStub(ResponseService::class);
 
 		$this->router = new class([], $this->endpointDiscoveryService, $requestValidator, $responseService) extends Router {
-			public function __construct(
-				$controllers,
-				$endpointDiscoveryService,
-				$requestValidator,
-				$responseService
-			) {
+			public function __construct($controllers, $endpointDiscoveryService, $requestValidator, $responseService) {
 				parent::__construct(
 					$controllers,
 					$endpointDiscoveryService,

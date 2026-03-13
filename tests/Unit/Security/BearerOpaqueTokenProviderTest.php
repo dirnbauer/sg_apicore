@@ -25,12 +25,6 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for BearerOpaqueTokenProvider
  */
 class BearerOpaqueTokenProviderTest extends UnitTestCase {
-	protected function createExtensionConfiguration(): ExtensionConfiguration {
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
-		$extensionConfiguration->method('isActivateLegacySupport')->willReturn(FALSE);
-		return $extensionConfiguration;
-	}
-
 	public function testAuthenticateReturnsNullIfNoBearerToken(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('');
@@ -114,10 +108,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
 
-		$tenantContext = new \SGalinski\SgApiCore\Context\TenantContext(
-			tenantId: 'tenant-1',
-			siteRootPageId: 456
-		);
+		$tenantContext = new \SGalinski\SgApiCore\Context\TenantContext(tenantId: 'tenant-1', siteRootPageId: 456);
 		$request->method('getAttribute')->with('api.tenant')->willReturn($tenantContext);
 
 		$tokenRecord = [
@@ -139,5 +130,10 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
 		$this->assertInstanceOf(AuthContext::class, $result);
+	}
+	protected function createExtensionConfiguration(): ExtensionConfiguration {
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isActivateLegacySupport')->willReturn(FALSE);
+		return $extensionConfiguration;
 	}
 }

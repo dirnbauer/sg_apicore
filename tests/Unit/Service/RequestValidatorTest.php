@@ -38,9 +38,7 @@ class RequestValidatorTest extends UnitTestCase {
 
 		$endpoint = [
 			'pathParams' => [],
-			'queryParams' => [
-				new ApiQueryParam(name: 'test', required: TRUE)
-			],
+			'queryParams' => [new ApiQueryParam(name: 'test', required: TRUE)],
 			'bodyParams' => []
 		];
 
@@ -60,10 +58,7 @@ class RequestValidatorTest extends UnitTestCase {
 
 		$endpoint = [
 			'pathParams' => [],
-			'queryParams' => [
-				new ApiQueryParam(name: 'type'),
-				new ApiQueryParam(name: 'extra', requiredIf: 'type=special')
-			],
+			'queryParams' => [new ApiQueryParam(name: 'type'), new ApiQueryParam(name: 'extra', requiredIf: 'type=special')],
 			'bodyParams' => []
 		];
 
@@ -88,9 +83,7 @@ class RequestValidatorTest extends UnitTestCase {
 
 		$endpoint = [
 			'pathParams' => [],
-			'queryParams' => [
-				new ApiQueryParam(name: 'age', type: 'integer', min: 18, max: 99)
-			],
+			'queryParams' => [new ApiQueryParam(name: 'age', type: 'integer', min: 18, max: 99)],
 			'bodyParams' => []
 		];
 
@@ -114,9 +107,7 @@ class RequestValidatorTest extends UnitTestCase {
 		$endpoint = [
 			'pathParams' => [],
 			'queryParams' => [],
-			'bodyParams' => [
-				new ApiBodyParam(name: 'username', type: 'string', minLength: 5, maxLength: 10)
-			]
+			'bodyParams' => [new ApiBodyParam(name: 'username', type: 'string', minLength: 5, maxLength: 10)]
 		];
 
 		$errors = $this->validator->validate($request, $endpoint, []);
@@ -138,9 +129,7 @@ class RequestValidatorTest extends UnitTestCase {
 
 		$endpoint = [
 			'pathParams' => [],
-			'queryParams' => [
-				new ApiQueryParam(name: 'code', pattern: '/^[A-Z]{3}$/')
-			],
+			'queryParams' => [new ApiQueryParam(name: 'code', pattern: '/^[A-Z]{3}$/')],
 			'bodyParams' => []
 		];
 
@@ -158,9 +147,7 @@ class RequestValidatorTest extends UnitTestCase {
 
 		$endpoint = [
 			'pathParams' => [],
-			'queryParams' => [
-				new ApiQueryParam(name: 'active', type: 'boolean')
-			],
+			'queryParams' => [new ApiQueryParam(name: 'active', type: 'boolean')],
 			'bodyParams' => []
 		];
 
@@ -183,9 +170,7 @@ class RequestValidatorTest extends UnitTestCase {
 
 		$endpoint = [
 			'pathParams' => [],
-			'queryParams' => [
-				new ApiQueryParam(name: 'price', type: 'float')
-			],
+			'queryParams' => [new ApiQueryParam(name: 'price', type: 'float')],
 			'bodyParams' => []
 		];
 

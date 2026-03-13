@@ -37,43 +37,6 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for Router
  */
 class RouterTest extends UnitTestCase {
-	/**
-	 * Helper to create a router with mock controllers
-	 *
-	 * @param array $controllers
-	 * @return Router
-	 */
-	protected function createRouter(array $controllers = []): Router {
-		$instances = [];
-		foreach ($controllers as $controllerClass) {
-			$instances[] = new $controllerClass();
-		}
-		$controllersIterator = new \ArrayIterator($instances);
-		$resourceRegistry = $this->createStub(ResourceRegistry::class);
-		$resourceRegistry->method('getResources')->willReturn([]);
-
-		$cache = $this->createStub(FrontendInterface::class);
-		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
-		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		$apiRegistry = $this->createStub(ApiRegistry::class);
-
-		$discoveryService = new EndpointDiscoveryService(
-			$controllersIterator,
-			$resourceRegistry,
-			$cacheManager,
-			$languageServiceFactory,
-			$apiRegistry
-		);
-		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
-		$responseService = $this->createStub(ResponseService::class);
-		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {
-			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
-		});
-		return new Router($controllersIterator, $discoveryService, $validator, $responseService);
-	}
-
 	public function testDispatchMatchesRouteAndCallsController(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
@@ -259,6 +222,42 @@ class RouterTest extends UnitTestCase {
 		$requestWithUserAuth = $request->withAttribute('api.auth', $authContextWithUser);
 		$response = $router->dispatch($requestWithUserAuth, 'public', '1', '/user-required', 'user');
 		$this->assertEquals(200, $response->getStatusCode());
+	}
+	/**
+	 * Helper to create a router with mock controllers
+	 *
+	 * @param array $controllers
+	 * @return Router
+	 */
+	protected function createRouter(array $controllers = []): Router {
+		$instances = [];
+		foreach ($controllers as $controllerClass) {
+			$instances[] = new $controllerClass();
+		}
+		$controllersIterator = new \ArrayIterator($instances);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+
+		$discoveryService = new EndpointDiscoveryService(
+			$controllersIterator,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
+		$responseService = $this->createStub(ResponseService::class);
+		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {
+			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
+		});
+		return new Router($controllersIterator, $discoveryService, $validator, $responseService);
 	}
 }
 

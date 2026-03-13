@@ -59,20 +59,6 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
 	}
 
-	protected function createMiddlewareWithCache(FrontendInterface $cache): ApiCacheMiddleware {
-		$cacheManager = $this->createStub(CacheManager::class);
-		$cacheManager->method('getCache')->willReturn($cache);
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
-		$extensionConfiguration->method('isCacheEnabled')->willReturn(TRUE);
-
-		return new ApiCacheMiddleware(
-			$this->discoveryService,
-			$this->pathAnalysisService,
-			$cacheManager,
-			$extensionConfiguration
-		);
-	}
-
 	/**
 	 * @test
 	 */
@@ -208,5 +194,19 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$handler->expects($this->once())->method('handle')->willReturn($this->createStub(ResponseInterface::class));
 
 		$middleware->process($request, $handler);
+	}
+
+	protected function createMiddlewareWithCache(FrontendInterface $cache): ApiCacheMiddleware {
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->willReturn($cache);
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isCacheEnabled')->willReturn(TRUE);
+
+		return new ApiCacheMiddleware(
+			$this->discoveryService,
+			$this->pathAnalysisService,
+			$cacheManager,
+			$extensionConfiguration
+		);
 	}
 }

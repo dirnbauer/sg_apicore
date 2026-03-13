@@ -27,10 +27,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 class SiteTenantResolverTest extends UnitTestCase {
 	public function testResolveReturnsFailureWhenSiteMissing(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
-		$request->method('getAttribute')->willReturnMap([
-			['site', NULL, NULL],
-			['language', NULL, NULL],
-		]);
+		$request->method('getAttribute')->willReturnMap([['site', NULL, NULL], ['language', NULL, NULL], ]);
 
 		$config = $this->createStub(ExtensionConfiguration::class);
 		$resolver = new SiteTenantResolver($config);
@@ -46,10 +43,7 @@ class SiteTenantResolverTest extends UnitTestCase {
 		$site->method('getIdentifier')->willReturn('main-site');
 		$site->method('getBase')->willReturn(new Uri('https://example.org/'));
 
-		$request->method('getAttribute')->willReturnMap([
-			['site', NULL, $site],
-			['language', NULL, NULL],
-		]);
+		$request->method('getAttribute')->willReturnMap([['site', NULL, $site], ['language', NULL, NULL], ]);
 
 		$config = $this->createStub(ExtensionConfiguration::class);
 		$config->method('getSiteTenantIdSource')->willReturn('identifier');
@@ -68,10 +62,7 @@ class SiteTenantResolverTest extends UnitTestCase {
 		$site->method('getIdentifier')->willReturn('main-site');
 		$site->method('getBase')->willReturn(new Uri('https://tenant-a.org/'));
 
-		$request->method('getAttribute')->willReturnMap([
-			['site', NULL, $site],
-			['language', NULL, NULL],
-		]);
+		$request->method('getAttribute')->willReturnMap([['site', NULL, $site], ['language', NULL, NULL], ]);
 
 		$config = $this->createStub(ExtensionConfiguration::class);
 		$config->method('getSiteTenantIdSource')->willReturn('baseHost');
@@ -90,10 +81,7 @@ class SiteTenantResolverTest extends UnitTestCase {
 		$site->method('getRootPageId')->willReturn(123);
 		$site->method('getBase')->willReturn(new Uri('https://example.org/'));
 
-		$request->method('getAttribute')->willReturnMap([
-			['site', NULL, $site],
-			['language', NULL, NULL],
-		]);
+		$request->method('getAttribute')->willReturnMap([['site', NULL, $site], ['language', NULL, NULL], ]);
 
 		$config = $this->createStub(ExtensionConfiguration::class);
 		$config->method('getSiteTenantIdSource')->willReturn('rootPageId');

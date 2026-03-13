@@ -145,11 +145,7 @@ class RequestValidator implements SingletonInterface {
 	 * @param bool $required
 	 * @return array|null
 	 */
-	protected function validateValue(
-		object $param,
-		mixed $value,
-		bool $required
-	): ?array {
+	protected function validateValue(object $param, mixed $value, bool $required): ?array {
 		$name = $param->name;
 		$type = $param->type;
 		$pattern = $param->pattern;

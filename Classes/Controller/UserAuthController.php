@@ -95,8 +95,19 @@ class UserAuthController {
 	 * @throws InvalidPasswordHashException
 	 */
 	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'user')]
-	#[ApiEndpoint(summary: 'User login', description: 'Authenticates a user with username and password and returns access and refresh tokens.', tags: ['Authentication'])]
-	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user', example: 'jane.doe@example.com')]
+	#[ApiEndpoint(
+		summary: 'User login',
+		description: 'Authenticates a user with username and password and returns access and refresh tokens.',
+		tags: [
+		'Authentication'
+	
+	])]
+	#[ApiBodyParam(
+		name: 'username',
+		type: 'string',
+		description: 'The username of the user',
+		example: 'jane.doe@example.com'
+	)]
 	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user', example: 'password123')]
 	#[ApiResponse(
 		status: 200,
@@ -125,7 +136,13 @@ class UserAuthController {
 	 * @throws JsonException
 	 */
 	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: 'user')]
-	#[ApiEndpoint(summary: 'Legacy User login', description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.', tags: ['Legacy'])]
+	#[ApiEndpoint(
+		summary: 'Legacy User login',
+		description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.',
+		tags: [
+		'Legacy'
+	
+	])]
 	#[ApiBodyParam(name: 'username', type: 'string', description: 'The username of the user')]
 	#[ApiBodyParam(name: 'password', type: 'string', description: 'The password of the user')]
 	#[ApiResponse(status: 200, description: 'Login successful, returns bearerToken')]
@@ -149,6 +166,85 @@ class UserAuthController {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Refreshes an access token using a refresh token
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws JsonException
+	 * @throws RandomException
+	 */
+	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: 'user')]
+	#[ApiEndpoint(
+		summary: 'Refresh access token',
+		description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).',
+		tags: [
+		'Authentication'
+	
+	])]
+	#[ApiBodyParam(
+		name: 'refresh_token',
+		type: 'string',
+		description: 'The refresh token obtained during login',
+		example: '7f8e9a0b1c2d3e4f5g6h7i8j9k0l1m2n...'
+	)]
+	#[ApiResponse(
+		status: 200,
+		description: 'Success, returns new access and refresh tokens',
+		example: [
+			'access_token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+			'refresh_token' => 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6...',
+			'token_type' => 'Bearer',
+			'expires_in' => 3600
+		]
+	)]
+	#[ApiResponse(status: 400, description: 'Missing refresh_token parameter')]
+	#[ApiResponse(status: 401, description: 'Invalid or expired refresh token')]
+	public function refresh(ServerRequestInterface $request): ResponseInterface {
+		$params = $request->getParsedBody();
+		$refreshToken = $params['refresh_token'] ?? '';
+
+		if ($refreshToken === '') {
+			return $this->responseService->createErrorResponse('Bad Request', 'Missing refresh_token parameter.', 400);
+		}
+
+		/** @var TenantContext|null $tenantContext */
+		$tenantContext = $request->getAttribute('api.tenant');
+		$apiId = (string) $request->getAttribute('api.id');
+		$version = (string) ($request->getAttribute('api.version') ?? '1');
+
+		try {
+			$tokens = $this->userAuthService->refreshTokens($refreshToken, $apiId, $version, $tenantContext);
+		} catch (\RuntimeException $e) {
+			return $this->responseService->createErrorResponse('Unauthorized', $e->getMessage(), 401);
+		}
+
+		return $this->responseService->createSuccessResponse($tokens);
+	}
+
+	/**
+	 * Logs out the user by revoking the current access token.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws Exception
+	 */
+	#[ApiRoute(path: '/auth/logout', methods: ['POST'], authMode: 'user')]
+	#[ApiEndpoint(summary: 'Logout', description: 'Revokes the current Access/Refresh token (User Auth).', tags: [
+		'Authentication'
+	])]
+	#[ApiResponse(status: 200, description: 'Success response')]
+	#[RequireUser]
+	public function logout(ServerRequestInterface $request): ResponseInterface {
+		$authorizationHeader = $request->getHeaderLine('Authorization');
+		if (str_starts_with($authorizationHeader, 'Bearer ')) {
+			$token = substr($authorizationHeader, 7);
+			$this->userAuthService->revokeUserToken($token);
+		}
+
+		return $this->responseService->createSuccessResponse(['message' => 'Logged out successfully']);
 	}
 
 	/**
@@ -185,84 +281,8 @@ class UserAuthController {
 			return $this->responseService->createErrorResponse('Unauthorized', 'Invalid credentials.', 401);
 		}
 
-		$tokens = $this->userAuthService->generateTokensForUserWithScopeHandling(
-			$user,
-			$request,
-			$apiId,
-			$version
-		);
+		$tokens = $this->userAuthService->generateTokensForUserWithScopeHandling($user, $request, $apiId, $version);
 
 		return $this->responseService->createSuccessResponse($tokens);
-	}
-
-	/**
-	 * Refreshes an access token using a refresh token
-	 *
-	 * @param ServerRequestInterface $request
-	 * @return ResponseInterface
-	 * @throws JsonException
-	 * @throws RandomException
-	 */
-	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: 'user')]
-	#[ApiEndpoint(summary: 'Refresh access token', description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).', tags: ['Authentication'])]
-	#[ApiBodyParam(name: 'refresh_token', type: 'string', description: 'The refresh token obtained during login', example: '7f8e9a0b1c2d3e4f5g6h7i8j9k0l1m2n...')]
-	#[ApiResponse(
-		status: 200,
-		description: 'Success, returns new access and refresh tokens',
-		example: [
-			'access_token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-			'refresh_token' => 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6...',
-			'token_type' => 'Bearer',
-			'expires_in' => 3600
-		]
-	)]
-	#[ApiResponse(status: 400, description: 'Missing refresh_token parameter')]
-	#[ApiResponse(status: 401, description: 'Invalid or expired refresh token')]
-	public function refresh(ServerRequestInterface $request): ResponseInterface {
-		$params = $request->getParsedBody();
-		$refreshToken = $params['refresh_token'] ?? '';
-
-		if ($refreshToken === '') {
-			return $this->responseService->createErrorResponse('Bad Request', 'Missing refresh_token parameter.', 400);
-		}
-
-		/** @var TenantContext|null $tenantContext */
-		$tenantContext = $request->getAttribute('api.tenant');
-		$apiId = (string) $request->getAttribute('api.id');
-		$version = (string) ($request->getAttribute('api.version') ?? '1');
-
-		try {
-			$tokens = $this->userAuthService->refreshTokens(
-				$refreshToken,
-				$apiId,
-				$version,
-				$tenantContext
-			);
-		} catch (\RuntimeException $e) {
-			return $this->responseService->createErrorResponse('Unauthorized', $e->getMessage(), 401);
-		}
-
-		return $this->responseService->createSuccessResponse($tokens);
-	}
-
-	/**
-	 * Logs out the user by revoking the current access token.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @return ResponseInterface
-	 * @throws Exception
-	 */
-	#[ApiRoute(path: '/auth/logout', methods: ['POST'], authMode: 'user')]
-	#[ApiEndpoint(summary: 'Logout', description: 'Revokes the current Access/Refresh token (User Auth).', tags: ['Authentication'])]
-	#[ApiResponse(status: 200, description: 'Success response')]
-	#[RequireUser]
-	public function logout(ServerRequestInterface $request): ResponseInterface {
-		$authorizationHeader = $request->getHeaderLine('Authorization');
-		if (str_starts_with($authorizationHeader, 'Bearer ')) {
-			$token = substr($authorizationHeader, 7);
-			$this->userAuthService->revokeUserToken($token);
-		}
-
-		return $this->responseService->createSuccessResponse(['message' => 'Logged out successfully']);
 	}
 }

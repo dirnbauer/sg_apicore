@@ -139,13 +139,7 @@ class UserAuthControllerTest extends UnitTestCase {
 		// Verify that generateTokensForUser is called with the inherited scopes
 		$this->userAuthService->expects($this->once())
 			->method('generateTokensForUser')
-			->with(
-				$userRecord,
-				'public',
-				'1',
-				$tenantContext,
-				['user', 'partner:read']
-			)
+			->with($userRecord, 'public', '1', $tenantContext, ['user', 'partner:read'])
 			->willReturn(['access_token' => 'new-token']);
 
 		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));

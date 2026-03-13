@@ -314,11 +314,6 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 			$tags[] = 'tenant_' . $tenantId;
 		}
 
-		$this->cache->set(
-			$cacheKey,
-			$data,
-			$tags,
-			$cacheAttr->lifetime > 0 ? $cacheAttr->lifetime : NULL
-		);
+		$this->cache->set($cacheKey, $data, $tags, $cacheAttr->lifetime > 0 ? $cacheAttr->lifetime : NULL);
 	}
 }

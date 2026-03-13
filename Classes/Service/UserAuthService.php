@@ -100,10 +100,7 @@ class UserAuthService implements SingletonInterface {
 
 		if (count($storagePids) > 0) {
 			$queryBuilder->andWhere(
-				$queryBuilder->expr()->in(
-					'pid',
-					$queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY)
-				)
+				$queryBuilder->expr()->in('pid', $queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY))
 			);
 		}
 
@@ -145,13 +142,7 @@ class UserAuthService implements SingletonInterface {
 					$hash = hash('sha256', $bearer);
 					$tenantId = $tenantContext?->getTenantId() ?? '';
 					$siteRootPageId = $tenantContext?->getSiteRootPageId();
-					$tokenRecord = $this->tokenRepository->findByHashApiAndTenant(
-						$hash,
-						$apiId,
-						$tenantId,
-						$siteRootPageId,
-						TRUE
-					);
+					$tokenRecord = $this->tokenRepository->findByHashApiAndTenant($hash, $apiId, $tenantId, $siteRootPageId, TRUE);
 					if ($tokenRecord !== NULL) {
 						$expired = ((int) ($tokenRecord['expires_at'] ?? 0) > 0) &&
 							((int) $tokenRecord['expires_at'] < time());
@@ -159,12 +150,7 @@ class UserAuthService implements SingletonInterface {
 							$inherited = [];
 							if (!empty($tokenRecord['scopes'])) {
 								try {
-									$inherited = json_decode(
-										(string) $tokenRecord['scopes'],
-										TRUE,
-										512,
-										JSON_THROW_ON_ERROR
-									) ?: [];
+									$inherited = json_decode((string) $tokenRecord['scopes'], TRUE, 512, JSON_THROW_ON_ERROR) ?: [];
 								} catch (\JsonException) {
 									$inherited = [];
 								}
@@ -176,13 +162,7 @@ class UserAuthService implements SingletonInterface {
 			}
 		}
 
-		return $this->generateTokensForUser(
-			$user,
-			$apiId,
-			$version,
-			$tenantContext,
-			$scopes
-		);
+		return $this->generateTokensForUser($user, $apiId, $version, $tenantContext, $scopes);
 	}
 
 	/**
@@ -227,10 +207,7 @@ class UserAuthService implements SingletonInterface {
 		$queryBuilder->update('fe_users')
 			->set('lastlogin', time())
 			->where(
-				$queryBuilder->expr()->eq(
-					'uid',
-					$queryBuilder->createNamedParameter($user['uid'], Connection::PARAM_INT)
-				)
+				$queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($user['uid'], Connection::PARAM_INT))
 			)
 			->executeStatement();
 
@@ -290,13 +267,7 @@ class UserAuthService implements SingletonInterface {
 
 		if ($useJwt) {
 			$jti = $jti ?: 'access-' . $userId . '-' . time();
-			$accessToken = $this->tokenService->generateJwtAccessToken(
-				$userId,
-				$apiId,
-				$tenantId,
-				$scopes,
-				$jti
-			);
+			$accessToken = $this->tokenService->generateJwtAccessToken($userId, $apiId, $tenantId, $scopes, $jti);
 
 			// Also create a database record for the JWT so it can be revoked via jti
 			$this->tokenService->createToken(
@@ -481,11 +452,7 @@ class UserAuthService implements SingletonInterface {
 				if ($accountConfiguration) {
 					$settings = $accountConfiguration->getSettings();
 					if (isset($settings['frontendUserStoragePage']) && (int) $settings['frontendUserStoragePage'] > 0) {
-						$storagePids = GeneralUtility::intExplode(
-							',',
-							(string) $settings['frontendUserStoragePage'],
-							TRUE
-						);
+						$storagePids = GeneralUtility::intExplode(',', (string) $settings['frontendUserStoragePage'], TRUE);
 					}
 				}
 			} catch (\Throwable) {
@@ -498,11 +465,7 @@ class UserAuthService implements SingletonInterface {
 		if ($site) {
 			$siteConfig = $site->getConfiguration();
 			if (isset($siteConfig['apicore']['userStoragePids'])) {
-				$storagePids = GeneralUtility::intExplode(
-					',',
-					(string) $siteConfig['apicore']['userStoragePids'],
-					TRUE
-				);
+				$storagePids = GeneralUtility::intExplode(',', (string) $siteConfig['apicore']['userStoragePids'], TRUE);
 			}
 		}
 

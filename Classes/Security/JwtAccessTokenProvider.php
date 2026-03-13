@@ -39,13 +39,6 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	}
 
 	/**
-	 * @return ExtensionConfiguration
-	 */
-	protected function getExtensionConfiguration(): ExtensionConfiguration {
-		return $this->extensionConfiguration;
-	}
-
-	/**
 	 * Authenticates the request and returns an AuthContext if successful
 	 *
 	 * @param ServerRequestInterface $request
@@ -94,11 +87,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 				// Let's do a more specific check: Does it exist and is it revoked?
 				$connection = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Database\ConnectionPool::class)
 					?->getConnectionForTable('tx_apicore_token');
-				$revokedRecord = $connection->select(
-					['uid'],
-					'tx_apicore_token',
-					['token_hash' => $jti]
-				)->fetchAssociative();
+				$revokedRecord = $connection->select(['uid'], 'tx_apicore_token', ['token_hash' => $jti])->fetchAssociative();
 
 				if ($revokedRecord && $this->isTokenRevoked($revokedRecord)) {
 					return NULL;
@@ -113,6 +102,13 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 			scopes: $payload['scopes'] ?? [],
 			userId: $payload['userId'] ?? NULL
 		);
+	}
+
+	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		return $this->extensionConfiguration;
 	}
 
 	/**

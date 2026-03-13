@@ -45,10 +45,7 @@ class BackendUserProviderTest extends UnitTestCase {
 	public function authenticateReturnsAuthContextIfUserLoggedIn(): void {
 		$context = $this->createMock(Context::class);
 		$userAspect = $this->createMock(UserAspect::class);
-		$userAspect->method('get')->willReturnMap([
-			['isLoggedIn', TRUE],
-			['id', 123]
-		]);
+		$userAspect->method('get')->willReturnMap([['isLoggedIn', TRUE], ['id', 123]]);
 		$context->method('getAspect')->with('backend.user')->willReturn($userAspect);
 		GeneralUtility::setSingletonInstance(Context::class, $context);
 

@@ -88,9 +88,7 @@ return [
 				'renderType' => 'selectSingle',
 				'foreign_table' => 'fe_users',
 				'foreign_table_where' => ' AND {#fe_users}.{#deleted}=0 ORDER BY {#fe_users}.{#username} ASC',
-				'items' => [
-					['LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:label.none', 0],
-				],
+				'items' => [['LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:label.none', 0], ],
 				'default' => 0
 			],
 		],

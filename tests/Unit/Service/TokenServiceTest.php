@@ -72,13 +72,7 @@ class TokenServiceTest extends UnitTestCase {
 
 		$connection->method('lastInsertId')->willReturn('123');
 
-		$result = $this->service->createToken(
-			$token,
-			'test-api',
-			'tenant-1',
-			0,
-			['read']
-		);
+		$result = $this->service->createToken($token, 'test-api', 'tenant-1', 0, ['read']);
 
 		$this->assertEquals(123, $result);
 	}
@@ -98,18 +92,7 @@ class TokenServiceTest extends UnitTestCase {
 				})
 			);
 
-		$this->service->createToken(
-			$jti,
-			'test-api',
-			'tenant-1',
-			0,
-			['read'],
-			NULL,
-			FALSE,
-			NULL,
-			'',
-			TRUE
-		);
+		$this->service->createToken($jti, 'test-api', 'tenant-1', 0, ['read'], NULL, FALSE, NULL, '', TRUE);
 	}
 
 	public function testGenerateJwtAccessTokenCallsJwtService(): void {
