@@ -23,7 +23,6 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
  */
 class RateLimitDashboardService {
 	protected const string TABLE_NAME = 'tx_apicore_rate_limit';
-	protected const int DASHBOARD_LOOKBACK_DAYS = 30;
 
 	public function __construct(
 		protected readonly ExtensionConfiguration $extensionConfiguration,
@@ -127,13 +126,12 @@ class RateLimitDashboardService {
 			}
 		}
 
-		$cutoff = time() - (self::DASHBOARD_LOOKBACK_DAYS * 86400);
-		$rows = $this->fetchRateLimitRows($cutoff);
-
 		$now = time();
+		$rows = $this->fetchRateLimitRows($now);
 		$counters = [];
 		foreach ($rows as $row) {
-			if ((int) $row['expires_at'] < $cutoff) {
+			$expiresAt = (int) $row['expires_at'];
+			if ($expiresAt > 0 && $expiresAt < $now) {
 				continue;
 			}
 
@@ -144,7 +142,6 @@ class RateLimitDashboardService {
 			$effectiveLimit = $limitConfig['effectiveLimit'] ?? $defaultEffectiveLimit;
 
 			$hits = (int) $row['hits'];
-			$expiresAt = (int) $row['expires_at'];
 			$remaining = max(0, $effectiveLimit - $hits);
 
 			$counters[] = [
@@ -167,10 +164,10 @@ class RateLimitDashboardService {
 	}
 
 	/**
-	 * @param int $cutoff
+	 * @param int $minExpiresAt
 	 * @return array<int, array<string, mixed>>
 	 */
-	protected function fetchRateLimitRows(int $cutoff): array {
+	protected function fetchRateLimitRows(int $minExpiresAt): array {
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		return $queryBuilder
@@ -179,7 +176,7 @@ class RateLimitDashboardService {
 			->where(
 				$queryBuilder->expr()->gte(
 					'expires_at',
-					$queryBuilder->createNamedParameter($cutoff, Connection::PARAM_INT)
+					$queryBuilder->createNamedParameter($minExpiresAt, Connection::PARAM_INT)
 				)
 			)
 			->orderBy('hits', 'DESC')

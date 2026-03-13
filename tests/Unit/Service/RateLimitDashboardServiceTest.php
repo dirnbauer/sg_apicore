@@ -25,7 +25,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for RateLimitDashboardService
  */
 class RateLimitDashboardServiceTest extends UnitTestCase {
-	public function testDashboardBoundsApplyCutoff(): void {
+	public function testDashboardShowsOnlyActiveSessions(): void {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
@@ -59,8 +59,7 @@ class RateLimitDashboardServiceTest extends UnitTestCase {
 		$this->assertCount(1, $counters);
 		$this->assertSame('public:tenant-1:ip:127.0.0.2', $counters[0]['identifier']);
 
-		$expectedCutoff = $now - (30 * 86400);
-		$this->assertTrue(abs($service->lastCutoff - $expectedCutoff) < 3);
+		$this->assertTrue(abs($service->lastCutoff - $now) < 3);
 	}
 }
 

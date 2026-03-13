@@ -96,3 +96,6 @@ If the limit is exceeded, the API returns `429 Too Many Requests` with Problem J
 
 Rate limit counters are registered with TYPO3's table garbage collection task and are removed 30 days after
 `expires_at` by default.
+
+The backend module "Rate Limits" focuses on active sessions (`expires_at >= now`) to keep the dashboard actionable.
+Historic/expired rows remain available for cleanup and operational analysis until TYPO3 garbage collection removes them.

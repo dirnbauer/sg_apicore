@@ -124,52 +124,45 @@
 		</f:else>
 	</f:if>
 
-	<h2>Current Counters</h2>
-	<p class="text-muted">
-		Counters show the latest window per identifier. Resource-specific limits are not visible in the counter table.
-	</p>
-	<f:if condition="{counters}">
-		<f:then>
-			<table class="table table-striped table-hover">
-				<thead>
-				<tr>
+		<h2>Active Sessions</h2>
+		<p class="text-muted">
+			Only active rate-limit sessions are shown. Resource-specific limits are not visible in this table.
+		</p>
+		<f:if condition="{counters}">
+			<f:then>
+				<table class="table table-striped table-hover">
+					<thead>
+					<tr>
 					<th>API</th>
 					<th>Tenant</th>
 					<th>Subject</th>
 					<th>Hits</th>
-					<th>Limit</th>
-					<th>Remaining</th>
-					<th>Window Start</th>
-					<th>Reset</th>
-					<th>Status</th>
-				</tr>
-				</thead>
-				<tbody>
-				<f:for each="{counters}" as="counter">
-					<tr class="{f:if(condition: counter.isExpired, then: 'text-muted')}">
-						<td><strong>{counter.apiId}</strong></td>
-						<td>{counter.tenantId}</td>
-						<td>{counter.subject}</td>
-						<td>{counter.hits}</td>
-						<td>{counter.effectiveLimit}</td>
-						<td>{counter.remaining}</td>
-						<td>{f:format.date(date: counter.windowStart, format: 'Y-m-d H:i:s')}</td>
-						<td>{f:format.date(date: counter.expiresAt, format: 'Y-m-d H:i:s')}</td>
-						<td>
-							<f:if condition="{counter.isExpired}">
-								<f:then><span class="badge badge-secondary">Expired</span></f:then>
-								<f:else><span class="badge badge-success">Active</span></f:else>
-							</f:if>
-						</td>
+						<th>Limit</th>
+						<th>Remaining</th>
+						<th>Window Start</th>
+						<th>Reset</th>
 					</tr>
-				</f:for>
-				</tbody>
-			</table>
-		</f:then>
-		<f:else>
-			<p>No counters recorded yet.</p>
-		</f:else>
-	</f:if>
+					</thead>
+					<tbody>
+					<f:for each="{counters}" as="counter">
+						<tr>
+							<td><strong>{counter.apiId}</strong></td>
+							<td>{counter.tenantId}</td>
+							<td>{counter.subject}</td>
+							<td>{counter.hits}</td>
+							<td>{counter.effectiveLimit}</td>
+							<td>{counter.remaining}</td>
+							<td>{f:format.date(date: counter.windowStart, format: 'Y-m-d H:i:s')}</td>
+							<td>{f:format.date(date: counter.expiresAt, format: 'Y-m-d H:i:s')}</td>
+						</tr>
+					</f:for>
+					</tbody>
+				</table>
+			</f:then>
+			<f:else>
+				<p>No active sessions recorded.</p>
+			</f:else>
+		</f:if>
 
 	<div class="row">
 		<div class="col-md-6">

@@ -113,4 +113,41 @@ class TcaMapperTest extends UnitTestCase {
 		$this->assertEquals('Test', $result['new_title']);
 		$this->assertArrayNotHasKey('title', $result);
 	}
+
+	public function testEnsureParseFuncConfigurationSetsFallbackForEmptyParseFuncConfiguration(): void {
+		$previousTsfe = $GLOBALS['TSFE'] ?? NULL;
+		$previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+
+		try {
+			$GLOBALS['TSFE'] = (object) [
+				'tmpl' => (object) [
+					'setup' => [
+						'lib.' => [
+							'parseFunc_RTE.' => []
+						]
+					]
+				]
+			];
+			unset($GLOBALS['TYPO3_REQUEST']);
+
+			$method = new \ReflectionMethod(TcaMapper::class, 'ensureParseFuncConfiguration');
+			$method->setAccessible(TRUE);
+			$method->invoke($this->mapper);
+
+			$this->assertArrayHasKey('parseFunc_RTE.', $GLOBALS['TSFE']->tmpl->setup['lib.']);
+			$this->assertGreaterThan(1, count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
+		} finally {
+			if ($previousTsfe !== NULL) {
+				$GLOBALS['TSFE'] = $previousTsfe;
+			} else {
+				unset($GLOBALS['TSFE']);
+			}
+
+			if ($previousRequest !== NULL) {
+				$GLOBALS['TYPO3_REQUEST'] = $previousRequest;
+			} else {
+				unset($GLOBALS['TYPO3_REQUEST']);
+			}
+		}
+	}
 }
