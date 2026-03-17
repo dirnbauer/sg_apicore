@@ -40,11 +40,7 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 		$this->loginProvider = $this->createMock(LoginProviderInterface::class);
 		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
 
-		$this->middleware = new ApiAuthMiddleware(
-			$this->apiRegistry,
-			$this->loginProvider,
-			$this->pathAnalysisService
-		);
+		$this->middleware = new ApiAuthMiddleware($this->apiRegistry, $this->loginProvider, $this->pathAnalysisService);
 	}
 
 	/**

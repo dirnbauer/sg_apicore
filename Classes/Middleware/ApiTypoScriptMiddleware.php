@@ -65,10 +65,7 @@ class ApiTypoScriptMiddleware implements MiddlewareInterface {
 		}
 
 		$request = $request->withAttribute('api.requireFullTypoScript', TRUE);
-		$request = $this->typoScriptSetupService->ensureTypoScript(
-			$request,
-			$request->getAttribute('api.tenant')
-		);
+		$request = $this->typoScriptSetupService->ensureTypoScript($request, $request->getAttribute('api.tenant'));
 
 		return $handler->handle($request);
 	}

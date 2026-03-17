@@ -15,12 +15,14 @@
 namespace SGalinski\SgApiCore\Mapper;
 
 use Doctrine\DBAL\Exception;
+use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ImmediateResponseException;
 use TYPO3\CMS\Core\Resource\FileReference;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
@@ -34,6 +36,15 @@ class TcaMapper implements SingletonInterface {
 	 */
 	protected array $recordCache = [];
 
+	public function __construct(
+		protected PersistenceManager $persistenceManager,
+		protected ConnectionPool $connectionPool,
+		protected ResourceFactory $resourceFactory,
+		protected FileRepository $fileRepository,
+		protected ContentObjectRenderer $contentObjectRenderer
+	) {
+	}
+
 	/**
 	 * @param PersistenceManager $persistenceManager
 	 * @param ConnectionPool $connectionPool
@@ -46,15 +57,6 @@ class TcaMapper implements SingletonInterface {
 	 */
 	public function getConnectionPool(): ConnectionPool {
 		return $this->connectionPool;
-	}
-
-	public function __construct(
-		protected PersistenceManager $persistenceManager,
-		protected ConnectionPool $connectionPool,
-		protected ResourceFactory $resourceFactory,
-		protected FileRepository $fileRepository,
-		protected ContentObjectRenderer $contentObjectRenderer
-	) {
 	}
 
 	/**
@@ -97,7 +99,26 @@ class TcaMapper implements SingletonInterface {
 		string $tableName,
 		array $record,
 		array $allowedFields = [],
-		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
+		array $excludedFields = [
+			'tstamp',
+			'crdate',
+			'cruser_id',
+			'hidden',
+			'deleted',
+			't3ver_oid',
+			't3ver_id',
+			't3ver_wsid',
+			't3ver_label',
+			't3ver_state',
+			't3ver_stage',
+			't3ver_count',
+			't3ver_tstamp',
+			't3ver_move_id',
+			't3_origuid',
+			'l10n_parent',
+			'l10n_diffsource',
+			'l10n_state'
+		],
 		int $resolveDepth = 0,
 		array $fieldConfiguration = [],
 		array $renamedFields = [],
@@ -115,9 +136,7 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$currentExcludedFields = $excludedFields;
-		if (isset($fieldConfiguration[$tableName]['excluded']) && is_array(
-			$fieldConfiguration[$tableName]['excluded']
-		)) {
+		if (isset($fieldConfiguration[$tableName]['excluded']) && is_array($fieldConfiguration[$tableName]['excluded'])) {
 			$currentExcludedFields = array_merge($excludedFields, $fieldConfiguration[$tableName]['excluded']);
 		}
 
@@ -185,7 +204,26 @@ class TcaMapper implements SingletonInterface {
 		string $tableName,
 		array $records,
 		array $allowedFields = [],
-		array $excludedFields = ['tstamp', 'crdate', 'cruser_id', 'hidden', 'deleted', 't3ver_oid', 't3ver_id', 't3ver_wsid', 't3ver_label', 't3ver_state', 't3ver_stage', 't3ver_count', 't3ver_tstamp', 't3ver_move_id', 't3_origuid', 'l10n_parent', 'l10n_diffsource', 'l10n_state'],
+		array $excludedFields = [
+			'tstamp',
+			'crdate',
+			'cruser_id',
+			'hidden',
+			'deleted',
+			't3ver_oid',
+			't3ver_id',
+			't3ver_wsid',
+			't3ver_label',
+			't3ver_state',
+			't3ver_stage',
+			't3ver_count',
+			't3ver_tstamp',
+			't3ver_move_id',
+			't3_origuid',
+			'l10n_parent',
+			'l10n_diffsource',
+			'l10n_state'
+		],
 		int $resolveDepth = 0,
 		array $fieldConfiguration = [],
 		array $renamedFields = [],
@@ -239,6 +277,37 @@ class TcaMapper implements SingletonInterface {
 	}
 
 	/**
+	 * Resolves FAL file references for a given field
+	 *
+	 * @param string $tableName
+	 * @param string $fieldName
+	 * @param int $uid
+	 * @return array
+	 */
+	public function resolveFileReferences(string $tableName, string $fieldName, int $uid): array {
+		$fileReferences = $this->fileRepository->findByRelation($tableName, $fieldName, $uid);
+
+		$resolvedFiles = [];
+		foreach ($fileReferences as $fileReference) {
+			/** @var FileReference $fileReference */
+			$file = $fileReference->getOriginalFile();
+			/** @noinspection NestedTernaryOperatorInspection */
+			$resolvedFiles[] = [
+				'uid' => $fileReference->getUid(),
+				'title' => $fileReference->getTitle() ?: ($file->getProperty('title') ?: $file->getName()),
+				'description' => $fileReference->getDescription() ?: $file->getProperty('description'),
+				'alternative' => $fileReference->getAlternative(),
+				'url' => $file->getPublicUrl(),
+				'extension' => $file->getExtension(),
+				'size' => $file->getSize(),
+				'mime_type' => $file->getMimeType(),
+			];
+		}
+
+		return $resolvedFiles;
+	}
+
+	/**
 	 * Transforms a value based on TCA configuration
 	 *
 	 * @param mixed $value
@@ -250,6 +319,7 @@ class TcaMapper implements SingletonInterface {
 	 * @param array $fieldConfiguration
 	 * @return mixed
 	 * @throws Exception
+	 * @throws ImmediateResponseException
 	 */
 	protected function transformValue(
 		mixed $value,
@@ -333,12 +403,7 @@ class TcaMapper implements SingletonInterface {
 								$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 								$foreignRecord = $queryBuilder->select('*')
 									->from($foreignTable)
-									->where(
-										$queryBuilder->expr()->eq(
-											'uid',
-											$queryBuilder->createNamedParameter($foreignUid)
-										)
-									)
+									->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
 									->executeQuery()
 									->fetchAssociative();
 								$this->recordCache[$cacheKey] = $foreignRecord;
@@ -360,19 +425,11 @@ class TcaMapper implements SingletonInterface {
 						$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 						$queryBuilder->select('*')
 							->from($foreignTable)
-							->where(
-								$queryBuilder->expr()->eq(
-									$config['foreign_field'],
-									$queryBuilder->createNamedParameter($uid)
-								)
-							);
+							->where($queryBuilder->expr()->eq($config['foreign_field'], $queryBuilder->createNamedParameter($uid)));
 
 						if (isset($config['foreign_table_field']) && $tableName !== '') {
 							$queryBuilder->andWhere(
-								$queryBuilder->expr()->eq(
-									$config['foreign_table_field'],
-									$queryBuilder->createNamedParameter($tableName)
-								)
+								$queryBuilder->expr()->eq($config['foreign_table_field'], $queryBuilder->createNamedParameter($tableName))
 							);
 						}
 
@@ -413,12 +470,7 @@ class TcaMapper implements SingletonInterface {
 								$queryBuilder = $this->connectionPool->getQueryBuilderForTable($foreignTable);
 								$foreignRecord = $queryBuilder->select('*')
 									->from($foreignTable)
-									->where(
-										$queryBuilder->expr()->eq(
-											'uid',
-											$queryBuilder->createNamedParameter($foreignUid)
-										)
-									)
+									->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($foreignUid)))
 									->executeQuery()
 									->fetchAssociative();
 								$this->recordCache[$cacheKey] = $foreignRecord;
@@ -450,41 +502,6 @@ class TcaMapper implements SingletonInterface {
 			default:
 				return $value;
 		}
-	}
-
-	/**
-	 * Resolves FAL file references for a given field
-	 *
-	 * @param string $tableName
-	 * @param string $fieldName
-	 * @param int $uid
-	 * @return array
-	 */
-	public function resolveFileReferences(string $tableName, string $fieldName, int $uid): array {
-		$fileReferences = $this->fileRepository->findByRelation(
-			$tableName,
-			$fieldName,
-			$uid
-		);
-
-		$resolvedFiles = [];
-		foreach ($fileReferences as $fileReference) {
-			/** @var FileReference $fileReference */
-			$file = $fileReference->getOriginalFile();
-			/** @noinspection NestedTernaryOperatorInspection */
-			$resolvedFiles[] = [
-				'uid' => $fileReference->getUid(),
-				'title' => $fileReference->getTitle() ?: ($file->getProperty('title') ?: $file->getName()),
-				'description' => $fileReference->getDescription() ?: $file->getProperty('description'),
-				'alternative' => $fileReference->getAlternative(),
-				'url' => $file->getPublicUrl(),
-				'extension' => $file->getExtension(),
-				'size' => $file->getSize(),
-				'mime_type' => $file->getMimeType(),
-			];
-		}
-
-		return $resolvedFiles;
 	}
 
 	/**
@@ -561,24 +578,74 @@ class TcaMapper implements SingletonInterface {
 			return $content;
 		}
 
-		return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+		if ($this->hasUsableParseFuncReferenceConfiguration()) {
+			try {
+				return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+			} catch (\LogicException $exception) {
+				if ($exception->getCode() !== 1641989097) {
+					throw $exception;
+				}
+			}
+		}
+
+		try {
+			return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf);
+		} catch (\LogicException $exception) {
+			if ($exception->getCode() !== 1641989097) {
+				throw $exception;
+			}
+		}
+
+		return $content;
 	}
 
 	/**
-	 * Ensures that a minimal parseFunc configuration is available in $GLOBALS['TSFE'].
-	 * This prevents crashes in sg_apicore's TcaMapper when processing RTE fields.
+	 * @return bool
+	 */
+	protected function hasUsableParseFuncReferenceConfiguration(): bool {
+		if (!isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
+			return FALSE;
+		}
+
+		$parseFuncReference = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
+		return is_array($parseFuncReference) && count($parseFuncReference) > 1;
+	}
+
+	/**
+	 * Ensures a usable parseFunc_RTE setup exists.
+	 * Some environments expose an empty/partial parseFunc_RTE key which still causes parseFunc crashes.
 	 *
 	 * @return void
 	 */
 	protected function ensureParseFuncConfiguration(): void {
-		if (!isset($GLOBALS['TSFE']) || isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
+		if (!isset($GLOBALS['TSFE']->tmpl->setup) || !is_array($GLOBALS['TSFE']->tmpl->setup)) {
 			return;
 		}
 
-		if (!isset($GLOBALS['TSFE']->tmpl->setup['lib.'])) {
-			$GLOBALS['TSFE']->tmpl->setup['lib.'] = [];
+		$currentParseFunc = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
+		if (is_array($currentParseFunc) && count($currentParseFunc) > 1) {
+			return;
 		}
 
+		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+		if ($request instanceof ServerRequestInterface) {
+			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
+			if ($frontendTypoScript instanceof FrontendTypoScript) {
+				$setup = $frontendTypoScript->getSetupArray();
+				$resolvedParseFunc = $setup['lib.']['parseFunc_RTE.'] ?? [];
+				if (!is_array($resolvedParseFunc) || count($resolvedParseFunc) <= 1) {
+					$resolvedParseFunc = $setup['lib.']['parseFunc.'] ?? [];
+				}
+
+				if (is_array($resolvedParseFunc) && count($resolvedParseFunc) > 1) {
+					$GLOBALS['TSFE']->tmpl->setup['lib.'] ??= [];
+					$GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] = $resolvedParseFunc;
+					return;
+				}
+			}
+		}
+
+		$GLOBALS['TSFE']->tmpl->setup['lib.'] ??= [];
 		$GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] = [
 			'externalBlocks' => 'table, blockquote, ol, ul, div, dl, header, section, footer, address, article, aside, figure, figcaption',
 			'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',

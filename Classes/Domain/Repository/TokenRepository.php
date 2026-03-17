@@ -67,10 +67,7 @@ class TokenRepository implements SingletonInterface {
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->or(
-				$queryBuilder->expr()->eq(
-					'pid',
-					$queryBuilder->createNamedParameter($siteRootPageId, Connection::PARAM_INT)
-				),
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($siteRootPageId, Connection::PARAM_INT)),
 				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 			);
 		}
@@ -124,10 +121,7 @@ class TokenRepository implements SingletonInterface {
 
 		if ($siteRootPageId !== NULL) {
 			$constraints[] = $queryBuilder->expr()->or(
-				$queryBuilder->expr()->eq(
-					'pid',
-					$queryBuilder->createNamedParameter($siteRootPageId, Connection::PARAM_INT)
-				),
+				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($siteRootPageId, Connection::PARAM_INT)),
 				$queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
 			);
 		}
@@ -151,19 +145,9 @@ class TokenRepository implements SingletonInterface {
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable(self::TABLE_NAME);
 
 		$query = $queryBuilder
-			->select(
-				'token.*',
-				'fe.uid AS fe_user_uid',
-				'fe.username AS fe_user_username',
-				'fe.email AS fe_user_email'
-			)
+			->select('token.*', 'fe.uid AS fe_user_uid', 'fe.username AS fe_user_username', 'fe.email AS fe_user_email')
 			->from(self::TABLE_NAME, 'token')
-			->leftJoin(
-				'token',
-				'fe_users',
-				'fe',
-				$queryBuilder->expr()->eq('token.user_id', 'fe.uid')
-			);
+			->leftJoin('token', 'fe_users', 'fe', $queryBuilder->expr()->eq('token.user_id', 'fe.uid'));
 
 		if (isset($filters['apiId']) && $filters['apiId'] !== '') {
 			$query->andWhere(

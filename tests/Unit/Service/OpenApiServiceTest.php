@@ -35,66 +35,6 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  * Test case for OpenApiService
  */
 class OpenApiServiceTest extends UnitTestCase {
-	protected function getDiscoveryService(iterable $controllers, ?ApiRegistry $apiRegistry = NULL): EndpointDiscoveryService {
-		$resourceRegistry = $this->createStub(ResourceRegistry::class);
-		$resourceRegistry->method('getResources')->willReturn([]);
-
-		$cache = $this->createStub(FrontendInterface::class);
-		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
-		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-
-		$languageService = $this->createStub(\TYPO3\CMS\Core\Localization\LanguageService::class);
-		$languageService->method('sL')->willReturnCallback(function ($key) {
-			if ($key === 'LLL:EXT:test/locallang.xlf:title') {
-				return 'Translated Title';
-			}
-			return $key;
-		});
-
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
-
-		if ($apiRegistry === NULL) {
-			$apiRegistry = $this->createStub(ApiRegistry::class);
-		}
-
-		return new EndpointDiscoveryService(
-			$controllers,
-			$resourceRegistry,
-			$cacheManager,
-			$languageServiceFactory,
-			$apiRegistry
-		);
-	}
-
-	protected function getOpenApiService(
-		EndpointDiscoveryService $discoveryService,
-		ApiRegistry $apiRegistry,
-		ExtensionConfiguration $extensionConfiguration,
-		array $globalSchemas = []
-	): OpenApiService {
-		$cache = $this->createStub(FrontendInterface::class);
-		$cache->method('get')->willReturn(NULL);
-
-		$cacheManager = $this->createStub(CacheManager::class);
-		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-
-		$schemaRegistry = $this->createStub(SchemaRegistry::class);
-		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
-		$schemaRegistry->method('getSchema')->willReturnCallback(function ($apiId, $schemaName) use ($globalSchemas) {
-			return $globalSchemas[$schemaName] ?? NULL;
-		});
-
-		return new OpenApiService(
-			$discoveryService,
-			$apiRegistry,
-			$schemaRegistry,
-			$extensionConfiguration,
-			$cacheManager
-		);
-	}
-
 	public function testEnrichSchemaWithXTagField(): void {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
@@ -288,18 +228,34 @@ class OpenApiServiceTest extends UnitTestCase {
 		$specPublic = $openApiService->generateSpec('public', '1');
 		$this->assertArrayHasKey('/hybrid', $specPublic['paths'], 'Public API should contain hybrid endpoint');
 		$this->assertArrayNotHasKey('/user-only', $specPublic['paths'], 'Public API should NOT contain user-only endpoint');
-		$this->assertArrayNotHasKey('/backend-only', $specPublic['paths'], 'Public API should NOT contain backend-only endpoint');
+		$this->assertArrayNotHasKey(
+			'/backend-only',
+			$specPublic['paths'],
+			'Public API should NOT contain backend-only endpoint'
+		);
 		$this->assertArrayHasKey('/default', $specPublic['paths'], 'Public API should contain default endpoint');
-		$this->assertArrayHasKey('/test', $specPublic['paths'], 'Public API should contain OpenAPI docs endpoint (registered for public)');
+		$this->assertArrayHasKey(
+			'/test',
+			$specPublic['paths'],
+			'Public API should contain OpenAPI docs endpoint (registered for public)'
+		);
 
 		// 2. Partner API (authMode: user)
 		$specPartner = $openApiService->generateSpec('partner', '1');
 		$this->assertArrayHasKey('/hybrid', $specPartner['paths'], 'Partner API should contain hybrid endpoint');
 		$this->assertArrayHasKey('/user-only', $specPartner['paths'], 'Partner API should contain user-only endpoint');
-		$this->assertArrayNotHasKey('/backend-only', $specPartner['paths'], 'Partner API should NOT contain backend-only endpoint');
+		$this->assertArrayNotHasKey(
+			'/backend-only',
+			$specPartner['paths'],
+			'Partner API should NOT contain backend-only endpoint'
+		);
 		$this->assertArrayHasKey('/default', $specPartner['paths'], 'Partner API should contain default endpoint');
 		// Note: /test is only registered for apiId: 'public' in MockOpenApiController
-		$this->assertArrayNotHasKey('/test', $specPartner['paths'], 'Partner API should NOT contain OpenAPI docs endpoint (only registered for public)');
+		$this->assertArrayNotHasKey(
+			'/test',
+			$specPartner['paths'],
+			'Partner API should NOT contain OpenAPI docs endpoint (only registered for public)'
+		);
 
 		// 3. Backend API (authMode: backend)
 		$specBackend = $openApiService->generateSpec('backend', '1');
@@ -307,7 +263,11 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertArrayNotHasKey('/user-only', $specBackend['paths'], 'Backend API should NOT contain user-only endpoint');
 		$this->assertArrayHasKey('/backend-only', $specBackend['paths'], 'Backend API should contain backend-only endpoint');
 		$this->assertArrayHasKey('/default', $specBackend['paths'], 'Backend API should contain default endpoint');
-		$this->assertArrayNotHasKey('/test', $specBackend['paths'], 'Backend API should NOT contain OpenAPI docs endpoint (only registered for public)');
+		$this->assertArrayNotHasKey(
+			'/test',
+			$specBackend['paths'],
+			'Backend API should NOT contain OpenAPI docs endpoint (only registered for public)'
+		);
 	}
 
 	public function testGenerateSpecContainsRequestBody(): void {
@@ -561,10 +521,7 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertEquals('array', $properties['tags']['type']);
 		$this->assertArrayHasKey('items', $properties['tags']);
 		$this->assertArrayHasKey('anyOf', $properties['tags']['items']);
-		$this->assertEquals(
-			[['type' => 'string'], ['type' => 'integer']],
-			$properties['tags']['items']['anyOf']
-		);
+		$this->assertEquals([['type' => 'string'], ['type' => 'integer']], $properties['tags']['items']['anyOf']);
 	}
 
 	public function testGenerateSpecUsesTcaLabelsForEnvelopedRegularEndpoints(): void {
@@ -595,6 +552,68 @@ class OpenApiServiceTest extends UnitTestCase {
 		);
 
 		unset($GLOBALS['TCA']['tx_test_table']);
+	}
+	protected function getDiscoveryService(
+		iterable $controllers,
+		?ApiRegistry $apiRegistry = NULL
+	): EndpointDiscoveryService {
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$languageService = $this->createStub(\TYPO3\CMS\Core\Localization\LanguageService::class);
+		$languageService->method('sL')->willReturnCallback(function ($key) {
+			if ($key === 'LLL:EXT:test/locallang.xlf:title') {
+				return 'Translated Title';
+			}
+			return $key;
+		});
+
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
+
+		if ($apiRegistry === NULL) {
+			$apiRegistry = $this->createStub(ApiRegistry::class);
+		}
+
+		return new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+	}
+
+	protected function getOpenApiService(
+		EndpointDiscoveryService $discoveryService,
+		ApiRegistry $apiRegistry,
+		ExtensionConfiguration $extensionConfiguration,
+		array $globalSchemas = []
+	): OpenApiService {
+		$cache = $this->createStub(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$schemaRegistry = $this->createStub(SchemaRegistry::class);
+		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
+		$schemaRegistry->method('getSchema')->willReturnCallback(function ($apiId, $schemaName) use ($globalSchemas) {
+			return $globalSchemas[$schemaName] ?? NULL;
+		});
+
+		return new OpenApiService(
+			$discoveryService,
+			$apiRegistry,
+			$schemaRegistry,
+			$extensionConfiguration,
+			$cacheManager
+		);
 	}
 }
 
@@ -628,7 +647,10 @@ class MockSchemaErrorController {
  * Mock controller for hybrid auth
  */
 class MockHybridController {
-	#[ApiRoute(path: '/hybrid', methods: ['GET'], apiId: ['public', 'partner'], version: '1', authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/hybrid', methods: ['GET'], apiId: ['public', 'partner'], version: '1', authMode: [
+		'user',
+		'public'
+	])]
 	public function hybridAction(): void {
 	}
 }

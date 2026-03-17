@@ -35,6 +35,11 @@ class Router implements SingletonInterface {
 	 * @var CachePathService
 	 */
 	protected CachePathService $cachePathService;
+
+	/**
+	 * @var array|null
+	 */
+	protected ?array $controllerInstances = NULL;
 	/**
 	 * @param iterable $controllers
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
@@ -50,27 +55,6 @@ class Router implements SingletonInterface {
 		?CachePathService $cachePathService = NULL
 	) {
 		$this->cachePathService = $cachePathService ?? new CachePathService();
-	}
-
-	/**
-	 * @var array|null
-	 */
-	protected ?array $controllerInstances = NULL;
-
-	/**
-	 * Returns all registered controller instances
-	 *
-	 * @return array
-	 */
-	protected function getControllerInstances(): array {
-		if ($this->controllerInstances === NULL) {
-			$this->controllerInstances = [];
-			foreach ($this->controllers as $controller) {
-				$this->controllerInstances[get_class($controller)] = $controller;
-			}
-		}
-
-		return $this->controllerInstances;
 	}
 
 	/**
@@ -174,12 +158,7 @@ class Router implements SingletonInterface {
 				$userAttributes = $reflectionMethod->getAttributes(RequireUser::class);
 				if (count($userAttributes) > 0) {
 					if ($authContext === NULL || $authContext->getUserId() === NULL) {
-						return $this->createErrorResponse(
-							$request,
-							'Forbidden',
-							'This endpoint requires a user login context.',
-							403
-						);
+						return $this->createErrorResponse($request, 'Forbidden', 'This endpoint requires a user login context.', 403);
 					}
 				}
 
@@ -264,6 +243,22 @@ class Router implements SingletonInterface {
 	}
 
 	/**
+	 * Returns all registered controller instances
+	 *
+	 * @return array
+	 */
+	protected function getControllerInstances(): array {
+		if ($this->controllerInstances === NULL) {
+			$this->controllerInstances = [];
+			foreach ($this->controllers as $controller) {
+				$this->controllerInstances[get_class($controller)] = $controller;
+			}
+		}
+
+		return $this->controllerInstances;
+	}
+
+	/**
 	 * Resolves and type-casts the arguments for the controller action
 	 *
 	 * @param ServerRequestInterface $request
@@ -331,7 +326,12 @@ class Router implements SingletonInterface {
 	 * @return array
 	 * @throws \ReflectionException
 	 */
-	protected function getFilteredEndpoints(string $apiId, string $version, ?string $authMode, string $tenantId = ''): array {
+	protected function getFilteredEndpoints(
+		string $apiId,
+		string $version,
+		?string $authMode,
+		string $tenantId = ''
+	): array {
 		$filteredEndpoints = $this->endpointDiscoveryService->getEndpointsForApi($apiId, $version, $authMode, $tenantId);
 
 		usort($filteredEndpoints, static function ($a, $b) {

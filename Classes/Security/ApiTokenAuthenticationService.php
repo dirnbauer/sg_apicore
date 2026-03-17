@@ -50,13 +50,6 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	/**
-	 * @return ExtensionConfiguration
-	 */
-	protected function getExtensionConfiguration(): ExtensionConfiguration {
-		return $this->extensionConfiguration;
-	}
-
-	/**
 	 * @return array|null
 	 * @throws Exception
 	 * @throws \JsonException
@@ -119,6 +112,13 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		return $this->extensionConfiguration;
+	}
+
+	/**
 	 * Fetches the user record from the database by UID
 	 *
 	 * @param int $userId
@@ -133,9 +133,7 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
 		$user = $queryBuilder->select('*')
 			->from('fe_users')
-			->where(
-				$queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($userId))
-			)
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($userId)))
 			->executeQuery()
 			->fetchAssociative();
 

@@ -228,7 +228,13 @@ class OpenApiService implements SingletonInterface {
 	 * @return string
 	 * @throws \ReflectionException
 	 */
-	protected function getSpecCacheKey(string $apiId, string $version, string $authMode, string $baseUrl, string $tenantId = ''): string {
+	protected function getSpecCacheKey(
+		string $apiId,
+		string $version,
+		string $authMode,
+		string $baseUrl,
+		string $tenantId = ''
+	): string {
 		$signature = $this->endpointDiscoveryService->getDiscoverySignature();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
 		$cachePayload = implode('|', [$apiId, $version, $authMode, $baseUrl, $apiPathPrefix, $signature, $tenantId]);
@@ -489,10 +495,7 @@ class OpenApiService implements SingletonInterface {
 							$baseSchema = $refSchema ?? $schema;
 							if (($baseSchema['type'] ?? '') === 'array' && isset($baseSchema['items']['$ref'])) {
 								$refName = basename($baseSchema['items']['$ref']);
-								$baseSchema['items'] = $this->schemaRegistry->getSchema(
-									$apiId,
-									$refName
-								) ?? $baseSchema['items'];
+								$baseSchema['items'] = $this->schemaRegistry->getSchema($apiId, $refName) ?? $baseSchema['items'];
 							}
 
 							// Merge properties, prioritizing the defined schema's structure
@@ -504,10 +507,7 @@ class OpenApiService implements SingletonInterface {
 									$generatedSchema['items']['properties'] ?? []
 								);
 							} elseif (isset($schema['properties'])) {
-								$schema['properties'] = array_merge(
-									$schema['properties'],
-									$generatedSchema['properties'] ?? []
-								);
+								$schema['properties'] = array_merge($schema['properties'], $generatedSchema['properties'] ?? []);
 							} elseif (($schema['type'] ?? '') === 'object' && isset($generatedSchema['properties'])) {
 								// Case where base schema was just {type: object} without properties
 								$schema['properties'] = $generatedSchema['properties'];
@@ -794,9 +794,7 @@ class OpenApiService implements SingletonInterface {
 			return $this->parseSchema(
 				$apiId,
 				$schemaStr,
-				array_merge(
-					array_keys($this->schemaRegistry->getSchemas($apiId))
-				)
+				array_merge(array_keys($this->schemaRegistry->getSchemas($apiId)))
 			);
 		}
 

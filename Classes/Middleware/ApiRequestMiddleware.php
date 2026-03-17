@@ -147,12 +147,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		return $this->createErrorResponse(
-			'Not Found',
-			'The requested API or version does not exist.',
-			404,
-			$request
-		);
+		return $this->createErrorResponse('Not Found', 'The requested API or version does not exist.', 404, $request);
 	}
 
 	/**
@@ -177,11 +172,6 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			$legacyMode = new ApiLegacyMode();
 		}
 
-		return $this->responseService->createErrorResponse(
-			$title,
-			$detail,
-			$status,
-			legacyMode: $legacyMode
-		);
+		return $this->responseService->createErrorResponse($title, $detail, $status, legacyMode: $legacyMode);
 	}
 }

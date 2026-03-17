@@ -84,12 +84,15 @@ return [
 		'user_id' => [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.user_id',
 			'config' => [
-				'type' => 'select',
-				'renderType' => 'selectSingle',
-				'foreign_table' => 'fe_users',
-				'foreign_table_where' => ' AND {#fe_users}.{#deleted}=0 ORDER BY {#fe_users}.{#username} ASC',
-				'items' => [
-					['LLL:EXT:core/Resources/Private/Language/locallang_common.xlf:label.none', 0],
+				'type' => 'group',
+				'allowed' => 'fe_users',
+				'size' => 1,
+				'maxitems' => 1,
+				'suggestOptions' => [
+					'default' => [
+						'additionalSearchFields' => 'username,name,email,first_name,last_name',
+						'addWhere' => ' AND fe_users.deleted=0 AND fe_users.disable=0',
+					],
 				],
 				'default' => 0
 			],

@@ -74,12 +74,7 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 				$tenantId = $request->getAttribute('api.tenant')?->getTenantId() ?? '';
 
 				// Authenticate (Token validation & Scope matching)
-				$authContext = $this->loginProvider->authenticate(
-					$request,
-					$apiId,
-					$tenantId,
-					$activeProviders
-				);
+				$authContext = $this->loginProvider->authenticate($request, $apiId, $tenantId, $activeProviders);
 
 				if ($authContext !== NULL) {
 					$request = $request->withAttribute('api.auth', $authContext);

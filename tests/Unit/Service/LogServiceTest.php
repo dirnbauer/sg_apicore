@@ -124,10 +124,7 @@ class LogServiceTest extends UnitTestCase {
 
 		$exception = new \Exception('Test Exception');
 		$request = $this->createStub(\Psr\Http\Message\ServerRequestInterface::class);
-		$request->method('getAttribute')->willReturnMap([
-			['api.requestId', '', 'req-123'],
-			['language', NULL, NULL]
-		]);
+		$request->method('getAttribute')->willReturnMap([['api.requestId', '', 'req-123'], ['language', NULL, NULL]]);
 		$uri = new \TYPO3\CMS\Core\Http\Uri('https://example.org/api/v1/test');
 		$request->method('getUri')->willReturn($uri);
 		$request->method('getMethod')->willReturn('GET');

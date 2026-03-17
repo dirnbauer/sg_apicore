@@ -58,11 +58,7 @@ class ResourceController {
 	public function listAction(ServerRequestInterface $request): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
 		if (!$resourceConfig) {
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'Resource configuration missing.',
-				500
-			);
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
 		}
 
 		$tableName = $resourceConfig['table'];
@@ -106,15 +102,10 @@ class ResourceController {
 
 				if (is_array($value)) {
 					$queryBuilder->andWhere(
-						$queryBuilder->expr()->in(
-							$field,
-							$queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY)
-						)
+						$queryBuilder->expr()->in($field, $queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY))
 					);
 				} else {
-					$queryBuilder->andWhere(
-						$queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value))
-					);
+					$queryBuilder->andWhere($queryBuilder->expr()->eq($field, $queryBuilder->createNamedParameter($value)));
 				}
 			}
 		}
@@ -180,11 +171,7 @@ class ResourceController {
 	public function getAction(ServerRequestInterface $request, string $id): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
 		if (!$resourceConfig) {
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'Resource configuration missing.',
-				500
-			);
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
 		}
 
 		$tableName = $resourceConfig['table'];
@@ -221,11 +208,7 @@ class ResourceController {
 	public function createAction(ServerRequestInterface $request): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
 		if (!$resourceConfig) {
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'Resource configuration missing.',
-				500
-			);
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
 		}
 
 		$tableName = $resourceConfig['table'];
@@ -286,11 +269,7 @@ class ResourceController {
 	public function updateAction(ServerRequestInterface $request, string $id): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
 		if (!$resourceConfig) {
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'Resource configuration missing.',
-				500
-			);
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
 		}
 
 		$tableName = $resourceConfig['table'];
@@ -356,11 +335,7 @@ class ResourceController {
 	public function deleteAction(ServerRequestInterface $request, string $id): ResponseInterface {
 		$resourceConfig = $request->getAttribute('api.resource');
 		if (!$resourceConfig) {
-			return $this->responseService->createErrorResponse(
-				'Internal Error',
-				'Resource configuration missing.',
-				500
-			);
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
 		}
 
 		$tableName = $resourceConfig['table'];

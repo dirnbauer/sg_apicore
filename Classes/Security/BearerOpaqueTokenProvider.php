@@ -36,13 +36,6 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 	}
 
 	/**
-	 * @return ExtensionConfiguration
-	 */
-	protected function getExtensionConfiguration(): ExtensionConfiguration {
-		return $this->extensionConfiguration;
-	}
-
-	/**
 	 * Authenticates the request and returns an AuthContext if successful
 	 *
 	 * @param ServerRequestInterface $request
@@ -101,6 +94,13 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 			scopes: $scopes,
 			userId: (int) ($tokenRecord['user_id'] ?? 0) ?: NULL
 		);
+	}
+
+	/**
+	 * @return ExtensionConfiguration
+	 */
+	protected function getExtensionConfiguration(): ExtensionConfiguration {
+		return $this->extensionConfiguration;
 	}
 
 	/**

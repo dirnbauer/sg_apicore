@@ -53,9 +53,7 @@ class OpenApiController {
 		$version = (string) ($request->getAttribute('api.version') ?? '1');
 
 		$path = rtrim($request->getUri()->getPath(), '/');
-		$baseUrl = (string) $request->getUri()->withPath(
-			str_replace('/docs.json', '', $path)
-		);
+		$baseUrl = (string) $request->getUri()->withPath(str_replace('/docs.json', '', $path));
 
 		$tenantContext = $request->getAttribute('api.tenant');
 		$tenantId = $tenantContext?->getTenantId() ?? '';
@@ -94,12 +92,8 @@ class OpenApiController {
 
 		// Build the path to the docs.json relative to the current URL
 		$path = rtrim($request->getUri()->getPath(), '/');
-		$baseUrl = (string) $request->getUri()->withPath(
-			str_replace('/docs/ui', '', $path)
-		);
-		$docsUrl = (string) $request->getUri()->withPath(
-			str_replace('/docs/ui', '/docs.json', $path)
-		);
+		$baseUrl = (string) $request->getUri()->withPath(str_replace('/docs/ui', '', $path));
+		$docsUrl = (string) $request->getUri()->withPath(str_replace('/docs/ui', '/docs.json', $path));
 
 		$debugInfo = '';
 		$debugFlag = $request->getQueryParams()['debug'] ?? '';

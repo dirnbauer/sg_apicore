@@ -224,69 +224,6 @@ class ApiCoreController extends ActionController {
 	}
 
 	/**
-	 * @param array<string,mixed> $filters
-	 * @return array<string,mixed>
-	 */
-	private function resolveAndPersistTokenFilters(array $filters): array {
-		$beUser = $GLOBALS['BE_USER'] ?? NULL;
-		$storedFilters = $beUser instanceof BackendUserAuthentication
-			? $beUser->getModuleData(self::TOKEN_FILTER_STATE_KEY, 'ses')
-			: NULL;
-		if ((!is_array($filters) || $filters === []) && is_array($storedFilters)) {
-			$filters = $storedFilters;
-		}
-
-		$normalizedFilters = [
-			'apiId' => trim((string) ($filters['apiId'] ?? '')),
-			'tenantId' => trim((string) ($filters['tenantId'] ?? '')),
-			'status' => trim((string) ($filters['status'] ?? '')),
-			'tokenCategory' => trim((string) ($filters['tokenCategory'] ?? 'm2m')),
-		];
-
-		if (!in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
-			$normalizedFilters['tokenCategory'] = 'm2m';
-		}
-		if (
-			$normalizedFilters['status'] !== ''
-			&& !in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
-		) {
-			$normalizedFilters['status'] = '';
-		}
-
-		if ($beUser instanceof BackendUserAuthentication) {
-			$beUser->pushModuleData(self::TOKEN_FILTER_STATE_KEY, $normalizedFilters);
-		}
-
-		return $normalizedFilters;
-	}
-
-	/**
-	 * @param array<string,mixed> $filters
-	 */
-	private function buildTokensModuleUrl(array $filters = []): string {
-		$parameters = ['action' => 'tokens'];
-		if ($filters !== []) {
-			$parameters['filters'] = $filters;
-		}
-
-		return (string) $this->backendUriBuilder->buildUriFromRoute('system_SgApiCore', $parameters);
-	}
-
-	private function resolveTokenReturnUrl(string $returnUrl): string {
-		$trimmedReturnUrl = trim($returnUrl);
-		if ($trimmedReturnUrl === '') {
-			return $this->buildTokensModuleUrl($this->resolveAndPersistTokenFilters([]));
-		}
-
-		$path = (string) (parse_url($trimmedReturnUrl, PHP_URL_PATH) ?? '');
-		if (!str_starts_with($path, self::TOKEN_MODULE_PATH)) {
-			return $this->buildTokensModuleUrl($this->resolveAndPersistTokenFilters([]));
-		}
-
-		return $trimmedReturnUrl;
-	}
-
-	/**
 	 * Provider Configuration
 	 *
 	 * @return ResponseInterface
@@ -321,10 +258,11 @@ class ApiCoreController extends ActionController {
 	/**
 	 * Rate limit dashboard
 	 *
+	 * @param array<string, mixed> $filters
 	 * @return ResponseInterface
 	 */
-	public function rateLimitsAction(): ResponseInterface {
-		$dashboardData = $this->rateLimitDashboardService->getDashboardData();
+	public function rateLimitsAction(array $filters = []): ResponseInterface {
+		$dashboardData = $this->rateLimitDashboardService->getDashboardData($filters);
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
 		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Rate Limits');
@@ -396,5 +334,68 @@ class ApiCoreController extends ActionController {
 				'M' => [] // You can specify additional arguments here if required
 			]);
 		$buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
+	}
+
+	/**
+	 * @param array<string,mixed> $filters
+	 * @return array<string,mixed>
+	 */
+	private function resolveAndPersistTokenFilters(array $filters): array {
+		$beUser = $GLOBALS['BE_USER'] ?? NULL;
+		$storedFilters = $beUser instanceof BackendUserAuthentication
+			? $beUser->getModuleData(self::TOKEN_FILTER_STATE_KEY, 'ses')
+			: NULL;
+		if ((!is_array($filters) || $filters === []) && is_array($storedFilters)) {
+			$filters = $storedFilters;
+		}
+
+		$normalizedFilters = [
+			'apiId' => trim((string) ($filters['apiId'] ?? '')),
+			'tenantId' => trim((string) ($filters['tenantId'] ?? '')),
+			'status' => trim((string) ($filters['status'] ?? '')),
+			'tokenCategory' => trim((string) ($filters['tokenCategory'] ?? 'm2m')),
+		];
+
+		if (!in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
+			$normalizedFilters['tokenCategory'] = 'm2m';
+		}
+		if (
+			$normalizedFilters['status'] !== ''
+			&& !in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
+		) {
+			$normalizedFilters['status'] = '';
+		}
+
+		if ($beUser instanceof BackendUserAuthentication) {
+			$beUser->pushModuleData(self::TOKEN_FILTER_STATE_KEY, $normalizedFilters);
+		}
+
+		return $normalizedFilters;
+	}
+
+	/**
+	 * @param array<string,mixed> $filters
+	 */
+	private function buildTokensModuleUrl(array $filters = []): string {
+		$parameters = ['action' => 'tokens'];
+		if ($filters !== []) {
+			$parameters['filters'] = $filters;
+		}
+
+		return (string) $this->backendUriBuilder->buildUriFromRoute('system_SgApiCore', $parameters);
+	}
+
+	private function resolveTokenReturnUrl(string $returnUrl): string {
+		$trimmedReturnUrl = trim($returnUrl);
+		if ($trimmedReturnUrl === '') {
+			return $this->buildTokensModuleUrl($this->resolveAndPersistTokenFilters([]));
+		}
+
+		$path = (string) (parse_url($trimmedReturnUrl, PHP_URL_PATH) ?? '');
+		if (!str_starts_with($path, self::TOKEN_MODULE_PATH)) {
+			return $this->buildTokensModuleUrl($this->resolveAndPersistTokenFilters([]));
+		}
+
+		return $trimmedReturnUrl;
 	}
 }

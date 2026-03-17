@@ -77,9 +77,7 @@ class ApiSetupMiddlewareTest extends UnitTestCase {
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);
 
-		$request->method('getAttribute')->willReturnMap([
-			['language', $language],
-		]);
+		$request->method('getAttribute')->willReturnMap([['language', $language], ]);
 
 		$tenantResult = TenantContextResult::success(new TenantContext('test'));
 		$this->tenantResolver->method('resolve')->willReturn($tenantResult);

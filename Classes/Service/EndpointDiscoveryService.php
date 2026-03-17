@@ -260,6 +260,52 @@ class EndpointDiscoveryService implements SingletonInterface {
 	}
 
 	/**
+	 * Returns discovered endpoints for a specific API and version, considering authentication mode and tenant context.
+	 *
+	 * @param string $apiId
+	 * @param string|null $version
+	 * @param string|null $authMode
+	 * @param string $tenantId
+	 * @return array
+	 * @throws \ReflectionException
+	 */
+	public function getEndpointsForApi(
+		string $apiId,
+		?string $version = NULL,
+		?string $authMode = NULL,
+		string $tenantId = ''
+	): array {
+		$endpoints = $this->getAllEndpoints();
+		$filteredEndpoints = [];
+
+		foreach ($endpoints as $endpoint) {
+			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+				continue;
+			}
+
+			if ($version !== NULL && !empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+				continue;
+			}
+
+			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
+				continue;
+			}
+
+			if (!empty($endpoint['authMode'])) {
+				// Visibility logic: if the endpoint defines specific modes, the current API's mode must be one of them.
+				// Exception: if 'public' is allowed, it's always visible in any API.
+				if (!in_array($authMode, $endpoint['authMode'], TRUE) && !in_array('public', $endpoint['authMode'], TRUE)) {
+					continue;
+				}
+			}
+
+			$filteredEndpoints[] = $endpoint;
+		}
+
+		return $filteredEndpoints;
+	}
+
+	/**
 	 * @param mixed $value
 	 * @return mixed
 	 */
@@ -310,10 +356,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 			$writeFieldCandidates = !empty($readFields) ? $readFields : $availableFields;
 		}
 		$writeFieldCandidates = array_values(
-			array_filter(
-				$writeFieldCandidates,
-				static fn (string $fieldName): bool => $fieldName !== 'uid'
-			)
+			array_filter($writeFieldCandidates, static fn (string $fieldName): bool => $fieldName !== 'uid')
 		);
 		$allFields = array_unique(array_merge($readFields, $writeFieldCandidates));
 
@@ -455,12 +498,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'scopes' => $scopes['list'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [
-					new ApiQueryParam(
-						name: 'page',
-						type: 'integer',
-						required: FALSE,
-						description: 'Page number (1-based)'
-					),
+					new ApiQueryParam(name: 'page', type: 'integer', required: FALSE, description: 'Page number (1-based)'),
 					new ApiQueryParam(
 						name: 'perPage',
 						type: 'integer',
@@ -488,9 +526,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					),
 				],
 				'pathParams' => [],
-				'responses' => [
-					new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')
-				],
+				'responses' => [new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')],
 				'apiCache' => new ApiCache(tags: [$tableName]),
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
@@ -513,9 +549,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'scopes' => $scopes['get'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [],
-				'pathParams' => [
-					new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')
-				],
+				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName),
 					new ApiResponse(status: 404, description: 'Not Found')
@@ -543,9 +577,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
 				'pathParams' => [],
-				'responses' => [
-					new ApiResponse(status: 201, description: 'Created', schema: $tableName)
-				],
+				'responses' => [new ApiResponse(status: 201, description: 'Created', schema: $tableName)],
 				'apiCache' => new ApiCache(tags: [$tableName]),
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
@@ -568,9 +600,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'scopes' => $scopes['update'] ?? [],
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
-				'pathParams' => [
-					new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')
-				],
+				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Updated', schema: $tableName),
 					new ApiResponse(status: 404, description: 'Not Found')
@@ -601,9 +631,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'scopes' => $scopes['delete'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [],
-				'pathParams' => [
-					new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')
-				],
+				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
 				'responses' => [
 					new ApiResponse(status: 204, description: 'Deleted (no content)'),
 					new ApiResponse(status: 404, description: 'Not Found')
@@ -617,52 +645,6 @@ class EndpointDiscoveryService implements SingletonInterface {
 		}
 
 		return $endpoints;
-	}
-
-	/**
-	 * Returns discovered endpoints for a specific API and version, considering authentication mode and tenant context.
-	 *
-	 * @param string $apiId
-	 * @param string|null $version
-	 * @param string|null $authMode
-	 * @param string $tenantId
-	 * @return array
-	 * @throws \ReflectionException
-	 */
-	public function getEndpointsForApi(
-		string $apiId,
-		?string $version = NULL,
-		?string $authMode = NULL,
-		string $tenantId = ''
-	): array {
-		$endpoints = $this->getAllEndpoints();
-		$filteredEndpoints = [];
-
-		foreach ($endpoints as $endpoint) {
-			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
-				continue;
-			}
-
-			if ($version !== NULL && !empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
-				continue;
-			}
-
-			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
-				continue;
-			}
-
-			if (!empty($endpoint['authMode'])) {
-				// Visibility logic: if the endpoint defines specific modes, the current API's mode must be one of them.
-				// Exception: if 'public' is allowed, it's always visible in any API.
-				if (!in_array($authMode, $endpoint['authMode'], TRUE) && !in_array('public', $endpoint['authMode'], TRUE)) {
-					continue;
-				}
-			}
-
-			$filteredEndpoints[] = $endpoint;
-		}
-
-		return $filteredEndpoints;
 	}
 
 	/**

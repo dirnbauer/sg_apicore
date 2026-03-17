@@ -54,9 +54,6 @@ class EditLinkViewHelper extends AbstractViewHelper {
 		}
 
 		$uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
-		return (string) $uriBuilder->buildUriFromRoute(
-			'record_edit',
-			$parameters
-		);
+		return (string) $uriBuilder->buildUriFromRoute('record_edit', $parameters);
 	}
 }
