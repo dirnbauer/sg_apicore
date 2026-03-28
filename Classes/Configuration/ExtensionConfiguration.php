@@ -102,7 +102,7 @@ class ExtensionConfiguration implements SingletonInterface {
 	 * @return array
 	 */
 	public function getRedactKeys(): array {
-		$keys = $this->get('redactKeys', 'password,token,authorization,secret,access_token,refresh_token');
+		$keys = $this->get('redactKeys', 'password,token,authorization,secret,access_token,refresh_token,authtoken,bearertoken,api_key,x-api-key,client_secret,cookie,set-cookie,stripe-signature');
 		return GeneralUtility::trimExplode(',', (string) $keys, TRUE);
 	}
 

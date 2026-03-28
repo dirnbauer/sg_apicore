@@ -101,11 +101,16 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		// Resolve tenant early
 		$tenantResult = $this->tenantResolver->resolve($request);
 		if (!$tenantResult->isSuccess()) {
-			return $this->responseService->createErrorResponse(
+			$statusCode = $this->extensionConfiguration->getOnMissingTenantStatusCode();
+			$this->logService->logRejectedRequest($request, 'tenant_resolution_failed', $statusCode, [
+				'tenantError' => $tenantResult->getError(),
+			]);
+			$response = $this->responseService->createErrorResponse(
 				'Tenant Resolution Failed',
 				'Could not resolve a valid tenant for this request. Reason: ' . $tenantResult->getError(),
-				$this->extensionConfiguration->getOnMissingTenantStatusCode()
+				$statusCode
 			);
+			return $response->withHeader('X-Request-ID', $requestId);
 		}
 		$request = $request->withAttribute('api.tenant', $tenantResult->getContext());
 
@@ -146,11 +151,18 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 				} catch (\JsonException) {
 					// Only throw an error for application/json if it's invalid
 					if (str_contains($contentType, 'application/json')) {
-						return $this->responseService->createErrorResponse(
+						$this->logService->logRejectedRequest($request, 'invalid_json', 400, [
+							'contentType' => $contentType,
+							'requestBodyLength' => strlen($body),
+							'requestBodyHash' => hash('sha256', $body),
+							'_skipRequestBody' => TRUE,
+						]);
+						$response = $this->responseService->createErrorResponse(
 							'Invalid JSON',
 							'The request body could not be parsed as JSON. Ensure Content-Type is application/json and the body is valid JSON.',
 							400
 						);
+						return $response->withHeader('X-Request-ID', $requestId);
 					}
 				}
 			}

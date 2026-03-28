@@ -171,6 +171,81 @@ class LogService implements SingletonInterface {
 	}
 
 	/**
+	 * Logs an API request that was rejected before reaching the handler.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $reason
+	 * @param int $statusCode
+	 * @param array<string, mixed> $additionalContext
+	 * @return void
+	 */
+	public function logRejectedRequest(
+		ServerRequestInterface $request,
+		string $reason,
+		int $statusCode,
+		array $additionalContext = []
+	): void {
+		if (!$this->extensionConfiguration->isLoggingEnabled()) {
+			return;
+		}
+
+		$redactKeys = $this->extensionConfiguration->getRedactKeys();
+		$maxBodyLength = $this->extensionConfiguration->getLogBodyMaxLength();
+		$apiId = (string) $request->getAttribute('api.id', 'unknown');
+		$tenant = $request->getAttribute('api.tenant');
+		$tenantId = $tenant?->getTenantId() ?? 'none';
+		$requestId = (string) $request->getAttribute('api.requestId', '');
+		$skipRequestBody = (bool) ($additionalContext['_skipRequestBody'] ?? FALSE);
+		unset($additionalContext['_skipRequestBody']);
+		$sanitizedAdditionalContext = $this->redact($additionalContext, $redactKeys);
+		if (!is_array($sanitizedAdditionalContext)) {
+			$sanitizedAdditionalContext = [];
+		}
+		if (!$this->extensionConfiguration->isLogBodyEnabled()) {
+			unset($sanitizedAdditionalContext['requestBody']);
+		}
+
+		$context = array_merge([
+			'requestId' => $requestId,
+			'apiId' => $apiId,
+			'tenantId' => $tenantId,
+			'method' => $request->getMethod(),
+			'path' => $request->getUri()->getPath(),
+			'status' => $statusCode,
+			'reason' => $reason,
+		], $sanitizedAdditionalContext);
+
+		if ($this->extensionConfiguration->isLogHeadersEnabled()) {
+			$context['requestHeaders'] = $this->redact($request->getHeaders(), $redactKeys);
+		}
+
+		if ($this->extensionConfiguration->isLogBodyEnabled() && array_key_exists('requestBody', $context)) {
+			$context['requestBody'] = $this->truncateLogData($context['requestBody'], $maxBodyLength);
+		} elseif ($this->extensionConfiguration->isLogBodyEnabled() && !$skipRequestBody && !array_key_exists('requestBody', $context)) {
+			$parsedBody = $request->getParsedBody();
+			if ($parsedBody) {
+				$context['requestBody'] = $this->truncateLogData($this->redact($parsedBody, $redactKeys), $maxBodyLength);
+			} else {
+				$rawBody = (string) $request->getBody();
+				if ($rawBody !== '') {
+					$context['requestBody'] = $this->truncateLogData($this->redact($rawBody, $redactKeys), $maxBodyLength);
+				}
+			}
+		}
+
+		$this->logger->warning(
+			sprintf(
+				'API Request rejected: %s %s - Status %d - %s',
+				$context['method'],
+				$context['path'],
+				$statusCode,
+				$reason
+			),
+			$context
+		);
+	}
+
+	/**
 	 * Masks sensitive data in an array or string
 	 *
 	 * @param mixed $data
