@@ -67,7 +67,7 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 
 		if ($apiId && $version && $this->apiRegistry->hasApi($apiId)) {
 			$apiConfig = $this->apiRegistry->getApi($apiId);
-			if (in_array($version, $apiConfig['versions'], TRUE)) {
+			if (\in_array($version, $apiConfig['versions'], TRUE)) {
 				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 				$activeProviders = $securityConfig['authProviders'] ?? [];
 

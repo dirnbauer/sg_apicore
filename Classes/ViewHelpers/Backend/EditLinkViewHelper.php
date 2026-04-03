@@ -44,9 +44,9 @@ class EditLinkViewHelper extends AbstractViewHelper {
 		$parameters = [
 			'edit' => [
 				$this->arguments['table'] => [
-					$this->arguments['uid'] => $this->arguments['new'] ? 'new' : 'edit'
-				]
-			]
+					$this->arguments['uid'] => $this->arguments['new'] ? 'new' : 'edit',
+				],
+			],
 		];
 
 		if ($this->arguments['returnUrl'] !== '') {

@@ -71,7 +71,7 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 		}
 
 		// 1. Check JWT
-		if (count(explode('.', $token)) === 3) {
+		if (\count(explode('.', $token)) === 3) {
 			try {
 				$payload = $this->jwtService->decode($token);
 			} catch (\JsonException) {

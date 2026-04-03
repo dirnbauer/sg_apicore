@@ -108,12 +108,12 @@ class ApiCoreController extends ActionController {
 
 		$tokens = $this->tokenRepository->findAllWithFilters($filters);
 		if ($filters['tokenCategory'] === 'user') {
-			$hasUserAccessTokens = count($tokens) > 0;
+			$hasUserAccessTokens = \count($tokens) > 0;
 		} else {
 			$userTokenFilters = $filters;
 			$userTokenFilters['isUserToken'] = 1;
 			$userTokenFilters['isRefreshToken'] = 0;
-			$hasUserAccessTokens = count($this->tokenRepository->findAllWithFilters($userTokenFilters)) > 0;
+			$hasUserAccessTokens = \count($this->tokenRepository->findAllWithFilters($userTokenFilters)) > 0;
 		}
 
 		$apis = $this->apiRegistry->getApis();
@@ -308,7 +308,7 @@ class ApiCoreController extends ActionController {
 	 */
 	protected function prepareDocHeader(ModuleTemplate $moduleTemplate): void {
 		$pageInfo = BackendUtility::readPageAccess(0, $GLOBALS['BE_USER']->getPagePermsClause(1));
-		if (is_array($pageInfo)) {
+		if (\is_array($pageInfo)) {
 			$moduleTemplate->getDocHeaderComponent()->setMetaInformation($pageInfo);
 		}
 
@@ -331,7 +331,7 @@ class ApiCoreController extends ActionController {
 			->setRouteIdentifier('system_SgApiCore') // Replace 'web_SgLogs' with your actual module route identifier
 			->setArguments([
 				'id' => [],
-				'M' => [] // You can specify additional arguments here if required
+				'M' => [], // You can specify additional arguments here if required
 			]);
 		$buttonBar->addButton($shortcutButton, ButtonBar::BUTTON_POSITION_RIGHT);
 	}
@@ -345,7 +345,7 @@ class ApiCoreController extends ActionController {
 		$storedFilters = $beUser instanceof BackendUserAuthentication
 			? $beUser->getModuleData(self::TOKEN_FILTER_STATE_KEY, 'ses')
 			: NULL;
-		if ((!is_array($filters) || $filters === []) && is_array($storedFilters)) {
+		if ((!\is_array($filters) || $filters === []) && \is_array($storedFilters)) {
 			$filters = $storedFilters;
 		}
 
@@ -356,12 +356,12 @@ class ApiCoreController extends ActionController {
 			'tokenCategory' => trim((string) ($filters['tokenCategory'] ?? 'm2m')),
 		];
 
-		if (!in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
+		if (!\in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
 			$normalizedFilters['tokenCategory'] = 'm2m';
 		}
 		if (
 			$normalizedFilters['status'] !== ''
-			&& !in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
+			&& !\in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
 		) {
 			$normalizedFilters['status'] = '';
 		}

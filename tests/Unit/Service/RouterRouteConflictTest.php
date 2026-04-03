@@ -55,7 +55,7 @@ class RouterRouteConflictTest extends UnitTestCase {
 
 			protected function getControllerInstances(): array {
 				return [
-					DummyController::class => new DummyController()
+					DummyController::class => new DummyController(),
 				];
 			}
 		};
@@ -72,7 +72,7 @@ class RouterRouteConflictTest extends UnitTestCase {
 				'action' => 'getAction',
 				'apiId' => ['legacy'],
 				'version' => [],
-				'authMode' => ['public']
+				'authMode' => ['public'],
 			],
 			[
 				'path' => '/news/news/list',
@@ -81,8 +81,8 @@ class RouterRouteConflictTest extends UnitTestCase {
 				'action' => 'listAction',
 				'apiId' => ['legacy'],
 				'version' => [],
-				'authMode' => ['public']
-			]
+				'authMode' => ['public'],
+			],
 		];
 
 		$this->endpointDiscoveryService->method('getAllEndpoints')->willReturn($endpoints);

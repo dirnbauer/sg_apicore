@@ -82,7 +82,7 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 				$scopes = [];
 			}
 
-			if (!is_array($scopes)) {
+			if (!\is_array($scopes)) {
 				$scopes = [];
 			}
 		}

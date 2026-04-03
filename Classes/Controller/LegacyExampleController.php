@@ -51,7 +51,7 @@ class LegacyExampleController {
 	public function listAction(ServerRequestInterface $request): ResponseInterface {
 		$data = [
 			['id' => 1, 'name' => 'Legacy Item 1'],
-			['id' => 2, 'name' => 'Legacy Item 2']
+			['id' => 2, 'name' => 'Legacy Item 2'],
 		];
 
 		$legacyMode = $request->getAttribute('api.legacyMode');

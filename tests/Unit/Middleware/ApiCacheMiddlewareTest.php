@@ -75,14 +75,14 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			[
 				'path' => '/foo',
 				'methods' => ['GET'],
-				'apiCache' => new ApiCache(tags: ['test'])
-			]
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
 		]);
 
 		$cache->method('get')->willReturn([
 			'status' => 200,
 			'contentType' => 'application/json',
-			'body' => '{"cached": true}'
+			'body' => '{"cached": true}',
 		]);
 
 		$handler = $this->createStub(RequestHandlerInterface::class);
@@ -111,8 +111,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			[
 				'path' => '/foo',
 				'methods' => ['GET'],
-				'apiCache' => new ApiCache(tags: ['test'])
-			]
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
 		]);
 
 		$cache->method('get')->willReturn(NULL);
@@ -148,8 +148,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			[
 				'path' => '/foo',
 				'methods' => ['POST'],
-				'apiCache' => new ApiCache(tags: ['test'])
-			]
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
 		]);
 
 		$cache->expects($this->once())->method('flushByTags')->with(['test']);
@@ -184,8 +184,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 				'path' => '/test',
 				'methods' => ['GET'],
 				'authMode' => 'token', // PROTECTED
-				'apiCache' => new ApiCache(enabled: TRUE)
-			]
+				'apiCache' => new ApiCache(enabled: TRUE),
+			],
 		]);
 
 		$cache->expects($this->never())->method('get');

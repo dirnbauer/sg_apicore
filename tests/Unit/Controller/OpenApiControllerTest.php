@@ -36,13 +36,13 @@ class OpenApiControllerTest extends UnitTestCase {
 			'info' => [
 				'title' => 'API: public (v1)',
 				'version' => '1',
-				'description' => 'Cached spec'
+				'description' => 'Cached spec',
 			],
 			'paths' => [
 				'/test' => [
-					'get' => ['summary' => 'Cached']
-				]
-			]
+					'get' => ['summary' => 'Cached'],
+				],
+			],
 		];
 
 		$cache = $this->createStub(FrontendInterface::class);

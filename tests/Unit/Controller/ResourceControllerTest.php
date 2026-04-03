@@ -95,7 +95,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
-			'readFields' => ['header']
+			'readFields' => ['header'],
 		];
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 		$request->method('getQueryParams')->willReturn([]);
@@ -135,7 +135,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
-			'readFields' => ['header']
+			'readFields' => ['header'],
 		];
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 		$request->method('getQueryParams')->willReturn(['filter' => ['header' => 'Test']]);
@@ -175,7 +175,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
-			'readFields' => ['header']
+			'readFields' => ['header'],
 		];
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 		// filter[header]=Test
@@ -216,7 +216,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'idField' => 'uid',
-			'readFields' => []
+			'readFields' => [],
 		];
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 
@@ -244,7 +244,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
-			'writeFields' => ['header']
+			'writeFields' => ['header'],
 		];
 		$request->method('getAttribute')->willReturnCallback(function ($name) use ($resourceConfig) {
 			if ($name === 'api.resource') {
@@ -277,7 +277,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
-			'writeFields' => ['header']
+			'writeFields' => ['header'],
 		];
 
 		$site = $this->createStub(Site::class);
@@ -320,7 +320,7 @@ class ResourceControllerTest extends UnitTestCase {
 			'table' => 'tt_content',
 			'idField' => 'uid',
 			'readFields' => ['header'],
-			'writeFields' => ['header']
+			'writeFields' => ['header'],
 		];
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 		$request->method('getParsedBody')->willReturn(['header' => 'Updated Header']);

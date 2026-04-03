@@ -93,7 +93,7 @@ class TestController {
 			'api' => 'public',
 			'version' => '1',
 			'code' => $code,
-			'message' => 'Public API test successful'
+			'message' => 'Public API test successful',
 		]);
 	}
 
@@ -118,7 +118,7 @@ class TestController {
 			'tenant' => $tenantContext->getTenantId(),
 			'tokenUid' => $authContext->getTokenUid(),
 			'scopes' => $authContext->getScopes(),
-			'message' => 'Partner API test successful'
+			'message' => 'Partner API test successful',
 		]);
 	}
 
@@ -139,7 +139,7 @@ class TestController {
 			'api' => 'user',
 			'userId' => $authContext->getUserId(),
 			'scopes' => $authContext->getScopes(),
-			'message' => 'User-Level API test successful'
+			'message' => 'User-Level API test successful',
 		]);
 	}
 
@@ -184,8 +184,8 @@ class TestController {
 			['id' => 5, 'name' => 'Example 5'],
 		];
 
-		$total = count($data);
-		$slicedData = array_slice($data, $offset, $limit);
+		$total = \count($data);
+		$slicedData = \array_slice($data, $offset, $limit);
 
 		return $this->responseService->createSuccessResponse(
 			$slicedData,

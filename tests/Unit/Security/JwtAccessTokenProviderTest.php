@@ -78,7 +78,7 @@ class JwtAccessTokenProviderTest extends UnitTestCase {
 			'userId' => 123,
 			'tenantId' => 'tenant-1',
 			'apiId' => 'test-api',
-			'scopes' => ['user']
+			'scopes' => ['user'],
 		];
 		$this->jwtService->method('decode')->willReturn($payload);
 

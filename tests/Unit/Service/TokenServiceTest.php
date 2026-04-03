@@ -48,7 +48,7 @@ class TokenServiceTest extends UnitTestCase {
 
 	public function testGenerateRandomTokenReturnsCorrectLength(): void {
 		$token = $this->service->generateRandomToken();
-		$this->assertEquals(64, strlen($token)); // bin2hex(32 bytes)
+		$this->assertEquals(64, \strlen($token)); // bin2hex(32 bytes)
 	}
 
 	public function testCreateTokenInsertsIntoDatabase(): void {

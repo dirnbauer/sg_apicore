@@ -61,7 +61,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 			'api_id' => 'public',
 			'tenant_id' => 'tenant-1',
 			'scopes' => json_encode(['read', 'write']),
-			'expires_at' => 0
+			'expires_at' => 0,
 		];
 
 		$tokenRepository = $this->createMock(TokenRepository::class);
@@ -90,7 +90,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$tokenRecord = [
 			'uid' => 123,
 			'token_hash' => $tokenHash,
-			'expires_at' => time() - 3600 // Expired 1 hour ago
+			'expires_at' => time() - 3600, // Expired 1 hour ago
 		];
 
 		$tokenRepository = $this->createStub(TokenRepository::class);
@@ -117,7 +117,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 			'api_id' => 'public',
 			'tenant_id' => 'tenant-1',
 			'scopes' => '[]',
-			'expires_at' => 0
+			'expires_at' => 0,
 		];
 
 		$tokenRepository = $this->createMock(TokenRepository::class);

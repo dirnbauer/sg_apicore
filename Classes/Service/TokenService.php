@@ -18,7 +18,6 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\SingletonInterface;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Service for managing API tokens
@@ -90,7 +89,7 @@ class TokenService implements SingletonInterface {
 			'expires_at' => (int) $expiresAt,
 			'label' => $label,
 			'crdate' => time(),
-			'tstamp' => time()
+			'tstamp' => time(),
 		]);
 
 		return (int) $connection->lastInsertId();
@@ -126,7 +125,7 @@ class TokenService implements SingletonInterface {
 			'exp' => $now + $ttl,
 			'jti' => $jti,
 			'iss' => 'sg_apicore',
-			'aud' => $apiId
+			'aud' => $apiId,
 		];
 
 		return $this->jwtService->encode($payload);

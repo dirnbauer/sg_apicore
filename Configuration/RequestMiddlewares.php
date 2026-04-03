@@ -24,43 +24,43 @@ return [
 			'target' => LegacyRoutingMiddleware::class,
 			'description' => 'Maps legacy sg_rest URLs to the new API structure',
 			'after' => ['typo3/cms-frontend/site'],
-			'before' => ['typo3/cms-frontend/frontend-user-authenticator']
+			'before' => ['typo3/cms-frontend/frontend-user-authenticator'],
 		],
 		'sgalinski/sg-apicore/api-setup' => [
 			'target' => \SGalinski\SgApiCore\Middleware\ApiSetupMiddleware::class,
 			'description' => 'Initializes the API request context',
 			'after' => ['typo3/cms-frontend/site', 'sgalinski/sg-apicore/legacy-routing'],
-			'before' => ['typo3/cms-frontend/frontend-user-authenticator']
+			'before' => ['typo3/cms-frontend/frontend-user-authenticator'],
 		],
 		'sgalinski/sg-apicore/api-auth' => [
 			'target' => \SGalinski\SgApiCore\Middleware\ApiAuthMiddleware::class,
 			'description' => 'Handles API authentication and scope validation',
 			'after' => ['typo3/cms-frontend/frontend-user-authenticator', 'sgalinski/sg-apicore/api-setup'],
-			'before' => ['sgalinski/sg-apicore/api-typoscript']
+			'before' => ['sgalinski/sg-apicore/api-typoscript'],
 		],
 		'sgalinski/sg-apicore/api-typoscript' => [
 			'target' => ApiTypoScriptMiddleware::class,
 			'description' => 'Initializes full TypoScript context when required',
 			'after' => ['sgalinski/sg-apicore/api-auth'],
-			'before' => ['sgalinski/sg-apicore/rate-limit']
+			'before' => ['sgalinski/sg-apicore/rate-limit'],
 		],
 		'sgalinski/sg-apicore/rate-limit' => [
 			'target' => RateLimitMiddleware::class,
 			'description' => 'Enforces API rate limits',
 			'after' => ['sgalinski/sg-apicore/api-auth'],
-			'before' => ['sgalinski/sg-apicore/api-cache']
+			'before' => ['sgalinski/sg-apicore/api-cache'],
 		],
 		'sgalinski/sg-apicore/api-cache' => [
 			'target' => ApiCacheMiddleware::class,
 			'description' => 'Handles API response caching',
 			'after' => ['sgalinski/sg-apicore/rate-limit'],
-			'before' => ['sgalinski/sg-apicore/api-request']
+			'before' => ['sgalinski/sg-apicore/api-request'],
 		],
 		'sgalinski/sg-apicore/api-request' => [
 			'target' => ApiRequestMiddleware::class,
 			'description' => 'Dispatches an API request',
 			'after' => ['sgalinski/sg-apicore/api-cache'],
-			'before' => ['typo3/cms-frontend/base-redirect-resolver', ]
+			'before' => ['typo3/cms-frontend/base-redirect-resolver', ],
 		],
-	]
+	],
 ];

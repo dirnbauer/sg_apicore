@@ -53,8 +53,8 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 		$request = new ServerRequest('https://example.com/', 'GET', 'php://input', [], [
 			'type' => '1595576052',
 			'tx_sgrest' => [
-				'request' => 'authentication/authentication/getBearerToken'
-			]
+				'request' => 'authentication/authentication/getBearerToken',
+			],
 		]);
 
 		$this->handler->expects($this->once())
@@ -66,7 +66,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 
 	public function testProcessMapsPathBasedLegacyRequest(): void {
 		$request = new ServerRequest('https://example.com/my-key/news/1/get', 'GET', 'php://input', [], [
-			'type' => '1595576052'
+			'type' => '1595576052',
 		]);
 
 		$this->handler->expects($this->once())
@@ -78,7 +78,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 
 	public function testProcessMapsPathBasedLegacyRequestWithLanguagePrefix(): void {
 		$request = new ServerRequest('https://example.com/en/my-key/news/1/get', 'GET', 'php://input', [], [
-			'type' => '1595576052'
+			'type' => '1595576052',
 		]);
 
 		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);

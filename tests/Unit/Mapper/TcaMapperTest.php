@@ -51,7 +51,7 @@ class TcaMapperTest extends UnitTestCase {
 				'hidden_field' => ['config' => ['type' => 'input']],
 				'number' => ['config' => ['type' => 'number']],
 				'check' => ['config' => ['type' => 'check']],
-			]
+			],
 		];
 	}
 
@@ -64,7 +64,7 @@ class TcaMapperTest extends UnitTestCase {
 		$record = [
 			'uid' => 1,
 			'title' => 'Test',
-			'hidden_field' => 'Hidden'
+			'hidden_field' => 'Hidden',
 		];
 
 		$result = $this->mapper->mapRecord('tx_test', $record, ['uid', 'title']);
@@ -78,7 +78,7 @@ class TcaMapperTest extends UnitTestCase {
 		$record = [
 			'uid' => 1,
 			'title' => 'Test',
-			'hidden_field' => 'Hidden'
+			'hidden_field' => 'Hidden',
 		];
 
 		$result = $this->mapper->mapRecord('tx_test', $record, [], ['hidden_field']);
@@ -123,10 +123,10 @@ class TcaMapperTest extends UnitTestCase {
 				'tmpl' => (object) [
 					'setup' => [
 						'lib.' => [
-							'parseFunc_RTE.' => []
-						]
-					]
-				]
+							'parseFunc_RTE.' => [],
+						],
+					],
+				],
 			];
 			unset($GLOBALS['TYPO3_REQUEST']);
 
@@ -135,7 +135,7 @@ class TcaMapperTest extends UnitTestCase {
 			$method->invoke($this->mapper);
 
 			$this->assertArrayHasKey('parseFunc_RTE.', $GLOBALS['TSFE']->tmpl->setup['lib.']);
-			$this->assertGreaterThan(1, count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
+			$this->assertGreaterThan(1, \count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
 		} finally {
 			if ($previousTsfe !== NULL) {
 				$GLOBALS['TSFE'] = $previousTsfe;
@@ -163,11 +163,11 @@ class TcaMapperTest extends UnitTestCase {
 						'lib.' => [
 							'parseFunc_RTE.' => [
 								'externalBlocks' => 'p',
-								'allowTags' => 'p'
-							]
-						]
-					]
-				]
+								'allowTags' => 'p',
+							],
+						],
+					],
+				],
 			];
 			unset($GLOBALS['TYPO3_REQUEST']);
 
@@ -178,10 +178,10 @@ class TcaMapperTest extends UnitTestCase {
 					$parseFuncCalls[] = [
 						'content' => $content,
 						'configuration' => $configuration,
-						'reference' => $reference
+						'reference' => $reference,
 					];
 
-					if (count($parseFuncCalls) === 1) {
+					if (\count($parseFuncCalls) === 1) {
 						throw new \LogicException('Invoked ContentObjectRenderer::parseFunc without any configuration', 1641989097);
 					}
 

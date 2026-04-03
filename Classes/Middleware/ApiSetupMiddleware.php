@@ -78,7 +78,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
-				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
+				$pathWithoutLanguage = '/' . ltrim(substr($path, \strlen($languagePrefix)), '/');
 			}
 		}
 
@@ -145,7 +145,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			if ($body !== '') {
 				try {
 					$parsedBody = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-					if (is_array($parsedBody)) {
+					if (\is_array($parsedBody)) {
 						$request = $request->withParsedBody($parsedBody);
 					}
 				} catch (\JsonException) {
@@ -153,7 +153,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					if (str_contains($contentType, 'application/json')) {
 						$this->logService->logRejectedRequest($request, 'invalid_json', 400, [
 							'contentType' => $contentType,
-							'requestBodyLength' => strlen($body),
+							'requestBodyLength' => \strlen($body),
 							'requestBodyHash' => hash('sha256', $body),
 							'_skipRequestBody' => TRUE,
 						]);

@@ -38,24 +38,24 @@ class PlaceholderTest extends UnitTestCase {
 				'name' => ['type' => 'string', 'example' => 'Test Name'],
 				'tags' => [
 					'type' => 'array',
-					'items' => ['type' => 'string']
+					'items' => ['type' => 'string'],
 				],
 				'media' => [
 					'type' => 'array',
 					'items' => [
 						'type' => 'object',
 						'properties' => [
-							'url' => ['type' => 'string']
-						]
-					]
+							'url' => ['type' => 'string'],
+						],
+					],
 				],
 				'meta' => [
 					'type' => 'object',
 					'properties' => [
-						'flag' => ['type' => 'boolean']
-					]
-				]
-			]
+						'flag' => ['type' => 'boolean'],
+					],
+				],
+			],
 		]);
 
 		$discovery = $this->getDiscoveryService([new MockPlaceholderController()]);
@@ -104,7 +104,7 @@ class MockPlaceholderController {
 	#[ApiEndpoint(summary: 'Placeholder test')]
 	#[ApiResponse(status: 200, schema: 'TestObj[]', example: [
 		'status' => 'ok',
-		'data' => 'schema:TestObj[]'
+		'data' => 'schema:TestObj[]',
 	])]
 	public function test(): void {
 	}

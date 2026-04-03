@@ -98,7 +98,7 @@ class UserAuthService implements SingletonInterface {
 				$queryBuilder->expr()->eq('deleted', 0)
 			);
 
-		if (count($storagePids) > 0) {
+		if (\count($storagePids) > 0) {
 			$queryBuilder->andWhere(
 				$queryBuilder->expr()->in('pid', $queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY))
 			);
@@ -229,7 +229,7 @@ class UserAuthService implements SingletonInterface {
 			'access_token' => $accessTokenData['access_token'],
 			'refresh_token' => $refreshToken,
 			'token_type' => 'Bearer',
-			'expires_in' => $accessTokenData['expires_in']
+			'expires_in' => $accessTokenData['expires_in'],
 		];
 	}
 
@@ -258,7 +258,7 @@ class UserAuthService implements SingletonInterface {
 		$siteRootPageId = $tenantContext?->getSiteRootPageId() ?? 0;
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$activeProviders = $securityConfig['authProviders'] ?? [];
-		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
+		$useJwt = \in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
 		// Determine TTL dynamically based on the provider
 		$expiresIn = $useJwt
@@ -299,7 +299,7 @@ class UserAuthService implements SingletonInterface {
 
 		return [
 			'access_token' => $accessToken,
-			'expires_in' => $expiresIn
+			'expires_in' => $expiresIn,
 		];
 	}
 
@@ -384,7 +384,7 @@ class UserAuthService implements SingletonInterface {
 			'access_token' => $accessTokenData['access_token'],
 			'refresh_token' => $newRefreshToken,
 			'token_type' => 'Bearer',
-			'expires_in' => $accessTokenData['expires_in']
+			'expires_in' => $accessTokenData['expires_in'],
 		];
 	}
 
@@ -401,7 +401,7 @@ class UserAuthService implements SingletonInterface {
 		$tokenRecord = $this->tokenRepository->findByHashGlobally($tokenHash);
 
 		// If not found by hash, it might be a JWT
-		if ($tokenRecord === NULL && count(explode('.', $token)) === 3) {
+		if ($tokenRecord === NULL && \count(explode('.', $token)) === 3) {
 			$payload = $this->jwtService->decode($token);
 			$jti = $payload['jti'] ?? '';
 			if ($jti !== '') {
@@ -420,7 +420,7 @@ class UserAuthService implements SingletonInterface {
 					'tenantId' => $tokenRecord['tenant_id'] ?? '',
 					'isRefreshToken' => 1,
 					'isUserToken' => 1,
-					'status' => 'active'
+					'status' => 'active',
 				];
 				$activeRefreshTokens = $this->tokenRepository->findAllWithFilters($filters);
 				foreach ($activeRefreshTokens as $refreshTokenRecord) {

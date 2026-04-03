@@ -24,8 +24,6 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Attribute\RequireFullTypoScript;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Controller\ResourceController;
-use SGalinski\SgApiCore\Service\ApiRegistry;
-use SGalinski\SgApiCore\Service\ResourceRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Localization\LanguageService;
@@ -88,7 +86,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 		$cacheKey = 'all_endpoints_' . $this->getDiscoverySignature();
 		$cachedEndpoints = $this->cache->get($cacheKey);
-		if (is_array($cachedEndpoints)) {
+		if (\is_array($cachedEndpoints)) {
 			$this->endpoints = $cachedEndpoints;
 			return $this->endpoints;
 		}
@@ -132,16 +130,16 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 					$apiCache = NULL;
 					$cacheAttr = $method->getAttributes(ApiCache::class);
-					if (count($cacheAttr) > 0) {
+					if (\count($cacheAttr) > 0) {
 						$apiCache = $cacheAttr[0]->newInstance();
 					}
 
 					$requireTypoScript = FALSE;
 					$typoScriptAttributes = $method->getAttributes(RequireFullTypoScript::class);
-					if (count($typoScriptAttributes) === 0) {
+					if (\count($typoScriptAttributes) === 0) {
 						$typoScriptAttributes = $reflectionClass->getAttributes(RequireFullTypoScript::class);
 					}
-					if (count($typoScriptAttributes) > 0) {
+					if (\count($typoScriptAttributes) > 0) {
 						$requireTypoScript = TRUE;
 					}
 
@@ -160,7 +158,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$path = '/';
 					}
 
-					$apiIds = is_array($route->apiId) ?
+					$apiIds = \is_array($route->apiId) ?
 						$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []);
 					$authModes = [];
 					if ($route->authMode !== NULL) {
@@ -169,12 +167,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 					$endpoints[] = [
 						'apiId' => $apiIds,
-						'version' => is_array($route->version) ?
+						'version' => \is_array($route->version) ?
 							$route->version : ($route->version !== NULL ? [$route->version] : []),
 						'path' => $path,
 						'methods' => $route->methods,
 						'authMode' => $authModes,
-						'tenants' => is_array($route->tenants) ?
+						'tenants' => \is_array($route->tenants) ?
 							$route->tenants : ($route->tenants !== NULL ? [$route->tenants] : []),
 						'summary' => $summary,
 						'description' => $description,
@@ -187,7 +185,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						'apiCache' => $apiCache,
 						'requireFullTypoScript' => $requireTypoScript,
 						'controller' => $controllerClass,
-						'action' => $method->getName()
+						'action' => $method->getName(),
 					];
 				}
 			}
@@ -219,7 +217,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 
 			// If both are static or both are variable, sort by path length (descending)
 			// to ensure more specific routes are matched first.
-			return strlen($pathB) <=> strlen($pathA);
+			return \strlen($pathB) <=> \strlen($pathA);
 		});
 
 		$this->endpoints = $endpoints;
@@ -279,22 +277,22 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$filteredEndpoints = [];
 
 		foreach ($endpoints as $endpoint) {
-			if (!empty($endpoint['apiId']) && !in_array($apiId, $endpoint['apiId'], TRUE)) {
+			if (!empty($endpoint['apiId']) && !\in_array($apiId, $endpoint['apiId'], TRUE)) {
 				continue;
 			}
 
-			if ($version !== NULL && !empty($endpoint['version']) && !in_array($version, $endpoint['version'], TRUE)) {
+			if ($version !== NULL && !empty($endpoint['version']) && !\in_array($version, $endpoint['version'], TRUE)) {
 				continue;
 			}
 
-			if ($tenantId !== '' && !empty($endpoint['tenants']) && !in_array($tenantId, $endpoint['tenants'], TRUE)) {
+			if ($tenantId !== '' && !empty($endpoint['tenants']) && !\in_array($tenantId, $endpoint['tenants'], TRUE)) {
 				continue;
 			}
 
 			if (!empty($endpoint['authMode'])) {
 				// Visibility logic: if the endpoint defines specific modes, the current API's mode must be one of them.
 				// Exception: if 'public' is allowed, it's always visible in any API.
-				if (!in_array($authMode, $endpoint['authMode'], TRUE) && !in_array('public', $endpoint['authMode'], TRUE)) {
+				if (!\in_array($authMode, $endpoint['authMode'], TRUE) && !\in_array('public', $endpoint['authMode'], TRUE)) {
 					continue;
 				}
 			}
@@ -310,11 +308,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @return mixed
 	 */
 	protected function normalizeSignatureData(mixed $value): mixed {
-		if (!is_array($value)) {
+		if (!\is_array($value)) {
 			return $value;
 		}
 
-		$isAssoc = array_keys($value) !== range(0, count($value) - 1);
+		$isAssoc = array_keys($value) !== range(0, \count($value) - 1);
 		if ($isAssoc) {
 			ksort($value);
 		}
@@ -460,7 +458,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'required' => $required,
 				'pattern' => $pattern,
 				'min' => $min,
-				'max' => $max
+				'max' => $max,
 			];
 		}
 
@@ -485,7 +483,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$resourceInfo['fieldMetadata'] = $fieldMetadata;
 
 		// List
-		if (in_array('list', $allowedOps, TRUE)) {
+		if (\in_array('list', $allowedOps, TRUE)) {
 			$endpoints[] = [
 				'apiId' => [$apiId],
 				'version' => [], // All versions of this API
@@ -531,12 +529,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'listAction',
-				'resource' => $resourceInfo
+				'resource' => $resourceInfo,
 			];
 		}
 
 		// Get
-		if (in_array('get', $allowedOps, TRUE)) {
+		if (\in_array('get', $allowedOps, TRUE)) {
 			$endpoints[] = [
 				'apiId' => [$apiId],
 				'version' => [],
@@ -552,18 +550,18 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName),
-					new ApiResponse(status: 404, description: 'Not Found')
+					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'getAction',
-				'resource' => $resourceInfo
+				'resource' => $resourceInfo,
 			];
 		}
 
 		// Create (POST)
-		if (in_array('create', $allowedOps, TRUE)) {
+		if (\in_array('create', $allowedOps, TRUE)) {
 			$endpoints[] = [
 				'apiId' => [$apiId],
 				'version' => [],
@@ -582,12 +580,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'createAction',
-				'resource' => $resourceInfo
+				'resource' => $resourceInfo,
 			];
 		}
 
 		// Update (PATCH)
-		if (in_array('update', $allowedOps, TRUE)) {
+		if (\in_array('update', $allowedOps, TRUE)) {
 			$endpoints[] = [
 				'apiId' => [$apiId],
 				'version' => [],
@@ -603,18 +601,18 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Updated', schema: $tableName),
-					new ApiResponse(status: 404, description: 'Not Found')
+					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'updateAction',
-				'resource' => $resourceInfo
+				'resource' => $resourceInfo,
 			];
 		}
 
 		// Delete
-		if (in_array('delete', $allowedOps, TRUE)) {
+		if (\in_array('delete', $allowedOps, TRUE)) {
 			$deleteDescription = 'Deletes an existing ' . $tableName . ' resource.';
 			if (($config['deleteMode'] ?? 'soft') === 'hard') {
 				$deleteDescription .= ' Hard delete (no TYPO3 audit log).';
@@ -634,13 +632,13 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
 				'responses' => [
 					new ApiResponse(status: 204, description: 'Deleted (no content)'),
-					new ApiResponse(status: 404, description: 'Not Found')
+					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'deleteAction',
-				'resource' => $resourceInfo
+				'resource' => $resourceInfo,
 			];
 		}
 
@@ -657,7 +655,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 		if ($this->controllerClasses === NULL) {
 			$this->controllerClasses = [];
 			foreach ($this->controllers as $controller) {
-				$className = get_class($controller);
+				$className = \get_class($controller);
 				if (str_contains($className, '@anonymous')) {
 					$reflectionClass = new \ReflectionClass($controller);
 					$className = $reflectionClass->getName();

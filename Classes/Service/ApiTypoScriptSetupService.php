@@ -76,7 +76,7 @@ class ApiTypoScriptSetupService {
 					&& isset($GLOBALS['TSFE']->tmpl)
 					&& $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService
 				) {
-					if (isset($GLOBALS['TSFE']->rootLine) && is_array($GLOBALS['TSFE']->rootLine)) {
+					if (isset($GLOBALS['TSFE']->rootLine) && \is_array($GLOBALS['TSFE']->rootLine)) {
 						/** @phpstan-ignore-next-line */
 						$GLOBALS['TSFE']->tmpl->runThroughTemplates($GLOBALS['TSFE']->rootLine);
 					}
@@ -90,7 +90,7 @@ class ApiTypoScriptSetupService {
 				if ($frontendTypoScript instanceof FrontendTypoScript && !$frontendTypoScript->hasSetup()) {
 					if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
 						&& isset($GLOBALS['TSFE']->tmpl->setup)
-						&& is_array($GLOBALS['TSFE']->tmpl->setup)
+						&& \is_array($GLOBALS['TSFE']->tmpl->setup)
 					) {
 						/** @phpstan-ignore-next-line */
 						$frontendTypoScript->setSetupArray($GLOBALS['TSFE']->tmpl->setup);
@@ -162,10 +162,10 @@ class ApiTypoScriptSetupService {
 			'config.' => [
 				'tx_sgapicore.' => [
 					'persistence.' => [
-						'storagePid' => $siteRootPageId
-					]
-				]
-			]
+						'storagePid' => $siteRootPageId,
+					],
+				],
+			],
 		];
 
 		if ($this->typo3Version->getMajorVersion() >= 13) {
@@ -183,7 +183,7 @@ class ApiTypoScriptSetupService {
 			'starttime' => 0,
 			'endtime' => 0,
 			'fe_group' => '',
-			'tx_staticfilecache_cache_priority' => 0
+			'tx_staticfilecache_cache_priority' => 0,
 		];
 		$tsfe->id = $siteRootPageId;
 		$tsfe->rootLine = $rootline;
@@ -256,7 +256,7 @@ class ApiTypoScriptSetupService {
 			'starttime' => 0,
 			'endtime' => 0,
 			'fe_group' => '',
-			'tx_staticfilecache_cache_priority' => 0
+			'tx_staticfilecache_cache_priority' => 0,
 		];
 		$tsfe->id = $siteRootPageId;
 		$GLOBALS['TSFE'] = $tsfe;

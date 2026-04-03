@@ -50,13 +50,13 @@ class ApiTypoScriptMiddleware implements MiddlewareInterface {
 
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
-		if (is_array($authMode)) {
+		if (\is_array($authMode)) {
 			$authMode = (string) reset($authMode);
 		}
 		$authMode = (string) $authMode;
 
 		$handlerInfo = $this->router->matchEndpoint($request, $apiId, $version, (string) $path, $authMode);
-		if (!is_array($handlerInfo)) {
+		if (!\is_array($handlerInfo)) {
 			return $handler->handle($request);
 		}
 

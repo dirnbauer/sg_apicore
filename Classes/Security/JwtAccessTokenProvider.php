@@ -57,13 +57,13 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	): ?AuthContext {
 		$tenantId ??= '';
 		$token = $this->extractToken($request);
-		if ($token === '' || count(explode('.', $token)) !== 3) {
+		if ($token === '' || \count(explode('.', $token)) !== 3) {
 			return NULL;
 		}
 
 		$payload = $this->jwtService->decode($token, [
 			'tenantId' => $tenantId,
-			'apiId' => $apiId
+			'apiId' => $apiId,
 		]);
 
 		if ($payload === NULL) {

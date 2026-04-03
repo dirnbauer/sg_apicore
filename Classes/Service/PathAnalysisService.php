@@ -51,7 +51,7 @@ class PathAnalysisService implements SingletonInterface {
 				return [
 					'apiId' => $apiId,
 					'version' => $version,
-					'remainingPath' => $remainingPath
+					'remainingPath' => $remainingPath,
 				];
 			}
 		}
@@ -61,7 +61,7 @@ class PathAnalysisService implements SingletonInterface {
 			return NULL;
 		}
 
-		$relativeWeight = strpos($path, $apiPathPrefix) + strlen($apiPathPrefix);
+		$relativeWeight = strpos($path, $apiPathPrefix) + \strlen($apiPathPrefix);
 		$relativeRequestPath = substr($path, $relativeWeight);
 		$relativeRequestPath = ltrim($relativeRequestPath, '/');
 		$relativeRequestPath = rtrim($relativeRequestPath, '/');
@@ -78,7 +78,7 @@ class PathAnalysisService implements SingletonInterface {
 			return [
 				'apiId' => $matches[1],
 				'version' => $matches[2],
-				'remainingPath' => $remainingPath
+				'remainingPath' => $remainingPath,
 			];
 		}
 

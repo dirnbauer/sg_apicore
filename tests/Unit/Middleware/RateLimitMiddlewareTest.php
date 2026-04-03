@@ -44,7 +44,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 			'limit' => 2,
 			'remaining' => 0,
 			'reset' => time() + 60,
-			'burst' => 0
+			'burst' => 0,
 		]);
 
 		$apiRegistry = $this->createStub(ApiRegistry::class);
@@ -95,7 +95,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 			'limit' => 2,
 			'remaining' => 1,
 			'reset' => time() + 60,
-			'burst' => 0
+			'burst' => 0,
 		]);
 
 		$apiRegistry = $this->createStub(ApiRegistry::class);
@@ -148,7 +148,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getRateLimitConfig')->willReturn([
 			'limit' => 5,
-			'windowSeconds' => 60
+			'windowSeconds' => 60,
 		]);
 
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
@@ -158,9 +158,9 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 				'rateLimit' => [
 					'limit' => 1,
 					'windowSeconds' => 30,
-					'burst' => 2
-				]
-			]
+					'burst' => 2,
+				],
+			],
 		]);
 
 		$rateLimitService = $this->createMock(RateLimitService::class);
@@ -174,7 +174,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 			'limit' => 3,
 			'remaining' => 2,
 			'reset' => time() + 30,
-			'burst' => 2
+			'burst' => 2,
 		]);
 
 		$responseService = $this->createStub(ResponseService::class);

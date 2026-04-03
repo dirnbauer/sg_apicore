@@ -129,16 +129,16 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$resourceRegistry = new ResourceRegistry();
 		$resourceRegistry->registerResource('public', 'tx_test', '/tests', [
 			'allowedOperations' => ['list'],
-			'readFields' => ['title']
+			'readFields' => ['title'],
 		]);
 
 		$GLOBALS['TCA']['tx_test'] = [
 			'columns' => [
 				'title' => [
 					'label' => 'LLL:EXT:test/Resources/Private/Language/locallang_db.xlf:tx_test.title',
-					'config' => ['type' => 'input']
-				]
-			]
+					'config' => ['type' => 'input'],
+				],
+			],
 		];
 
 		$cache = $this->createStub(FrontendInterface::class);

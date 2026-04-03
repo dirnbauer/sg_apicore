@@ -47,7 +47,7 @@ class ApiRegistry implements SingletonInterface {
 			'versions' => $versions,
 			'security' => $security,
 			'basePath' => $basePath,
-			'rateLimit' => $rateLimit
+			'rateLimit' => $rateLimit,
 		];
 	}
 
@@ -93,11 +93,11 @@ class ApiRegistry implements SingletonInterface {
 		}
 
 		$rateLimit = $api['rateLimit'] ?? NULL;
-		if (!is_array($rateLimit)) {
+		if (!\is_array($rateLimit)) {
 			return NULL;
 		}
 
-		if (isset($rateLimit['versions']) && is_array($rateLimit['versions'])) {
+		if (isset($rateLimit['versions']) && \is_array($rateLimit['versions'])) {
 			return $rateLimit['versions'][$version] ?? $rateLimit;
 		}
 

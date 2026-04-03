@@ -51,7 +51,7 @@ class LoginProviderChain implements LoginProviderInterface {
 		$tenantId ??= '';
 		foreach ($this->providers as $provider) {
 			if (!empty($activeProviders)) {
-				$className = get_class($provider);
+				$className = \get_class($provider);
 				$shortName = strtolower((new \ReflectionClass($className))->getShortName());
 				// Allow matching by full class name or simplified short name (e.g. 'beareropaquetokenprovider')
 				$match = FALSE;

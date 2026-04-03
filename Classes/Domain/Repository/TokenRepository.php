@@ -55,7 +55,7 @@ class TokenRepository implements SingletonInterface {
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
 			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
 			$queryBuilder->expr()->eq('token_hash', $queryBuilder->createNamedParameter($tokenHash)),
-			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
 		];
 
 		if (!$includeRefreshTokens) {
@@ -116,7 +116,7 @@ class TokenRepository implements SingletonInterface {
 		$constraints = [
 			$queryBuilder->expr()->eq('api_id', $queryBuilder->createNamedParameter($apiId)),
 			$queryBuilder->expr()->eq('tenant_id', $queryBuilder->createNamedParameter($tenantId)),
-			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT))
+			$queryBuilder->expr()->eq('revoked_at', $queryBuilder->createNamedParameter(0, Connection::PARAM_INT)),
 		];
 
 		if ($siteRootPageId !== NULL) {

@@ -13,9 +13,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 	$GLOBALS['TYPO3_CONF_VARS']['LOG']['SGalinski']['SgApiCore']['Service']['LogService']['writerConfiguration'] = [
 		LogLevel::INFO => [
 			FileWriter::class => [
-				'logFile' => Environment::getVarPath() . '/log/sg_apicore.log'
-			]
-		]
+				'logFile' => Environment::getVarPath() . '/log/sg_apicore.log',
+			],
+		],
 	];
 
 	$extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
@@ -23,22 +23,22 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 		// DEMO API ENTRIES
 		$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
 		$apiRegistry->registerApi('public', ['1'], [
-			'authMode' => 'public'
+			'authMode' => 'public',
 		]);
 		$apiRegistry->registerApi('partner', ['1'], [
 			'authMode' => 'token',
-			'authProviders' => ['beareropaquetokenprovider']
+			'authProviders' => ['beareropaquetokenprovider'],
 		]);
 		$apiRegistry->registerApi('user', ['1'], [
 			'authMode' => 'user',
-			'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider']
+			'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider'],
 		]);
 
 		// DEMO RESOURCE ENTRIES
 		$resourceRegistry = GeneralUtility::makeInstance(ResourceRegistry::class);
 		$resourceRegistry->registerResource('public', 'tt_content', '/contents', [
 			'allowedOperations' => ['list', 'get'],
-			'readFields' => ['uid', 'pid', 'header', 'bodytext', 'CType']
+			'readFields' => ['uid', 'pid', 'header', 'bodytext', 'CType'],
 		]);
 		$resourceRegistry->registerResource('partner', 'tt_content', '/contents', [
 			'allowedOperations' => ['list', 'get', 'create', 'update', 'delete'],
@@ -49,12 +49,12 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 				'create' => ['partner:write'],
 				'update' => ['partner:write'],
 				'delete' => ['partner:write'],
-			]
+			],
 		]);
 
 		$resourceRegistry->registerResource('public', 'pages', '/pages', [
 			'allowedOperations' => ['list', 'get'],
-			'readFields' => ['uid', 'pid', 'title', 'doktype', 'slug']
+			'readFields' => ['uid', 'pid', 'title', 'doktype', 'slug'],
 		]);
 	}
 
@@ -62,7 +62,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 		$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
 		$apiRegistry->registerApi('legacy', ['1'], [
 			'authMode' => 'user',
-			'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider']
+			'authProviders' => ['beareropaquetokenprovider', 'jwtaccesstokenprovider'],
 		]);
 	}
 

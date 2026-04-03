@@ -65,8 +65,8 @@ class LogServiceTest extends UnitTestCase {
 			'token' => 'abc-123',
 			'nested' => [
 				'secret' => 'top-secret',
-				'safe' => 'ok'
-			]
+				'safe' => 'ok',
+			],
 		];
 		$redactKeys = ['password', 'token', 'secret'];
 
@@ -159,7 +159,7 @@ class LogServiceTest extends UnitTestCase {
 			['api.requestId', '', 'req-123'],
 			['api.id', 'global', 'public'],
 			['api.tenant', NULL, NULL],
-			['language', NULL, NULL]
+			['language', NULL, NULL],
 		]);
 
 		$response = $this->createStub(\Psr\Http\Message\ResponseInterface::class);
@@ -185,7 +185,7 @@ class LogServiceTest extends UnitTestCase {
 		$longString = str_repeat('a', 100);
 		$result = $method->invoke($this->service, $longString, 50);
 
-		$this->assertEquals(50 + strlen('... [truncated]'), strlen($result));
+		$this->assertEquals(50 + \strlen('... [truncated]'), \strlen($result));
 		$this->assertStringContainsString('... [truncated]', $result);
 		$this->assertEquals(0, strpos(strrev($result), strrev('... [truncated]')));
 	}

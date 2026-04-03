@@ -169,7 +169,7 @@ class UserAuthServiceTest extends UnitTestCase {
 	public function testResolveUserStoragePidsFromSiteConfig(): void {
 		$site = $this->createStub(Site::class);
 		$site->method('getConfiguration')->willReturn([
-			'apicore' => ['userStoragePids' => '10,20']
+			'apicore' => ['userStoragePids' => '10,20'],
 		]);
 		$tenantContext = new TenantContext('test-tenant', 'test-site', 1, $site);
 
@@ -196,7 +196,7 @@ class UserAuthServiceTest extends UnitTestCase {
 			'user_id' => 123,
 			'is_refresh_token' => 1,
 			'expires_at' => 0,
-			'scopes' => '["user"]'
+			'scopes' => '["user"]',
 		];
 		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
 		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authProviders' => []]);
@@ -215,7 +215,7 @@ class UserAuthServiceTest extends UnitTestCase {
 			'user_id' => 123,
 			'is_refresh_token' => 1,
 			'expires_at' => time() - 3600,
-			'scopes' => '["user"]'
+			'scopes' => '["user"]',
 		];
 		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
 
@@ -237,7 +237,7 @@ class UserAuthServiceTest extends UnitTestCase {
 			'user_id' => 123,
 			'is_refresh_token' => 0,
 			'api_id' => 'public',
-			'tenant_id' => 'test-tenant'
+			'tenant_id' => 'test-tenant',
 		];
 
 		$this->tokenRepository->expects($this->once())
@@ -301,7 +301,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$this->tokenRepository->method('findByHashGlobally')
 			->willReturnMap([
 				[$tokenHash, NULL],
-				[$jti, ['uid' => 999, 'user_id' => 123, 'is_refresh_token' => 0]]
+				[$jti, ['uid' => 999, 'user_id' => 123, 'is_refresh_token' => 0]],
 			]);
 
 		$this->jwtService->expects($this->once())

@@ -57,7 +57,7 @@ class RateLimitMiddleware implements MiddlewareInterface {
 		}
 
 		$rateLimitConfig = $this->resolveRateLimitConfig($request, $apiId);
-		if (is_array($rateLimitConfig) && array_key_exists('enabled', $rateLimitConfig) && !$rateLimitConfig['enabled']) {
+		if (\is_array($rateLimitConfig) && \array_key_exists('enabled', $rateLimitConfig) && !$rateLimitConfig['enabled']) {
 			return $handler->handle($request);
 		}
 
@@ -76,7 +76,7 @@ class RateLimitMiddleware implements MiddlewareInterface {
 			$this->logService->logError('Rate limit exceeded.', [
 				'identifier' => $identifier,
 				'limit' => $result['limit'],
-				'reset' => $result['reset']
+				'reset' => $result['reset'],
 			]);
 
 			return $this->responseService->createErrorResponse(
@@ -129,7 +129,7 @@ class RateLimitMiddleware implements MiddlewareInterface {
 	 */
 	protected function resolveRateLimitConfig(ServerRequestInterface $request, string $apiId): ?array {
 		$resourceConfig = $this->resolveResourceConfig($request, $apiId);
-		if (is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && is_array($resourceConfig['rateLimit'])) {
+		if (\is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && \is_array($resourceConfig['rateLimit'])) {
 			return $resourceConfig['rateLimit'];
 		}
 

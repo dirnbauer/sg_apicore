@@ -50,7 +50,7 @@ class PaginationService implements SingletonInterface {
 
 		return [
 			'offset' => $offset,
-			'limit' => $limit
+			'limit' => $limit,
 		];
 	}
 
@@ -72,7 +72,7 @@ class PaginationService implements SingletonInterface {
 			'limit' => $limit,
 			'count' => min($limit, max(0, $total - $offset)),
 			'page' => $page,
-			'pages' => $pages
+			'pages' => $pages,
 		];
 	}
 }

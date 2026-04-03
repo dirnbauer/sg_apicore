@@ -98,7 +98,7 @@ class OpenApiController {
 		$debugInfo = '';
 		$debugFlag = $request->getQueryParams()['debug'] ?? '';
 		$debugFlag = strtolower((string) $debugFlag);
-		if (in_array($debugFlag, ['1', 'true', 'yes'], TRUE)) {
+		if (\in_array($debugFlag, ['1', 'true', 'yes'], TRUE)) {
 			$tenantContext = $request->getAttribute('api.tenant');
 			$tenantId = $tenantContext?->getTenantId() ?? '';
 			$cacheInfo = $this->openApiService->getCacheDebugInfo($apiId, $version, $baseUrl, $tenantId);

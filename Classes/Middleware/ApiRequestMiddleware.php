@@ -79,7 +79,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
-				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
+				$pathWithoutLanguage = '/' . ltrim(substr($path, \strlen($languagePrefix)), '/');
 			}
 		}
 
@@ -124,7 +124,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 		if ($apiId && $version && $this->apiRegistry->hasApi($apiId)) {
 			$apiConfig = $this->apiRegistry->getApi($apiId);
-			if (in_array($version, $apiConfig['versions'], TRUE)) {
+			if (\in_array($version, $apiConfig['versions'], TRUE)) {
 				// Redirect to documentation if the base API URL is called
 				if ($remainingPath === '/' && $request->getMethod() === 'GET') {
 					$redirectPath = rtrim($path, '/') . '/docs/ui';
@@ -136,7 +136,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 				$authMode = $securityConfig['authMode'] ?? 'token';
-				if (is_array($authMode)) {
+				if (\is_array($authMode)) {
 					$authMode = (string) reset($authMode);
 				}
 				$authMode = (string) $authMode;

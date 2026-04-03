@@ -19,7 +19,7 @@ return [
 	'palettes' => [
 		'management' => [
 			'label' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_db.xlf:tx_apicore_token.palette.management',
-			'showitem' => 'user_id, is_refresh_token, --break--, expires_at, revoked_at, last_used_at'
+			'showitem' => 'user_id, is_refresh_token, --break--, expires_at, revoked_at, last_used_at',
 		],
 	],
 	'types' => [
@@ -51,7 +51,7 @@ return [
 			'config' => [
 				'type' => 'input',
 				'size' => 30,
-				'eval' => 'trim'
+				'eval' => 'trim',
 			],
 		],
 		'tenant_id' => [
@@ -60,7 +60,7 @@ return [
 			'config' => [
 				'type' => 'input',
 				'size' => 30,
-				'eval' => 'trim,required'
+				'eval' => 'trim,required',
 			],
 		],
 		'api_id' => [
@@ -69,7 +69,7 @@ return [
 			'config' => [
 				'type' => 'input',
 				'size' => 30,
-				'eval' => 'trim,required'
+				'eval' => 'trim,required',
 			],
 		],
 		'token_hash' => [
@@ -94,7 +94,7 @@ return [
 						'addWhere' => ' AND fe_users.deleted=0 AND fe_users.disable=0',
 					],
 				],
-				'default' => 0
+				'default' => 0,
 			],
 		],
 		'is_refresh_token' => [
@@ -102,7 +102,7 @@ return [
 			'config' => [
 				'type' => 'check',
 				'renderType' => 'checkboxToggle',
-				'default' => 0
+				'default' => 0,
 			],
 		],
 		'scopes' => [
@@ -113,7 +113,7 @@ return [
 				'cols' => 40,
 				'rows' => 5,
 				'eval' => 'trim',
-				'default' => '[]'
+				'default' => '[]',
 			],
 		],
 		'expires_at' => [
@@ -122,7 +122,7 @@ return [
 				'type' => 'input',
 				'renderType' => 'inputDateTime',
 				'eval' => 'datetime',
-				'default' => 0
+				'default' => 0,
 			],
 		],
 		'revoked_at' => [
@@ -131,7 +131,7 @@ return [
 				'type' => 'input',
 				'renderType' => 'inputDateTime',
 				'eval' => 'datetime',
-				'default' => 0
+				'default' => 0,
 			],
 		],
 		'last_used_at' => [

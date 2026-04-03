@@ -46,9 +46,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$GLOBALS['TCA']['tx_test_table'] = [
 			'columns' => [
 				'original_field' => [
-					'label' => 'LLL:EXT:test/locallang.xlf:title'
-				]
-			]
+					'label' => 'LLL:EXT:test/locallang.xlf:title',
+				],
+			],
 		];
 
 		$globalSchemas = [
@@ -57,10 +57,10 @@ class OpenApiServiceTest extends UnitTestCase {
 				'properties' => [
 					'remapped_field' => [
 						'type' => 'string',
-						'x-tca-field' => 'original_field'
-					]
-				]
-			]
+						'x-tca-field' => 'original_field',
+					],
+				],
+			],
 		];
 
 		$schemaRegistry = $this->createStub(SchemaRegistry::class);
@@ -98,9 +98,9 @@ class OpenApiServiceTest extends UnitTestCase {
 			'columns' => [
 				'title' => [
 					'label' => 'LLL:EXT:test/locallang.xlf:title',
-					'description' => 'A descriptive text'
-				]
-			]
+					'description' => 'A descriptive text',
+				],
+			],
 		];
 
 		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
@@ -125,8 +125,8 @@ class OpenApiServiceTest extends UnitTestCase {
 		$globalSchemas = [
 			'GlobalObject' => [
 				'type' => 'object',
-				'properties' => ['id' => ['type' => 'integer']]
-			]
+				'properties' => ['id' => ['type' => 'integer']],
+			],
 		];
 
 		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration, $globalSchemas);
@@ -209,7 +209,7 @@ class OpenApiServiceTest extends UnitTestCase {
 			['partner', '1', ['authMode' => 'user']],
 			['partner', '', ['authMode' => 'user']],
 			['backend', '1', ['authMode' => 'backend']],
-			['backend', '', ['authMode' => 'backend']]
+			['backend', '', ['authMode' => 'backend']],
 		]);
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
@@ -218,7 +218,7 @@ class OpenApiServiceTest extends UnitTestCase {
 			new MockUserOnlyController(),
 			new MockBackendOnlyController(),
 			new MockDefaultController(),
-			new MockOpenApiController()
+			new MockOpenApiController(),
 		]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -437,9 +437,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$GLOBALS['TCA']['tx_test_table'] = [
 			'columns' => [
 				'title' => [
-					'label' => 'LLL:EXT:test/locallang.xlf:title'
-				]
-			]
+					'label' => 'LLL:EXT:test/locallang.xlf:title',
+				],
+			],
 		];
 
 		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
@@ -466,17 +466,17 @@ class OpenApiServiceTest extends UnitTestCase {
 					'label' => 'Parent Child Label',
 					'config' => [
 						'type' => 'inline',
-						'foreign_table' => 'tx_child_table'
-					]
-				]
-			]
+						'foreign_table' => 'tx_child_table',
+					],
+				],
+			],
 		];
 		$GLOBALS['TCA']['tx_child_table'] = [
 			'columns' => [
 				'name' => [
-					'label' => 'Child Name Label'
-				]
-			]
+					'label' => 'Child Name Label',
+				],
+			],
 		];
 
 		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
@@ -535,9 +535,9 @@ class OpenApiServiceTest extends UnitTestCase {
 		$GLOBALS['TCA']['tx_test_table'] = [
 			'columns' => [
 				'title' => [
-					'label' => 'LLL:EXT:test/locallang.xlf:title'
-				]
-			]
+					'label' => 'LLL:EXT:test/locallang.xlf:title',
+				],
+			],
 		];
 
 		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
@@ -649,7 +649,7 @@ class MockSchemaErrorController {
 class MockHybridController {
 	#[ApiRoute(path: '/hybrid', methods: ['GET'], apiId: ['public', 'partner'], version: '1', authMode: [
 		'user',
-		'public'
+		'public',
 	])]
 	public function hybridAction(): void {
 	}
@@ -721,8 +721,8 @@ class MockEnvelopedTcaExampleController {
 	#[ApiRoute(path: '/enveloped-tca-example', methods: ['GET'])]
 	#[ApiResponse(status: 200, schema: 'tx_test_table', example: [
 		'data' => [
-			['title' => 'Test']
-		]
+			['title' => 'Test'],
+		],
 	])]
 	public function tcaAction(): void {
 	}
@@ -744,8 +744,8 @@ class MockComplexExampleController {
 		'title' => 'Complex',
 		'count' => 5,
 		'items' => [
-			['id' => 1]
-		]
+			['id' => 1],
+		],
 	])]
 	public function complexAction(): void {
 	}

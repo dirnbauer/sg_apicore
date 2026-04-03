@@ -84,13 +84,13 @@ class UserAuthControllerTest extends UnitTestCase {
 		$request->method('getAttribute')->willReturnMap([
 			['api.tenant', $tenantContext],
 			['api.id', 'public'],
-			['api.version', '1']
+			['api.version', '1'],
 		]);
 
 		$userRecord = [
 			'uid' => 123,
 			'username' => 'testuser',
-			'password' => 'hashed-password'
+			'password' => 'hashed-password',
 		];
 		$this->userAuthService->method('authenticateUser')->willReturn($userRecord);
 
@@ -98,7 +98,7 @@ class UserAuthControllerTest extends UnitTestCase {
 			'access_token' => 'access-token',
 			'refresh_token' => 'refresh-token',
 			'token_type' => 'Bearer',
-			'expires_in' => 3600
+			'expires_in' => 3600,
 		];
 		$this->userAuthService->method('generateTokensForUserWithScopeHandling')->willReturn($tokens);
 
@@ -123,7 +123,7 @@ class UserAuthControllerTest extends UnitTestCase {
 			['api.tenant', NULL, $tenantContext],
 			['api.id', NULL, 'public'],
 			['api.version', NULL, '1'],
-			['api.auth', NULL, NULL]
+			['api.auth', NULL, NULL],
 		]);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer valid-token');
 
@@ -132,7 +132,7 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$tokenRecord = [
 			'scopes' => json_encode(['partner:read', 'user']),
-			'expires_at' => time() + 3600
+			'expires_at' => time() + 3600,
 		];
 		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
 
@@ -168,13 +168,13 @@ class UserAuthControllerTest extends UnitTestCase {
 		$request->method('getAttribute')->willReturnMap([
 			['api.tenant', NULL, new TenantContext('test-tenant')],
 			['api.id', NULL, 'public'],
-			['api.version', NULL, '1']
+			['api.version', NULL, '1'],
 		]);
 
 		$tokens = [
 			'access_token' => 'new-access-token',
 			'token_type' => 'Bearer',
-			'expires_in' => 3600
+			'expires_in' => 3600,
 		];
 		$this->userAuthService->method('refreshTokens')->willReturn($tokens);
 
@@ -196,7 +196,7 @@ class UserAuthControllerTest extends UnitTestCase {
 		$request->method('getAttribute')->willReturnMap([
 			['api.tenant', NULL, new TenantContext('test-tenant')],
 			['api.id', NULL, 'public'],
-			['api.version', NULL, '1']
+			['api.version', NULL, '1'],
 		]);
 
 		$this->userAuthService->method('refreshTokens')->willThrowException(

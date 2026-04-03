@@ -51,8 +51,8 @@ class ResourceRegistry implements SingletonInterface {
 				'get' => [],
 				'create' => [],
 				'update' => [],
-				'delete' => []
-			]
+				'delete' => [],
+			],
 		], $config);
 	}
 

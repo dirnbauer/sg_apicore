@@ -114,7 +114,7 @@ class UserAuthController {
 			'access_token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
 			'refresh_token' => '7f8e9a0b1c2d3e4f5g6h7i8j9k0l1m2n...',
 			'token_type' => 'Bearer',
-			'expires_in' => 3600
+			'expires_in' => 3600,
 		]
 	)]
 	#[ApiResponse(status: 400, description: 'Missing username or password')]
@@ -157,7 +157,7 @@ class UserAuthController {
 		if ($response->getStatusCode() === 200) {
 			$data = json_decode((string) $response->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
 			return $this->responseService->createSuccessResponse([
-				'bearerToken' => $data['access_token'] ?? ''
+				'bearerToken' => $data['access_token'] ?? '',
 			], [], 200, new ApiLegacyMode(wrapData: FALSE));
 		}
 
@@ -191,7 +191,7 @@ class UserAuthController {
 			'access_token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
 			'refresh_token' => 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6...',
 			'token_type' => 'Bearer',
-			'expires_in' => 3600
+			'expires_in' => 3600,
 		]
 	)]
 	#[ApiResponse(status: 400, description: 'Missing refresh_token parameter')]
@@ -227,7 +227,7 @@ class UserAuthController {
 	 */
 	#[ApiRoute(path: '/auth/logout', methods: ['POST'], authMode: 'user')]
 	#[ApiEndpoint(summary: 'Logout', description: 'Revokes the current Access/Refresh token (User Auth).', tags: [
-		'Authentication'
+		'Authentication',
 	])]
 	#[ApiResponse(status: 200, description: 'Success response')]
 	#[RequireUser]
