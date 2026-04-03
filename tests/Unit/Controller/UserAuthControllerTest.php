@@ -62,11 +62,11 @@ class UserAuthControllerTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		$this->tokenRepository = $this->createStub(TokenRepository::class);
-		$this->tokenService = $this->createStub(TokenService::class);
-		$this->apiRegistry = $this->createStub(ApiRegistry::class);
-		$this->responseService = $this->createStub(ResponseService::class);
-		$this->userAuthService = $this->createStub(UserAuthService::class);
+		$this->tokenRepository = $this->createMock(TokenRepository::class);
+		$this->tokenService = $this->createMock(TokenService::class);
+		$this->apiRegistry = $this->createMock(ApiRegistry::class);
+		$this->responseService = $this->createMock(ResponseService::class);
+		$this->userAuthService = $this->createMock(UserAuthService::class);
 
 		$this->controller = new UserAuthController(
 			$this->tokenRepository,
@@ -130,16 +130,10 @@ class UserAuthControllerTest extends UnitTestCase {
 		$userRecord = ['uid' => 123, 'username' => 'testuser'];
 		$this->userAuthService->method('authenticateUser')->willReturn($userRecord);
 
-		$tokenRecord = [
-			'scopes' => json_encode(['partner:read', 'user']),
-			'expires_at' => time() + 3600,
-		];
-		$this->tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
-
-		// Verify that generateTokensForUser is called with the inherited scopes
+		// Verify that the controller delegates scope handling to the dedicated service method.
 		$this->userAuthService->expects($this->once())
-			->method('generateTokensForUser')
-			->with($userRecord, 'public', '1', $tenantContext, ['user', 'partner:read'])
+			->method('generateTokensForUserWithScopeHandling')
+			->with($userRecord, $request, 'public', '1')
 			->willReturn(['access_token' => 'new-token']);
 
 		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));

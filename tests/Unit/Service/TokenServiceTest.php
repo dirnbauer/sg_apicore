@@ -34,10 +34,10 @@ class TokenServiceTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		$this->tokenRepository = $this->createStub(TokenRepository::class);
-		$this->jwtService = $this->createStub(JwtService::class);
-		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
-		$this->connectionPool = $this->createStub(ConnectionPool::class);
+		$this->tokenRepository = $this->createMock(TokenRepository::class);
+		$this->jwtService = $this->createMock(JwtService::class);
+		$this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+		$this->connectionPool = $this->createMock(ConnectionPool::class);
 		$this->service = new TokenService(
 			$this->tokenRepository,
 			$this->jwtService,

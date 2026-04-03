@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use PHPUnit\Framework\MockObject\MockObject;
+use SGalinski\SgApiCore\Service\CachePathService;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\RequestValidator;
 use SGalinski\SgApiCore\Service\ResponseService;
@@ -42,23 +43,41 @@ class RouterRouteConflictTest extends UnitTestCase {
 		$this->endpointDiscoveryService = $this->createStub(EndpointDiscoveryService::class);
 		$requestValidator = $this->createStub(RequestValidator::class);
 		$responseService = $this->createStub(ResponseService::class);
+		$cacheDirectory = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_test_' . uniqid('', TRUE);
+		mkdir($cacheDirectory, 0775, TRUE);
+		$cachePathService = new class($cacheDirectory) extends CachePathService {
+			public function __construct(private readonly string $cacheDirectory) {
+			}
 
-		$this->router = new class([], $this->endpointDiscoveryService, $requestValidator, $responseService) extends Router {
-			public function __construct($controllers, $endpointDiscoveryService, $requestValidator, $responseService) {
-				parent::__construct(
+			public function getFastRouteCacheDirectory(): string {
+				return $this->cacheDirectory;
+			}
+		};
+
+		$this->router = new class([
+			], $this->endpointDiscoveryService, $requestValidator, $responseService, $cachePathService) extends Router {
+				public function __construct(
 					$controllers,
 					$endpointDiscoveryService,
 					$requestValidator,
-					$responseService
-				);
-			}
+					$responseService,
+					$cachePathService
+				) {
+					parent::__construct(
+						$controllers,
+						$endpointDiscoveryService,
+						$requestValidator,
+						$responseService,
+						$cachePathService
+					);
+				}
 
-			protected function getControllerInstances(): array {
-				return [
-					DummyController::class => new DummyController(),
-				];
-			}
-		};
+				protected function getControllerInstances(): array {
+					return [
+						DummyController::class => new DummyController(),
+					];
+				}
+			};
 	}
 
 	public function testRouteConflictIsResolvedBySorting(): void {
@@ -85,7 +104,7 @@ class RouterRouteConflictTest extends UnitTestCase {
 			],
 		];
 
-		$this->endpointDiscoveryService->method('getAllEndpoints')->willReturn($endpoints);
+		$this->endpointDiscoveryService->method('getEndpointsForApi')->willReturn($endpoints);
 
 		$request = new ServerRequest('https://example.com/api/legacy/v1/news/news/list', 'GET');
 

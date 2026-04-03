@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Security\BackendUserProvider;
+use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -29,8 +30,7 @@ class BackendUserProviderTest extends UnitTestCase {
 	#[Test]
 	public function authenticateReturnsNullIfUserNotLoggedIn(): void {
 		$context = $this->createMock(Context::class);
-		$userAspect = $this->createMock(UserAspect::class);
-		$userAspect->method('get')->with('isLoggedIn')->willReturn(FALSE);
+		$userAspect = new UserAspect();
 		$context->method('getAspect')->with('backend.user')->willReturn($userAspect);
 		GeneralUtility::setSingletonInstance(Context::class, $context);
 
@@ -44,8 +44,12 @@ class BackendUserProviderTest extends UnitTestCase {
 	#[Test]
 	public function authenticateReturnsAuthContextIfUserLoggedIn(): void {
 		$context = $this->createMock(Context::class);
-		$userAspect = $this->createMock(UserAspect::class);
-		$userAspect->method('get')->willReturnMap([['isLoggedIn', TRUE], ['id', 123]]);
+		$backendUser = new BackendUserAuthentication();
+		$backendUser->user = [
+			$backendUser->userid_column => 123,
+			$backendUser->username_column => 'test-user',
+		];
+		$userAspect = new UserAspect($backendUser);
 		$context->method('getAspect')->with('backend.user')->willReturn($userAspect);
 		GeneralUtility::setSingletonInstance(Context::class, $context);
 

@@ -426,7 +426,7 @@ class RateLimitDashboardService {
 
 	/**
 	 * @param array<int, array<string, mixed>> $apiOverrides
-	 * @return array<string, array<string, string>>
+	 * @return array<string, array<int|string, string>>
 	 */
 	protected function buildFilterOptions(array $apiOverrides): array {
 		$apiOptions = ['' => 'All APIs'];

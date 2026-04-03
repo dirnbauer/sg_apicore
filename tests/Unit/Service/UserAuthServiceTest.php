@@ -86,16 +86,16 @@ class UserAuthServiceTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		$this->connectionPool = $this->createStub(ConnectionPool::class);
-		$this->passwordHashFactory = $this->createStub(PasswordHashFactory::class);
-		$this->apiRegistry = $this->createStub(ApiRegistry::class);
-		$this->tokenService = $this->createStub(TokenService::class);
-		$this->tokenRepository = $this->createStub(TokenRepository::class);
-		$this->extensionConfiguration = $this->createStub(
+		$this->connectionPool = $this->createMock(ConnectionPool::class);
+		$this->passwordHashFactory = $this->createMock(PasswordHashFactory::class);
+		$this->apiRegistry = $this->createMock(ApiRegistry::class);
+		$this->tokenService = $this->createMock(TokenService::class);
+		$this->tokenRepository = $this->createMock(TokenRepository::class);
+		$this->extensionConfiguration = $this->createMock(
 			\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
 		);
-		$this->logService = $this->createStub(\SGalinski\SgApiCore\Service\LogService::class);
-		$this->jwtService = $this->createStub(JwtService::class);
+		$this->logService = $this->createMock(\SGalinski\SgApiCore\Service\LogService::class);
+		$this->jwtService = $this->createMock(JwtService::class);
 		$this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
 		$this->service = new UserAuthService(
