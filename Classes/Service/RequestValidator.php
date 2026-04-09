@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
@@ -94,6 +95,9 @@ class RequestValidator implements SingletonInterface {
 				foreach ($endpoint['bodyParams'] as $param) {
 					/** @var ApiBodyParam $param */
 					$value = $body[$param->name] ?? NULL;
+					if (strtolower($param->type) === 'file') {
+						$value = $this->resolveValidUploadedFileValue($request, $param->name);
+					}
 					$required = $param->required;
 					if ($param->requiredIf && $this->checkCondition($param->requiredIf, $body)) {
 						$required = TRUE;
@@ -107,6 +111,51 @@ class RequestValidator implements SingletonInterface {
 		}
 
 		return \count($errors) > 0 ? $errors : NULL;
+	}
+
+	/**
+	 * Resolve an uploaded file value for a body parameter and only accept successfully uploaded files.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $parameterName
+	 * @return UploadedFileInterface|array<int, UploadedFileInterface>|null
+	 */
+	protected function resolveValidUploadedFileValue(
+		ServerRequestInterface $request,
+		string $parameterName
+	): UploadedFileInterface|array|NULL {
+		$uploadedFiles = $request->getUploadedFiles();
+		if (!\is_array($uploadedFiles) || !\array_key_exists($parameterName, $uploadedFiles)) {
+			return NULL;
+		}
+
+		return $this->normalizeUploadedFileValue($uploadedFiles[$parameterName]);
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return UploadedFileInterface|array<int, UploadedFileInterface>|null
+	 */
+	protected function normalizeUploadedFileValue(mixed $value): UploadedFileInterface|array|NULL {
+		if ($value instanceof UploadedFileInterface) {
+			return $value->getError() === UPLOAD_ERR_OK ? $value : NULL;
+		}
+
+		if (!\is_array($value)) {
+			return NULL;
+		}
+
+		$normalized = [];
+		foreach ($value as $item) {
+			$normalizedItem = $this->normalizeUploadedFileValue($item);
+			if ($normalizedItem instanceof UploadedFileInterface) {
+				$normalized[] = $normalizedItem;
+			} elseif (\is_array($normalizedItem)) {
+				$normalized = array_merge($normalized, $normalizedItem);
+			}
+		}
+
+		return $normalized !== [] ? $normalized : NULL;
 	}
 
 	/**

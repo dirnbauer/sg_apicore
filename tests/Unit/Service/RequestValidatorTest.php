@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UploadedFileInterface;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Service\RequestValidator;
@@ -182,5 +183,76 @@ class RequestValidatorTest extends UnitTestCase {
 		$request2->method('getQueryParams')->willReturn(['price' => '12.50']);
 		$errors2 = $this->validator->validate($request2, $endpoint, []);
 		$this->assertNull($errors2);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateAcceptsRequiredFileParamFromUploadedFiles(): void {
+		$uploadedImage = $this->createMock(UploadedFileInterface::class);
+		$uploadedImage->method('getError')->willReturn(UPLOAD_ERR_OK);
+
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn([]);
+		$request->method('getParsedBody')->willReturn(['language' => 'en']);
+		$request->method('getUploadedFiles')->willReturn([
+			'image' => $uploadedImage,
+		]);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [],
+			'bodyParams' => [new ApiBodyParam(name: 'image', type: 'file', required: TRUE)],
+		];
+
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertNull($errors);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateRejectsRequiredFileParamWhenUploadIsMissing(): void {
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn([]);
+		$request->method('getParsedBody')->willReturn(['language' => 'en']);
+		$request->method('getUploadedFiles')->willReturn([]);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [],
+			'bodyParams' => [new ApiBodyParam(name: 'image', type: 'file', required: TRUE)],
+		];
+
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertIsArray($errors);
+		$this->assertSame('image', $errors[0]['field']);
+		$this->assertSame('This field is required', $errors[0]['message']);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testValidateRejectsRequiredFileParamWhenUploadHasError(): void {
+		$uploadedImage = $this->createMock(UploadedFileInterface::class);
+		$uploadedImage->method('getError')->willReturn(UPLOAD_ERR_NO_FILE);
+
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getQueryParams')->willReturn([]);
+		$request->method('getParsedBody')->willReturn(['language' => 'en']);
+		$request->method('getUploadedFiles')->willReturn([
+			'image' => $uploadedImage,
+		]);
+
+		$endpoint = [
+			'pathParams' => [],
+			'queryParams' => [],
+			'bodyParams' => [new ApiBodyParam(name: 'image', type: 'file', required: TRUE)],
+		];
+
+		$errors = $this->validator->validate($request, $endpoint, []);
+		$this->assertIsArray($errors);
+		$this->assertSame('image', $errors[0]['field']);
+		$this->assertSame('This field is required', $errors[0]['message']);
 	}
 }
