@@ -169,6 +169,25 @@ Supports multiple auth modes (`public`, `token`, `user`) and scope-based authori
 
 See [Authentication & Scopes](docs/AuthScopes.md).
 
+### CORS
+
+CORS handling is provided by `ApiCorsMiddleware` and is enabled for API paths (`apiPathPrefix`) by default.
+
+- Origin policy is **default deny**.
+- Preflight requests (`OPTIONS` with `Access-Control-Request-Method`) are answered directly.
+- Allowed origins are configured per API via `ApiRegistry::registerApi(..., $security)`:
+
+```php
+$apiRegistry->registerApi('partner', ['1'], [
+    'authMode' => 'user',
+    'authProviders' => ['beareropaquetokenprovider'],
+    'cors' => [
+        'allowedOrigins' => ['https://app.example.org'],
+        'allowCredentials' => true,
+    ],
+]);
+```
+
 ### Known Issues & Troubleshooting
 
 #### Missing Authorization Header (Apache)

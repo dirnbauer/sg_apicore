@@ -13,6 +13,7 @@
  ***************************************************************/
 
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
+use SGalinski\SgApiCore\Middleware\ApiCorsMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiTypoScriptMiddleware;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
@@ -20,6 +21,12 @@ use SGalinski\SgApiCore\Middleware\RateLimitMiddleware;
 
 return [
 	'frontend' => [
+		'sgalinski/sg-apicore/api-cors' => [
+			'target' => ApiCorsMiddleware::class,
+			'description' => 'Handles CORS for API paths and preflight requests',
+			'after' => ['typo3/cms-frontend/site'],
+			'before' => ['sgalinski/sg-apicore/legacy-routing', 'sgalinski/sg-apicore/api-setup', ],
+		],
 		'sgalinski/sg-apicore/legacy-routing' => [
 			'target' => LegacyRoutingMiddleware::class,
 			'description' => 'Maps legacy sg_rest URLs to the new API structure',

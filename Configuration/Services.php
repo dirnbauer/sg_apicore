@@ -76,6 +76,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 		->tag('event.listener', ['identifier' => 'sg_apicore_clear_cache']);
 
 	$services->set(SGalinski\SgApiCore\Middleware\ApiSetupMiddleware::class);
+	$services->set(SGalinski\SgApiCore\Middleware\ApiCorsMiddleware::class);
 	$services->set(SGalinski\SgApiCore\Middleware\ApiAuthMiddleware::class);
 	$services->set(SGalinski\SgApiCore\Middleware\ApiCacheMiddleware::class);
 	$services->set(SGalinski\SgApiCore\Middleware\ApiRequestMiddleware::class);
