@@ -45,10 +45,7 @@ class ApiCorsMiddlewareTest extends UnitTestCase {
 		);
 	}
 
-	/**
-	 * @test
-	 */
-	public function processReturnsPreflightResponseForAllowedApiOrigin(): void {
+	public function testProcessReturnsPreflightResponseForAllowedApiOrigin(): void {
 		$request = (new ServerRequest('/api/partner/v1/offer', 'OPTIONS'))
 			->withHeader('Origin', 'https://app.example.org')
 			->withHeader('Access-Control-Request-Method', 'GET')
@@ -86,10 +83,7 @@ class ApiCorsMiddlewareTest extends UnitTestCase {
 		$this->assertStringContainsString('Origin', $response->getHeaderLine('Vary'));
 	}
 
-	/**
-	 * @test
-	 */
-	public function processReturnsForbiddenForDisallowedPreflightOrigin(): void {
+	public function testProcessReturnsForbiddenForDisallowedPreflightOrigin(): void {
 		$request = (new ServerRequest('/api/partner/v1/offer', 'OPTIONS'))
 			->withHeader('Origin', 'https://blocked.example.org')
 			->withHeader('Access-Control-Request-Method', 'GET');
@@ -124,10 +118,7 @@ class ApiCorsMiddlewareTest extends UnitTestCase {
 		$this->assertSame('Origin', $response->getHeaderLine('Vary'));
 	}
 
-	/**
-	 * @test
-	 */
-	public function processAddsCorsHeadersToAllowedApiResponse(): void {
+	public function testProcessAddsCorsHeadersToAllowedApiResponse(): void {
 		$request = (new ServerRequest('/api/partner/v1/offer', 'GET'))
 			->withHeader('Origin', 'https://app.example.org');
 
@@ -166,10 +157,7 @@ class ApiCorsMiddlewareTest extends UnitTestCase {
 		$this->assertSame('true', $response->getHeaderLine('Access-Control-Allow-Credentials'));
 	}
 
-	/**
-	 * @test
-	 */
-	public function processPassesThroughForNonApiPath(): void {
+	public function testProcessPassesThroughForNonApiPath(): void {
 		$request = (new ServerRequest('/kontakt', 'GET'))
 			->withHeader('Origin', 'https://app.example.org');
 

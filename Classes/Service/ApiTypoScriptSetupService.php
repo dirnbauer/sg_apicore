@@ -96,10 +96,10 @@ class ApiTypoScriptSetupService {
 					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
 					$GLOBALS['TYPO3_REQUEST'] = $request;
 				}
-				} catch (\Throwable $e) {
-					$this->logService->logException($e, $request);
-				}
+			} catch (\Throwable $e) {
+				$this->logService->logException($e, $request);
 			}
+		}
 
 		return $request;
 	}
