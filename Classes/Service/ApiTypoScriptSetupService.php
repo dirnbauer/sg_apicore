@@ -87,19 +87,19 @@ class ApiTypoScriptSetupService {
 				}
 
 				$frontendTypoScript = $request->getAttribute('frontend.typoscript');
-				if ($frontendTypoScript instanceof FrontendTypoScript && !$frontendTypoScript->hasSetup()) {
-					if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
-						&& isset($GLOBALS['TSFE']->tmpl->setup)
-						&& \is_array($GLOBALS['TSFE']->tmpl->setup)
-					) {
-						/** @phpstan-ignore-next-line */
-						$frontendTypoScript->setSetupArray($GLOBALS['TSFE']->tmpl->setup);
-					}
+				if (!($frontendTypoScript instanceof FrontendTypoScript)) {
+					$frontendTypoScript = $this->createEmptyFrontendTypoScript();
 				}
-			} catch (\Throwable $e) {
-				$this->logService->logException($e, $request);
+				if (!$this->hasInitializedSetupArray($frontendTypoScript)) {
+					$setupArray = $this->resolveSetupArrayFromTemplateService($siteRootPageId);
+					$frontendTypoScript->setSetupArray($setupArray);
+					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
+					$GLOBALS['TYPO3_REQUEST'] = $request;
+				}
+				} catch (\Throwable $e) {
+					$this->logService->logException($e, $request);
+				}
 			}
-		}
 
 		return $request;
 	}
@@ -170,7 +170,7 @@ class ApiTypoScriptSetupService {
 
 		if ($this->typo3Version->getMajorVersion() >= 13) {
 			/** @phpstan-ignore-next-line */
-			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], new RootNode());
+			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], []);
 		} else {
 			/** @phpstan-ignore-next-line */
 			$frontendTypoScript = new FrontendTypoScript(new RootNode(), []);
@@ -263,5 +263,47 @@ class ApiTypoScriptSetupService {
 		$GLOBALS['TYPO3_REQUEST'] = $request;
 
 		return $request;
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	private function resolveSetupArrayFromTemplateService(int $siteRootPageId): array {
+		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
+			&& isset($GLOBALS['TSFE']->tmpl->setup)
+			&& \is_array($GLOBALS['TSFE']->tmpl->setup)
+		) {
+			/** @var array<string, mixed> $setupArray */
+			$setupArray = $GLOBALS['TSFE']->tmpl->setup;
+			return $setupArray;
+		}
+
+		return [
+			'config.' => [
+				'tx_sgapicore.' => [
+					'persistence.' => [
+						'storagePid' => $siteRootPageId,
+					],
+				],
+			],
+		];
+	}
+
+	private function hasInitializedSetupArray(FrontendTypoScript $frontendTypoScript): bool {
+		try {
+			$frontendTypoScript->getSetupArray();
+			return TRUE;
+		} catch (\Throwable) {
+			return FALSE;
+		}
+	}
+
+	private function createEmptyFrontendTypoScript(): FrontendTypoScript {
+		if ($this->typo3Version->getMajorVersion() >= 13) {
+			return new FrontendTypoScript(new RootNode(), [], [], []);
+		}
+
+		/** @phpstan-ignore-next-line */
+		return new FrontendTypoScript(new RootNode(), []);
 	}
 }
