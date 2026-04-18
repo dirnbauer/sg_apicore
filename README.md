@@ -14,7 +14,7 @@ Provides an API framework for TYPO3: Multi-API, Multi-Tenants, Attribute-based e
 Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints.
 
 For detailed information, please refer to the Documentation in docs/.
-For website-ready end-user communication, see `docs/Website-End-User-Documentation.md`.
+For website-ready end-user communication, see [End-User-Documentation](docs/Website-End-User-Documentation.md).
 
 ## Directory Structure
 
