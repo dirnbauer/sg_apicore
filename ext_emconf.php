@@ -2,7 +2,7 @@
 
 $EM_CONF['sg_apicore'] = [
 	'title' => 'Modern API Core for TYPO3',
-	'description' => 'Modern API Core for TYPO3 - Routing, Easy Configuration via Attributes, Multi-API Support, Multi-Domain Support, Multi-Tenant Support, Backend Token Management, Login/Refresh for Frontend Users for user-scoped APIs, Proper scope management, Swagger UI viewer, and automatic docs generation incl. CLI commands, Public API Support, Private API Support, User API Support, Bearer Opaque Tokens, JWT Tokens, Demo Controllers, Logging, Complete README, and Tests, Performance-driven',
+	'description' => 'Modern, performance-driven TYPO3 API framework with attribute-based routing and endpoint metadata, multi-API/multi-version setup, tenant-aware request context, OpenAPI 3 generation with Swagger UI and CLI export, token/user/backend authentication (opaque bearer + JWT + FE/BE contexts), scope enforcement, auto-CRUD resource registration via TCA/DataHandler, built-in response caching, rate limiting, structured request/response logging with redaction, backend dashboards for APIs/tokens/endpoints/rate-limits/logs, and optional legacy sg_rest compatibility.',
 	'category' => 'misc',
 	'author' => 'Stefan Galinski',
 	'author_email' => 'support@sgalinski.de',
