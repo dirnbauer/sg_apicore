@@ -9,6 +9,7 @@ return [
 		'access' => 'admin',
 		'workspaces' => 'live',
 		'path' => '/module/system/sgapicore',
+		'iconIdentifier' => 'module-sg_apicore',
 		'labels' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_backend.xlf',
 		'extensionName' => 'SgApiCore',
 		'controllerActions' => [

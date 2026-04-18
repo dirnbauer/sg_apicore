@@ -1,66 +1,84 @@
 # Example: Hello World API
 
-To create a new API in TYPO3 using `sg_apicore`, follow these steps:
+This guide shows a minimal but current `sg_apicore` setup with route metadata and parameter validation.
 
-## 1. Extension Setup
+## 1. Register an API
 
-Create a TYPO3 extension (e.g., `my_api`).
-
-## 2. API Registration
-
-Register the API in your `ext_localconf.php`:
+In your extension `ext_localconf.php`:
 
 ```php
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
-$apiRegistry->registerApi('hello', ['1'], ['authMode' => 'public']);
+(static function (): void {
+	$apiRegistry = GeneralUtility::makeInstance(ApiRegistry::class);
+	$apiRegistry->registerApi('hello', ['1'], [
+		'authMode' => 'public',
+	]);
+})();
 ```
 
-## 3. Create a Controller
+## 2. Create a controller endpoint
 
-Create the file `Classes/Controller/HelloController.php`:
+Create `Classes/Controller/HelloController.php`:
 
 ```php
 namespace MyVendor\MyApi\Controller;
 
-use SGalinski\SgApiCore\Attribute\ApiRoute;
-use SGalinski\SgApiCore\Service\ResponseService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiQueryParam;
+use SGalinski\SgApiCore\Attribute\ApiResponse;
+use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Service\ResponseService;
 
 class HelloController {
-    public function __construct(
-        protected ResponseService $responseService
-    ) {}
+	public function __construct(
+		protected ResponseService $responseService
+	) {
+	}
 
-    #[ApiRoute(path: '/world', methods: ['GET'], apiId: 'hello', version: '1')]
-    public function worldAction(ServerRequestInterface $request): ResponseInterface {
-        return $this->responseService->createSuccessResponse(['message' => 'Hello World!']);
-    }
+	#[ApiRoute(path: '/world', methods: ['GET'], apiId: 'hello', version: '1')]
+	#[ApiEndpoint(summary: 'Hello world endpoint', tags: ['Hello'])]
+	#[ApiQueryParam(name: 'name', type: 'string', required: FALSE, minLength: 2, maxLength: 60, example: 'TYPO3')]
+	#[ApiResponse(status: 200, description: 'Greeting response')]
+	public function worldAction(ServerRequestInterface $request): ResponseInterface {
+		$queryParams = $request->getQueryParams();
+		$name = trim((string) ($queryParams['name'] ?? 'World'));
+
+		return $this->responseService->createSuccessResponse([
+			'message' => 'Hello ' . $name . '!',
+		]);
+	}
 }
 ```
 
-## 4. Register the Controller
+## 3. Register the controller service
 
-Register the controller in your `Configuration/Services.php`:
+In `Configuration/Services.php`:
 
 ```php
 $services->set(\MyVendor\MyApi\Controller\HelloController::class)
-    ->tag('sg_apicore.router');
+	->tag('sg_apicore.router');
 ```
 
-## 5. Testing
-
-Call the endpoint in your browser or via cURL:
+## 4. Test the endpoint
 
 ```bash
-curl https://your-instance.local/api/hello/v1/world
+curl "https://your-instance.local/api/hello/v1/world?name=TYPO3"
 ```
 
-Result:
+Expected response:
 
 ```json
-{"message": "Hello World!"}
+{
+  "message": "Hello TYPO3!"
+}
 ```
+
+## 5. Use the full template
+
+For a larger real-world template (auth scopes, pagination, body validation, cache and TypoScript requirements), use:
+
+- `docs/examples/ExampleController.php`

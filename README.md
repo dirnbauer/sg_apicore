@@ -14,6 +14,7 @@ Provides an API framework for TYPO3: Multi-API, Multi-Tenants, Attribute-based e
 Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints.
 
 For detailed information, please refer to the Documentation in docs/.
+For website-ready end-user communication, see `docs/Website-End-User-Documentation.md`.
 
 ## Directory Structure
 
@@ -103,6 +104,7 @@ $apiRegistry->registerApi('public', ['1']);
 
 Endpoints are defined using PHP attributes on controller methods. See [Writing Endpoints](docs/WritingEndpoints.md) for
 a full guide.
+For a complete template with current best practices, see [ExampleController](docs/examples/ExampleController.php).
 
 ```php
 #[ApiRoute(path: '/my-endpoint', methods: ['GET'], apiId: 'public', version: '1')]

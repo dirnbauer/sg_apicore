@@ -2,6 +2,18 @@
 
 In `sg_apicore`, endpoints are defined via standard PHP classes (controllers) configured using PHP attributes.
 
+## Recommended Template
+
+Use `docs/examples/ExampleController.php` as the reference implementation. It covers:
+
+- global and API-specific routes
+- tenant and auth context usage
+- query/path/body validation
+- `RequireUser` and `RequireScopes`
+- pagination with metadata
+- response caching via `ApiCache`
+- full TypoScript requirement via `RequireFullTypoScript`
+
 ## Controller Registration
 
 For the router to recognize your controller class, it must be registered in `Configuration/Services.php` with the
@@ -9,7 +21,7 @@ For the router to recognize your controller class, it must be registered in `Con
 
 ```php
 $services->set(MyCustomController::class)
-    ->tag('sg_apicore.router');
+	->tag('sg_apicore.router');
 ```
 
 ## Routing & Metadata
@@ -26,17 +38,17 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 class MyController {
-    public function __construct(
-        protected ResponseService $responseService
-    ) {}
+	public function __construct(
+		protected ResponseService $responseService
+	) {}
 
-    #[ApiRoute(path: '/my-action/{id}', methods: ['GET'], apiId: 'public', version: '1', tenants: 'my-tenant')]
-    #[ApiEndpoint(summary: 'Short description', tags: ['MyCategory'])]
-    #[ApiResponse(status: 200, description: 'Success')]
-    public function myAction(ServerRequestInterface $request, string $id): ResponseInterface {
-        $data = ['id' => $id, 'name' => 'Test'];
-        return $this->responseService->createSuccessResponse($data);
-    }
+	#[ApiRoute(path: '/my-action/{id}', methods: ['GET'], apiId: 'public', version: '1', tenants: 'my-tenant')]
+	#[ApiEndpoint(summary: 'Short description', tags: ['MyCategory'])]
+	#[ApiResponse(status: 200, description: 'Success')]
+	public function myAction(ServerRequestInterface $request, string $id): ResponseInterface {
+		$data = ['id' => $id, 'name' => 'Test'];
+		return $this->responseService->createSuccessResponse($data);
+	}
 }
 ```
 
@@ -74,6 +86,15 @@ $myModel = $this->propertyMapper->convert($data, MyModel::class);
 $results = $this->validatorResolver->getBaseValidatorConjunction(MyModel::class)->validate($myModel);
 ```
 
+## Request Context
+
+During request handling, `sg_apicore` enriches the PSR-7 request with attributes. Most relevant ones:
+
+- `api.tenant` (`TenantContext`)
+- `api.auth` (`AuthContext`, if authenticated)
+- `api.requestId` (string)
+- `frontend.typoscript` (when `#[RequireFullTypoScript]` is active)
+
 ## Parameter Types & Validation
 
 The extension supports automatic validation of parameters based on the attributes used in your controller.
@@ -87,7 +108,7 @@ The extension supports automatic validation of parameters based on the attribute
 
 You can add various validation constraints to these attributes:
 
-* `type`: The expected data type (`string`, `integer`, `float`, `boolean`).
+* `type`: The expected data type (`string`, `integer`, `float`, `boolean`, `array`, `file`).
 * `required`: Whether the parameter must be present.
 * `pattern`: An optional regular expression (PCRE) the value must match.
 * `min` / `max`: For numeric types, defines the inclusive range.
@@ -108,8 +129,7 @@ attribute:
 #[ApiRoute(path: '/render-content', methods: ['GET'])]
 #[RequireFullTypoScript]
 public function renderAction(ServerRequestInterface $request): ResponseInterface {
-    // The full TypoScript setup is now available via $request->getAttribute('frontend.typoscript')
-    // and globally in $GLOBALS['TSFE']->tmpl->setup (v12) or the request object (v13).
+	// The full TypoScript setup is now available via $request->getAttribute('frontend.typoscript').
 }
 ```
 
@@ -125,7 +145,7 @@ Example:
 #[ApiBodyParam(name: 'type', type: 'string')]
 #[ApiBodyParam(name: 'company_name', required: false, requiredIf: 'type=business')]
 public function registerAction(ServerRequestInterface $request): ResponseInterface {
-    // ...
+	// ...
 }
 ```
 
@@ -155,30 +175,26 @@ The extension provides a `PaginationService` to handle consistent pagination acr
 use SGalinski\SgApiCore\Service\PaginationService;
 
 class MyController {
-    public function __construct(
-        protected PaginationService $paginationService,
-        protected ResponseService $responseService
-    ) {}
+	public function __construct(
+		protected PaginationService $paginationService,
+		protected ResponseService $responseService
+	) {}
 
-    #[ApiQueryParam(name: 'page', type: 'integer', description: 'The page number (1-based)')]
-    #[ApiQueryParam(name: 'limit', type: 'integer', description: 'Maximum number of items to return')]
-    public function listAction(ServerRequestInterface $request): ResponseInterface {
-        // 1. Get offset and limit from query parameters (with default/max values)
-        // Internally, this extracts 'page' and 'limit' and calculates the offset.
-        $pagination = $this->paginationService->getPaginationParams($request);
-        $offset = $pagination['offset'];
-        $limit = $pagination['limit'];
+	#[ApiQueryParam(name: 'page', type: 'integer', description: 'The page number (1-based)')]
+	#[ApiQueryParam(name: 'limit', type: 'integer', description: 'Maximum number of items to return')]
+	public function listAction(ServerRequestInterface $request): ResponseInterface {
+		$pagination = $this->paginationService->getPaginationParams($request);
+		$offset = $pagination['offset'];
+		$limit = $pagination['limit'];
 
-        // 2. Fetch your data and total count
-        $items = $this->myRepository->findSubset($limit, $offset);
-        $total = $this->myRepository->countAll();
+		$items = $this->myRepository->findSubset($limit, $offset);
+		$total = $this->myRepository->countAll();
 
-        // 3. Create response with pagination metadata
-        return $this->responseService->createSuccessResponse(
-            $items,
-            $this->paginationService->buildPaginationMeta($total, $offset, $limit)
-        );
-    }
+		return $this->responseService->createSuccessResponse(
+			$items,
+			$this->paginationService->buildPaginationMeta($total, $offset, $limit)
+		);
+	}
 }
 ```
 
@@ -213,7 +229,7 @@ public function liveAction(): ResponseInterface { ... }
 #[ApiRoute(path: '/heavy-list', methods: ['GET'])]
 #[ApiCache(lifetime: 3600, tags: ['news', 'category_1'])]
 public function listAction(ServerRequestInterface $request): ResponseInterface {
-    // This response will be cached for 1 hour with specific tags.
+	// This response will be cached for 1 hour with specific tags.
 }
 ```
 
@@ -227,7 +243,7 @@ The `#[ApiCache]` attribute supports the following properties:
 * `useUserGroups` (bool): If `true` (default), the cache key varies by the user groups of the authenticated frontend
   user.
 * `useLanguage` (bool): If `true` (default), the cache varies by the current language.
-* `additionalVary` (array): A list of additional query parameters or header names to vary the cache key by.
+* `additionalVary` (array): Additional query parameters or header names that should affect cache keys.
 
 ### Cache Invalidation
 
