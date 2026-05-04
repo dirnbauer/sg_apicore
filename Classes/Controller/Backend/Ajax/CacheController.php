@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Service\CachePathService;
 use TYPO3\CMS\Core\Cache\CacheManager;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\NullResponse;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -29,13 +30,16 @@ class CacheController {
 	/**
 	 * @param CacheManager|null $cacheManager
 	 * @param CachePathService|null $cachePathService
+	 * @param Context|null $context
 	 */
 	public function __construct(
 		protected ?CacheManager $cacheManager = NULL,
-		protected ?CachePathService $cachePathService = NULL
+		protected ?CachePathService $cachePathService = NULL,
+		protected ?Context $context = NULL
 	) {
 		$this->cacheManager ??= GeneralUtility::makeInstance(CacheManager::class);
 		$this->cachePathService ??= GeneralUtility::makeInstance(CachePathService::class);
+		$this->context ??= GeneralUtility::makeInstance(Context::class);
 	}
 
 	/**
@@ -45,6 +49,10 @@ class CacheController {
 	 * @return ResponseInterface
 	 */
 	public function clearCacheAction(ServerRequestInterface $request): ResponseInterface {
+		if (!$this->isBackendAdmin()) {
+			return new JsonResponse(['success' => FALSE, 'error' => 'Access denied.'], 403);
+		}
+
 		try {
 			$cache = $this->cacheManager->getCache('sg_apicore_responses');
 			$cache->flush();
@@ -61,5 +69,14 @@ class CacheController {
 		} catch (\Exception $e) {
 			return new JsonResponse(['success' => FALSE, 'error' => $e->getMessage()], 500);
 		}
+	}
+
+	/**
+	 * Checks whether the current backend user is an administrator.
+	 *
+	 * @return bool
+	 */
+	protected function isBackendAdmin(): bool {
+		return (bool) $this->context->getAspect('backend.user')->get('isAdmin');
 	}
 }
