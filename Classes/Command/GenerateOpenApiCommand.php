@@ -25,6 +25,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * CLI Command to generate OpenAPI specification files
  */
 class GenerateOpenApiCommand extends Command {
+	public const COMMAND_DESCRIPTION = 'Generates an OpenAPI specification file for a specific API and version.';
 	/**
 	 * @var OpenApiService
 	 */
@@ -43,7 +44,7 @@ class GenerateOpenApiCommand extends Command {
 	 */
 	protected function configure(): void {
 		$this->setName('api:openapi:generate')
-			->setDescription('Generates an OpenAPI specification file for a specific API and version.')
+			->setDescription(self::COMMAND_DESCRIPTION)
 			->addOption('api', NULL, InputOption::VALUE_REQUIRED, 'The API ID (e.g. public)', 'public')
 			->addOption('api-version', NULL, InputOption::VALUE_REQUIRED, 'The API version (e.g. 1)', '1')
 			->addOption('format', NULL, InputOption::VALUE_REQUIRED, 'The output format (json)', 'json')
