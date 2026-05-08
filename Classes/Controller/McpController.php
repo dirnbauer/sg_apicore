@@ -133,6 +133,16 @@ class McpController {
 				return new JsonResponse($this->createErrorResponse($id, -32602, 'Invalid params: "name" is required.'));
 			}
 
+			if (\array_key_exists('arguments', $params)) {
+				if (!\is_array($params['arguments']) || ($params['arguments'] !== [] && array_is_list($params['arguments']))) {
+					return new JsonResponse($this->createErrorResponse(
+						$id,
+						-32602,
+						'Invalid params: "arguments" must be an object.'
+					));
+				}
+			}
+
 			$arguments = \is_array($params['arguments'] ?? NULL) ? $params['arguments'] : [];
 			$result = $this->mcpToolService->callTool($request, $apiId, $version, $toolName, $arguments, $authMode);
 			if ($result === NULL) {
@@ -162,7 +172,8 @@ class McpController {
 			]);
 		}
 
-		if (!$this->extensionConfiguration->isMcpEnabled()) {
+		$apiId = (string) $request->getAttribute('api.id');
+		if (!$this->mcpToolService->isMcpAvailableForApi($apiId)) {
 			return new Response(NULL, 404, [
 				'Cache-Control' => 'no-store',
 				'X-Content-Type-Options' => 'nosniff',
@@ -173,12 +184,11 @@ class McpController {
 		$response = new Response('php://temp', 200, [
 			'Content-Type' => 'text/event-stream; charset=utf-8',
 			'Cache-Control' => 'no-cache, no-transform',
-			'Connection' => 'keep-alive',
 			'X-Accel-Buffering' => 'no',
 			'X-Content-Type-Options' => 'nosniff',
 			'X-Frame-Options' => 'DENY',
 		]);
-		$response->getBody()->write(": sg_apicore MCP stream ready\n\n");
+		$response->getBody()->write("retry: 60000\n: sg_apicore MCP stream ready\n\n");
 		return $response;
 	}
 

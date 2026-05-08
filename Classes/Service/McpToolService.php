@@ -29,6 +29,9 @@ use TYPO3\CMS\Core\SingletonInterface;
  * Service for MCP tool discovery and invocation.
  */
 class McpToolService implements SingletonInterface {
+	protected const TOOL_CONTENT_TEXT_MAX_BYTES = 12000;
+	protected const TOOL_CONTENT_TEXT_STRING_MAX_BYTES = 2048;
+
 	/**
 	 * @var array
 	 */
@@ -63,6 +66,24 @@ class McpToolService implements SingletonInterface {
 			$authMode = (string) reset($authMode);
 		}
 		return (string) $authMode;
+	}
+
+	/**
+	 * Returns whether MCP is exposed for the given API.
+	 *
+	 * @param string $apiId
+	 * @return bool
+	 */
+	public function isMcpAvailableForApi(string $apiId): bool {
+		if (!$this->extensionConfiguration->isMcpEnabled()) {
+			return FALSE;
+		}
+
+		if (\in_array($apiId, $this->extensionConfiguration->getMcpDisabledApis(), TRUE)) {
+			return FALSE;
+		}
+
+		return $this->apiRegistry->isMcpEnabledForApi($apiId);
 	}
 
 	/**
@@ -105,15 +126,7 @@ class McpToolService implements SingletonInterface {
 		string $tenantId = '',
 		?AuthContext $authContext = NULL
 	): array {
-		if (!$this->extensionConfiguration->isMcpEnabled()) {
-			return [];
-		}
-
-		if (\in_array($apiId, $this->extensionConfiguration->getMcpDisabledApis(), TRUE)) {
-			return [];
-		}
-
-		if (!$this->apiRegistry->isMcpEnabledForApi($apiId)) {
+		if (!$this->isMcpAvailableForApi($apiId)) {
 			return [];
 		}
 
@@ -344,11 +357,56 @@ class McpToolService implements SingletonInterface {
 	protected function buildToolContentText(array $payload): string {
 		if (\array_key_exists('rawBody', $payload) && \count($payload) === 1) {
 			$rawBody = (string) $payload['rawBody'];
-			return $rawBody !== '' ? $rawBody : 'Tool executed successfully.';
+			return $rawBody !== ''
+				? $this->truncateStringForTextContent($rawBody, self::TOOL_CONTENT_TEXT_MAX_BYTES)
+				: 'Tool executed successfully.';
 		}
 
-		$encodedPayload = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-		return \is_string($encodedPayload) && $encodedPayload !== '' ? $encodedPayload : 'Tool executed successfully.';
+		$encodedPayload = json_encode(
+			$this->preparePayloadForTextContent($payload),
+			JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+		);
+		if (!\is_string($encodedPayload) || $encodedPayload === '') {
+			return 'Tool executed successfully.';
+		}
+
+		return $this->truncateStringForTextContent($encodedPayload, self::TOOL_CONTENT_TEXT_MAX_BYTES);
+	}
+
+	/**
+	 * @param array $payload
+	 * @return array
+	 */
+	protected function preparePayloadForTextContent(array $payload): array {
+		$prepared = [];
+		foreach ($payload as $key => $value) {
+			if (\is_array($value)) {
+				$prepared[$key] = $this->preparePayloadForTextContent($value);
+				continue;
+			}
+
+			if (\is_string($value)) {
+				$prepared[$key] = $this->truncateStringForTextContent($value, self::TOOL_CONTENT_TEXT_STRING_MAX_BYTES);
+				continue;
+			}
+
+			$prepared[$key] = $value;
+		}
+
+		return $prepared;
+	}
+
+	/**
+	 * @param string $value
+	 * @param int $maxBytes
+	 * @return string
+	 */
+	protected function truncateStringForTextContent(string $value, int $maxBytes): string {
+		if (\strlen($value) <= $maxBytes) {
+			return $value;
+		}
+
+		return substr($value, 0, $maxBytes) . "\n[truncated, original length: " . \strlen($value) . ' bytes]';
 	}
 
 	/**

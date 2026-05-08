@@ -37,6 +37,7 @@ use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -75,12 +76,63 @@ class McpToolServiceTest extends UnitTestCase {
 		$this->assertStringContainsString('"properties":{}', $encodedTool);
 	}
 
+	public function testListToolsEncodesAllPropertiesAsJsonObjects(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService(
+			[
+				McpListMockController::class,
+				McpCallMockController::class,
+				McpBodyMockController::class,
+				McpQueryMockController::class,
+			],
+			$apiRegistry,
+			TRUE,
+			[]
+		);
+
+		$tools = $service->listTools('sgai', '1', 'public');
+		foreach ($tools as $tool) {
+			$properties = $tool['inputSchema']['properties'] ?? NULL;
+			if ($properties instanceof \stdClass) {
+				continue;
+			}
+
+			$this->assertIsArray($properties);
+			$this->assertFalse(
+				array_is_list($properties),
+				'Tool properties must be an object map for ' . ($tool['name'] ?? 'unknown')
+			);
+		}
+	}
+
 	public function testListToolsReturnsEmptyWhenMcpDisabled(): void {
 		$apiRegistry = new ApiRegistry();
 		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
 
 		$service = $this->createMcpToolService([McpListMockController::class], $apiRegistry, FALSE, []);
 
+		$this->assertSame([], $service->listTools('sgai', '1', 'public'));
+	}
+
+	public function testIsMcpAvailableForApiAppliesGlobalApiDenyList(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpListMockController::class], $apiRegistry, TRUE, [], FALSE, NULL, ['sgai']);
+
+		$this->assertFalse($service->isMcpAvailableForApi('sgai'));
+		$this->assertSame([], $service->listTools('sgai', '1', 'public'));
+	}
+
+	public function testIsMcpAvailableForApiAppliesApiRegistryDisableFlag(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public'], NULL, ['mcpEnabled' => FALSE]);
+
+		$service = $this->createMcpToolService([McpListMockController::class], $apiRegistry, TRUE, []);
+
+		$this->assertFalse($service->isMcpAvailableForApi('sgai'));
 		$this->assertSame([], $service->listTools('sgai', '1', 'public'));
 	}
 
@@ -95,6 +147,28 @@ class McpToolServiceTest extends UnitTestCase {
 
 		$allowedTools = $service->listTools('sgai', '1', 'token', '', new AuthContext('sgai', '', 1, ['read', 'write']));
 		$this->assertSame(['sgai_get_public', 'sgai_post_write'], array_column($allowedTools, 'name'));
+	}
+
+	public function testListToolsAppliesExactDenylistEntries(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpListMockController::class], $apiRegistry, TRUE, ['sgai_get_credits']);
+		$toolNames = array_column($service->listTools('sgai', '1', 'public'), 'name');
+
+		$this->assertNotContains('sgai_get_credits', $toolNames);
+		$this->assertContains('sgai_custom_tool', $toolNames);
+	}
+
+	public function testListToolsAppliesWildcardDenylistEntries(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpListMockController::class], $apiRegistry, TRUE, ['sgai_custom_*']);
+		$toolNames = array_column($service->listTools('sgai', '1', 'public'), 'name');
+
+		$this->assertContains('sgai_get_credits', $toolNames);
+		$this->assertNotContains('sgai_custom_tool', $toolNames);
 	}
 
 	public function testCallToolReturnsValidationErrorForMissingPathParam(): void {
@@ -140,6 +214,38 @@ class McpToolServiceTest extends UnitTestCase {
 		$this->assertSame(144, $result['structuredContent']['credits']);
 		$this->assertStringContainsString('"credits": 144', $result['content'][0]['text'] ?? '');
 		$this->assertStringContainsString('"subscription": "Bronze"', $result['content'][0]['text'] ?? '');
+	}
+
+	public function testCallToolKeepsStructuredContentCompleteButTruncatesLargeVisibleText(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpLargePayloadMockController::class], $apiRegistry, TRUE, []);
+		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
+
+		$result = $service->callTool($request, 'sgai', '1', 'sgai_get_large_payload', []);
+
+		$this->assertIsArray($result);
+		$this->assertFalse($result['isError']);
+		$this->assertSame(15000, \strlen($result['structuredContent']['imageData']));
+		$this->assertLessThan(13000, \strlen($result['content'][0]['text'] ?? ''));
+		$this->assertStringContainsString('[truncated, original length: 15000 bytes]', $result['content'][0]['text'] ?? '');
+	}
+
+	public function testCallToolTruncatesLargeRawTextResponses(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpRawPayloadMockController::class], $apiRegistry, TRUE, []);
+		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
+
+		$result = $service->callTool($request, 'sgai', '1', 'sgai_get_raw_payload', []);
+
+		$this->assertIsArray($result);
+		$this->assertFalse($result['isError']);
+		$this->assertSame(15000, \strlen($result['structuredContent']['rawBody']));
+		$this->assertLessThan(13000, \strlen($result['content'][0]['text'] ?? ''));
+		$this->assertStringContainsString('[truncated, original length: 15000 bytes]', $result['content'][0]['text'] ?? '');
 	}
 
 	public function testCallToolForwardsBodyParametersIntoRawJsonBody(): void {
@@ -228,7 +334,8 @@ class McpToolServiceTest extends UnitTestCase {
 		bool $mcpEnabled,
 		array $denylist,
 		bool $rateLimitEnabled = FALSE,
-		?RateLimitService $rateLimitService = NULL
+		?RateLimitService $rateLimitService = NULL,
+		array $mcpDisabledApis = []
 	): McpToolService {
 		$instances = [];
 		foreach ($controllerClasses as $controllerClass) {
@@ -262,7 +369,7 @@ class McpToolServiceTest extends UnitTestCase {
 
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn($mcpEnabled);
-		$extensionConfiguration->method('getMcpDisabledApis')->willReturn([]);
+		$extensionConfiguration->method('getMcpDisabledApis')->willReturn($mcpDisabledApis);
 		$extensionConfiguration->method('getMcpDenylist')->willReturn($denylist);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 		$extensionConfiguration->method('isRateLimitEnabled')->willReturn($rateLimitEnabled);
@@ -336,6 +443,27 @@ class McpCreditsMockController {
 			'subscription' => 'Bronze',
 			'monthly_credits' => 144,
 		]);
+	}
+}
+
+class McpLargePayloadMockController {
+	#[ApiRoute(path: '/large-payload', methods: ['GET'], apiId: 'sgai', version: '1')]
+	#[ApiMcp(name: 'sgai_get_large_payload')]
+	public function largePayloadAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse([
+			'imageData' => str_repeat('A', 15000),
+			'usage' => ['credits' => 10.0],
+		]);
+	}
+}
+
+class McpRawPayloadMockController {
+	#[ApiRoute(path: '/raw-payload', methods: ['GET'], apiId: 'sgai', version: '1')]
+	#[ApiMcp(name: 'sgai_get_raw_payload')]
+	public function rawPayloadAction(ServerRequestInterface $request): ResponseInterface {
+		$response = new Response('php://temp', 200);
+		$response->getBody()->write(str_repeat('A', 15000));
+		return $response;
 	}
 }
 

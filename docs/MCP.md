@@ -22,9 +22,10 @@ Supported JSON-RPC methods:
 - `tools/list`
 - `tools/call`
 
-The `GET` endpoint returns `Content-Type: text/event-stream` and an initial SSE comment. It does not currently emit
-server-initiated JSON-RPC requests or notifications, but it keeps clients compatible with MCP Streamable HTTP clients
-that probe the optional server-to-client event stream.
+The `GET` endpoint returns `Content-Type: text/event-stream`, a slow SSE `retry` hint, and an initial SSE comment. It
+does not currently emit server-initiated JSON-RPC requests or notifications, but it keeps clients compatible with MCP
+Streamable HTTP clients that probe the optional server-to-client event stream without advertising a long-lived PHP
+worker.
 
 ## Architecture
 
@@ -173,8 +174,10 @@ Validation stays enforced by `RequestValidator`.
 
 Successful tool calls return the endpoint payload in two places:
 
-- `content[0].text`: a JSON/text representation for clients that only display MCP text content.
+- `content[0].text`: a bounded JSON/text representation for clients that only display MCP text content.
 - `structuredContent`: the same payload as structured JSON for clients that consume typed tool output.
+
+Large string values are truncated only in `content[0].text`; `structuredContent` keeps the complete endpoint payload.
 
 ## Client Integration Patterns
 

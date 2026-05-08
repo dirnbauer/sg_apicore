@@ -80,6 +80,146 @@ class McpControllerTest extends UnitTestCase {
 		$this->assertSame('sgai_get_credits', $payload['result']['tools'][0]['name']);
 	}
 
+	public function testToolsListRequiresAuthentication(): void {
+		$mcpToolService = $this->createStub(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('token');
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 1,
+				'method' => 'tools/list',
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertSame(-32002, $payload['error']['code']);
+	}
+
+	public function testToolsCallRejectsNonObjectArguments(): void {
+		$mcpToolService = $this->createMock(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('public');
+		$mcpToolService->expects($this->never())->method('callTool');
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withAttribute('api.auth', new AuthContext('sgai', ''))
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 'call-1',
+				'method' => 'tools/call',
+				'params' => [
+					'name' => 'sgai_get_credits',
+					'arguments' => 'invalid',
+				],
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertSame(-32602, $payload['error']['code']);
+		$this->assertSame('Invalid params: "arguments" must be an object.', $payload['error']['message']);
+	}
+
+	public function testToolsCallRejectsListArguments(): void {
+		$mcpToolService = $this->createMock(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('public');
+		$mcpToolService->expects($this->never())->method('callTool');
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withAttribute('api.auth', new AuthContext('sgai', ''))
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 'call-1',
+				'method' => 'tools/call',
+				'params' => [
+					'name' => 'sgai_get_credits',
+					'arguments' => ['invalid'],
+				],
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertSame(-32602, $payload['error']['code']);
+		$this->assertSame('Invalid params: "arguments" must be an object.', $payload['error']['message']);
+	}
+
+	public function testToolsCallRequiresAuthentication(): void {
+		$mcpToolService = $this->createMock(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('token');
+		$mcpToolService->expects($this->never())->method('callTool');
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 1,
+				'method' => 'tools/call',
+				'params' => [
+					'name' => 'sgai_get_credits',
+					'arguments' => [],
+				],
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertSame(-32002, $payload['error']['code']);
+	}
+
+	public function testToolsCallReturnsToolNotFoundWhenServiceCannotResolveTool(): void {
+		$mcpToolService = $this->createStub(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('public');
+		$mcpToolService->method('callTool')->willReturn(NULL);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withAttribute('api.auth', new AuthContext('sgai', ''))
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 1,
+				'method' => 'tools/call',
+				'params' => [
+					'name' => 'sgai_missing_tool',
+					'arguments' => [],
+				],
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertSame(-32001, $payload['error']['code']);
+		$this->assertSame('Tool not found: sgai_missing_tool', $payload['error']['message']);
+	}
+
 	public function testToolsCallReturnsMethodNotFoundErrorForUnknownMethod(): void {
 		$mcpToolService = $this->createStub(McpToolService::class);
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
@@ -154,18 +294,37 @@ class McpControllerTest extends UnitTestCase {
 
 	public function testStreamActionReturnsSseResponseForGetRequests(): void {
 		$mcpToolService = $this->createStub(McpToolService::class);
+		$mcpToolService->method('isMcpAvailableForApi')->with('sgai')->willReturn(TRUE);
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
 		$controller = new McpController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'GET'))
+			->withAttribute('api.id', 'sgai')
 			->withHeader('Accept', 'text/event-stream');
 
 		$response = $controller->streamAction($request);
 
 		$this->assertSame(200, $response->getStatusCode());
 		$this->assertSame('text/event-stream; charset=utf-8', $response->getHeaderLine('Content-Type'));
+		$this->assertSame('', $response->getHeaderLine('Connection'));
+		$this->assertStringContainsString('retry: 60000', (string) $response->getBody());
 		$this->assertStringContainsString('sg_apicore MCP stream ready', (string) $response->getBody());
+	}
+
+	public function testStreamActionReturnsNotFoundWhenMcpIsUnavailableForApi(): void {
+		$mcpToolService = $this->createStub(McpToolService::class);
+		$mcpToolService->method('isMcpAvailableForApi')->with('sgai')->willReturn(FALSE);
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'GET'))
+			->withAttribute('api.id', 'sgai')
+			->withHeader('Accept', 'text/event-stream');
+
+		$response = $controller->streamAction($request);
+
+		$this->assertSame(404, $response->getStatusCode());
 	}
 
 	public function testStreamActionRejectsClientsWithoutSseAcceptHeader(): void {
