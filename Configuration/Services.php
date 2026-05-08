@@ -1,6 +1,5 @@
 <?php
 
-use SGalinski\SgApiCore\Command\GenerateOpenApiCommand;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
 use SGalinski\SgApiCore\Security\JwtAccessTokenProvider;
 use SGalinski\SgApiCore\Security\LoginProviderChain;
