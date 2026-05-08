@@ -281,7 +281,7 @@ a cache tag.
 ### Clearing Cache manually
 
 You can clear the entire API response cache in the TYPO3 Backend via the "Flush cache" menu (lightning icon) using
-the **"Clear API Cache"** entry.
+the **"Clear API Cache"** entry. This entry is only available to backend administrators.
 
 ### Cache Status Headers
 

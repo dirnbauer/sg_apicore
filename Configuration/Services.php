@@ -1,5 +1,6 @@
 <?php
 
+use SGalinski\SgApiCore\Command\GenerateOpenApiCommand;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
 use SGalinski\SgApiCore\Security\JwtAccessTokenProvider;
 use SGalinski\SgApiCore\Security\LoginProviderChain;
@@ -51,7 +52,13 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 		->tag('sg_apicore.router');
 
 	$services->set(SGalinski\SgApiCore\Command\GenerateOpenApiCommand::class)
-		->tag('console.command', ['command' => 'api:openapi:generate']);
+		->tag(
+			'console.command',
+			[
+				'command' => 'api:openapi:generate',
+				'description' => SGalinski\SgApiCore\Command\GenerateOpenApiCommand::COMMAND_DESCRIPTION
+			]
+		);
 	$services->set(SGalinski\SgApiCore\Command\McpListCommand::class)
 		->tag('console.command', ['command' => 'api:mcp:list']);
 
