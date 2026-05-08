@@ -44,12 +44,16 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
 	$services->set(SGalinski\SgApiCore\Controller\UserAuthController::class)
 		->tag('sg_apicore.router');
+	$services->set(SGalinski\SgApiCore\Controller\McpController::class)
+		->tag('sg_apicore.router');
 
 	$services->set(SGalinski\SgApiCore\Controller\ResourceController::class)
 		->tag('sg_apicore.router');
 
 	$services->set(SGalinski\SgApiCore\Command\GenerateOpenApiCommand::class)
 		->tag('console.command', ['command' => 'api:openapi:generate']);
+	$services->set(SGalinski\SgApiCore\Command\McpListCommand::class)
+		->tag('console.command', ['command' => 'api:mcp:list']);
 
 	$services->set(TenantResolverChain::class)
 		->arg('$resolvers', tagged_iterator('sg_apicore.tenant_resolver'));

@@ -257,4 +257,35 @@ class ExtensionConfiguration implements SingletonInterface {
 	public function getApiResourceWriteBackendUserId(): int {
 		return (int) $this->get('apiResourceWriteBackendUserId', 0);
 	}
+
+	/**
+	 * Returns whether MCP support is enabled globally.
+	 *
+	 * @return bool
+	 */
+	public function isMcpEnabled(): bool {
+		return (bool) $this->get('mcpEnabled', TRUE);
+	}
+
+	/**
+	 * Returns API IDs for which MCP is globally disabled via extension config.
+	 *
+	 * @return array
+	 */
+	public function getMcpDisabledApis(): array {
+		$apiIds = (string) $this->get('mcpDisabledApis', '');
+		return GeneralUtility::trimExplode(',', $apiIds, TRUE);
+	}
+
+	/**
+	 * Returns a global MCP denylist.
+	 *
+	 * Each entry can match a generated endpoint ID or tool name.
+	 *
+	 * @return array
+	 */
+	public function getMcpDenylist(): array {
+		$entries = (string) $this->get('mcpDenylist', '');
+		return GeneralUtility::trimExplode(',', $entries, TRUE);
+	}
 }

@@ -48,6 +48,7 @@ class ApiRegistry implements SingletonInterface {
 			'security' => $security,
 			'basePath' => $basePath,
 			'rateLimit' => $rateLimit,
+			'options' => $options,
 		];
 	}
 
@@ -121,5 +122,53 @@ class ApiRegistry implements SingletonInterface {
 	 */
 	public function hasApi(string $apiId): bool {
 		return isset($this->apis[$apiId]);
+	}
+
+	/**
+	 * Returns whether MCP is enabled for the given API.
+	 *
+	 * @param string $apiId
+	 * @return bool
+	 */
+	public function isMcpEnabledForApi(string $apiId): bool {
+		$api = $this->getApi($apiId);
+		if ($api === NULL) {
+			return FALSE;
+		}
+
+		$options = \is_array($api['options'] ?? NULL) ? $api['options'] : [];
+		$security = \is_array($api['security'] ?? NULL) ? $api['security'] : [];
+
+		if (\array_key_exists('mcpEnabled', $options)) {
+			return (bool) $options['mcpEnabled'];
+		}
+		if (\array_key_exists('mcpEnabled', $security)) {
+			return (bool) $security['mcpEnabled'];
+		}
+
+		return TRUE;
+	}
+
+	/**
+	 * Returns MCP denylist entries configured for this API.
+	 *
+	 * @param string $apiId
+	 * @return array
+	 */
+	public function getMcpDenylistForApi(string $apiId): array {
+		$api = $this->getApi($apiId);
+		if ($api === NULL) {
+			return [];
+		}
+
+		$options = \is_array($api['options'] ?? NULL) ? $api['options'] : [];
+		$security = \is_array($api['security'] ?? NULL) ? $api['security'] : [];
+		$denylist = $options['mcpDenylist'] ?? $security['mcpDenylist'] ?? [];
+
+		if (!\is_array($denylist)) {
+			return [];
+		}
+
+		return array_values(array_filter(array_map('strval', $denylist), static fn (string $entry): bool => $entry !== ''));
 	}
 }

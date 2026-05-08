@@ -16,6 +16,7 @@ namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiMcp;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
@@ -124,6 +125,30 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
 	}
 
+	public function testDiscoverySignatureIsCachedInMemory(): void {
+		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
+		$resourceRegistry = $this->createMock(ResourceRegistry::class);
+		$resourceRegistry->expects($this->once())->method('getResources')->willReturn([]);
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+
+		$service = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+
+		$signature = $service->getDiscoverySignature();
+
+		$this->assertSame($signature, $service->getDiscoverySignature());
+	}
+
 	public function testGenerateResourceEndpointsUsesTcaLabels(): void {
 		$controllers = new \ArrayIterator([]);
 		$resourceRegistry = new ResourceRegistry();
@@ -169,6 +194,33 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 
 		unset($GLOBALS['TCA']['tx_test']);
 	}
+
+	public function testGetAllEndpointsIncludesMcpMetadata(): void {
+		$controllers = new \ArrayIterator([new DiscoveryMcpController()]);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+
+		$service = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+		$endpoints = $service->getAllEndpoints();
+
+		$this->assertCount(1, $endpoints);
+		$this->assertInstanceOf(ApiMcp::class, $endpoints[0]['mcp']);
+		$this->assertTrue($endpoints[0]['mcp']->exclude);
+		$this->assertSame('custom_tool', $endpoints[0]['mcp']->name);
+	}
 }
 
 /**
@@ -183,5 +235,12 @@ class DiscoveryMockController {
 	#[ApiPathParam(name: 'id', type: 'integer')]
 	#[ApiResponse(status: 200, description: 'Success')]
 	public function testAction(): void {
+	}
+}
+
+class DiscoveryMcpController {
+	#[ApiRoute(path: '/mcp-test', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiMcp(exclude: TRUE, name: 'custom_tool')]
+	public function testMcpAction(): void {
 	}
 }

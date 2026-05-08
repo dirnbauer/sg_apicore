@@ -175,11 +175,11 @@ class RouterTest extends UnitTestCase {
 
 		$router = $this->createRouter([MockHybridRouterController::class]);
 
-		// 'public' api should NOT match /hybrid
+		// Hybrid endpoints explicitly allowing public auth should match in public APIs.
 		$response = $router->dispatch($request, 'public', '1', '/hybrid', 'public');
-		$this->assertEquals(404, $response->getStatusCode());
+		$this->assertEquals(200, $response->getStatusCode());
 
-		// 'user' api SHOULD match /hybrid and it should be accessible without auth
+		// Hybrid endpoints should also match in user APIs and remain accessible without auth.
 		$response = $router->dispatch($request, 'user', '1', '/hybrid', 'user');
 		$this->assertEquals(200, $response->getStatusCode());
 	}

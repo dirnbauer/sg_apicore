@@ -17,6 +17,7 @@ namespace SGalinski\SgApiCore\Service;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiMcp;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
@@ -43,6 +44,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @var array|null
 	 */
 	protected ?array $endpoints = NULL;
+
+	/**
+	 * @var string|null
+	 */
+	protected ?string $discoverySignature = NULL;
 
 	/**
 	 * @var FrontendInterface
@@ -134,6 +140,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$apiCache = $cacheAttr[0]->newInstance();
 					}
 
+					$mcp = NULL;
+					$mcpAttr = $method->getAttributes(ApiMcp::class);
+					if (\count($mcpAttr) > 0) {
+						$mcp = $mcpAttr[0]->newInstance();
+					}
+
 					$requireTypoScript = FALSE;
 					$typoScriptAttributes = $method->getAttributes(RequireFullTypoScript::class);
 					if (\count($typoScriptAttributes) === 0) {
@@ -183,6 +195,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						'pathParams' => $pathParams,
 						'responses' => $responses,
 						'apiCache' => $apiCache,
+						'mcp' => $mcp,
 						'requireFullTypoScript' => $requireTypoScript,
 						'controller' => $controllerClass,
 						'action' => $method->getName(),
@@ -232,6 +245,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @throws \ReflectionException
 	 */
 	public function getDiscoverySignature(): string {
+		if ($this->discoverySignature !== NULL) {
+			return $this->discoverySignature;
+		}
+
 		$controllers = [];
 		foreach ($this->getControllerClasses() as $controllerClass) {
 			$reflectionClass = new \ReflectionClass($controllerClass);
@@ -254,7 +271,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 			$encoded = serialize($signaturePayload);
 		}
 
-		return sha1($encoded);
+		$this->discoverySignature = sha1($encoded);
+		return $this->discoverySignature;
 	}
 
 	/**
@@ -526,6 +544,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [],
 				'responses' => [new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'listAction',
@@ -553,6 +572,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'getAction',
@@ -577,6 +597,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [],
 				'responses' => [new ApiResponse(status: 201, description: 'Created', schema: $tableName)],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'createAction',
@@ -604,6 +625,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'updateAction',
@@ -635,6 +657,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'deleteAction',
