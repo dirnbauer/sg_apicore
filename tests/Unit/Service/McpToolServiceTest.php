@@ -123,6 +123,23 @@ class McpToolServiceTest extends UnitTestCase {
 		$this->assertIsArray($result);
 		$this->assertFalse($result['isError']);
 		$this->assertTrue($result['structuredContent']['ok']);
+		$this->assertStringContainsString('"ok": true', $result['content'][0]['text'] ?? '');
+	}
+
+	public function testCallToolReturnsStructuredPayloadAsVisibleTextContent(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpCreditsMockController::class], $apiRegistry, TRUE, []);
+		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
+
+		$result = $service->callTool($request, 'sgai', '1', 'sgai_get_credits', []);
+
+		$this->assertIsArray($result);
+		$this->assertFalse($result['isError']);
+		$this->assertSame(144, $result['structuredContent']['credits']);
+		$this->assertStringContainsString('"credits": 144', $result['content'][0]['text'] ?? '');
+		$this->assertStringContainsString('"subscription": "Bronze"', $result['content'][0]['text'] ?? '');
 	}
 
 	public function testCallToolForwardsBodyParametersIntoRawJsonBody(): void {
@@ -308,6 +325,17 @@ class McpCallMockController {
 	#[ApiRoute(path: '/ping', methods: ['GET'], apiId: 'sgai', version: '1')]
 	public function pingAction(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse(['ok' => TRUE]);
+	}
+}
+
+class McpCreditsMockController {
+	#[ApiRoute(path: '/credits', methods: ['GET'], apiId: 'sgai', version: '1')]
+	public function creditsAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse([
+			'credits' => 144,
+			'subscription' => 'Bronze',
+			'monthly_credits' => 144,
+		]);
 	}
 }
 

@@ -171,6 +171,11 @@ Validation stays enforced by `RequestValidator`.
 }
 ```
 
+Successful tool calls return the endpoint payload in two places:
+
+- `content[0].text`: a JSON/text representation for clients that only display MCP text content.
+- `structuredContent`: the same payload as structured JSON for clients that consume typed tool output.
+
 ## Client Integration Patterns
 
 Most MCP clients can connect with:

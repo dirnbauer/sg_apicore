@@ -55,7 +55,7 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 			'console.command',
 			[
 				'command' => 'api:openapi:generate',
-				'description' => SGalinski\SgApiCore\Command\GenerateOpenApiCommand::COMMAND_DESCRIPTION
+				'description' => SGalinski\SgApiCore\Command\GenerateOpenApiCommand::COMMAND_DESCRIPTION,
 			]
 		);
 	$services->set(SGalinski\SgApiCore\Command\McpListCommand::class)

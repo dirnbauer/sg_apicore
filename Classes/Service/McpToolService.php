@@ -325,7 +325,7 @@ class McpToolService implements SingletonInterface {
 				'content' => [
 					[
 						'type' => 'text',
-						'text' => 'Tool executed successfully.',
+						'text' => $this->buildToolContentText($payload),
 					],
 				],
 				'structuredContent' => $payload,
@@ -335,6 +335,20 @@ class McpToolService implements SingletonInterface {
 		$category = $this->mapStatusToErrorCategory($statusCode);
 		$message = (string) ($payload['detail'] ?? $payload['message'] ?? 'Tool call failed');
 		return $this->createToolErrorResult($category, $statusCode, $message, $payload);
+	}
+
+	/**
+	 * @param array $payload
+	 * @return string
+	 */
+	protected function buildToolContentText(array $payload): string {
+		if (\array_key_exists('rawBody', $payload) && \count($payload) === 1) {
+			$rawBody = (string) $payload['rawBody'];
+			return $rawBody !== '' ? $rawBody : 'Tool executed successfully.';
+		}
+
+		$encodedPayload = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		return \is_string($encodedPayload) && $encodedPayload !== '' ? $encodedPayload : 'Tool executed successfully.';
 	}
 
 	/**
