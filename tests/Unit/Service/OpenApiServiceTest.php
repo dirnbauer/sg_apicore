@@ -166,6 +166,21 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertEquals('/api/public/v1', $spec['servers'][0]['url']);
 	}
 
+	public function testGenerateSpecPutsMcpAndOpenApiTagsBelowApplicationTags(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$controllers = new \ArrayIterator([new MockTagOrderingController()]);
+		$discoveryService = $this->getDiscoveryService($controllers);
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+
+		$this->assertSame(['SGAI', 'MCP', 'OpenAPI'], array_column($spec['tags'], 'name'));
+	}
+
 	public function testGenerateSpecUsesProvidedBaseUrl(): void {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
@@ -628,6 +643,23 @@ class MockOpenApiController {
 
 	#[ApiRoute(path: '/partner-only', methods: ['GET'], apiId: 'partner', version: '1')]
 	public function partnerAction(): void {
+	}
+}
+
+class MockTagOrderingController {
+	#[ApiRoute(path: '/mcp', methods: ['POST'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(summary: 'MCP endpoint', tags: ['MCP'])]
+	public function mcpAction(): void {
+	}
+
+	#[ApiRoute(path: '/credits', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(summary: 'Credits endpoint', tags: ['SGAI'])]
+	public function creditsAction(): void {
+	}
+
+	#[ApiRoute(path: '/docs.json', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiEndpoint(summary: 'Docs endpoint', tags: ['OpenAPI'])]
+	public function docsAction(): void {
 	}
 }
 

@@ -156,7 +156,7 @@ class OpenApiService implements SingletonInterface {
 		// Sort tags alphabetically but keep specific tags at the end
 		$tagNames = array_keys($allTags);
 		natcasesort($tagNames);
-		$bottomTags = ['openapi', 'health'];
+		$bottomTags = ['mcp', 'openapi', 'health'];
 		$sortedTags = [];
 		$tagsToPutAtBottom = [];
 
