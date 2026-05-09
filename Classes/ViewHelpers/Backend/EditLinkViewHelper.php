@@ -26,7 +26,7 @@ class EditLinkViewHelper extends AbstractViewHelper {
 	/**
 	 * Register the ViewHelpers arguments
 	 */
-	public function initializeArguments() {
+	public function initializeArguments(): void {
 		parent::initializeArguments();
 		$this->registerArgument('table', 'string', 'The table of the edit link', TRUE);
 		$this->registerArgument('uid', 'int', 'The uid of the record', TRUE);

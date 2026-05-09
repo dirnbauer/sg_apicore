@@ -41,7 +41,7 @@ class PathAnalysisService implements SingletonInterface {
 	 * @return array|null
 	 */
 	public function analyze(string $path, ?string $prefixOverride = NULL): ?array {
-		if ($GLOBALS['TYPO3_REQUEST'] instanceof \Psr\Http\Message\ServerRequestInterface) {
+		if (($GLOBALS['TYPO3_REQUEST'] ?? NULL) instanceof \Psr\Http\Message\ServerRequestInterface) {
 			$request = $GLOBALS['TYPO3_REQUEST'];
 			$apiId = $request->getAttribute('api.id');
 			$version = $request->getAttribute('api.version');

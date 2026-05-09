@@ -25,6 +25,8 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Information\Typo3Version;
@@ -63,6 +65,7 @@ class ResourceController {
 
 		$tableName = $resourceConfig['table'];
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyResourceVisibilityRestrictions($queryBuilder, $resourceConfig);
 		$queryBuilder->select('*')->from($tableName);
 
 		// Pagination
@@ -178,6 +181,7 @@ class ResourceController {
 		$idField = $resourceConfig['idField'] ?? 'uid';
 
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyResourceVisibilityRestrictions($queryBuilder, $resourceConfig);
 		$record = $queryBuilder->select('*')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
@@ -237,6 +241,7 @@ class ResourceController {
 				'NEW1' => $filteredData,
 			],
 		];
+		$this->expandFileReferencePayloads($tableName, 'NEW1', $dataMap, (int) $filteredData['pid']);
 
 		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
 		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
@@ -245,7 +250,7 @@ class ResourceController {
 		}
 
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-		$dataHandler->admin = $writeBackendUserId <= 0;
+		$dataHandler->bypassAccessCheckForRecords = $writeBackendUserId <= 0 && !$this->hasAuthenticatedBackendUser();
 		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
@@ -282,12 +287,14 @@ class ResourceController {
 
 		// Check if a record exists
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
-		$uid = (int) $queryBuilder->select('uid')
+		$this->applyResourceVisibilityRestrictions($queryBuilder, $resourceConfig);
+		$record = $queryBuilder->select('uid', 'pid')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
 			->executeQuery()
-			->fetchOne();
+			->fetchAssociative();
 
+		$uid = (int) ($record['uid'] ?? 0);
 		if ($uid <= 0) {
 			return $this->responseService->createErrorResponse('Not Found', 'Resource not found.', 404);
 		}
@@ -304,6 +311,7 @@ class ResourceController {
 				$uid => $filteredData,
 			],
 		];
+		$this->expandFileReferencePayloads($tableName, $uid, $dataMap, (int) ($filteredData['pid'] ?? $record['pid'] ?? 0));
 
 		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
 		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
@@ -312,7 +320,7 @@ class ResourceController {
 		}
 
 		$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-		$dataHandler->admin = $writeBackendUserId <= 0;
+		$dataHandler->bypassAccessCheckForRecords = $writeBackendUserId <= 0 && !$this->hasAuthenticatedBackendUser();
 		$dataHandler->dontProcessTransformations = TRUE;
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
@@ -343,6 +351,7 @@ class ResourceController {
 
 		// Check if a record exists
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyResourceVisibilityRestrictions($queryBuilder, $resourceConfig);
 		$uid = (int) $queryBuilder->select('uid')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
@@ -372,7 +381,7 @@ class ResourceController {
 			$connection->delete($tableName, ['uid' => $uid]);
 		} else {
 			$dataHandler = GeneralUtility::makeInstance(DataHandler::class);
-			$dataHandler->admin = $writeBackendUserId <= 0;
+			$dataHandler->bypassAccessCheckForRecords = $writeBackendUserId <= 0 && !$this->hasAuthenticatedBackendUser();
 			$dataHandler->dontProcessTransformations = TRUE;
 			$dataHandler->start([], $cmdMap);
 			$dataHandler->process_cmdmap();
@@ -412,6 +421,8 @@ class ResourceController {
 			}
 
 			$backendUser->fetchGroupData();
+			$backendUser->workspace = 0;
+			$backendUser->workspaceRec = [];
 			$GLOBALS['BE_USER'] = $backendUser;
 			$this->initializeLanguageService();
 			return NULL;
@@ -419,6 +430,8 @@ class ResourceController {
 
 		$backendUser->user['admin'] = 1;
 		$backendUser->user['uid'] = 0;
+		$backendUser->workspace = 0;
+		$backendUser->workspaceRec = [];
 		$GLOBALS['BE_USER'] = $backendUser;
 		$this->initializeLanguageService();
 		return NULL;
@@ -447,5 +460,84 @@ class ResourceController {
 		}
 
 		$GLOBALS['LANG'] = $this->languageServiceFactory->create('default');
+	}
+
+	protected function hasAuthenticatedBackendUser(): bool {
+		$backendUser = $GLOBALS['BE_USER'] ?? NULL;
+		return $backendUser instanceof BackendUserAuthentication && (int) ($backendUser->user['uid'] ?? 0) > 0;
+	}
+
+	/**
+	 * Converts API file payloads into DataHandler sys_file_reference child records.
+	 *
+	 * @param array<string, array<int|string, array<string, mixed>>> $dataMap
+	 */
+	protected function expandFileReferencePayloads(string $tableName, int|string $recordId, array &$dataMap, int $pid): void {
+		$recordData = $dataMap[$tableName][$recordId] ?? [];
+		if (!\is_array($recordData)) {
+			return;
+		}
+
+		foreach ($recordData as $fieldName => $value) {
+			$fieldConfiguration = $GLOBALS['TCA'][$tableName]['columns'][$fieldName]['config'] ?? [];
+			if (($fieldConfiguration['type'] ?? '') !== 'file' || !\is_array($value)) {
+				continue;
+			}
+
+			$referenceIds = [];
+			foreach ($value as $index => $filePayload) {
+				if (\is_numeric($filePayload)) {
+					$referenceIds[] = (string) (int) $filePayload;
+					continue;
+				}
+				if (!\is_array($filePayload)) {
+					continue;
+				}
+
+				$fileUid = (int) ($filePayload['uid_local'] ?? $filePayload['fileUid'] ?? 0);
+				if ($fileUid <= 0 && isset($filePayload['uid'])) {
+					$referenceIds[] = (string) (int) $filePayload['uid'];
+					continue;
+				}
+				if ($fileUid <= 0) {
+					continue;
+				}
+
+				$newReferenceId = 'NEW' . substr(hash('sha1', $tableName . $recordId . $fieldName . $index . microtime(TRUE)), 0, 12);
+				$referenceIds[] = $newReferenceId;
+				$fileReferenceData = [
+					'pid' => $pid,
+					'uid_local' => $fileUid,
+					'tablenames' => $tableName,
+					'fieldname' => $fieldName,
+					'table_local' => 'sys_file',
+				];
+
+				foreach (['title', 'alternative', 'description', 'link', 'showinpreview'] as $referenceFieldName) {
+					if (array_key_exists($referenceFieldName, $filePayload)) {
+						$fileReferenceData[$referenceFieldName] = $filePayload[$referenceFieldName];
+					}
+				}
+				if (array_key_exists('crop', $filePayload)) {
+					$fileReferenceData['crop'] = \is_array($filePayload['crop'])
+						? json_encode($filePayload['crop'], JSON_THROW_ON_ERROR)
+						: (string) $filePayload['crop'];
+				}
+
+				$dataMap['sys_file_reference'][$newReferenceId] = $fileReferenceData;
+			}
+
+			$dataMap[$tableName][$recordId][$fieldName] = implode(',', $referenceIds);
+		}
+	}
+
+	protected function applyResourceVisibilityRestrictions(QueryBuilder $queryBuilder, array $resourceConfig): void {
+		if (empty($resourceConfig['includeDisabled'])) {
+			return;
+		}
+
+		$queryBuilder->getRestrictions()
+			->removeAll()
+			->add(GeneralUtility::makeInstance(DeletedRestriction::class));
 	}
 }

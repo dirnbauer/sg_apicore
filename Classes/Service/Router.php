@@ -371,7 +371,8 @@ class Router implements SingletonInterface {
 		$cacheDirectory = $this->cachePathService->getFastRouteCacheDirectory();
 
 		$authKey = \is_array($authMode) ? implode(',', $authMode) : (string) $authMode;
-		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey . '|' . $tenantId) . '.php';
+		$endpointSignature = sha1(serialize($filteredEndpoints));
+		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey . '|' . $tenantId . '|' . $endpointSignature) . '.php';
 
 		return cachedDispatcher(function (RouteCollector $r) use ($filteredEndpoints) {
 			foreach ($filteredEndpoints as $endpoint) {
