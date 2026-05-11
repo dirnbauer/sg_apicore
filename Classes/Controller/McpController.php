@@ -52,7 +52,13 @@ class McpController {
 	 * @throws ReflectionException
 	 */
 	#[ApiRoute(path: '/mcp', methods: ['POST'], authMode: 'public')]
-	#[ApiEndpoint(summary: 'MCP JSON-RPC endpoint', tags: ['MCP'])]
+	#[ApiEndpoint(
+		summary: 'MCP JSON-RPC endpoint',
+		description: 'Supported methods: initialize, tools/list, tools/call. '
+			. 'For MCP transport details and cURL examples see docs/MCP.md in this extension '
+			. 'or https://www.sgalinski.de/en/typo3-products-web-development/modern-api-core-for-typo3/.',
+		tags: ['MCP']
+	)]
 	#[ApiMcp(exclude: TRUE)]
 	#[ApiBodyParam(
 		name: 'jsonrpc',
@@ -117,16 +123,22 @@ class McpController {
 		}
 
 		if ($method === 'tools/list') {
-			if (!$authContext instanceof AuthContext) {
+			if ($authMode !== 'public' && !$authContext instanceof AuthContext) {
 				return new JsonResponse($this->createErrorResponse($id, -32002, 'Authentication required.'));
 			}
 
-			$tools = $this->mcpToolService->listTools($apiId, $version, $authMode, $tenantId, $authContext);
+			$tools = $this->mcpToolService->listTools(
+				$apiId,
+				$version,
+				$authMode,
+				$tenantId,
+				$authContext instanceof AuthContext ? $authContext : NULL
+			);
 			return new JsonResponse($this->createResultResponse($id, ['tools' => $tools]));
 		}
 
 		if ($method === 'tools/call') {
-			if (!$authContext instanceof AuthContext) {
+			if ($authMode !== 'public' && !$authContext instanceof AuthContext) {
 				return new JsonResponse($this->createErrorResponse($id, -32002, 'Authentication required.'));
 			}
 
@@ -163,7 +175,14 @@ class McpController {
 	 * @return ResponseInterface
 	 */
 	#[ApiRoute(path: '/mcp', methods: ['GET'], authMode: 'public')]
-	#[ApiEndpoint(summary: 'MCP server-to-client event stream', tags: ['MCP'])]
+	#[ApiEndpoint(
+		summary: 'MCP server-to-client event stream',
+		description: 'Optional SSE stream for MCP Streamable HTTP. '
+			. 'Clients must send Accept: text/event-stream, otherwise the endpoint returns HTTP 406. '
+			. 'See docs/MCP.md in this extension or '
+			. 'https://www.sgalinski.de/en/typo3-products-web-development/modern-api-core-for-typo3/.',
+		tags: ['MCP']
+	)]
 	#[ApiMcp(exclude: TRUE)]
 	public function streamAction(ServerRequestInterface $request): ResponseInterface {
 		if (!str_contains(strtolower($request->getHeaderLine('Accept')), 'text/event-stream')) {

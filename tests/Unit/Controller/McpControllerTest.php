@@ -80,6 +80,40 @@ class McpControllerTest extends UnitTestCase {
 		$this->assertSame('sgai_get_credits', $payload['result']['tools'][0]['name']);
 	}
 
+	public function testToolsListAllowsUnauthenticatedRequestsForPublicApi(): void {
+		$mcpToolService = $this->createMock(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('public');
+		$mcpToolService->expects($this->once())
+			->method('listTools')
+			->with('sgai', '1', 'public', '', NULL)
+			->willReturn([
+				[
+					'name' => 'sgai_get_credits',
+					'description' => 'Credits',
+					'inputSchema' => ['type' => 'object'],
+				],
+			]);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 'public-tools',
+				'method' => 'tools/list',
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertArrayHasKey('result', $payload);
+		$this->assertSame('sgai_get_credits', $payload['result']['tools'][0]['name']);
+	}
+
 	public function testToolsListRequiresAuthentication(): void {
 		$mcpToolService = $this->createStub(McpToolService::class);
 		$mcpToolService->method('getAuthModeForApi')->willReturn('token');
@@ -100,6 +134,42 @@ class McpControllerTest extends UnitTestCase {
 		$payload = json_decode((string) $response->getBody(), TRUE);
 
 		$this->assertSame(-32002, $payload['error']['code']);
+	}
+
+	public function testToolsCallAllowsUnauthenticatedRequestsForPublicApi(): void {
+		$mcpToolService = $this->createMock(McpToolService::class);
+		$mcpToolService->method('getAuthModeForApi')->willReturn('public');
+		$mcpToolService->expects($this->once())
+			->method('callTool')
+			->willReturn([
+				'content' => [['type' => 'text', 'text' => 'ok']],
+				'structuredContent' => ['ok' => TRUE],
+				'isError' => FALSE,
+			]);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
+
+		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
+			->withAttribute('api.id', 'sgai')
+			->withAttribute('api.version', '1')
+			->withParsedBody([
+				'jsonrpc' => '2.0',
+				'id' => 'public-call',
+				'method' => 'tools/call',
+				'params' => [
+					'name' => 'sgai_get_ping',
+					'arguments' => [],
+				],
+			]);
+
+		$response = $controller->handleAction($request);
+		$payload = json_decode((string) $response->getBody(), TRUE);
+
+		$this->assertArrayHasKey('result', $payload);
+		$this->assertFalse($payload['result']['isError']);
+		$this->assertTrue($payload['result']['structuredContent']['ok']);
 	}
 
 	public function testToolsCallRejectsNonObjectArguments(): void {

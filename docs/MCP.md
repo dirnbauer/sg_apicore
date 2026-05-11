@@ -2,6 +2,10 @@
 
 `sg_apicore` can expose existing API endpoints as MCP tools without duplicating business logic.
 
+Online extension documentation:
+
+- https://www.sgalinski.de/en/typo3-products-web-development/modern-api-core-for-typo3/
+
 ## What This Provides
 
 - Tool discovery (`tools/list`) from existing endpoint metadata.
@@ -188,6 +192,8 @@ MCP_URL="https://<host>/api/<apiId>/v<version>/mcp"
 MCP_TOKEN="<token>"
 ```
 
+For APIs using `authMode: public`, the `Authorization` header is optional.
+
 ### initialize
 
 ```bash
@@ -245,6 +251,36 @@ Most MCP clients can connect with:
 - header: `Authorization: Bearer <token>`
 
 If a client supports only `stdio`, use a small bridge/proxy that forwards stdio MCP messages to the HTTP endpoint.
+
+## Implementation Hints (Codex, Claude, Others)
+
+Use this baseline checklist for MCP client onboarding:
+
+1. Verify the endpoint with `initialize` and `tools/list` via `curl` before touching client config.
+2. Start with one dedicated API token and minimal scopes.
+3. Confirm `authMode` of the target API:
+    - `public`: no `Authorization` header required.
+    - `token` or `user`: send `Authorization: Bearer <token>`.
+4. For optional server-to-client stream probing, ensure `Accept: text/event-stream` on `GET /mcp`.
+5. If tools are missing, check denylist/exclude rules with `vendor/bin/typo3 api:mcp:list --json`.
+
+### Codex
+
+- Use MCP server URL: `https://<host>/api/<apiId>/v<version>/mcp`
+- Prefer `bearer_token_env_var` in config instead of hardcoding tokens.
+- Validate registration by calling `tools/list` from the client and comparing with `api:mcp:list --json`.
+
+### Claude Desktop
+
+- Configure transport as HTTP and use the same MCP URL.
+- Add the bearer token header when the API is not `public`.
+- If connection testing fails, manually verify with the `curl` examples in this document first.
+
+### Cursor / Other MCP Clients
+
+- Reuse the same URL and auth model.
+- Ensure JSON-RPC requests use `"jsonrpc": "2.0"` and object-style `params.arguments`.
+- Treat `406` on `GET /mcp` as an Accept-header issue, not as endpoint unavailability.
 
 ### Junie Example
 
