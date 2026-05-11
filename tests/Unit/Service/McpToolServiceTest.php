@@ -151,6 +151,44 @@ class McpToolServiceTest extends UnitTestCase {
 		$this->assertSame(['sgai_get_public', 'sgai_post_write'], array_column($allowedTools, 'name'));
 	}
 
+	public function testListToolsHidesScopedEndpointsWithoutAuthContext(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'token']);
+
+		$service = $this->createMcpToolService([McpScopedMockController::class], $apiRegistry, TRUE, []);
+
+		$tools = $service->listTools('sgai', '1', 'token', '', NULL);
+
+		$this->assertSame(['sgai_get_public'], array_column($tools, 'name'));
+	}
+
+	public function testListToolsCreatesToolEntriesForAllConfiguredHttpMethods(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpMultiMethodMockController::class], $apiRegistry, TRUE, []);
+		$toolNames = array_column($service->listTools('sgai', '1', 'public'), 'name');
+		sort($toolNames);
+
+		$this->assertSame(['sgai_get_duplex', 'sgai_post_duplex'], $toolNames);
+	}
+
+	public function testCallToolUsesHttpMethodFromResolvedToolEntry(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpMultiMethodMockController::class], $apiRegistry, TRUE, []);
+		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
+
+		$getResult = $service->callTool($request, 'sgai', '1', 'sgai_get_duplex', []);
+		$postResult = $service->callTool($request, 'sgai', '1', 'sgai_post_duplex', []);
+
+		$this->assertIsArray($getResult);
+		$this->assertIsArray($postResult);
+		$this->assertSame('GET', $getResult['structuredContent']['method'] ?? NULL);
+		$this->assertSame('POST', $postResult['structuredContent']['method'] ?? NULL);
+	}
+
 	public function testListToolsAppliesExactDenylistEntries(): void {
 		$apiRegistry = new ApiRegistry();
 		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
@@ -501,6 +539,15 @@ class McpQueryMockController {
 	public function searchAction(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse([
 			'query' => $request->getQueryParams(),
+		]);
+	}
+}
+
+class McpMultiMethodMockController {
+	#[ApiRoute(path: '/duplex', methods: ['GET', 'POST'], apiId: 'sgai', version: '1')]
+	public function duplexAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse([
+			'method' => $request->getMethod(),
 		]);
 	}
 }

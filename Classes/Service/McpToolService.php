@@ -137,37 +137,43 @@ class McpToolService implements SingletonInterface {
 				continue;
 			}
 
-			$httpMethod = strtolower((string) (($endpoint['methods'][0] ?? 'get')));
 			$endpointPath = (string) ($endpoint['path'] ?? '/');
-			$endpointId = $this->buildEndpointId($apiId, $version, $httpMethod, $endpointPath);
-			$toolName = $mcpConfig['name'] ?? $this->buildToolName($apiId, $httpMethod, $endpointPath);
+			$httpMethods = array_values(array_unique(array_filter(array_map(
+				static fn (mixed $method): string => strtolower(trim((string) $method)),
+				(array) ($endpoint['methods'] ?? ['get'])
+			), static fn (string $method): bool => $method !== '')));
 
-			if ($this->matchesDenylist($denylist, [$endpointId, $toolName, $endpointPath, $apiId . ':' . $endpointPath])) {
-				continue;
-			}
+			foreach ($httpMethods as $httpMethod) {
+				$endpointId = $this->buildEndpointId($apiId, $version, $httpMethod, $endpointPath);
+				$toolName = $mcpConfig['name'] ?? $this->buildToolName($apiId, $httpMethod, $endpointPath);
 
-			$description = trim((string) ($mcpConfig['description'] ?? $endpoint['summary'] ?? ''));
-			$endpointDescription = trim((string) ($endpoint['description'] ?? ''));
-			if ($endpointDescription !== '') {
-				$description .= ($description !== '' ? "\n\n" : '') . $endpointDescription;
-			}
-			if (($mcpConfig['notes'] ?? '') !== '') {
-				$description .= ($description !== '' ? "\n\n" : '') . trim((string) $mcpConfig['notes']);
-			}
+				if ($this->matchesDenylist($denylist, [$endpointId, $toolName, $endpointPath, $apiId . ':' . $endpointPath])) {
+					continue;
+				}
 
-			$resolved[] = [
-				'endpointId' => $endpointId,
-				'apiId' => $apiId,
-				'version' => $version,
-				'httpMethod' => strtoupper($httpMethod),
-				'path' => $endpointPath,
-				'endpoint' => $endpoint,
-				'tool' => [
-					'name' => $toolName,
-					'description' => $description,
-					'inputSchema' => $this->buildInputSchema($endpoint),
-				],
-			];
+				$description = trim((string) ($mcpConfig['description'] ?? $endpoint['summary'] ?? ''));
+				$endpointDescription = trim((string) ($endpoint['description'] ?? ''));
+				if ($endpointDescription !== '') {
+					$description .= ($description !== '' ? "\n\n" : '') . $endpointDescription;
+				}
+				if (($mcpConfig['notes'] ?? '') !== '') {
+					$description .= ($description !== '' ? "\n\n" : '') . trim((string) $mcpConfig['notes']);
+				}
+
+				$resolved[] = [
+					'endpointId' => $endpointId,
+					'apiId' => $apiId,
+					'version' => $version,
+					'httpMethod' => strtoupper($httpMethod),
+					'path' => $endpointPath,
+					'endpoint' => $endpoint,
+					'tool' => [
+						'name' => $toolName,
+						'description' => $description,
+						'inputSchema' => $this->buildInputSchema($endpoint),
+					],
+				];
+			}
 		}
 
 		$this->resolvedToolsCache[$cacheKey] = $resolved;
@@ -266,7 +272,7 @@ class McpToolService implements SingletonInterface {
 			$remainingPath = '/';
 		}
 
-		$httpMethod = strtoupper((string) (($endpoint['methods'][0] ?? 'GET')));
+		$httpMethod = strtoupper((string) ($resolvedTool['httpMethod'] ?? ($endpoint['methods'][0] ?? 'GET')));
 		$internalRequest = $request
 			->withMethod($httpMethod)
 			->withUri($targetUri)
@@ -521,7 +527,7 @@ class McpToolService implements SingletonInterface {
 		}
 
 		if ($authContext === NULL) {
-			return TRUE;
+			return FALSE;
 		}
 
 		foreach ($requiredScopes as $scope) {
