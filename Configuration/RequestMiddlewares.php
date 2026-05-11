@@ -11,11 +11,11 @@
  *  the terms of the "GNU General Public License", either version 3
  *  of the License or any later version.
  ***************************************************************/
-use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiAuthMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiCorsMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
+use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiTypoScriptMiddleware;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
 use SGalinski\SgApiCore\Middleware\RateLimitMiddleware;

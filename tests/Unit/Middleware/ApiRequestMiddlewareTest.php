@@ -14,7 +14,6 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -26,6 +25,7 @@ use SGalinski\SgApiCore\Service\PathAnalysisService;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 

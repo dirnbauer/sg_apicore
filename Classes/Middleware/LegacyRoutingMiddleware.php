@@ -14,12 +14,12 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Middleware to handle legacy sg_rest URLs and map them to sg_apicore
@@ -63,7 +63,7 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
-				$path = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
+				$path = '/' . ltrim(substr($path, \strlen($languagePrefix)), '/');
 				$hasLanguagePrefix = TRUE;
 			}
 		}
@@ -88,14 +88,14 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			$isLegacyRequest = TRUE;
 			$legacyRequest = $queryParams['tx_sgrest']['request'] ?? $queryParams['tx_sgrest_request'];
 			$requestSegments = explode('/', trim($legacyRequest, '/'));
-			if (count($requestSegments) >= 2) {
+			if (\count($requestSegments) >= 2) {
 				$apiKey = $requestSegments[0];
 				/** @noinspection MultiAssignmentUsageInspection */
 				$entity = $requestSegments[1];
 				$identifier = $requestSegments[2] ?? NULL;
 				// In query mode, usually the path contains more segments if needed
-				if (count($requestSegments) > 3) {
-					$verb = implode('/', array_slice($requestSegments, 3));
+				if (\count($requestSegments) > 3) {
+					$verb = implode('/', \array_slice($requestSegments, 3));
 				}
 
 				// Tag the request as legacy
@@ -134,14 +134,14 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			}
 
 			if ($match) {
-				$strippedPathSegments = array_slice($pathSegments, count($apiPathSegments));
+				$strippedPathSegments = \array_slice($pathSegments, \count($apiPathSegments));
 
 				// If it already starts with 'legacy/v1', we skip these segments for analysis, but we still want to
 				// process the rest as a legacy request if it has additional path parameters
-				if (count($strippedPathSegments) >= 2 && $strippedPathSegments[0] === 'legacy' &&
+				if (\count($strippedPathSegments) >= 2 && $strippedPathSegments[0] === 'legacy' &&
 					$strippedPathSegments[1] === 'v1'
 				) {
-					$strippedPathSegments = array_slice($strippedPathSegments, 2);
+					$strippedPathSegments = \array_slice($strippedPathSegments, 2);
 				}
 			}
 
@@ -151,7 +151,7 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 			// ALSO: We check if the type parameter is set to the typical sg_rest type
 			// or if the request contains legacy auth headers.
 			$isRestType = (isset($queryParams['type']) && (int) $queryParams['type'] === 1595576052);
-			if (($isRestType || $hasLegacyAuthHeader) && count($strippedPathSegments) >= 2 &&
+			if (($isRestType || $hasLegacyAuthHeader) && \count($strippedPathSegments) >= 2 &&
 				!str_contains(end($strippedPathSegments), '.') && !$this->isReservedPath($strippedPathSegments[0])
 			) {
 				$isLegacyRequest = TRUE;
@@ -171,21 +171,21 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 
 				// Extract additional key/value pairs from the path if they exist
 				// Example: /api/offer/offer/list/page/1/limit/20
-				$remainingSegments = array_slice($strippedPathSegments, 4);
-				if ($verb !== NULL && count($remainingSegments) % 2 !== 0) {
+				$remainingSegments = \array_slice($strippedPathSegments, 4);
+				if ($verb !== NULL && \count($remainingSegments) % 2 !== 0) {
 					// This means we have an odd number of segments after the verb (which is at index 3).
 					// This usually happens if the verb is actually a key.
 					$possibleVerbAsKey = $verb;
 					$possibleValue = $remainingSegments[0] ?? NULL;
 					if ($possibleValue !== NULL) {
 						$queryParams[$possibleVerbAsKey] = $possibleValue;
-						$remainingSegments = array_slice($remainingSegments, 1);
+						$remainingSegments = \array_slice($remainingSegments, 1);
 						$verb = NULL;
 					}
 				}
 
-				if (count($remainingSegments) > 0) {
-					for ($i = 0, $iMax = count($remainingSegments); $i < $iMax; $i += 2) {
+				if (\count($remainingSegments) > 0) {
+					for ($i = 0, $iMax = \count($remainingSegments); $i < $iMax; $i += 2) {
 						if (isset($remainingSegments[$i + 1])) {
 							$queryParams[$remainingSegments[$i]] = $remainingSegments[$i + 1];
 						}
@@ -250,6 +250,6 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 	protected function isReservedPath(string $segment): bool {
 		$apiPathPrefix = trim($this->extensionConfiguration->getApiPathPrefix(), '/');
 		$reserved = ['typo3', 'fileadmin', 'typo3conf', 'typo3temp', 'uploads', 'docs', $apiPathPrefix];
-		return in_array(strtolower($segment), $reserved, TRUE);
+		return \in_array(strtolower($segment), $reserved, TRUE);
 	}
 }

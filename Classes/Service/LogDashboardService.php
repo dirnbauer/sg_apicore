@@ -51,7 +51,7 @@ class LogDashboardService {
 		$fileMtime = $logFilePath !== '' && is_file($logFilePath) ? filemtime($logFilePath) : 0;
 
 		$cached = $this->cache->get($cacheKey);
-		if (is_array($cached)
+		if (\is_array($cached)
 			&& isset($cached['cacheTimestamp'], $cached['fileMtime'])
 			&& $cached['fileMtime'] === $fileMtime
 			&& (time() - (int) $cached['cacheTimestamp']) <= self::CACHE_TTL
@@ -142,7 +142,7 @@ class LogDashboardService {
 			'slowRequests' => $slowRequests,
 			'recentErrors' => $recentErrors,
 			'summary' => $summary,
-			'processedLines' => count($lines),
+			'processedLines' => \count($lines),
 		]);
 		$result['metrics'] = [
 			'cacheHit' => FALSE,
@@ -166,7 +166,7 @@ class LogDashboardService {
 		foreach ($levels as $level) {
 			$writerConfig = $config[$level] ?? [];
 			foreach ($writerConfig as $writerOptions) {
-				if (isset($writerOptions['logFile']) && is_string($writerOptions['logFile'])) {
+				if (isset($writerOptions['logFile']) && \is_string($writerOptions['logFile'])) {
 					return $writerOptions['logFile'];
 				}
 			}
@@ -182,7 +182,7 @@ class LogDashboardService {
 	 */
 	protected function readLastLines(string $filePath, int $maxLines): array {
 		$handle = fopen($filePath, 'rb');
-		if (!is_resource($handle)) {
+		if (!\is_resource($handle)) {
 			return [];
 		}
 
@@ -191,7 +191,7 @@ class LogDashboardService {
 		$lines = [];
 		$chunkSize = 8192;
 
-		while ($position > 0 && count($lines) <= $maxLines) {
+		while ($position > 0 && \count($lines) <= $maxLines) {
 			$readSize = min($chunkSize, $position);
 			$position -= $readSize;
 			fseek($handle, $position);
@@ -211,8 +211,8 @@ class LogDashboardService {
 		fclose($handle);
 
 		$lines = array_values(array_filter(array_map('trim', $lines), static fn ($line) => $line !== ''));
-		if (count($lines) > $maxLines) {
-			$lines = array_slice($lines, -$maxLines);
+		if (\count($lines) > $maxLines) {
+			$lines = \array_slice($lines, -$maxLines);
 		}
 
 		return $lines;
@@ -232,7 +232,7 @@ class LogDashboardService {
 		$context = [];
 		if (!empty($matches['context'])) {
 			$decoded = json_decode($matches['context'], TRUE);
-			if (is_array($decoded)) {
+			if (\is_array($decoded)) {
 				$context = $decoded;
 			}
 		}
@@ -290,7 +290,7 @@ class LogDashboardService {
 	 * @return array<string, mixed>
 	 */
 	protected function buildSummary(array $requests, int $cutoff): array {
-		$total = count($requests);
+		$total = \count($requests);
 		$errorCount = 0;
 		$durations = [];
 
@@ -307,9 +307,9 @@ class LogDashboardService {
 		sort($durations);
 		$avg = NULL;
 		$p95 = NULL;
-		if (count($durations) > 0) {
-			$avg = array_sum($durations) / count($durations);
-			$index = (int) floor(0.95 * (count($durations) - 1));
+		if (\count($durations) > 0) {
+			$avg = array_sum($durations) / \count($durations);
+			$index = (int) floor(0.95 * (\count($durations) - 1));
 			$p95 = $durations[$index];
 		}
 
@@ -427,7 +427,7 @@ class LogDashboardService {
 		arsort($counts);
 		$max = $counts ? reset($counts) : 0;
 		$result = [];
-		foreach (array_slice($counts, 0, 10, TRUE) as $label => $count) {
+		foreach (\array_slice($counts, 0, 10, TRUE) as $label => $count) {
 			$percent = $max > 0 ? round(($count / $max) * 100, 2) : 0;
 			$result[] = [
 				'label' => (string) $label,
@@ -446,7 +446,7 @@ class LogDashboardService {
 	protected function buildSlowRequests(array $requests): array {
 		$filtered = array_filter($requests, static fn (array $entry) => $entry['durationMs'] !== NULL);
 		usort($filtered, static fn (array $a, array $b) => $b['durationMs'] <=> $a['durationMs']);
-		$top = array_slice($filtered, 0, 10);
+		$top = \array_slice($filtered, 0, 10);
 		foreach ($top as &$entry) {
 			$durationMs = (float) $entry['durationMs'];
 			$entry['durationLabel'] = $this->formatDurationLabel($durationMs);
@@ -489,9 +489,9 @@ class LogDashboardService {
 			if (!$includeErrors) {
 				return FALSE;
 			}
-			return in_array($entry['level'], ['ERROR', 'CRITICAL'], TRUE);
+			return \in_array($entry['level'], ['ERROR', 'CRITICAL'], TRUE);
 		});
 		usort($errors, static fn (array $a, array $b) => $b['timestamp'] <=> $a['timestamp']);
-		return array_slice($errors, 0, 10);
+		return \array_slice($errors, 0, 10);
 	}
 }

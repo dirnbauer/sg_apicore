@@ -15,7 +15,6 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use ArrayIterator;
-use TYPO3\CMS\Core\Localization\LanguageService;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
@@ -30,6 +29,7 @@ use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\SchemaRegistry;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 

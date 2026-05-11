@@ -14,11 +14,11 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
-use ReflectionException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\ApiTypoScriptSetupService;
 use SGalinski\SgApiCore\Service\Router;
@@ -35,12 +35,12 @@ readonly class ApiTypoScriptMiddleware implements MiddlewareInterface {
 	}
 
 	/**
-     * @param ServerRequestInterface $request
-     * @param RequestHandlerInterface $handler
-     * @return ResponseInterface
-     * @throws ReflectionException
-     */
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+	 * @param ServerRequestInterface $request
+	 * @param RequestHandlerInterface $handler
+	 * @return ResponseInterface
+	 * @throws ReflectionException
+	 */
+	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
 		$version = (string) $request->getAttribute('api.version');
 		$path = $request->getAttribute('api.remainingPath');
@@ -51,13 +51,13 @@ readonly class ApiTypoScriptMiddleware implements MiddlewareInterface {
 
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
-		if (is_array($authMode)) {
+		if (\is_array($authMode)) {
 			$authMode = (string) reset($authMode);
 		}
 		$authMode = (string) $authMode;
 
 		$handlerInfo = $this->router->matchEndpoint($request, $apiId, $version, (string) $path, $authMode);
-		if (!is_array($handlerInfo)) {
+		if (!\is_array($handlerInfo)) {
 			return $handler->handle($request);
 		}
 

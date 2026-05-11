@@ -76,6 +76,6 @@ final readonly class AuthContext {
 	 * @return bool
 	 */
 	public function hasScope(string $scope): bool {
-		return in_array($scope, $this->scopes, TRUE);
+		return \in_array($scope, $this->scopes, TRUE);
 	}
 }

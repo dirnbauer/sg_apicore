@@ -14,7 +14,6 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
-use stdClass;
 use ArrayIterator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -36,6 +35,7 @@ use SGalinski\SgApiCore\Service\RequestValidator;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
+use stdClass;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -229,8 +229,8 @@ class McpToolServiceTest extends UnitTestCase {
 
 		$this->assertIsArray($result);
 		$this->assertFalse($result['isError']);
-		$this->assertSame(15000, strlen($result['structuredContent']['imageData']));
-		$this->assertLessThan(13000, strlen($result['content'][0]['text'] ?? ''));
+		$this->assertSame(15000, \strlen($result['structuredContent']['imageData']));
+		$this->assertLessThan(13000, \strlen($result['content'][0]['text'] ?? ''));
 		$this->assertStringContainsString('[truncated, original length: 15000 bytes]', $result['content'][0]['text'] ?? '');
 	}
 
@@ -245,8 +245,8 @@ class McpToolServiceTest extends UnitTestCase {
 
 		$this->assertIsArray($result);
 		$this->assertFalse($result['isError']);
-		$this->assertSame(15000, strlen($result['structuredContent']['rawBody']));
-		$this->assertLessThan(13000, strlen($result['content'][0]['text'] ?? ''));
+		$this->assertSame(15000, \strlen($result['structuredContent']['rawBody']));
+		$this->assertLessThan(13000, \strlen($result['content'][0]['text'] ?? ''));
 		$this->assertStringContainsString('[truncated, original length: 15000 bytes]', $result['content'][0]['text'] ?? '');
 	}
 

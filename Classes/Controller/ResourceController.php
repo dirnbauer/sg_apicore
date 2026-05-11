@@ -71,12 +71,12 @@ class ResourceController {
 		// Filtering (minimal)
 		$queryParams = $request->getQueryParams();
 		$filters = $queryParams['filter'] ?? [];
-		if (is_string($filters)) {
+		if (\is_string($filters)) {
 			// Some clients might send filters as a string, e.g. filter[name]=value
 			// Or even name=value directly if they misinterpret the documentation
 			if (str_contains($filters, '[') && str_contains($filters, ']')) {
 				parse_str($filters, $parsedFilters);
-				if (isset($parsedFilters['filter']) && is_array($parsedFilters['filter'])) {
+				if (isset($parsedFilters['filter']) && \is_array($parsedFilters['filter'])) {
 					$filters = $parsedFilters['filter'];
 				}
 			} elseif (str_contains($filters, '=')) {
@@ -85,10 +85,10 @@ class ResourceController {
 			}
 		}
 
-		if (is_array($filters) && count($filters) > 0) {
+		if (\is_array($filters) && \count($filters) > 0) {
 			foreach ($filters as $field => $value) {
 				// Only filter by whitelisted fields
-				if (!empty($resourceConfig['readFields']) && !in_array($field, $resourceConfig['readFields'], TRUE)) {
+				if (!empty($resourceConfig['readFields']) && !\in_array($field, $resourceConfig['readFields'], TRUE)) {
 					// Also check if uid or pid is requested, which is always allowed if not explicitly restricted
 					if ($field !== 'uid' && $field !== 'pid') {
 						continue;
@@ -100,7 +100,7 @@ class ResourceController {
 					continue;
 				}
 
-				if (is_array($value)) {
+				if (\is_array($value)) {
 					$queryBuilder->andWhere(
 						$queryBuilder->expr()->in($field, $queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY))
 					);
@@ -111,7 +111,7 @@ class ResourceController {
 		}
 
 		// Sorting
-		if (isset($queryParams['sort']) && is_string($queryParams['sort'])) {
+		if (isset($queryParams['sort']) && \is_string($queryParams['sort'])) {
 			$sortField = $queryParams['sort'];
 			$sortOrder = 'ASC';
 			if (str_starts_with($sortField, '-')) {
@@ -214,7 +214,7 @@ class ResourceController {
 		$tableName = $resourceConfig['table'];
 		$data = $request->getParsedBody();
 
-		if (!is_array($data)) {
+		if (!\is_array($data)) {
 			return $this->responseService->createErrorResponse('Bad Request', 'Invalid JSON body.', 400);
 		}
 
@@ -250,7 +250,7 @@ class ResourceController {
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
 
-		if (count($dataHandler->errorLog) > 0) {
+		if (\count($dataHandler->errorLog) > 0) {
 			return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 		}
 
@@ -276,7 +276,7 @@ class ResourceController {
 		$idField = $resourceConfig['idField'] ?? 'uid';
 		$data = $request->getParsedBody();
 
-		if (!is_array($data)) {
+		if (!\is_array($data)) {
 			return $this->responseService->createErrorResponse('Bad Request', 'Invalid JSON body.', 400);
 		}
 
@@ -317,7 +317,7 @@ class ResourceController {
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
 
-		if (count($dataHandler->errorLog) > 0) {
+		if (\count($dataHandler->errorLog) > 0) {
 			return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 		}
 
@@ -377,7 +377,7 @@ class ResourceController {
 			$dataHandler->start([], $cmdMap);
 			$dataHandler->process_cmdmap();
 
-			if (count($dataHandler->errorLog) > 0) {
+			if (\count($dataHandler->errorLog) > 0) {
 				return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 			}
 		}

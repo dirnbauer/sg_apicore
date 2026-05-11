@@ -94,11 +94,11 @@ class ApiRegistry implements SingletonInterface {
 		}
 
 		$rateLimit = $api['rateLimit'] ?? NULL;
-		if (!is_array($rateLimit)) {
+		if (!\is_array($rateLimit)) {
 			return NULL;
 		}
 
-		if (isset($rateLimit['versions']) && is_array($rateLimit['versions'])) {
+		if (isset($rateLimit['versions']) && \is_array($rateLimit['versions'])) {
 			return $rateLimit['versions'][$version] ?? $rateLimit;
 		}
 
@@ -136,13 +136,13 @@ class ApiRegistry implements SingletonInterface {
 			return FALSE;
 		}
 
-		$options = is_array($api['options'] ?? NULL) ? $api['options'] : [];
-		$security = is_array($api['security'] ?? NULL) ? $api['security'] : [];
+		$options = \is_array($api['options'] ?? NULL) ? $api['options'] : [];
+		$security = \is_array($api['security'] ?? NULL) ? $api['security'] : [];
 
-		if (array_key_exists('mcpEnabled', $options)) {
+		if (\array_key_exists('mcpEnabled', $options)) {
 			return (bool) $options['mcpEnabled'];
 		}
-		if (array_key_exists('mcpEnabled', $security)) {
+		if (\array_key_exists('mcpEnabled', $security)) {
 			return (bool) $security['mcpEnabled'];
 		}
 
@@ -161,11 +161,11 @@ class ApiRegistry implements SingletonInterface {
 			return [];
 		}
 
-		$options = is_array($api['options'] ?? NULL) ? $api['options'] : [];
-		$security = is_array($api['security'] ?? NULL) ? $api['security'] : [];
+		$options = \is_array($api['options'] ?? NULL) ? $api['options'] : [];
+		$security = \is_array($api['security'] ?? NULL) ? $api['security'] : [];
 		$denylist = $options['mcpDenylist'] ?? $security['mcpDenylist'] ?? [];
 
-		if (!is_array($denylist)) {
+		if (!\is_array($denylist)) {
 			return [];
 		}
 

@@ -14,8 +14,8 @@
 
 namespace SGalinski\SgApiCore\Service;
 
-use Random\RandomException;
 use JsonException;
+use Random\RandomException;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -40,32 +40,32 @@ class TokenService implements SingletonInterface {
 	}
 
 	/**
-     * Generates a new random token
-     *
-     * @return string
-     * @throws RandomException
-     */
-    public function generateRandomToken(): string {
+	 * Generates a new random token
+	 *
+	 * @return string
+	 * @throws RandomException
+	 */
+	public function generateRandomToken(): string {
 		return bin2hex(random_bytes(32));
 	}
 
 	/**
-     * Creates a new token record in the database
-     *
-     * @param string $token The plaintext token OR a JWT ID (jti)
-     * @param string $apiId
-     * @param string $tenantId
-     * @param int $pid
-     * @param array $scopes
-     * @param int|null $userId
-     * @param bool $isRefreshToken
-     * @param int|null $expiresAt
-     * @param string $label
-     * @param bool $isJwt (If true, $token is treated as a jti, not hashed)
-     * @return int The UID of the new token record
-     * @throws JsonException
-     */
-    public function createToken(
+	 * Creates a new token record in the database
+	 *
+	 * @param string $token The plaintext token OR a JWT ID (jti)
+	 * @param string $apiId
+	 * @param string $tenantId
+	 * @param int $pid
+	 * @param array $scopes
+	 * @param int|null $userId
+	 * @param bool $isRefreshToken
+	 * @param int|null $expiresAt
+	 * @param string $label
+	 * @param bool $isJwt (If true, $token is treated as a jti, not hashed)
+	 * @return int The UID of the new token record
+	 * @throws JsonException
+	 */
+	public function createToken(
 		string $token,
 		string $apiId,
 		string $tenantId,
@@ -98,17 +98,17 @@ class TokenService implements SingletonInterface {
 	}
 
 	/**
-     * Generates a JWT access token for a user
-     *
-     * @param int $userId
-     * @param string $apiId
-     * @param string $tenantId
-     * @param array $scopes
-     * @param int|string $jti Unique ID for the token (usually the UID of the database record or a unique string)
-     * @return string
-     * @throws JsonException
-     */
-    public function generateJwtAccessToken(
+	 * Generates a JWT access token for a user
+	 *
+	 * @param int $userId
+	 * @param string $apiId
+	 * @param string $tenantId
+	 * @param array $scopes
+	 * @param int|string $jti Unique ID for the token (usually the UID of the database record or a unique string)
+	 * @return string
+	 * @throws JsonException
+	 */
+	public function generateJwtAccessToken(
 		int $userId,
 		string $apiId,
 		string $tenantId,

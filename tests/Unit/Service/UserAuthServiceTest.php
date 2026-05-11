@@ -14,16 +14,16 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
-use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Service\LogService;
 use Doctrine\DBAL\Result;
-use RuntimeException;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use RuntimeException;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\JwtService;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\TokenService;
 use SGalinski\SgApiCore\Service\UserAuthService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
@@ -69,14 +69,14 @@ class UserAuthServiceTest extends UnitTestCase {
 	protected $tokenRepository;
 
 	/**
-     * @var ExtensionConfiguration|MockObject
-     */
-    protected $extensionConfiguration;
+	 * @var ExtensionConfiguration|MockObject
+	 */
+	protected $extensionConfiguration;
 
 	/**
-     * @var LogService|MockObject
-     */
-    protected $logService;
+	 * @var LogService|MockObject
+	 */
+	protected $logService;
 
 	/**
 	 * @var JwtService|MockObject
@@ -95,9 +95,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$this->apiRegistry = $this->createMock(ApiRegistry::class);
 		$this->tokenService = $this->createMock(TokenService::class);
 		$this->tokenRepository = $this->createMock(TokenRepository::class);
-		$this->extensionConfiguration = $this->createMock(
-			ExtensionConfiguration::class
-		);
+		$this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$this->logService = $this->createMock(LogService::class);
 		$this->jwtService = $this->createMock(JwtService::class);
 		$this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);

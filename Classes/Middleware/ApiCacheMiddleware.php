@@ -29,9 +29,6 @@ use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use function count;
-use function in_array;
-use function is_array;
 
 /**
  * Middleware for API response caching
@@ -143,7 +140,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		$endpoints = $this->discoveryService->getEndpointsForApi($apiId, $version);
 		$matchingEndpoint = NULL;
 		foreach ($endpoints as $endpoint) {
-			if ($endpoint['path'] === $path && in_array('GET', $endpoint['methods'], TRUE)) {
+			if ($endpoint['path'] === $path && \in_array('GET', $endpoint['methods'], TRUE)) {
 				$matchingEndpoint = $endpoint;
 				break;
 			}
@@ -162,7 +159,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 
 		// Security Check: If the endpoint is protected, we MUST have a valid auth context
 		$authMode = $matchingEndpoint['authMode'] ?? 'public';
-		$isPublic = $authMode === 'public' || (is_array($authMode) && in_array('public', $authMode, TRUE));
+		$isPublic = $authMode === 'public' || (\is_array($authMode) && \in_array('public', $authMode, TRUE));
 		if (!$isPublic) {
 			$authContext = $request->getAttribute('api.auth');
 			if ($authContext === NULL) {
@@ -174,7 +171,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		$cacheKey = $this->calculateCacheKey($request, $cacheAttr);
 		$cachedResponse = $this->cache->get($cacheKey);
 
-		if (is_array($cachedResponse)) {
+		if (\is_array($cachedResponse)) {
 			$response = new Response();
 			$stream = new Stream('php://temp', 'wb+');
 			$stream->write($cachedResponse['body']);
@@ -220,7 +217,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		$endpoints = $this->discoveryService->getEndpointsForApi($apiId, $version);
 		$matchingEndpoint = NULL;
 		foreach ($endpoints as $endpoint) {
-			if ($endpoint['path'] === $path && in_array($request->getMethod(), $endpoint['methods'], TRUE)) {
+			if ($endpoint['path'] === $path && \in_array($request->getMethod(), $endpoint['methods'], TRUE)) {
 				$matchingEndpoint = $endpoint;
 				break;
 			}
@@ -233,11 +230,11 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		$tags = [];
 		/** @var ApiCache|null $cacheAttr */
 		$cacheAttr = $matchingEndpoint['apiCache'] ?? NULL;
-		if ($cacheAttr && count($cacheAttr->tags) > 0) {
+		if ($cacheAttr && \count($cacheAttr->tags) > 0) {
 			$tags = $cacheAttr->tags;
 		}
 
-		if (count($tags) > 0) {
+		if (\count($tags) > 0) {
 			$this->cache->flushByTags($tags);
 		}
 	}
