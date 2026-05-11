@@ -14,7 +14,10 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use RuntimeException;
+use Throwable;
 use Doctrine\DBAL\Exception;
+use JsonException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
@@ -86,7 +89,6 @@ class UserAuthService implements SingletonInterface {
 	 * @throws Exception
 	 */
 	public function findUserByUsername(string $username, ?TenantContext $tenantContext): ?array {
-		$siteRootPageId = $tenantContext?->getSiteRootPageId();
 		$storagePids = $this->resolveUserStoragePids($tenantContext);
 
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('fe_users');
@@ -98,7 +100,7 @@ class UserAuthService implements SingletonInterface {
 				$queryBuilder->expr()->eq('deleted', 0)
 			);
 
-		if (\count($storagePids) > 0) {
+		if (count($storagePids) > 0) {
 			$queryBuilder->andWhere(
 				$queryBuilder->expr()->in('pid', $queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY))
 			);
@@ -115,8 +117,9 @@ class UserAuthService implements SingletonInterface {
 	 * @param string $apiId
 	 * @param string $version
 	 * @return array
-	 * @throws \JsonException
-	 * @throws \Random\RandomException
+	 * @throws Exception
+	 * @throws JsonException
+	 * @throws RandomException
 	 */
 	public function generateTokensForUserWithScopeHandling(
 		array $user,
@@ -151,7 +154,7 @@ class UserAuthService implements SingletonInterface {
 							if (!empty($tokenRecord['scopes'])) {
 								try {
 									$inherited = json_decode((string) $tokenRecord['scopes'], TRUE, 512, JSON_THROW_ON_ERROR) ?: [];
-								} catch (\JsonException) {
+								} catch (JsonException) {
 									$inherited = [];
 								}
 							}
@@ -174,8 +177,8 @@ class UserAuthService implements SingletonInterface {
 	 * @param TenantContext|null $tenantContext
 	 * @param array $scopes
 	 * @return array
-	 * @throws \JsonException
-	 * @throws \Random\RandomException
+	 * @throws JsonException
+	 * @throws RandomException
 	 */
 	public function generateTokensForUser(
 		array $user,
@@ -194,7 +197,7 @@ class UserAuthService implements SingletonInterface {
 			$refreshToken,
 			$apiId,
 			$tenantId,
-			(int) $siteRootPageId,
+			$siteRootPageId,
 			$scopes,
 			(int) $user['uid'],
 			TRUE,
@@ -243,8 +246,8 @@ class UserAuthService implements SingletonInterface {
 	 * @param array $scopes
 	 * @param string $jti (for JWT)
 	 * @return array ['access_token' => string, 'expires_in' => int]
-	 * @throws \JsonException
-	 * @throws \Random\RandomException
+	 * @throws JsonException
+	 * @throws RandomException
 	 */
 	public function generateAccessToken(
 		int $userId,
@@ -258,7 +261,7 @@ class UserAuthService implements SingletonInterface {
 		$siteRootPageId = $tenantContext?->getSiteRootPageId() ?? 0;
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$activeProviders = $securityConfig['authProviders'] ?? [];
-		$useJwt = \in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
+		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
 		// Determine TTL dynamically based on the provider
 		$expiresIn = $useJwt
@@ -313,7 +316,7 @@ class UserAuthService implements SingletonInterface {
 	 * @param TenantContext|null $tenantContext
 	 * @return array
 	 * @throws Exception
-	 * @throws \JsonException
+	 * @throws JsonException
 	 * @throws RandomException
 	 */
 	public function refreshTokens(
@@ -335,12 +338,12 @@ class UserAuthService implements SingletonInterface {
 		);
 
 		if ($tokenRecord === NULL || !$tokenRecord['is_refresh_token']) {
-			throw new \RuntimeException('Invalid refresh token.', 401);
+			throw new RuntimeException('Invalid refresh token.', 401);
 		}
 
 		// Check expiry
 		if ((int) $tokenRecord['expires_at'] > 0 && (int) $tokenRecord['expires_at'] < time()) {
-			throw new \RuntimeException('Refresh token expired.', 401);
+			throw new RuntimeException('Refresh token expired.', 401);
 		}
 
 		$scopes = [];
@@ -367,7 +370,7 @@ class UserAuthService implements SingletonInterface {
 			$newRefreshToken,
 			$apiId,
 			$tenantId,
-			(int) ($siteRootPageId ?? 0),
+			$siteRootPageId ?? 0,
 			$scopes,
 			$userId,
 			TRUE,
@@ -394,14 +397,14 @@ class UserAuthService implements SingletonInterface {
 	 * @param string $token
 	 * @return void
 	 * @throws Exception
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	public function revokeUserToken(string $token): void {
 		$tokenHash = hash('sha256', $token);
 		$tokenRecord = $this->tokenRepository->findByHashGlobally($tokenHash);
 
 		// If not found by hash, it might be a JWT
-		if ($tokenRecord === NULL && \count(explode('.', $token)) === 3) {
+		if ($tokenRecord === NULL && count(explode('.', $token)) === 3) {
 			$payload = $this->jwtService->decode($token);
 			$jti = $payload['jti'] ?? '';
 			if ($jti !== '') {
@@ -455,7 +458,7 @@ class UserAuthService implements SingletonInterface {
 						$storagePids = GeneralUtility::intExplode(',', (string) $settings['frontendUserStoragePage'], TRUE);
 					}
 				}
-			} catch (\Throwable) {
+			} catch (Throwable) {
 				// Fallback to site root if sg_account fails
 			}
 		}

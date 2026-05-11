@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Controller\Backend\Ajax;
 
+use Exception;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Service\CachePathService;
@@ -66,7 +67,7 @@ class CacheController {
 			}
 
 			return new NullResponse();
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			return new JsonResponse(['success' => FALSE, 'error' => $e->getMessage()], 500);
 		}
 	}

@@ -14,6 +14,9 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use RuntimeException;
+use InvalidArgumentException;
+use JsonException;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
@@ -27,22 +30,22 @@ class JwtService implements SingletonInterface {
 
 	public function __construct() {
 		$this->privateKey = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '';
-		if (\strlen($this->privateKey) < 32) {
-			throw new \RuntimeException(
+		if (strlen($this->privateKey) < 32) {
+			throw new RuntimeException(
 				'Insecure or missing encryptionKey in TYPO3 configuration. A key with at least 32 characters is required.'
 			);
 		}
 	}
 
 	/**
-	 * Encodes a payload into a JWT
-	 *
-	 * @param array $payload
-	 * @param string $algo
-	 * @return string
-	 * @throws \JsonException
-	 */
-	public function encode(array $payload, string $algo = 'HS256'): string {
+     * Encodes a payload into a JWT
+     *
+     * @param array $payload
+     * @param string $algo
+     * @return string
+     * @throws JsonException
+     */
+    public function encode(array $payload, string $algo = 'HS256'): string {
 		$header = ['typ' => 'JWT', 'alg' => $algo];
 
 		$segments = [];
@@ -57,16 +60,16 @@ class JwtService implements SingletonInterface {
 	}
 
 	/**
-	 * Decodes and verifies a JWT
-	 *
-	 * @param string $jwt
-	 * @param array $expectedClaims (e.g. ['tenantId' => '...', 'apiId' => '...'])
-	 * @return array|null
-	 * @throws \JsonException
-	 */
-	public function decode(string $jwt, array $expectedClaims = []): ?array {
+     * Decodes and verifies a JWT
+     *
+     * @param string $jwt
+     * @param array $expectedClaims (e.g. ['tenantId' => '...', 'apiId' => '...'])
+     * @return array|null
+     * @throws JsonException
+     */
+    public function decode(string $jwt, array $expectedClaims = []): ?array {
 		$tokenSegments = explode('.', $jwt);
-		if (\count($tokenSegments) !== 3) {
+		if (count($tokenSegments) !== 3) {
 			return NULL;
 		}
 
@@ -84,7 +87,7 @@ class JwtService implements SingletonInterface {
 		}
 
 		// Whitelist algorithms
-		if (!\in_array($header['alg'], ['HS256', 'HS384', 'HS512'], TRUE)) {
+		if (!in_array($header['alg'], ['HS256', 'HS384', 'HS512'], TRUE)) {
 			return NULL;
 		}
 
@@ -136,7 +139,7 @@ class JwtService implements SingletonInterface {
 		];
 
 		if (empty($methods[$method])) {
-			throw new \InvalidArgumentException('Algorithm not supported');
+			throw new InvalidArgumentException('Algorithm not supported');
 		}
 
 		return hash_hmac($methods[$method], $message, $key, TRUE);
@@ -149,7 +152,7 @@ class JwtService implements SingletonInterface {
 	 * @return string
 	 */
 	protected function urlsafeB64Decode(string $input): string {
-		$remainder = \strlen($input) % 4;
+		$remainder = strlen($input) % 4;
 		if ($remainder) {
 			$input .= str_repeat('=', 4 - $remainder);
 		}

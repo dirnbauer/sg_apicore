@@ -14,6 +14,9 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Mapper;
 
+use ReflectionClass;
+use ReflectionMethod;
+use LogicException;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\FileRepository;
@@ -89,7 +92,7 @@ class TcaMapperTest extends UnitTestCase {
 	}
 
 	public function testTransformValueHandlesTypes(): void {
-		$reflection = new \ReflectionClass(TcaMapper::class);
+		$reflection = new ReflectionClass(TcaMapper::class);
 		$method = $reflection->getMethod('transformValue');
 		$method->setAccessible(TRUE);
 
@@ -130,12 +133,12 @@ class TcaMapperTest extends UnitTestCase {
 			];
 			unset($GLOBALS['TYPO3_REQUEST']);
 
-			$method = new \ReflectionMethod(TcaMapper::class, 'ensureParseFuncConfiguration');
+			$method = new ReflectionMethod(TcaMapper::class, 'ensureParseFuncConfiguration');
 			$method->setAccessible(TRUE);
 			$method->invoke($this->mapper);
 
 			$this->assertArrayHasKey('parseFunc_RTE.', $GLOBALS['TSFE']->tmpl->setup['lib.']);
-			$this->assertGreaterThan(1, \count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
+			$this->assertGreaterThan(1, count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
 		} finally {
 			if ($previousTsfe !== NULL) {
 				$GLOBALS['TSFE'] = $previousTsfe;
@@ -181,8 +184,8 @@ class TcaMapperTest extends UnitTestCase {
 						'reference' => $reference,
 					];
 
-					if (\count($parseFuncCalls) === 1) {
-						throw new \LogicException('Invoked ContentObjectRenderer::parseFunc without any configuration', 1641989097);
+					if (count($parseFuncCalls) === 1) {
+						throw new LogicException('Invoked ContentObjectRenderer::parseFunc without any configuration', 1641989097);
 					}
 
 					return '<p>processed</p>';
@@ -196,7 +199,7 @@ class TcaMapperTest extends UnitTestCase {
 				$this->createStub(FileRepository::class),
 				$contentObjectRenderer
 			);
-			$method = new \ReflectionMethod(TcaMapper::class, 'processRteContent');
+			$method = new ReflectionMethod(TcaMapper::class, 'processRteContent');
 			$method->setAccessible(TRUE);
 			$result = $method->invoke($mapper, '<p>source</p>');
 

@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Mapper;
 
+use DateTimeInterface;
+use LogicException;
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -131,28 +133,28 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$fieldsToMap = $allowedFields;
-		if (isset($fieldConfiguration[$tableName]['allowed']) && \is_array($fieldConfiguration[$tableName]['allowed'])) {
+		if (isset($fieldConfiguration[$tableName]['allowed']) && is_array($fieldConfiguration[$tableName]['allowed'])) {
 			$fieldsToMap = $fieldConfiguration[$tableName]['allowed'];
 		}
 
 		$currentExcludedFields = $excludedFields;
-		if (isset($fieldConfiguration[$tableName]['excluded']) && \is_array($fieldConfiguration[$tableName]['excluded'])) {
+		if (isset($fieldConfiguration[$tableName]['excluded']) && is_array($fieldConfiguration[$tableName]['excluded'])) {
 			$currentExcludedFields = array_merge($excludedFields, $fieldConfiguration[$tableName]['excluded']);
 		}
 
 		if (empty($fieldsToMap)) {
 			$fieldsToMap = array_keys($tca['columns'] ?? []);
 			// Always include uid
-			if (!\in_array('uid', $fieldsToMap, TRUE)) {
+			if (!in_array('uid', $fieldsToMap, TRUE)) {
 				$fieldsToMap[] = 'uid';
 			}
-			if (!\in_array('pid', $fieldsToMap, TRUE)) {
+			if (!in_array('pid', $fieldsToMap, TRUE)) {
 				$fieldsToMap[] = 'pid';
 			}
 		}
 
 		foreach ($fieldsToMap as $fieldName) {
-			if (\in_array($fieldName, $currentExcludedFields, TRUE)) {
+			if (in_array($fieldName, $currentExcludedFields, TRUE)) {
 				continue;
 			}
 
@@ -178,7 +180,7 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		foreach ($customCallbacks as $fieldName => $callback) {
-			if (\is_callable($callback)) {
+			if (is_callable($callback)) {
 				$mappedRecord[$fieldName] = $callback($record, $mappedRecord);
 			}
 		}
@@ -261,7 +263,7 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		foreach ($data as $fieldName => $value) {
-			if (!empty($allowedFields) && !\in_array($fieldName, $allowedFields, TRUE)) {
+			if (!empty($allowedFields) && !in_array($fieldName, $allowedFields, TRUE)) {
 				continue;
 			}
 
@@ -366,7 +368,7 @@ class TcaMapper implements SingletonInterface {
 					(isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))
 				) {
 					if (is_numeric($value)) {
-						return date(\DateTimeInterface::ATOM, (int) $value);
+						return date(DateTimeInterface::ATOM, (int) $value);
 					}
 					return $value;
 				}
@@ -452,7 +454,7 @@ class TcaMapper implements SingletonInterface {
 						}
 					} else {
 						// Relation via a comma-separated list of UIDs
-						if (\is_string($value) && str_contains($value, ',')) {
+						if (is_string($value) && str_contains($value, ',')) {
 							$uids = GeneralUtility::intExplode(',', $value, TRUE);
 						} else {
 							$uids = [(int) $value];
@@ -489,14 +491,14 @@ class TcaMapper implements SingletonInterface {
 						}
 					}
 
-					if (isset($config['maxitems']) && (int) $config['maxitems'] <= 1 && \count($resolvedRecords) <= 1) {
+					if (isset($config['maxitems']) && (int) $config['maxitems'] <= 1 && count($resolvedRecords) <= 1) {
 						return $resolvedRecords[0] ?? NULL;
 					}
 					return $resolvedRecords;
 				}
 
 				if (isset($config['maxitems']) && (int) $config['maxitems'] > 1) {
-					return \is_string($value) ? explode(',', $value) : $value;
+					return is_string($value) ? explode(',', $value) : $value;
 				}
 				return $value;
 			default:
@@ -524,7 +526,7 @@ class TcaMapper implements SingletonInterface {
 				if (($config['renderType'] ?? '') === 'inputDateTime' || (isset($config['dbType']) &&
 						($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))
 				) {
-					if (\is_string($value)) {
+					if (is_string($value)) {
 						$timestamp = strtotime($value);
 						return $timestamp !== FALSE ? $timestamp : (int) $value;
 					}
@@ -535,7 +537,7 @@ class TcaMapper implements SingletonInterface {
 				return str_contains($config['format'] ?? '', 'decimal') ? (float) $value : (int) $value;
 			case 'select':
 			case 'group':
-				if (\is_array($value)) {
+				if (is_array($value)) {
 					return implode(',', $value);
 				}
 				return (string) $value;
@@ -556,16 +558,16 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
-		if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+		if ($request instanceof ServerRequestInterface) {
 			$this->contentObjectRenderer->setRequest($request);
 		}
 		$this->contentObjectRenderer->start([]);
 
 		$this->ensureParseFuncConfiguration();
 		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		if (empty($parseFuncConf) && $request instanceof \Psr\Http\Message\ServerRequestInterface) {
+		if (empty($parseFuncConf) && $request instanceof ServerRequestInterface) {
 			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
-			if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
+			if ($frontendTypoScript instanceof FrontendTypoScript) {
 				$setup = $frontendTypoScript->getSetupArray();
 				$parseFuncConf = $setup['lib.']['parseFunc_RTE.'] ?? [];
 				if (empty($parseFuncConf)) {
@@ -581,7 +583,7 @@ class TcaMapper implements SingletonInterface {
 		if ($this->hasUsableParseFuncReferenceConfiguration()) {
 			try {
 				return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
-			} catch (\LogicException $exception) {
+			} catch (LogicException $exception) {
 				if ($exception->getCode() !== 1641989097) {
 					throw $exception;
 				}
@@ -590,7 +592,7 @@ class TcaMapper implements SingletonInterface {
 
 		try {
 			return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf);
-		} catch (\LogicException $exception) {
+		} catch (LogicException $exception) {
 			if ($exception->getCode() !== 1641989097) {
 				throw $exception;
 			}
@@ -608,7 +610,7 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$parseFuncReference = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		return \is_array($parseFuncReference) && \count($parseFuncReference) > 1;
+		return is_array($parseFuncReference) && count($parseFuncReference) > 1;
 	}
 
 	/**
@@ -618,12 +620,12 @@ class TcaMapper implements SingletonInterface {
 	 * @return void
 	 */
 	protected function ensureParseFuncConfiguration(): void {
-		if (!isset($GLOBALS['TSFE']->tmpl->setup) || !\is_array($GLOBALS['TSFE']->tmpl->setup)) {
+		if (!isset($GLOBALS['TSFE']->tmpl->setup) || !is_array($GLOBALS['TSFE']->tmpl->setup)) {
 			return;
 		}
 
 		$currentParseFunc = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		if (\is_array($currentParseFunc) && \count($currentParseFunc) > 1) {
+		if (is_array($currentParseFunc) && count($currentParseFunc) > 1) {
 			return;
 		}
 
@@ -633,11 +635,11 @@ class TcaMapper implements SingletonInterface {
 			if ($frontendTypoScript instanceof FrontendTypoScript) {
 				$setup = $frontendTypoScript->getSetupArray();
 				$resolvedParseFunc = $setup['lib.']['parseFunc_RTE.'] ?? [];
-				if (!\is_array($resolvedParseFunc) || \count($resolvedParseFunc) <= 1) {
+				if (!is_array($resolvedParseFunc) || count($resolvedParseFunc) <= 1) {
 					$resolvedParseFunc = $setup['lib.']['parseFunc.'] ?? [];
 				}
 
-				if (\is_array($resolvedParseFunc) && \count($resolvedParseFunc) > 1) {
+				if (is_array($resolvedParseFunc) && count($resolvedParseFunc) > 1) {
 					$GLOBALS['TSFE']->tmpl->setup['lib.'] ??= [];
 					$GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] = $resolvedParseFunc;
 					return;

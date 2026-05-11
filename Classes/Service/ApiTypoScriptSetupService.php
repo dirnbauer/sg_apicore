@@ -14,6 +14,10 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use TYPO3\CMS\Core\TypoScript\TemplateService;
+use Throwable;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
 use TYPO3\CMS\Core\Context\Context;
@@ -31,11 +35,11 @@ use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 /**
  * Ensures full TypoScript context for API requests
  */
-class ApiTypoScriptSetupService {
+readonly class ApiTypoScriptSetupService {
 	public function __construct(
-		protected readonly Context $context,
-		protected readonly LogService $logService,
-		protected readonly Typo3Version $typo3Version
+		protected Context $context,
+		protected LogService $logService,
+		protected Typo3Version $typo3Version
 	) {
 	}
 
@@ -72,11 +76,11 @@ class ApiTypoScriptSetupService {
 				}
 				$GLOBALS['TYPO3_REQUEST'] = $request;
 
-				if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
+				if (class_exists(TemplateService::class)
 					&& isset($GLOBALS['TSFE']->tmpl)
-					&& $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService
+					&& $GLOBALS['TSFE']->tmpl instanceof TemplateService
 				) {
-					if (isset($GLOBALS['TSFE']->rootLine) && \is_array($GLOBALS['TSFE']->rootLine)) {
+					if (isset($GLOBALS['TSFE']->rootLine) && is_array($GLOBALS['TSFE']->rootLine)) {
 						/** @phpstan-ignore-next-line */
 						$GLOBALS['TSFE']->tmpl->runThroughTemplates($GLOBALS['TSFE']->rootLine);
 					}
@@ -96,7 +100,7 @@ class ApiTypoScriptSetupService {
 					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
 					$GLOBALS['TYPO3_REQUEST'] = $request;
 				}
-			} catch (\Throwable $e) {
+			} catch (Throwable $e) {
 				$this->logService->logException($e, $request);
 			}
 		}
@@ -122,8 +126,8 @@ class ApiTypoScriptSetupService {
 		$pageInformationClass = 'TYPO3\\CMS\\Frontend\\Page\\PageInformation';
 		$rootline = [];
 		if (class_exists($pageInformationClass)) {
-			/** @var \TYPO3\CMS\Frontend\Page\PageInformation $pageInformation */
-			$pageInformation = new $pageInformationClass();
+			/** @var PageInformation $pageInformation */
+            $pageInformation = new $pageInformationClass();
 			if (method_exists($pageInformation, 'setId')) {
 				$pageInformation->setId($siteRootPageId);
 			}
@@ -131,7 +135,7 @@ class ApiTypoScriptSetupService {
 			try {
 				$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
 				$rootline = $rootlineUtility->get();
-			} catch (\Throwable) {
+			} catch (Throwable) {
 				// Fallback if the rootline cannot be generated
 			}
 			if (method_exists($pageInformation, 'setRootLine')) {
@@ -187,10 +191,10 @@ class ApiTypoScriptSetupService {
 		];
 		$tsfe->id = $siteRootPageId;
 		$tsfe->rootLine = $rootline;
-		$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
-		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
+		$tsfe->sys_page = GeneralUtility::makeInstance(PageRepository::class);
+		if (class_exists(TemplateService::class)) {
 			/** @phpstan-ignore-next-line */
-			$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+			$tsfe->tmpl = GeneralUtility::makeInstance(TemplateService::class);
 		}
 		$GLOBALS['TSFE'] = $tsfe;
 		$GLOBALS['TYPO3_REQUEST'] = $request;
@@ -235,20 +239,20 @@ class ApiTypoScriptSetupService {
 			$pageArguments,
 			$frontendUser
 		);
-		$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
+		$tsfe->sys_page = GeneralUtility::makeInstance(PageRepository::class);
 
 		$rootline = [];
 		try {
 			$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
 			$rootline = $rootlineUtility->get();
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			// Fallback if the rootline cannot be generated
 		}
 		$tsfe->rootLine = $rootline;
 
-		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
+		if (class_exists(TemplateService::class)) {
 			/** @phpstan-ignore-next-line */
-			$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
+			$tsfe->tmpl = GeneralUtility::makeInstance(TemplateService::class);
 		}
 
 		$tsfe->page = [
@@ -269,9 +273,9 @@ class ApiTypoScriptSetupService {
 	 * @return array<string, mixed>
 	 */
 	private function resolveSetupArrayFromTemplateService(int $siteRootPageId): array {
-		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
+		if (class_exists(TemplateService::class)
 			&& isset($GLOBALS['TSFE']->tmpl->setup)
-			&& \is_array($GLOBALS['TSFE']->tmpl->setup)
+			&& is_array($GLOBALS['TSFE']->tmpl->setup)
 		) {
 			/** @var array<string, mixed> $setupArray */
 			$setupArray = $GLOBALS['TSFE']->tmpl->setup;
@@ -293,7 +297,7 @@ class ApiTypoScriptSetupService {
 		try {
 			$frontendTypoScript->getSetupArray();
 			return TRUE;
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			return FALSE;
 		}
 	}

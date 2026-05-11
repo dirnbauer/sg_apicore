@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
+use JsonException;
+use Throwable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -78,7 +80,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
-				$pathWithoutLanguage = '/' . ltrim(substr($path, \strlen($languagePrefix)), '/');
+				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
 			}
 		}
 
@@ -145,15 +147,15 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 			if ($body !== '') {
 				try {
 					$parsedBody = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-					if (\is_array($parsedBody)) {
+					if (is_array($parsedBody)) {
 						$request = $request->withParsedBody($parsedBody);
 					}
-				} catch (\JsonException) {
+				} catch (JsonException) {
 					// Only throw an error for application/json if it's invalid
 					if (str_contains($contentType, 'application/json')) {
 						$this->logService->logRejectedRequest($request, 'invalid_json', 400, [
 							'contentType' => $contentType,
-							'requestBodyLength' => \strlen($body),
+							'requestBodyLength' => strlen($body),
 							'requestBodyHash' => hash('sha256', $body),
 							'_skipRequestBody' => TRUE,
 						]);
@@ -171,7 +173,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		$startTime = microtime(TRUE);
 		try {
 			$response = $handler->handle($request);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			$this->logService->logException($e, $request);
 			$status = (int) $e->getCode();
 			if ($status < 400 || $status > 599) {

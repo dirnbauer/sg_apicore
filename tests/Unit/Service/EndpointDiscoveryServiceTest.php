@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use ArrayIterator;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiMcp;
@@ -36,7 +37,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
  */
 class EndpointDiscoveryServiceTest extends UnitTestCase {
 	public function testGetAllEndpointsReturnsCompleteData(): void {
-		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
+		$controllers = new ArrayIterator([new DiscoveryMockController()]);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
@@ -88,7 +89,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 	}
 
 	public function testDiscoverySignatureChangesOnResourceChange(): void {
-		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
+		$controllers = new ArrayIterator([new DiscoveryMockController()]);
 		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
 		$cacheManager = $this->createStub(CacheManager::class);
@@ -126,7 +127,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 	}
 
 	public function testDiscoverySignatureIsCachedInMemory(): void {
-		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
+		$controllers = new ArrayIterator([new DiscoveryMockController()]);
 		$resourceRegistry = $this->createMock(ResourceRegistry::class);
 		$resourceRegistry->expects($this->once())->method('getResources')->willReturn([]);
 
@@ -150,7 +151,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateResourceEndpointsUsesTcaLabels(): void {
-		$controllers = new \ArrayIterator([]);
+		$controllers = new ArrayIterator([]);
 		$resourceRegistry = new ResourceRegistry();
 		$resourceRegistry->registerResource('public', 'tx_test', '/tests', [
 			'allowedOperations' => ['list'],
@@ -196,7 +197,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 	}
 
 	public function testGetAllEndpointsIncludesMcpMetadata(): void {
-		$controllers = new \ArrayIterator([new DiscoveryMcpController()]);
+		$controllers = new ArrayIterator([new DiscoveryMcpController()]);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 

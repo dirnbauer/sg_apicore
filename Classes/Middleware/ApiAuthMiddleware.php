@@ -21,6 +21,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use function in_array;
 
 /**
  * Middleware to handle API authentication and scope validation
@@ -67,7 +68,7 @@ class ApiAuthMiddleware implements MiddlewareInterface {
 
 		if ($apiId && $version && $this->apiRegistry->hasApi($apiId)) {
 			$apiConfig = $this->apiRegistry->getApi($apiId);
-			if (\in_array($version, $apiConfig['versions'], TRUE)) {
+			if (in_array($version, $apiConfig['versions'], TRUE)) {
 				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 				$activeProviders = $securityConfig['authProviders'] ?? [];
 

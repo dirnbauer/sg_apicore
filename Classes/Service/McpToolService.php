@@ -14,6 +14,9 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use Doctrine\DBAL\Exception;
+use stdClass;
+use ReflectionException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
@@ -22,6 +25,8 @@ use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Security\AuthContext;
+use TYPO3\CMS\Core\Error\Http\AbstractServerErrorException;
+use TYPO3\CMS\Core\Http\PropagateResponseException;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\SingletonInterface;
 
@@ -33,15 +38,10 @@ class McpToolService implements SingletonInterface {
 	protected const TOOL_CONTENT_TEXT_STRING_MAX_BYTES = 2048;
 
 	/**
-	 * @var array
 	 */
 	protected array $resolvedToolsCache = [];
 
 	/**
-	 * @param EndpointDiscoveryService $endpointDiscoveryService
-	 * @param ApiRegistry $apiRegistry
-	 * @param ExtensionConfiguration $extensionConfiguration
-	 * @param Router $router
 	 */
 	public function __construct(
 		protected EndpointDiscoveryService $endpointDiscoveryService,
@@ -55,14 +55,11 @@ class McpToolService implements SingletonInterface {
 	/**
 	 * Returns the effective auth mode for an API/version pair.
 	 *
-	 * @param string $apiId
-	 * @param string $version
-	 * @return string
 	 */
 	public function getAuthModeForApi(string $apiId, string $version): string {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
-		if (\is_array($authMode)) {
+		if (is_array($authMode)) {
 			$authMode = (string) reset($authMode);
 		}
 		return (string) $authMode;
@@ -71,15 +68,13 @@ class McpToolService implements SingletonInterface {
 	/**
 	 * Returns whether MCP is exposed for the given API.
 	 *
-	 * @param string $apiId
-	 * @return bool
 	 */
 	public function isMcpAvailableForApi(string $apiId): bool {
 		if (!$this->extensionConfiguration->isMcpEnabled()) {
 			return FALSE;
 		}
 
-		if (\in_array($apiId, $this->extensionConfiguration->getMcpDisabledApis(), TRUE)) {
+		if (in_array($apiId, $this->extensionConfiguration->getMcpDisabledApis(), TRUE)) {
 			return FALSE;
 		}
 
@@ -87,17 +82,11 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * Lists exposed MCP tools for an API/version pair.
-	 *
-	 * @param string $apiId
-	 * @param string $version
-	 * @param string|null $authMode
-	 * @param string $tenantId
-	 * @param AuthContext|null $authContext
-	 * @return array
-	 * @throws \ReflectionException
-	 */
-	public function listTools(
+     * Lists exposed MCP tools for an API/version pair.
+     *
+     * @throws ReflectionException
+     */
+    public function listTools(
 		string $apiId,
 		string $version,
 		?string $authMode = NULL,
@@ -109,17 +98,11 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * Lists resolved MCP tools including endpoint metadata for operational use.
-	 *
-	 * @param string $apiId
-	 * @param string $version
-	 * @param string|null $authMode
-	 * @param string $tenantId
-	 * @param AuthContext|null $authContext
-	 * @return array
-	 * @throws \ReflectionException
-	 */
-	public function listResolvedTools(
+     * Lists resolved MCP tools including endpoint metadata for operational use.
+     *
+     * @throws ReflectionException
+     */
+    public function listResolvedTools(
 		string $apiId,
 		string $version,
 		?string $authMode = NULL,
@@ -196,16 +179,12 @@ class McpToolService implements SingletonInterface {
 	/**
 	 * Executes an MCP tool by dispatching the mapped API endpoint internally.
 	 *
-	 * @param ServerRequestInterface $request
-	 * @param string $apiId
-	 * @param string $version
-	 * @param string $toolName
-	 * @param array $arguments
-	 * @param string|null $authMode
-	 * @return array|null
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
+	 * @throws Exception
+	 * @throws AbstractServerErrorException
+	 * @throws PropagateResponseException
 	 */
-	public function callTool(
+    public function callTool(
 		ServerRequestInterface $request,
 		string $apiId,
 		string $version,
@@ -241,7 +220,7 @@ class McpToolService implements SingletonInterface {
 		$path = (string) ($endpoint['path'] ?? '/');
 		foreach ($endpoint['pathParams'] ?? [] as $pathParam) {
 			/** @var ApiPathParam $pathParam */
-			if (!\array_key_exists($pathParam->name, $arguments)) {
+			if (!array_key_exists($pathParam->name, $arguments)) {
 				return $this->createToolErrorResult(
 					'validation_error',
 					400,
@@ -249,7 +228,7 @@ class McpToolService implements SingletonInterface {
 				);
 			}
 			$rawValue = $arguments[$pathParam->name];
-			if (\is_array($rawValue) || \is_object($rawValue)) {
+			if (is_array($rawValue) || is_object($rawValue)) {
 				return $this->createToolErrorResult(
 					'validation_error',
 					400,
@@ -262,7 +241,7 @@ class McpToolService implements SingletonInterface {
 		$queryParameters = [];
 		foreach ($endpoint['queryParams'] ?? [] as $queryParam) {
 			/** @var ApiQueryParam $queryParam */
-			if (\array_key_exists($queryParam->name, $arguments)) {
+			if (array_key_exists($queryParam->name, $arguments)) {
 				$queryParameters[$queryParam->name] = $arguments[$queryParam->name];
 			}
 		}
@@ -270,7 +249,7 @@ class McpToolService implements SingletonInterface {
 		$bodyParameters = [];
 		foreach ($endpoint['bodyParams'] ?? [] as $bodyParam) {
 			/** @var ApiBodyParam $bodyParam */
-			if (\array_key_exists($bodyParam->name, $arguments)) {
+			if (array_key_exists($bodyParam->name, $arguments)) {
 				$bodyParameters[$bodyParam->name] = $arguments[$bodyParam->name];
 			}
 		}
@@ -301,7 +280,7 @@ class McpToolService implements SingletonInterface {
 
 		if ($bodyParameters !== []) {
 			$encodedBody = json_encode($bodyParameters);
-			if (\is_string($encodedBody)) {
+			if (is_string($encodedBody)) {
 				$bodyStream = new Stream('php://temp', 'wb+');
 				$bodyStream->write($encodedBody);
 				$bodyStream->rewind();
@@ -323,14 +302,12 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param ResponseInterface $response
-	 * @return array
 	 */
 	protected function normalizeToolResponse(ResponseInterface $response): array {
 		$statusCode = $response->getStatusCode();
 		$rawBody = (string) $response->getBody();
 		$decodedBody = json_decode($rawBody, TRUE);
-		$payload = \is_array($decodedBody) ? $decodedBody : ['rawBody' => $rawBody];
+		$payload = is_array($decodedBody) ? $decodedBody : ['rawBody' => $rawBody];
 
 		if ($statusCode >= 200 && $statusCode < 300) {
 			return [
@@ -351,11 +328,9 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param array $payload
-	 * @return string
 	 */
 	protected function buildToolContentText(array $payload): string {
-		if (\array_key_exists('rawBody', $payload) && \count($payload) === 1) {
+		if (array_key_exists('rawBody', $payload) && count($payload) === 1) {
 			$rawBody = (string) $payload['rawBody'];
 			return $rawBody !== ''
 				? $this->truncateStringForTextContent($rawBody, self::TOOL_CONTENT_TEXT_MAX_BYTES)
@@ -366,7 +341,7 @@ class McpToolService implements SingletonInterface {
 			$this->preparePayloadForTextContent($payload),
 			JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
 		);
-		if (!\is_string($encodedPayload) || $encodedPayload === '') {
+		if (!is_string($encodedPayload) || $encodedPayload === '') {
 			return 'Tool executed successfully.';
 		}
 
@@ -374,18 +349,16 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param array $payload
-	 * @return array
 	 */
 	protected function preparePayloadForTextContent(array $payload): array {
 		$prepared = [];
 		foreach ($payload as $key => $value) {
-			if (\is_array($value)) {
+			if (is_array($value)) {
 				$prepared[$key] = $this->preparePayloadForTextContent($value);
 				continue;
 			}
 
-			if (\is_string($value)) {
+			if (is_string($value)) {
 				$prepared[$key] = $this->truncateStringForTextContent($value, self::TOOL_CONTENT_TEXT_STRING_MAX_BYTES);
 				continue;
 			}
@@ -397,21 +370,16 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param string $value
-	 * @param int $maxBytes
-	 * @return string
 	 */
 	protected function truncateStringForTextContent(string $value, int $maxBytes): string {
-		if (\strlen($value) <= $maxBytes) {
+		if (strlen($value) <= $maxBytes) {
 			return $value;
 		}
 
-		return substr($value, 0, $maxBytes) . "\n[truncated, original length: " . \strlen($value) . ' bytes]';
+		return substr($value, 0, $maxBytes) . "\n[truncated, original length: " . strlen($value) . ' bytes]';
 	}
 
 	/**
-	 * @param array $endpoint
-	 * @return array
 	 */
 	protected function buildInputSchema(array $endpoint): array {
 		$properties = [];
@@ -441,7 +409,7 @@ class McpToolService implements SingletonInterface {
 
 		$schema = [
 			'type' => 'object',
-			'properties' => $properties !== [] ? $properties : new \stdClass(),
+			'properties' => $properties !== [] ? $properties : new stdClass(),
 			'additionalProperties' => FALSE,
 		];
 		if ($required !== []) {
@@ -452,8 +420,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param object $parameter
-	 * @return array
 	 */
 	protected function buildParameterSchema(object $parameter): array {
 		$type = strtolower((string) ($parameter->type ?? 'string'));
@@ -503,10 +469,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param string $apiId
-	 * @param string $httpMethod
-	 * @param string $path
-	 * @return string
 	 */
 	protected function buildToolName(string $apiId, string $httpMethod, string $path): string {
 		$pathSlug = trim($path, '/');
@@ -523,23 +485,12 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param string $apiId
-	 * @param string $version
-	 * @param string $httpMethod
-	 * @param string $path
-	 * @return string
 	 */
 	protected function buildEndpointId(string $apiId, string $version, string $httpMethod, string $path): string {
 		return strtolower($apiId . ':' . $version . ':' . $httpMethod . ':' . $path);
 	}
 
 	/**
-	 * @param string $apiId
-	 * @param string $version
-	 * @param string $authMode
-	 * @param string $tenantId
-	 * @param AuthContext|null $authContext
-	 * @return string
 	 */
 	protected function buildResolvedToolsCacheKey(
 		string $apiId,
@@ -561,9 +512,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param array $endpoint
-	 * @param AuthContext|null $authContext
-	 * @return bool
 	 */
 	protected function isEndpointAllowedForAuthContext(array $endpoint, ?AuthContext $authContext): bool {
 		$requiredScopes = array_values(array_filter(
@@ -588,8 +536,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param mixed $mcpConfig
-	 * @return array
 	 */
 	protected function normalizeMcpConfig(mixed $mcpConfig): array {
 		if (!$mcpConfig instanceof ApiMcp) {
@@ -610,9 +556,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param array $denylist
-	 * @param array $candidates
-	 * @return bool
 	 */
 	protected function matchesDenylist(array $denylist, array $candidates): bool {
 		if ($denylist === [] || $candidates === []) {
@@ -637,7 +580,7 @@ class McpToolService implements SingletonInterface {
 				continue;
 			}
 
-			if (\in_array($entry, $normalizedCandidates, TRUE)) {
+			if (in_array($entry, $normalizedCandidates, TRUE)) {
 				return TRUE;
 			}
 		}
@@ -646,8 +589,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param array $entries
-	 * @return array
 	 */
 	protected function normalizeDenylist(array $entries): array {
 		$normalized = [];
@@ -661,8 +602,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param int $status
-	 * @return string
 	 */
 	protected function mapStatusToErrorCategory(int $status): string {
 		if ($status === 400 || $status === 422) {
@@ -678,11 +617,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param string $category
-	 * @param int $statusCode
-	 * @param string $message
-	 * @param array $payload
-	 * @return array
 	 */
 	protected function createToolErrorResult(
 		string $category,
@@ -707,8 +641,6 @@ class McpToolService implements SingletonInterface {
 	}
 
 	/**
-	 * @param string $path
-	 * @return bool
 	 */
 	protected function isConventionExcludedPath(string $path): bool {
 		$normalizedPath = strtolower(trim($path));

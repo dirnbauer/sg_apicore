@@ -20,6 +20,7 @@ use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use TYPO3\CMS\Core\SingletonInterface;
+use function array_key_exists;
 
 /**
  * Service for validating API requests based on endpoint metadata
@@ -65,7 +66,7 @@ class RequestValidator implements SingletonInterface {
 			$body = $request->getParsedBody();
 
 			// Legacy parameter mapping (user -> username, pass -> password)
-			if ($request->getAttribute('api.isLegacy') && \is_array($body)) {
+			if ($request->getAttribute('api.isLegacy') && is_array($body)) {
 				if (isset($body['user']) && !isset($body['username'])) {
 					$body['username'] = $body['user'];
 				}
@@ -74,7 +75,7 @@ class RequestValidator implements SingletonInterface {
 				}
 			}
 
-			if (!\is_array($body) && $request->getMethod() !== 'GET') {
+			if (!is_array($body) && $request->getMethod() !== 'GET') {
 				// If body params are expected but the body is not an array, check if any are required
 				foreach ($endpoint['bodyParams'] as $param) {
 					$required = $param->required;
@@ -91,7 +92,7 @@ class RequestValidator implements SingletonInterface {
 					}
 				}
 			} else {
-				$body = \is_array($body) ? $body : [];
+				$body = is_array($body) ? $body : [];
 				foreach ($endpoint['bodyParams'] as $param) {
 					/** @var ApiBodyParam $param */
 					$value = $body[$param->name] ?? NULL;
@@ -110,7 +111,7 @@ class RequestValidator implements SingletonInterface {
 			}
 		}
 
-		return \count($errors) > 0 ? $errors : NULL;
+		return count($errors) > 0 ? $errors : NULL;
 	}
 
 	/**
@@ -125,11 +126,10 @@ class RequestValidator implements SingletonInterface {
 		string $parameterName
 	): UploadedFileInterface|array|NULL {
 		$uploadedFiles = $request->getUploadedFiles();
-		if (!\is_array($uploadedFiles) || !\array_key_exists($parameterName, $uploadedFiles)) {
-			return NULL;
-		}
+		return !array_key_exists($parameterName, $uploadedFiles) ? NULL : $this->normalizeUploadedFileValue(
+			$uploadedFiles[$parameterName]
+		);
 
-		return $this->normalizeUploadedFileValue($uploadedFiles[$parameterName]);
 	}
 
 	/**
@@ -141,7 +141,7 @@ class RequestValidator implements SingletonInterface {
 			return $value->getError() === UPLOAD_ERR_OK ? $value : NULL;
 		}
 
-		if (!\is_array($value)) {
+		if (!is_array($value)) {
 			return NULL;
 		}
 
@@ -150,7 +150,7 @@ class RequestValidator implements SingletonInterface {
 			$normalizedItem = $this->normalizeUploadedFileValue($item);
 			if ($normalizedItem instanceof UploadedFileInterface) {
 				$normalized[] = $normalizedItem;
-			} elseif (\is_array($normalizedItem)) {
+			} elseif (is_array($normalizedItem)) {
 				$normalized = array_merge($normalized, $normalizedItem);
 			}
 		}
@@ -211,7 +211,7 @@ class RequestValidator implements SingletonInterface {
 
 		// If the expected type is array, and we have an array, validate it as a whole.
 		if (strtolower($type) === 'array') {
-			if (!\is_array($value)) {
+			if (!is_array($value)) {
 				// If we expect an array but get a scalar, we wrap it in an array for consistent processing
 				$value = [$value];
 			} else {
@@ -220,7 +220,7 @@ class RequestValidator implements SingletonInterface {
 				// we validate each element of the array against a string type if it was an array[string]
 				foreach ($value as $index => $subValue) {
 					$subError = $this->validateValue(
-						new (\get_class($param))(
+						new (get_class($param))(
 							name: $name . '[' . $index . ']',
 							type: 'string',
 							required: $required,
@@ -244,10 +244,10 @@ class RequestValidator implements SingletonInterface {
 
 		// If it's an array, but we expect a scalar type, we iterate and validate each element.
 		// This happens for query parameters like ?theme[]=1&theme[]=2 which TYPO3 parses as an array.
-		if (\is_array($value)) {
+		if (is_array($value)) {
 			foreach ($value as $index => $subValue) {
 				$subError = $this->validateValue(
-					new (\get_class($param))(
+					new (get_class($param))(
 						name: $name . '[' . $index . ']',
 						type: strtolower($type) === 'array' ? 'string' : $type,
 						required: $required,
@@ -316,7 +316,7 @@ class RequestValidator implements SingletonInterface {
 			case 'bool':
 			case 'boolean':
 				$boolValues = ['1', '0', 'true', 'false', TRUE, FALSE, 1, 0];
-				if (!\in_array($value, $boolValues, TRUE)) {
+				if (!in_array($value, $boolValues, TRUE)) {
 					return [
 						'field' => $name,
 						'message' => 'Value must be a boolean',
@@ -324,7 +324,7 @@ class RequestValidator implements SingletonInterface {
 				}
 				break;
 			case 'string':
-				if (!\is_scalar($value)) {
+				if (!is_scalar($value)) {
 					return [
 						'field' => $name,
 						'message' => 'Value must be a string',
@@ -332,7 +332,7 @@ class RequestValidator implements SingletonInterface {
 				}
 
 				$stringValue = (string) $value;
-				if (property_exists($param, 'minLength') && $param->minLength !== NULL && \strlen(
+				if (property_exists($param, 'minLength') && $param->minLength !== NULL && strlen(
 					$stringValue
 				) < $param->minLength) {
 					return [
@@ -340,7 +340,7 @@ class RequestValidator implements SingletonInterface {
 						'message' => 'Value length must be at least ' . $param->minLength,
 					];
 				}
-				if (property_exists($param, 'maxLength') && $param->maxLength !== NULL && \strlen(
+				if (property_exists($param, 'maxLength') && $param->maxLength !== NULL && strlen(
 					$stringValue
 				) > $param->maxLength) {
 					return [
@@ -352,7 +352,7 @@ class RequestValidator implements SingletonInterface {
 		}
 
 		// Pattern Validation
-		if ($pattern !== NULL && $pattern !== '' && !\is_array($value)) {
+		if ($pattern !== NULL && $pattern !== '' && !is_array($value)) {
 			$regex = $pattern;
 			if (!str_starts_with($regex, '/') || !str_ends_with($regex, '/')) {
 				$regex = '/' . str_replace('/', '\/', $regex) . '/';

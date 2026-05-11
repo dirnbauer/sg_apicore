@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Security;
 
+use SGalinski\SgApiCore\Context\TenantContext;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
@@ -108,7 +109,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
 
-		$tenantContext = new \SGalinski\SgApiCore\Context\TenantContext(tenantId: 'tenant-1', siteRootPageId: 456);
+		$tenantContext = new TenantContext(tenantId: 'tenant-1', siteRootPageId: 456);
 		$request->method('getAttribute')->with('api.tenant')->willReturn($tenantContext);
 
 		$tokenRecord = [

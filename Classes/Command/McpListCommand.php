@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Command;
 
+use JsonException;
+use ReflectionException;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\McpToolService;
@@ -54,15 +56,15 @@ class McpListCommand extends Command {
 	}
 
 	/**
-	 * Execute command.
-	 *
-	 * @param InputInterface $input
-	 * @param OutputInterface $output
-	 * @return int
-	 * @throws \JsonException
-	 * @throws \ReflectionException
-	 */
-	protected function execute(InputInterface $input, OutputInterface $output): int {
+     * Execute command.
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws JsonException
+     * @throws ReflectionException
+     */
+    protected function execute(InputInterface $input, OutputInterface $output): int {
 		$io = new SymfonyStyle($input, $output);
 		$selectedApi = trim((string) $input->getOption('api'));
 		$selectedVersion = trim((string) $input->getOption('api-version'));
@@ -126,7 +128,7 @@ class McpListCommand extends Command {
 			], $rows)
 		);
 
-		$io->success('Exposed tools: ' . \count($rows));
+		$io->success('Exposed tools: ' . count($rows));
 		return Command::SUCCESS;
 	}
 }

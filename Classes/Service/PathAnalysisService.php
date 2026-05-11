@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 
@@ -41,7 +42,7 @@ class PathAnalysisService implements SingletonInterface {
 	 * @return array|null
 	 */
 	public function analyze(string $path, ?string $prefixOverride = NULL): ?array {
-		if ($GLOBALS['TYPO3_REQUEST'] instanceof \Psr\Http\Message\ServerRequestInterface) {
+		if ($GLOBALS['TYPO3_REQUEST'] instanceof ServerRequestInterface) {
 			$request = $GLOBALS['TYPO3_REQUEST'];
 			$apiId = $request->getAttribute('api.id');
 			$version = $request->getAttribute('api.version');
@@ -61,7 +62,7 @@ class PathAnalysisService implements SingletonInterface {
 			return NULL;
 		}
 
-		$relativeWeight = strpos($path, $apiPathPrefix) + \strlen($apiPathPrefix);
+		$relativeWeight = strpos($path, $apiPathPrefix) + strlen($apiPathPrefix);
 		$relativeRequestPath = substr($path, $relativeWeight);
 		$relativeRequestPath = ltrim($relativeRequestPath, '/');
 		$relativeRequestPath = rtrim($relativeRequestPath, '/');

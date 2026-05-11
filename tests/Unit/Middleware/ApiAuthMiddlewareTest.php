@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
+use SGalinski\SgApiCore\Context\TenantContext;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -59,7 +60,7 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 				return '1';
 			}
 			if ($name === 'api.tenant') {
-				return new \SGalinski\SgApiCore\Context\TenantContext('tenant');
+				return new TenantContext('tenant');
 			}
 			return NULL;
 		});

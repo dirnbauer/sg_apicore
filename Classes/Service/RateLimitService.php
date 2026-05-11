@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use Throwable;
 use Doctrine\DBAL\Exception;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\SingletonInterface;
@@ -53,7 +54,7 @@ class RateLimitService implements SingletonInterface {
 			);
 
 			$allowed = TRUE;
-			if (\is_array($row) && (int) $row['window_start'] === $windowStart) {
+			if (is_array($row) && (int) $row['window_start'] === $windowStart) {
 				$hits = (int) $row['hits'];
 				if ($hits >= $effectiveLimit) {
 					$allowed = FALSE;
@@ -66,7 +67,7 @@ class RateLimitService implements SingletonInterface {
 				}
 			} else {
 				$hits = 1;
-				if (\is_array($row)) {
+				if (is_array($row)) {
 					$connection->update(self::TABLE_NAME, [
 						'hits' => $hits,
 						'window_start' => $windowStart,
@@ -83,7 +84,7 @@ class RateLimitService implements SingletonInterface {
 			}
 
 			$connection->commit();
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			$connection->rollBack();
 			// Fail open on limiter errors
 			return [

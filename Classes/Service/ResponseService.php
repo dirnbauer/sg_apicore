@@ -14,6 +14,10 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
+use SGalinski\SgApiCore\Attribute\ApiCache;
+use Psr\Http\Message\ServerRequestInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use Psr\Http\Message\ResponseInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\JsonResponse;
@@ -36,23 +40,23 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-	 * Creates a success response
-	 *
-	 * @param mixed $data The response data
-	 * @param array $meta Optional metadata (e.g., pagination)
-	 * @param int $status HTTP status code
-	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
-	 * @param \SGalinski\SgApiCore\Attribute\ApiCache|null $apiCache
-	 * @return ResponseInterface
-	 */
-	public function createSuccessResponse(
+     * Creates a success response
+     *
+     * @param mixed $data The response data
+     * @param array $meta Optional metadata (e.g., pagination)
+     * @param int $status HTTP status code
+     * @param ApiLegacyMode|null $legacyMode
+     * @param ApiCache|null $apiCache
+     * @return ResponseInterface
+     */
+    public function createSuccessResponse(
 		mixed $data = [],
 		array $meta = [],
 		int $status = 200,
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL,
-		?\SGalinski\SgApiCore\Attribute\ApiCache $apiCache = NULL
+		?ApiLegacyMode $legacyMode = NULL,
+		?ApiCache $apiCache = NULL
 	): ResponseInterface {
-		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || \count($meta) > 0;
+		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || count($meta) > 0;
 		if ($legacyMode !== NULL) {
 			$wrapData = $legacyMode->wrapData;
 		}
@@ -61,7 +65,7 @@ class ResponseService implements SingletonInterface {
 			$response = [
 				'data' => $data,
 			];
-			if (\count($meta) > 0) {
+			if (count($meta) > 0) {
 				$response['meta'] = $meta;
 			}
 		} else {
@@ -83,33 +87,33 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-	 * Creates a localized error response
-	 *
-	 * @param string $title
-	 * @param string $detail
-	 * @param int $status
-	 * @param string $type
-	 * @param array $additionalData
-	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
-	 * @return ResponseInterface
-	 */
-	public function createLocalizedErrorResponse(
+     * Creates a localized error response
+     *
+     * @param string $title
+     * @param string $detail
+     * @param int $status
+     * @param string $type
+     * @param array $additionalData
+     * @param ApiLegacyMode|null $legacyMode
+     * @return ResponseInterface
+     */
+    public function createLocalizedErrorResponse(
 		string $title,
 		string $detail,
 		int $status,
 		string $type = 'about:blank',
 		array $additionalData = [],
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+		?ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
 		/** @var LanguageService|null $languageService */
 		$languageService = $GLOBALS['LANG'] ?? NULL;
 		if ($languageService === NULL) {
 			$language = NULL;
 			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
-			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+			if ($request instanceof ServerRequestInterface) {
 				$language = $request->getAttribute('language');
 			}
-			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+			if ($language instanceof SiteLanguage) {
 				$languageService = $this->languageServiceFactory->createFromSiteLanguage($language);
 			} else {
 				$languageService = $this->languageServiceFactory->create('default');
@@ -130,23 +134,23 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-	 * Creates an error response (RFC 7807)
-	 *
-	 * @param string $title
-	 * @param string $detail
-	 * @param int $status
-	 * @param string $type
-	 * @param array $additionalData
-	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
-	 * @return ResponseInterface
-	 */
-	public function createErrorResponse(
+     * Creates an error response (RFC 7807)
+     *
+     * @param string $title
+     * @param string $detail
+     * @param int $status
+     * @param string $type
+     * @param array $additionalData
+     * @param ApiLegacyMode|null $legacyMode
+     * @return ResponseInterface
+     */
+    public function createErrorResponse(
 		string $title,
 		string $detail,
 		int $status,
 		string $type = 'about:blank',
 		array $additionalData = [],
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+		?ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
 		$contentType = 'application/problem+json';
 		$headers = [
@@ -180,19 +184,19 @@ class ResponseService implements SingletonInterface {
 		if (!isset($additionalData['requestId'])) {
 			$requestId = NULL;
 			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
-			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+			if ($request instanceof ServerRequestInterface) {
 				$requestId = $request->getAttribute('api.requestId');
 			}
-			if (\is_string($requestId) && $requestId !== '') {
+			if (is_string($requestId) && $requestId !== '') {
 				$additionalData['requestId'] = $requestId;
 			}
 		}
 
-		if (isset($additionalData['requestId']) && \is_string($additionalData['requestId'])) {
+		if (isset($additionalData['requestId']) && is_string($additionalData['requestId'])) {
 			$headers['X-Request-ID'] = $additionalData['requestId'];
 		}
 
-		if (isset($additionalData['rateLimit']) && \is_array($additionalData['rateLimit'])) {
+		if (isset($additionalData['rateLimit']) && is_array($additionalData['rateLimit'])) {
 			if (isset($additionalData['rateLimit']['limit'])) {
 				$headers['X-RateLimit-Limit'] = (string) $additionalData['rateLimit']['limit'];
 			}
@@ -207,7 +211,7 @@ class ResponseService implements SingletonInterface {
 			}
 		}
 
-		if (\count($additionalData) > 0) {
+		if (count($additionalData) > 0) {
 			$response = array_merge($response, $additionalData);
 		}
 

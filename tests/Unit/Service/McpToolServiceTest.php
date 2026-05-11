@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use stdClass;
+use ArrayIterator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
@@ -95,7 +97,7 @@ class McpToolServiceTest extends UnitTestCase {
 		$tools = $service->listTools('sgai', '1', 'public');
 		foreach ($tools as $tool) {
 			$properties = $tool['inputSchema']['properties'] ?? NULL;
-			if ($properties instanceof \stdClass) {
+			if ($properties instanceof stdClass) {
 				continue;
 			}
 
@@ -227,8 +229,8 @@ class McpToolServiceTest extends UnitTestCase {
 
 		$this->assertIsArray($result);
 		$this->assertFalse($result['isError']);
-		$this->assertSame(15000, \strlen($result['structuredContent']['imageData']));
-		$this->assertLessThan(13000, \strlen($result['content'][0]['text'] ?? ''));
+		$this->assertSame(15000, strlen($result['structuredContent']['imageData']));
+		$this->assertLessThan(13000, strlen($result['content'][0]['text'] ?? ''));
 		$this->assertStringContainsString('[truncated, original length: 15000 bytes]', $result['content'][0]['text'] ?? '');
 	}
 
@@ -243,8 +245,8 @@ class McpToolServiceTest extends UnitTestCase {
 
 		$this->assertIsArray($result);
 		$this->assertFalse($result['isError']);
-		$this->assertSame(15000, \strlen($result['structuredContent']['rawBody']));
-		$this->assertLessThan(13000, \strlen($result['content'][0]['text'] ?? ''));
+		$this->assertSame(15000, strlen($result['structuredContent']['rawBody']));
+		$this->assertLessThan(13000, strlen($result['content'][0]['text'] ?? ''));
 		$this->assertStringContainsString('[truncated, original length: 15000 bytes]', $result['content'][0]['text'] ?? '');
 	}
 
@@ -341,7 +343,7 @@ class McpToolServiceTest extends UnitTestCase {
 		foreach ($controllerClasses as $controllerClass) {
 			$instances[] = new $controllerClass();
 		}
-		$controllers = new \ArrayIterator($instances);
+		$controllers = new ArrayIterator($instances);
 
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);

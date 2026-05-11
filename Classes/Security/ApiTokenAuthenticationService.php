@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Security;
 
+use JsonException;
 use Doctrine\DBAL\Exception;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
@@ -50,11 +51,11 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 	}
 
 	/**
-	 * @return array|null
-	 * @throws Exception
-	 * @throws \JsonException
-	 */
-	public function getUser(): ?array {
+     * @return array|null
+     * @throws Exception
+     * @throws JsonException
+     */
+    public function getUser(): ?array {
 		if (method_exists($this->pObj, 'setDontSetCookie')) {
 			$this->pObj->setDontSetCookie();
 		}
@@ -71,10 +72,10 @@ class ApiTokenAuthenticationService extends AbstractAuthenticationService {
 		}
 
 		// 1. Check JWT
-		if (\count(explode('.', $token)) === 3) {
+		if (count(explode('.', $token)) === 3) {
 			try {
 				$payload = $this->jwtService->decode($token);
-			} catch (\JsonException) {
+			} catch (JsonException) {
 				$payload = NULL;
 			}
 			if ($payload && isset($payload['userId'])) {

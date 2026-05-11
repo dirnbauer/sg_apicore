@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Configuration;
 
+use Exception;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration as Typo3ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -43,7 +44,7 @@ class ExtensionConfiguration implements SingletonInterface {
 		);
 		try {
 			$this->configuration = (array) $this->typo3ExtensionConfiguration->get('sg_apicore');
-		} catch (\Exception) {
+		} catch (Exception) {
 			// Fallback to empty configuration
 			$this->configuration = [];
 		}

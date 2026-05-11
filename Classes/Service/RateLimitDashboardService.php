@@ -82,9 +82,9 @@ class RateLimitDashboardService {
 		$apiOverrides = [];
 		foreach ($this->apiRegistry->getApis() as $apiId => $apiConfig) {
 			$rateLimit = $apiConfig['rateLimit'] ?? $apiConfig['security']['rateLimit'] ?? NULL;
-			$normalized = $this->normalizeRateLimitConfig(\is_array($rateLimit) ? $rateLimit : NULL, $config);
+			$normalized = $this->normalizeRateLimitConfig(is_array($rateLimit) ? $rateLimit : NULL, $config);
 			$versionOverrides = $this->buildVersionOverrides($rateLimit, $config);
-			$hasOverride = \is_array($rateLimit);
+			$hasOverride = is_array($rateLimit);
 
 			$apiOverrides[] = [
 				'apiId' => $apiId,
@@ -108,7 +108,7 @@ class RateLimitDashboardService {
 		foreach ($this->resourceRegistry->getResources() as $apiId => $resources) {
 			foreach ($resources as $resource) {
 				$rateLimit = $resource['rateLimit'] ?? NULL;
-				if (!\is_array($rateLimit) || $rateLimit === []) {
+				if (!is_array($rateLimit) || $rateLimit === []) {
 					continue;
 				}
 
@@ -136,7 +136,7 @@ class RateLimitDashboardService {
 		$apiLimits = [];
 		foreach ($apiOverrides as $override) {
 			$normalized = $override['normalized'] ?? [];
-			if (!empty($override['apiId']) && \is_array($normalized)) {
+			if (!empty($override['apiId']) && is_array($normalized)) {
 				$apiLimits[$override['apiId']] = $normalized;
 			}
 		}
@@ -229,7 +229,7 @@ class RateLimitDashboardService {
 			: array_filter($counters, static fn (array $counter) => !$counter['isExpired']);
 
 		usort($relevantCounters, static fn (array $a, array $b) => $b['hits'] <=> $a['hits']);
-		return \array_slice($relevantCounters, 0, 10);
+		return array_slice($relevantCounters, 0, 10);
 	}
 
 	/**
@@ -291,13 +291,13 @@ class RateLimitDashboardService {
 	 * @return array<int, array<string, mixed>>
 	 */
 	protected function buildVersionOverrides(mixed $rateLimit, array $config): array {
-		if (!\is_array($rateLimit) || !isset($rateLimit['versions']) || !\is_array($rateLimit['versions'])) {
+		if (!is_array($rateLimit) || !isset($rateLimit['versions']) || !is_array($rateLimit['versions'])) {
 			return [];
 		}
 
 		$overrides = [];
 		foreach ($rateLimit['versions'] as $version => $versionConfig) {
-			if (!\is_array($versionConfig)) {
+			if (!is_array($versionConfig)) {
 				continue;
 			}
 
@@ -321,7 +321,7 @@ class RateLimitDashboardService {
 		$subjectType = 'unknown';
 
 		$parts = explode(':', $identifier, 3);
-		if (\count($parts) === 3) {
+		if (count($parts) === 3) {
 			$apiId = $parts[0];
 			$tenantId = $parts[1];
 			$subject = $parts[2];
@@ -357,10 +357,10 @@ class RateLimitDashboardService {
 			'perPage' => (int) ($filters['perPage'] ?? self::DEFAULT_PER_PAGE),
 		];
 
-		if (!\in_array($normalized['subjectType'], ['', 'token', 'user', 'ip', 'unknown'], TRUE)) {
+		if (!in_array($normalized['subjectType'], ['', 'token', 'user', 'ip', 'unknown'], TRUE)) {
 			$normalized['subjectType'] = '';
 		}
-		if (!\in_array($normalized['perPage'], self::ALLOWED_PER_PAGE, TRUE)) {
+		if (!in_array($normalized['perPage'], self::ALLOWED_PER_PAGE, TRUE)) {
 			$normalized['perPage'] = self::DEFAULT_PER_PAGE;
 		}
 
@@ -397,14 +397,14 @@ class RateLimitDashboardService {
 	 * @return array{items: array<int, array<string, mixed>>, pagination: array<string, int|bool>}
 	 */
 	protected function paginateCounters(array $counters, int $page, int $perPage): array {
-		$totalItems = \count($counters);
+		$totalItems = count($counters);
 		$totalPages = max(1, (int) ceil($totalItems / $perPage));
 		$currentPage = max(1, min($page, $totalPages));
 		$offset = ($currentPage - 1) * $perPage;
-		$items = \array_slice($counters, $offset, $perPage);
+		$items = array_slice($counters, $offset, $perPage);
 
 		$fromItem = $totalItems > 0 ? ($offset + 1) : 0;
-		$toItem = $totalItems > 0 ? ($offset + \count($items)) : 0;
+		$toItem = $totalItems > 0 ? ($offset + count($items)) : 0;
 
 		return [
 			'items' => $items,

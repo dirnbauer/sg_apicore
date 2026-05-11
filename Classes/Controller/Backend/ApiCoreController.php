@@ -14,6 +14,10 @@
 
 namespace SGalinski\SgApiCore\Controller\Backend;
 
+use TYPO3\CMS\Core\Imaging\IconSize;
+use ReflectionException;
+use Doctrine\DBAL\Exception;
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Random\RandomException;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
@@ -24,6 +28,7 @@ use SGalinski\SgApiCore\Service\LogDashboardService;
 use SGalinski\SgApiCore\Service\RateLimitDashboardService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Backend\Attribute\AsController;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder as BackendUriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
@@ -90,7 +95,7 @@ class ApiCoreController extends ActionController {
 	 *
 	 * @param array $filters
 	 * @return ResponseInterface
-	 * @throws \Doctrine\DBAL\Exception
+	 * @throws Exception
 	 */
 	public function tokensAction(array $filters = []): ResponseInterface {
 		$filters = $this->resolveAndPersistTokenFilters($filters);
@@ -108,12 +113,12 @@ class ApiCoreController extends ActionController {
 
 		$tokens = $this->tokenRepository->findAllWithFilters($filters);
 		if ($filters['tokenCategory'] === 'user') {
-			$hasUserAccessTokens = \count($tokens) > 0;
+			$hasUserAccessTokens = count($tokens) > 0;
 		} else {
 			$userTokenFilters = $filters;
 			$userTokenFilters['isUserToken'] = 1;
 			$userTokenFilters['isRefreshToken'] = 0;
-			$hasUserAccessTokens = \count($this->tokenRepository->findAllWithFilters($userTokenFilters)) > 0;
+			$hasUserAccessTokens = count($this->tokenRepository->findAllWithFilters($userTokenFilters)) > 0;
 		}
 
 		$apis = $this->apiRegistry->getApis();
@@ -141,7 +146,7 @@ class ApiCoreController extends ActionController {
 	 * @param string $scopes
 	 * @param int $expiresDays
 	 * @return ResponseInterface
-	 * @throws \JsonException
+	 * @throws JsonException
 	 * @throws RandomException
 	 */
 	public function createTokenAction(
@@ -204,6 +209,7 @@ class ApiCoreController extends ActionController {
 	 * Regenerate a token key
 	 *
 	 * @param int $uid
+	 * @param string $returnUrl
 	 * @return ResponseInterface
 	 * @throws RandomException
 	 */
@@ -239,12 +245,12 @@ class ApiCoreController extends ActionController {
 	}
 
 	/**
-	 * Endpoint Overview
-	 *
-	 * @return ResponseInterface
-	 * @throws \ReflectionException
-	 */
-	public function endpointsAction(): ResponseInterface {
+     * Endpoint Overview
+     *
+     * @return ResponseInterface
+     * @throws ReflectionException
+     */
+    public function endpointsAction(): ResponseInterface {
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
 		$this->prepareDocHeader($moduleTemplate);
@@ -308,7 +314,7 @@ class ApiCoreController extends ActionController {
 	 */
 	protected function prepareDocHeader(ModuleTemplate $moduleTemplate): void {
 		$pageInfo = BackendUtility::readPageAccess(0, $GLOBALS['BE_USER']->getPagePermsClause(1));
-		if (\is_array($pageInfo)) {
+		if (is_array($pageInfo)) {
 			$moduleTemplate->getDocHeaderComponent()->setMetaInformation($pageInfo);
 		}
 
@@ -317,8 +323,8 @@ class ApiCoreController extends ActionController {
 		$refreshTitle = LocalizationUtility::translate('labels.reload', 'core') ?? 'Reload';
 
 		$iconSize = Icon::SIZE_SMALL;
-		if (class_exists(\TYPO3\CMS\Core\Imaging\IconSize::class)) {
-			$iconSize = \TYPO3\CMS\Core\Imaging\IconSize::SMALL;
+		if (class_exists(IconSize::class)) {
+			$iconSize = IconSize::SMALL;
 		}
 
 		$refreshButton = $buttonBar->makeLinkButton()
@@ -345,7 +351,7 @@ class ApiCoreController extends ActionController {
 		$storedFilters = $beUser instanceof BackendUserAuthentication
 			? $beUser->getModuleData(self::TOKEN_FILTER_STATE_KEY, 'ses')
 			: NULL;
-		if ((!\is_array($filters) || $filters === []) && \is_array($storedFilters)) {
+		if (($filters === []) && is_array($storedFilters)) {
 			$filters = $storedFilters;
 		}
 
@@ -356,12 +362,12 @@ class ApiCoreController extends ActionController {
 			'tokenCategory' => trim((string) ($filters['tokenCategory'] ?? 'm2m')),
 		];
 
-		if (!\in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
+		if (!in_array($normalizedFilters['tokenCategory'], ['m2m', 'user', 'refresh'], TRUE)) {
 			$normalizedFilters['tokenCategory'] = 'm2m';
 		}
 		if (
 			$normalizedFilters['status'] !== ''
-			&& !\in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
+			&& !in_array($normalizedFilters['status'], ['active', 'expired', 'revoked'], TRUE)
 		) {
 			$normalizedFilters['status'] = '';
 		}
@@ -375,6 +381,8 @@ class ApiCoreController extends ActionController {
 
 	/**
 	 * @param array<string,mixed> $filters
+	 * @return string
+	 * @throws RouteNotFoundException
 	 */
 	private function buildTokensModuleUrl(array $filters = []): string {
 		$parameters = ['action' => 'tokens'];

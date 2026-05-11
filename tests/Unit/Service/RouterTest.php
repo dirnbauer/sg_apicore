@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use ArrayIterator;
+use SGalinski\SgApiCore\Service\RequestValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
@@ -234,7 +236,7 @@ class RouterTest extends UnitTestCase {
 		foreach ($controllers as $controllerClass) {
 			$instances[] = new $controllerClass();
 		}
-		$controllersIterator = new \ArrayIterator($instances);
+		$controllersIterator = new ArrayIterator($instances);
 		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
@@ -252,7 +254,7 @@ class RouterTest extends UnitTestCase {
 			$languageServiceFactory,
 			$apiRegistry
 		);
-		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
+		$validator = new RequestValidator();
 		$responseService = $this->createStub(ResponseService::class);
 		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {
 			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
