@@ -22,10 +22,12 @@ use SGalinski\SgApiCore\Attribute\ApiMcp;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
+use SGalinski\SgApiCore\Attribute\RequireFullTypoScript;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\ApiTypoScriptSetupService;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\EndpointExecutionGuardService;
 use SGalinski\SgApiCore\Service\LogService;
@@ -187,6 +189,34 @@ class McpToolServiceTest extends UnitTestCase {
 		$this->assertIsArray($postResult);
 		$this->assertSame('GET', $getResult['structuredContent']['method'] ?? NULL);
 		$this->assertSame('POST', $postResult['structuredContent']['method'] ?? NULL);
+	}
+
+	public function testCallToolInitializesTypoScriptWhenEndpointRequiresFullTypoScript(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$apiTypoScriptSetupService = $this->createMock(ApiTypoScriptSetupService::class);
+		$apiTypoScriptSetupService->expects($this->once())
+			->method('ensureTypoScript')
+			->willReturnCallback(static fn (ServerRequestInterface $request): ServerRequestInterface => $request);
+
+		$service = $this->createMcpToolService(
+			[McpTypoScriptMockController::class],
+			$apiRegistry,
+			TRUE,
+			[],
+			FALSE,
+			NULL,
+			[],
+			$apiTypoScriptSetupService
+		);
+		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
+
+		$result = $service->callTool($request, 'sgai', '1', 'sgai_get_need_tsfe', []);
+
+		$this->assertIsArray($result);
+		$this->assertFalse($result['isError']);
+		$this->assertTrue($result['structuredContent']['ok']);
 	}
 
 	public function testListToolsAppliesExactDenylistEntries(): void {
@@ -375,7 +405,8 @@ class McpToolServiceTest extends UnitTestCase {
 		array $denylist,
 		bool $rateLimitEnabled = FALSE,
 		?RateLimitService $rateLimitService = NULL,
-		array $mcpDisabledApis = []
+		array $mcpDisabledApis = [],
+		?ApiTypoScriptSetupService $apiTypoScriptSetupService = NULL
 	): McpToolService {
 		$instances = [];
 		foreach ($controllerClasses as $controllerClass) {
@@ -428,12 +459,15 @@ class McpToolServiceTest extends UnitTestCase {
 			$logService
 		);
 
+		$apiTypoScriptSetupService ??= $this->createStub(ApiTypoScriptSetupService::class);
+
 		return new McpToolService(
 			$endpointDiscoveryService,
 			$apiRegistry,
 			$extensionConfiguration,
 			$router,
-			$endpointExecutionGuardService
+			$endpointExecutionGuardService,
+			$apiTypoScriptSetupService
 		);
 	}
 }
@@ -549,5 +583,13 @@ class McpMultiMethodMockController {
 		return new JsonResponse([
 			'method' => $request->getMethod(),
 		]);
+	}
+}
+
+class McpTypoScriptMockController {
+	#[ApiRoute(path: '/need-tsfe', methods: ['GET'], apiId: 'sgai', version: '1')]
+	#[RequireFullTypoScript]
+	public function needTsfeAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse(['ok' => TRUE]);
 	}
 }

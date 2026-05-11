@@ -25,6 +25,15 @@ Supported JSON-RPC methods:
 - `initialize`
 - `tools/list`
 - `tools/call`
+- `resources/list`
+- `resources/read`
+
+For ChatGPT app/deep-research compatibility, `tools/list` also includes the MCP compatibility tools `search` and
+`fetch` (read-only discovery helpers over exposed endpoint tools). These tools are returned first to stay visible even
+for clients that cap tool lists.
+
+For connector clients that discover via MCP resources, `resources/list` and `resources/read` expose the same endpoint
+catalog as MCP resources.
 
 The `GET` endpoint returns `Content-Type: text/event-stream`, a slow SSE `retry` hint, and an initial SSE comment. It
 does not currently emit server-initiated JSON-RPC requests or notifications, but it keeps clients compatible with MCP

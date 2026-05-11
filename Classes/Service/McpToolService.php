@@ -48,7 +48,8 @@ class McpToolService implements SingletonInterface {
 		protected ApiRegistry $apiRegistry,
 		protected ExtensionConfiguration $extensionConfiguration,
 		protected Router $router,
-		protected EndpointExecutionGuardService $endpointExecutionGuardService
+		protected EndpointExecutionGuardService $endpointExecutionGuardService,
+		protected ApiTypoScriptSetupService $apiTypoScriptSetupService
 	) {
 	}
 
@@ -281,6 +282,11 @@ class McpToolService implements SingletonInterface {
 			->withAttribute('api.version', $version)
 			->withAttribute('api.remainingPath', $remainingPath)
 			->withParsedBody($bodyParameters);
+
+		if (!empty($endpoint['requireFullTypoScript'])) {
+			$internalRequest = $internalRequest->withAttribute('api.requireFullTypoScript', TRUE);
+			$internalRequest = $this->apiTypoScriptSetupService->ensureTypoScript($internalRequest, $tenantContext);
+		}
 
 		if ($bodyParameters !== []) {
 			$encodedBody = json_encode($bodyParameters);
