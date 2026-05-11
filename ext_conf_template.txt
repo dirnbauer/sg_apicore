@@ -60,3 +60,12 @@ rateLimitDefaultBurst = 0
 
 # cat=basic/security; type=int; label=Backend user UID for Auto-CRUD resource writes:Use this BE user for create/update/delete in Auto-CRUD resources. Leave empty or 0 to keep the admin bypass.
 apiResourceWriteBackendUserId = 0
+
+# cat=basic/mcp; type=boolean; label=Enable MCP support globally:Master kill switch for MCP tool exposure and invocation.
+mcpEnabled = 1
+
+# cat=basic/mcp; type=string; label=Disable MCP for APIs (comma-separated API IDs):Example: public,partner
+mcpDisabledApis =
+
+# cat=basic/mcp; type=string; label=Global MCP denylist entries (comma-separated):Match generated endpoint IDs or tool names.
+mcpDenylist =

@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
+use ReflectionException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -56,14 +58,14 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	}
 
 	/**
-	 * Process an incoming server request.
-	 *
-	 * @param ServerRequestInterface $request
-	 * @param RequestHandlerInterface $handler
-	 * @return ResponseInterface
-	 * @throws \ReflectionException
-	 */
-	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
+     * Process an incoming server request.
+     *
+     * @param ServerRequestInterface $request
+     * @param RequestHandlerInterface $handler
+     * @return ResponseInterface
+     * @throws ReflectionException
+     */
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
 		$path = $uri->getPath();
 		$apiPathPrefix = $this->extensionConfiguration->getApiPathPrefix();
@@ -71,7 +73,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		// Respect TYPO3 Language Prefix
 		$language = $request->getAttribute('language');
 		$languagePrefix = NULL;
-		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+		if ($language instanceof SiteLanguage) {
 			$languagePrefix = $language->getBase()->getPath();
 		}
 
@@ -79,7 +81,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		if ($languagePrefix !== NULL && $languagePrefix !== '/' && $languagePrefix !== '') {
 			$languagePrefix = '/' . trim($languagePrefix, '/') . '/';
 			if (str_starts_with($path, $languagePrefix)) {
-				$pathWithoutLanguage = '/' . ltrim(substr($path, \strlen($languagePrefix)), '/');
+				$pathWithoutLanguage = '/' . ltrim(substr($path, strlen($languagePrefix)), '/');
 			}
 		}
 
@@ -124,7 +126,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 		if ($apiId && $version && $this->apiRegistry->hasApi($apiId)) {
 			$apiConfig = $this->apiRegistry->getApi($apiId);
-			if (\in_array($version, $apiConfig['versions'], TRUE)) {
+			if (in_array($version, $apiConfig['versions'], TRUE)) {
 				// Redirect to documentation if the base API URL is called
 				if ($remainingPath === '/' && $request->getMethod() === 'GET') {
 					$redirectPath = rtrim($path, '/') . '/docs/ui';
@@ -136,7 +138,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 
 				$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 				$authMode = $securityConfig['authMode'] ?? 'token';
-				if (\is_array($authMode)) {
+				if (is_array($authMode)) {
 					$authMode = (string) reset($authMode);
 				}
 				$authMode = (string) $authMode;

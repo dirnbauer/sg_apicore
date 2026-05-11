@@ -14,6 +14,10 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Service\LogService;
+use Doctrine\DBAL\Result;
+use RuntimeException;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
@@ -65,14 +69,14 @@ class UserAuthServiceTest extends UnitTestCase {
 	protected $tokenRepository;
 
 	/**
-	 * @var \SGalinski\SgApiCore\Configuration\ExtensionConfiguration|MockObject
-	 */
-	protected $extensionConfiguration;
+     * @var ExtensionConfiguration|MockObject
+     */
+    protected $extensionConfiguration;
 
 	/**
-	 * @var \SGalinski\SgApiCore\Service\LogService|MockObject
-	 */
-	protected $logService;
+     * @var LogService|MockObject
+     */
+    protected $logService;
 
 	/**
 	 * @var JwtService|MockObject
@@ -92,9 +96,9 @@ class UserAuthServiceTest extends UnitTestCase {
 		$this->tokenService = $this->createMock(TokenService::class);
 		$this->tokenRepository = $this->createMock(TokenRepository::class);
 		$this->extensionConfiguration = $this->createMock(
-			\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
+			ExtensionConfiguration::class
 		);
-		$this->logService = $this->createMock(\SGalinski\SgApiCore\Service\LogService::class);
+		$this->logService = $this->createMock(LogService::class);
 		$this->jwtService = $this->createMock(JwtService::class);
 		$this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
@@ -126,7 +130,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$queryBuilder->method('where')->willReturn($queryBuilder);
 		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
 
-		$result = $this->createStub(\Doctrine\DBAL\Result::class);
+		$result = $this->createStub(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn($userRecord);
 
@@ -158,7 +162,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$queryBuilder->method('where')->willReturn($queryBuilder);
 		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
 
-		$result = $this->createStub(\Doctrine\DBAL\Result::class);
+		$result = $this->createStub(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn(FALSE);
 
@@ -222,7 +226,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$thrown = FALSE;
 		try {
 			$this->service->refreshTokens('expired-refresh-token', 'public', '1', $tenantContext);
-		} catch (\RuntimeException $e) {
+		} catch (RuntimeException $e) {
 			$thrown = TRUE;
 			$this->assertSame('Refresh token expired.', $e->getMessage());
 		}

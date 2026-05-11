@@ -11,7 +11,8 @@
  *  the terms of the "GNU General Public License", either version 3
  *  of the License or any later version.
  ***************************************************************/
-
+use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
+use SGalinski\SgApiCore\Middleware\ApiAuthMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiCorsMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
@@ -34,13 +35,13 @@ return [
 			'before' => ['typo3/cms-frontend/frontend-user-authenticator'],
 		],
 		'sgalinski/sg-apicore/api-setup' => [
-			'target' => \SGalinski\SgApiCore\Middleware\ApiSetupMiddleware::class,
+			'target' => ApiSetupMiddleware::class,
 			'description' => 'Initializes the API request context',
 			'after' => ['typo3/cms-frontend/site', 'sgalinski/sg-apicore/legacy-routing'],
 			'before' => ['typo3/cms-frontend/frontend-user-authenticator'],
 		],
 		'sgalinski/sg-apicore/api-auth' => [
-			'target' => \SGalinski\SgApiCore\Middleware\ApiAuthMiddleware::class,
+			'target' => ApiAuthMiddleware::class,
 			'description' => 'Handles API authentication and scope validation',
 			'after' => ['typo3/cms-frontend/frontend-user-authenticator', 'sgalinski/sg-apicore/api-setup'],
 			'before' => ['sgalinski/sg-apicore/api-typoscript'],

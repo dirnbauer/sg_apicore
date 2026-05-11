@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 
+use RuntimeException;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
@@ -194,7 +196,7 @@ class UserAuthControllerTest extends UnitTestCase {
 		]);
 
 		$this->userAuthService->method('refreshTokens')->willThrowException(
-			new \RuntimeException('Invalid refresh token.', 401)
+			new RuntimeException('Invalid refresh token.', 401)
 		);
 
 		$this->responseService->method('createErrorResponse')->willReturnCallback(
@@ -215,7 +217,7 @@ class UserAuthControllerTest extends UnitTestCase {
 				'api.tenant' => $tenantContext,
 				'api.id' => 'legacy',
 				'api.version' => '1',
-				'api.legacyMode' => new \SGalinski\SgApiCore\Attribute\ApiLegacyMode(wrapData: FALSE),
+				'api.legacyMode' => new ApiLegacyMode(wrapData: FALSE),
 				default => NULL
 			};
 		});
@@ -228,7 +230,7 @@ class UserAuthControllerTest extends UnitTestCase {
 
 		$this->responseService->method('createSuccessResponse')->willReturnCallback(
 			function ($data) {
-				return new \TYPO3\CMS\Core\Http\JsonResponse($data, 200);
+				return new JsonResponse($data, 200);
 			}
 		);
 

@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Controller;
 
+use RuntimeException;
 use Doctrine\DBAL\Exception;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
@@ -211,7 +212,7 @@ class UserAuthController {
 
 		try {
 			$tokens = $this->userAuthService->refreshTokens($refreshToken, $apiId, $version, $tenantContext);
-		} catch (\RuntimeException $e) {
+		} catch (RuntimeException $e) {
 			return $this->responseService->createErrorResponse('Unauthorized', $e->getMessage(), 401);
 		}
 

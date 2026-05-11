@@ -72,6 +72,28 @@ APIs, versions, tenants, or auth modes by using the properties of the `ApiRoute`
 #[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'public')]
 ```
 
+### MCP Exposure Control
+
+If you use MCP, you can control per-endpoint exposure with `#[ApiMcp]`:
+
+```php
+use SGalinski\SgApiCore\Attribute\ApiMcp;
+
+#[ApiRoute(path: '/seo/title', methods: ['POST'], apiId: 'sgai', version: '1')]
+#[ApiMcp(name: 'sgai_generate_seo_title')]
+public function seoTitleAction(ServerRequestInterface $request): ResponseInterface {
+	// ...
+}
+
+#[ApiRoute(path: '/internal/debug', methods: ['GET'])]
+#[ApiMcp(exclude: true)]
+public function debugAction(ServerRequestInterface $request): ResponseInterface {
+	// ...
+}
+```
+
+See [MCP Integration](MCP.md) for global kill switch, denylist, and runtime details.
+
 ### Manual Property Mapping & Validation (Extbase Compatibility)
 
 Since this extension avoids the Extbase bootstrap for performance reasons, automatic argument mapping is not available.

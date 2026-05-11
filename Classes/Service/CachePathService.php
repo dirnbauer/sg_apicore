@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use Throwable;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\SingletonInterface;
 
@@ -29,7 +30,7 @@ class CachePathService implements SingletonInterface {
 	public function getFastRouteCacheDirectory(): string {
 		try {
 			$varPath = Environment::getVarPath();
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			$varPath = '';
 		}
 
@@ -62,7 +63,7 @@ class CachePathService implements SingletonInterface {
 			if ($varPath !== '') {
 				$directories[] = rtrim($varPath, '/') . '/cache/sg_apicore';
 			}
-		} catch (\Throwable) {
+		} catch (Throwable) {
 		}
 
 		$directories[] = rtrim(sys_get_temp_dir(), '/') . '/sg_apicore_cache';

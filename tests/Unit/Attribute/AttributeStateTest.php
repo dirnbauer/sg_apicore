@@ -15,6 +15,7 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Attribute;
 
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
+use SGalinski\SgApiCore\Attribute\ApiMcp;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -42,5 +43,17 @@ class AttributeStateTest extends UnitTestCase {
 		$this->assertSame(200, $restored->status);
 		$this->assertSame('OK', $restored->description);
 		$this->assertSame('object', $restored->schema);
+	}
+
+	public function testApiMcpRestoresFromVarExport(): void {
+		$attribute = new ApiMcp(exclude: TRUE, name: 'tool_name', description: 'Description', notes: 'Notes');
+		$export = var_export($attribute, TRUE);
+		$restored = eval('return ' . $export . ';');
+
+		$this->assertInstanceOf(ApiMcp::class, $restored);
+		$this->assertTrue($restored->exclude);
+		$this->assertSame('tool_name', $restored->name);
+		$this->assertSame('Description', $restored->description);
+		$this->assertSame('Notes', $restored->notes);
 	}
 }

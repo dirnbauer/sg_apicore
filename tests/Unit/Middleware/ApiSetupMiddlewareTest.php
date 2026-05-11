@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -72,7 +73,7 @@ class ApiSetupMiddlewareTest extends UnitTestCase {
 		$uri->method('getPath')->willReturn('/en/api/test/v1/foo');
 		$request->method('getUri')->willReturn($uri);
 
-		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
+		$language = $this->createStub(SiteLanguage::class);
 		$base = $this->createStub(UriInterface::class);
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);

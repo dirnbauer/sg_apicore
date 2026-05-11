@@ -76,6 +76,10 @@ While the API-level `authMode` must be a string, individual endpoints can define
 Use the fifth parameter for additional options:
 
 * `rateLimit`: Overrides rate limit settings for this API (see `RateLimiting.md`).
+* `mcpEnabled`: Enables/disables MCP tool exposure for this API (default: `true`).
+* `mcpDenylist`: API-local denylist entries for MCP endpoint IDs or tool names.
+
+See [MCP Integration](MCP.md) for MCP transport and exposure details.
 
 ## Versioning
 

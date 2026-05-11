@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Security;
 
+use ReflectionClass;
+use ReflectionException;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -35,14 +37,14 @@ class LoginProviderChain implements LoginProviderInterface {
 	}
 
 	/**
-	 * @param ServerRequestInterface $request
-	 * @param string $apiId
-	 * @param string $tenantId
-	 * @param array $activeProviders
-	 * @return AuthContext|null
-	 * @throws \ReflectionException
-	 */
-	public function authenticate(
+     * @param ServerRequestInterface $request
+     * @param string $apiId
+     * @param string $tenantId
+     * @param array $activeProviders
+     * @return AuthContext|null
+     * @throws ReflectionException
+     */
+    public function authenticate(
 		ServerRequestInterface $request,
 		string $apiId,
 		?string $tenantId,
@@ -51,8 +53,8 @@ class LoginProviderChain implements LoginProviderInterface {
 		$tenantId ??= '';
 		foreach ($this->providers as $provider) {
 			if (!empty($activeProviders)) {
-				$className = \get_class($provider);
-				$shortName = strtolower((new \ReflectionClass($className))->getShortName());
+				$className = get_class($provider);
+				$shortName = strtolower((new ReflectionClass($className))->getShortName());
 				// Allow matching by full class name or simplified short name (e.g. 'beareropaquetokenprovider')
 				$match = FALSE;
 				foreach ($activeProviders as $activeProvider) {
