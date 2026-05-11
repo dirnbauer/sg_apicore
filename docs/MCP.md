@@ -47,13 +47,13 @@ Tool exposure is resolved in this order:
 1. Global kill switch (`mcpEnabled`) in extension configuration.
 2. Global API deny list (`mcpDisabledApis`) in extension configuration.
 3. API-level MCP settings from `ApiRegistry::registerApi(..., $options)`:
-   - `mcpEnabled` (bool, default `true`)
-   - `mcpDenylist` (array of endpoint IDs/tool names, exact or wildcard)
+    - `mcpEnabled` (bool, default `true`)
+    - `mcpDenylist` (array of endpoint IDs/tool names, exact or wildcard)
 4. Endpoint exclusion attribute: `#[ApiMcp(exclude: true)]`
 5. Convention-based exclusions:
-   - `/docs*`
-   - `/demo*`
-   - `/internal*`
+    - `/docs*`
+    - `/demo*`
+    - `/internal*`
 
 ## Configuration (Extension)
 
@@ -137,10 +137,10 @@ Validation stays enforced by `RequestValidator`.
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": "init-1",
-  "method": "initialize",
-  "params": {}
+    "jsonrpc": "2.0",
+    "id": "init-1",
+    "method": "initialize",
+    "params": {}
 }
 ```
 
@@ -148,10 +148,10 @@ Validation stays enforced by `RequestValidator`.
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": "tools-1",
-  "method": "tools/list",
-  "params": {}
+    "jsonrpc": "2.0",
+    "id": "tools-1",
+    "method": "tools/list",
+    "params": {}
 }
 ```
 
@@ -159,16 +159,16 @@ Validation stays enforced by `RequestValidator`.
 
 ```json
 {
-  "jsonrpc": "2.0",
-  "id": "call-1",
-  "method": "tools/call",
-  "params": {
-    "name": "sgai_generate_seo_title",
-    "arguments": {
-      "context": "<h1>About us</h1><p>TYPO3 + AI experts</p>",
-      "language": "en"
+    "jsonrpc": "2.0",
+    "id": "call-1",
+    "method": "tools/call",
+    "params": {
+        "name": "sgai_generate_seo_title",
+        "arguments": {
+            "context": "<h1>About us</h1><p>TYPO3 + AI experts</p>",
+            "language": "en"
+        }
     }
-  }
 }
 ```
 
@@ -178,6 +178,63 @@ Successful tool calls return the endpoint payload in two places:
 - `structuredContent`: the same payload as structured JSON for clients that consume typed tool output.
 
 Large string values are truncated only in `content[0].text`; `structuredContent` keeps the complete endpoint payload.
+
+## cURL Examples
+
+Set variables once:
+
+```bash
+MCP_URL="https://<host>/api/<apiId>/v<version>/mcp"
+MCP_TOKEN="<token>"
+```
+
+### initialize
+
+```bash
+curl -sS -X POST "$MCP_URL" \
+  -H "Authorization: Bearer $MCP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":"init-1","method":"initialize","params":{}}' | jq
+```
+
+### tools/list
+
+```bash
+curl -sS -X POST "$MCP_URL" \
+  -H "Authorization: Bearer $MCP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":"tools-1","method":"tools/list","params":{}}' | jq
+```
+
+### tools/call
+
+```bash
+curl -sS -X POST "$MCP_URL" \
+  -H "Authorization: Bearer $MCP_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc":"2.0",
+    "id":"call-1",
+    "method":"tools/call",
+    "params":{
+      "name":"sgai_generate_seo_title",
+      "arguments":{
+        "context":"<h1>About us</h1><p>TYPO3 + AI experts</p>",
+        "language":"en"
+      }
+    }
+  }' | jq
+```
+
+### Open optional SSE stream (`GET /mcp`)
+
+```bash
+curl -i -N "$MCP_URL" \
+  -H "Authorization: Bearer $MCP_TOKEN" \
+  -H "Accept: text/event-stream"
+```
+
+Important: if `Accept: text/event-stream` is missing, the endpoint returns `406 Not Acceptable`.
 
 ## Client Integration Patterns
 
@@ -193,12 +250,12 @@ If a client supports only `stdio`, use a small bridge/proxy that forwards stdio 
 
 ```json
 {
-  "name": "my-api",
-  "transport": "http",
-  "url": "https://<host>/api/<apiId>/v<version>/mcp",
-  "headers": {
-    "Authorization": "Bearer <token>"
-  }
+    "name": "my-api",
+    "transport": "http",
+    "url": "https://<host>/api/<apiId>/v<version>/mcp",
+    "headers": {
+        "Authorization": "Bearer <token>"
+    }
 }
 ```
 
@@ -206,15 +263,15 @@ If a client supports only `stdio`, use a small bridge/proxy that forwards stdio 
 
 ```json
 {
-  "mcpServers": {
-    "my-api": {
-      "transport": "http",
-      "url": "https://<host>/api/<apiId>/v<version>/mcp",
-      "headers": {
-        "Authorization": "Bearer <token>"
-      }
+    "mcpServers": {
+        "my-api": {
+            "transport": "http",
+            "url": "https://<host>/api/<apiId>/v<version>/mcp",
+            "headers": {
+                "Authorization": "Bearer <token>"
+            }
+        }
     }
-  }
 }
 ```
 
