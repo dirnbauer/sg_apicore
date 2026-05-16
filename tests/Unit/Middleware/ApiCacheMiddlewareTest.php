@@ -32,6 +32,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for ApiCacheMiddleware
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ApiCacheMiddlewareTest extends UnitTestCase {
 	/**
 	 * @var bool
@@ -55,15 +56,15 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		$this->discoveryService = $this->createStub(EndpointDiscoveryService::class);
-		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
+		$this->discoveryService = $this->createMock(EndpointDiscoveryService::class);
+		$this->pathAnalysisService = $this->createMock(PathAnalysisService::class);
 	}
 
 	/**
 	 * @test
 	 */
 	public function testProcessReturnsCachedResponseIfAvailable(): void {
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
 		$request = new ServerRequest('https://example.com/api/test/v1/foo', 'GET');
@@ -85,7 +86,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			'body' => '{"cached": true}',
 		]);
 
-		$handler = $this->createStub(RequestHandlerInterface::class);
+		$handler = $this->createMock(RequestHandlerInterface::class);
 
 		$response = $middleware->process($request, $handler);
 
@@ -118,7 +119,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cache->expects($this->once())->method('set');
 
-		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock = $this->createMock(ResponseInterface::class);
 		$responseMock->method('getStatusCode')->willReturn(200);
 		$responseMock->method('getHeaderLine')->with('Content-Type')->willReturn('application/json');
 		$stream = new Stream('php://temp', 'wb+');
@@ -126,7 +127,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$responseMock->method('getBody')->willReturn($stream);
 		$responseMock->method('withHeader')->willReturnSelf();
 
-		$handler = $this->createStub(RequestHandlerInterface::class);
+		$handler = $this->createMock(RequestHandlerInterface::class);
 		$handler->method('handle')->willReturn($responseMock);
 
 		$middleware->process($request, $handler);
@@ -154,7 +155,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 
 		$cache->expects($this->once())->method('flushByTags')->with(['test']);
 
-		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock = $this->createMock(ResponseInterface::class);
 		$responseMock->method('getStatusCode')->willReturn(201);
 
 		$handler = $this->createMock(RequestHandlerInterface::class);
@@ -167,7 +168,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache = $this->createMock(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 		$request->method('getAttribute')->willReturnMap([
 			['api.id', 'test'],
@@ -175,7 +176,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			['api.remainingPath', '/test'],
 			['api.auth', NULL], // NOT AUTHENTICATED
 		]);
-		$uri = $this->createStub(UriInterface::class);
+		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/test/v1/test');
 		$request->method('getUri')->willReturn($uri);
 
@@ -191,15 +192,15 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache->expects($this->never())->method('get');
 
 		$handler = $this->createMock(RequestHandlerInterface::class);
-		$handler->expects($this->once())->method('handle')->willReturn($this->createStub(ResponseInterface::class));
+		$handler->expects($this->once())->method('handle')->willReturn($this->createMock(ResponseInterface::class));
 
 		$middleware->process($request, $handler);
 	}
 
 	protected function createMiddlewareWithCache(FrontendInterface $cache): ApiCacheMiddleware {
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isCacheEnabled')->willReturn(TRUE);
 
 		return new ApiCacheMiddleware(

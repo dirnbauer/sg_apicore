@@ -24,6 +24,7 @@ use TYPO3\CMS\Core\Context\UserAspect;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class BackendUserProviderTest extends UnitTestCase {
 	protected bool $resetSingletonInstances = TRUE;
 

@@ -24,6 +24,7 @@ use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ApiCorsMiddlewareTest extends UnitTestCase {
 	protected ExtensionConfiguration|MockObject $extensionConfiguration;
 	protected ApiRegistry|MockObject $apiRegistry;

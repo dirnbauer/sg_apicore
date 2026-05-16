@@ -33,18 +33,19 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for EndpointDiscoveryService
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class EndpointDiscoveryServiceTest extends UnitTestCase {
 	public function testGetAllEndpointsReturnsCompleteData(): void {
 		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
-		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry = $this->createMock(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 
 		$service = new EndpointDiscoveryService(
 			$controllers,
@@ -88,12 +89,12 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 
 	public function testDiscoverySignatureChangesOnResourceChange(): void {
 		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 
 		$resourceRegistry = new ResourceRegistry();
 		$resourceRegistry->registerResource('public', 'tt_content', '/contents', [
@@ -141,18 +142,18 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			],
 		];
 
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$languageService = $this->createStub(LanguageService::class);
+		$languageService = $this->createMock(LanguageService::class);
 		$languageService->method('sL')->with('LLL:EXT:test/Resources/Private/Language/locallang_db.xlf:tx_test.title')
 			->willReturn('Translated Title');
 
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 
 		$service = new EndpointDiscoveryService(
 			$controllers,

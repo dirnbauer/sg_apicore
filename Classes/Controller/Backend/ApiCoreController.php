@@ -30,8 +30,10 @@ use TYPO3\CMS\Backend\Template\ModuleTemplate;
 use TYPO3\CMS\Backend\Template\ModuleTemplateFactory;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
+use TYPO3\CMS\Core\FormProtection\FormProtectionFactory;
 use TYPO3\CMS\Core\Imaging\IconFactory;
 use TYPO3\CMS\Core\Imaging\IconSize;
+use TYPO3\CMS\Core\Type\ContextualFeedbackSeverity;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -42,6 +44,8 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 #[AsController]
 class ApiCoreController extends ActionController {
 	private const string TOKEN_FILTER_STATE_KEY = 'sg_apicore_tokens_filters';
+	private const string TOKEN_FORM_PROTECTION_FORM_NAME = 'sg_apicore_tokens';
+	private const string TOKEN_FORM_PROTECTION_ACTION = 'change';
 	private const string TOKEN_MODULE_PATH = '/typo3/module/system/sgapicore';
 
 	/**
@@ -50,6 +54,7 @@ class ApiCoreController extends ActionController {
 	 * @param TokenService $tokenService
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
 	 * @param ModuleTemplateFactory $moduleTemplateFactory
+	 * @param FormProtectionFactory $formProtectionFactory
 	 * @param IconFactory $iconFactory
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @param RateLimitDashboardService $rateLimitDashboardService
@@ -62,6 +67,7 @@ class ApiCoreController extends ActionController {
 		protected readonly EndpointDiscoveryService $endpointDiscoveryService,
 		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
 		protected readonly BackendUriBuilder $backendUriBuilder,
+		protected readonly FormProtectionFactory $formProtectionFactory,
 		protected readonly IconFactory $iconFactory,
 		protected readonly ExtensionConfiguration $extensionConfiguration,
 		protected readonly RateLimitDashboardService $rateLimitDashboardService,
@@ -127,6 +133,7 @@ class ApiCoreController extends ActionController {
 		$moduleTemplate->assign('filters', $filters);
 		$moduleTemplate->assign('hasUserAccessTokens', $hasUserAccessTokens);
 		$moduleTemplate->assign('tokenListReturnUrl', $this->buildTokensModuleUrl($filters));
+		$moduleTemplate->assign('formToken', $this->generateTokenFormToken());
 		$moduleTemplate->assign('currentTab', 'tokens');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Tokens');
 	}
@@ -152,8 +159,13 @@ class ApiCoreController extends ActionController {
 		string $scopes = '',
 		int $expiresDays = 0,
 		int $feUserId = 0,
-		string $returnUrl = ''
+		string $returnUrl = '',
+		string $formToken = ''
 	): ResponseInterface {
+		if (!$this->validateTokenFormToken($formToken)) {
+			return $this->createInvalidTokenFormResponse($returnUrl);
+		}
+
 		$newTokenKey = $tokenKey !== '' ? $tokenKey : $this->tokenService->generateRandomToken();
 		$expiresAt = $expiresDays > 0 ? time() + ($expiresDays * 24 * 3600) : 0;
 		$userId = $feUserId > 0 ? $feUserId : NULL;
@@ -194,7 +206,11 @@ class ApiCoreController extends ActionController {
 	 * @param int $uid
 	 * @return ResponseInterface
 	 */
-	public function revokeTokenAction(int $uid, string $returnUrl = ''): ResponseInterface {
+	public function revokeTokenAction(int $uid, string $returnUrl = '', string $formToken = ''): ResponseInterface {
+		if (!$this->validateTokenFormToken($formToken)) {
+			return $this->createInvalidTokenFormResponse($returnUrl);
+		}
+
 		$this->tokenRepository->revoke($uid);
 		$this->addFlashMessage('Token revoked successfully.');
 		return $this->redirectToUri($this->resolveTokenReturnUrl($returnUrl));
@@ -207,7 +223,11 @@ class ApiCoreController extends ActionController {
 	 * @return ResponseInterface
 	 * @throws RandomException
 	 */
-	public function regenerateTokenAction(int $uid, string $returnUrl = ''): ResponseInterface {
+	public function regenerateTokenAction(int $uid, string $returnUrl = '', string $formToken = ''): ResponseInterface {
+		if (!$this->validateTokenFormToken($formToken)) {
+			return $this->createInvalidTokenFormResponse($returnUrl);
+		}
+
 		$newTokenKey = $this->tokenService->generateRandomToken();
 		$this->tokenRepository->updateTokenHash($uid, hash('sha256', $newTokenKey));
 
@@ -392,5 +412,29 @@ class ApiCoreController extends ActionController {
 		}
 
 		return $trimmedReturnUrl;
+	}
+
+	private function generateTokenFormToken(): string {
+		return $this->formProtectionFactory->createFromRequest($this->request)->generateToken(
+			self::TOKEN_FORM_PROTECTION_FORM_NAME,
+			self::TOKEN_FORM_PROTECTION_ACTION
+		);
+	}
+
+	private function validateTokenFormToken(string $formToken): bool {
+		return $this->formProtectionFactory->createFromRequest($this->request)->validateToken(
+			$formToken,
+			self::TOKEN_FORM_PROTECTION_FORM_NAME,
+			self::TOKEN_FORM_PROTECTION_ACTION
+		);
+	}
+
+	private function createInvalidTokenFormResponse(string $returnUrl): ResponseInterface {
+		$this->addFlashMessage(
+			'Invalid request token. Please retry the token action.',
+			'Request rejected',
+			ContextualFeedbackSeverity::ERROR
+		);
+		return $this->redirectToUri($this->resolveTokenReturnUrl($returnUrl));
 	}
 }

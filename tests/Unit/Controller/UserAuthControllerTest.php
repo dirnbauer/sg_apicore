@@ -29,6 +29,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for UserAuthController
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class UserAuthControllerTest extends UnitTestCase {
 	/**
 	 * @var UserAuthController
@@ -78,7 +79,7 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testLoginSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'testpass']);
 		$tenantContext = new TenantContext('test-tenant');
 		$request->method('getAttribute')->willReturnMap([
@@ -142,7 +143,7 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testLoginInvalidCredentials(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['username' => 'testuser', 'password' => 'wrongpass']);
 
 		$this->userAuthService->method('authenticateUser')->willReturn(NULL);
@@ -157,7 +158,7 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testRefreshSuccessful(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['refresh_token' => 'valid-refresh-token']);
 		$request->method('getAttribute')->willReturnMap([
 			['api.tenant', NULL, new TenantContext('test-tenant')],
@@ -185,7 +186,7 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testRefreshFails(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getParsedBody')->willReturn(['refresh_token' => 'invalid-token']);
 		$request->method('getAttribute')->willReturnMap([
 			['api.tenant', NULL, new TenantContext('test-tenant')],
@@ -240,7 +241,7 @@ class UserAuthControllerTest extends UnitTestCase {
 	}
 
 	public function testLegacyLoginFailsWithWrongApiId(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getAttribute')->with('api.id')->willReturn('not-legacy');
 
 		$this->responseService->method('createErrorResponse')->willReturnCallback(

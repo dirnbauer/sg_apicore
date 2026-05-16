@@ -40,6 +40,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for ResourceController
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ResourceControllerTest extends UnitTestCase {
 	protected ResourceController $controller;
 	protected ConnectionPool|MockObject $connectionPool;
@@ -54,23 +55,24 @@ class ResourceControllerTest extends UnitTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		$this->resetSingletonInstances = TRUE;
-		$this->connectionPool = $this->createStub(ConnectionPool::class);
-		$this->tcaMapper = $this->createStub(TcaMapper::class);
-		$this->responseService = $this->createStub(ResponseService::class);
-		$this->paginationService = $this->createStub(PaginationService::class);
-		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$this->connectionPool = $this->createMock(ConnectionPool::class);
+		$this->tcaMapper = $this->createMock(TcaMapper::class);
+		$this->responseService = $this->createMock(ResponseService::class);
+		$this->paginationService = $this->createMock(PaginationService::class);
+		$this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$this->extensionConfiguration->method('getApiResourceWriteBackendUserId')->willReturn(0);
-		$this->languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		$this->typo3Version = $this->createStub(Typo3Version::class);
+		$this->extensionConfiguration->method('getApiResourceWriteWorkspaceId')->willReturn(-1);
+		$this->languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$this->typo3Version = $this->createMock(Typo3Version::class);
 
 		// Mock LogManager to avoid singleton issues in tests
-		$logManager = $this->createStub(LogManager::class);
+		$logManager = $this->createMock(LogManager::class);
 		GeneralUtility::setSingletonInstance(LogManager::class, $logManager);
 
 		// Mock BE_USER
-		$GLOBALS['BE_USER'] = $this->createStub(BackendUserAuthentication::class);
+		$GLOBALS['BE_USER'] = $this->createMock(BackendUserAuthentication::class);
 
-		$this->logService = $this->createStub(LogService::class);
+		$this->logService = $this->createMock(LogService::class);
 
 		$this->controller = new ResourceController(
 			$this->connectionPool,
@@ -92,7 +94,7 @@ class ResourceControllerTest extends UnitTestCase {
 
 	public function testListActionReturnsMappedRecords(): void {
 		$GLOBALS['TCA']['tt_content']['columns']['header'] = [];
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'readFields' => ['header'],
@@ -100,18 +102,18 @@ class ResourceControllerTest extends UnitTestCase {
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 		$request->method('getQueryParams')->willReturn([]);
 
-		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$queryBuilder = $this->createMock(QueryBuilder::class);
 		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
 
 		$queryBuilder->method('select')->willReturn($queryBuilder);
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('setFirstResult')->willReturn($queryBuilder);
 		$queryBuilder->method('setMaxResults')->willReturn($queryBuilder);
-		$concreteQueryBuilder = $this->createStub(\Doctrine\DBAL\Query\QueryBuilder::class);
+		$concreteQueryBuilder = $this->createMock(\Doctrine\DBAL\Query\QueryBuilder::class);
 		$queryBuilder->method('getConcreteQueryBuilder')->willReturn($concreteQueryBuilder);
 		$queryBuilder->method('count')->willReturn($queryBuilder);
 
-		$result = $this->createStub(Result::class);
+		$result = $this->createMock(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$records = [['uid' => 1, 'header' => 'Test']];
 		$result->method('fetchAllAssociative')->willReturn($records);
@@ -132,7 +134,7 @@ class ResourceControllerTest extends UnitTestCase {
 
 	public function testListActionFiltersWithArray(): void {
 		$GLOBALS['TCA']['tt_content']['columns']['header'] = [];
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'readFields' => ['header'],
@@ -150,7 +152,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$queryBuilder->method('setFirstResult')->willReturn($queryBuilder);
 		$queryBuilder->method('setMaxResults')->willReturn($queryBuilder);
 		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
-		$concreteQueryBuilder = $this->createStub(\Doctrine\DBAL\Query\QueryBuilder::class);
+		$concreteQueryBuilder = $this->createMock(\Doctrine\DBAL\Query\QueryBuilder::class);
 		$queryBuilder->method('getConcreteQueryBuilder')->willReturn($concreteQueryBuilder);
 
 		$expressionBuilder->expects($this->atLeastOnce())
@@ -163,7 +165,7 @@ class ResourceControllerTest extends UnitTestCase {
 			->with('header = :ptr')
 			->willReturn($queryBuilder);
 
-		$result = $this->createStub(Result::class);
+		$result = $this->createMock(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$this->paginationService->method('getPaginationParams')->willReturn(['offset' => 0, 'limit' => 10]);
 
@@ -172,7 +174,7 @@ class ResourceControllerTest extends UnitTestCase {
 
 	public function testListActionFiltersWithString(): void {
 		$GLOBALS['TCA']['tt_content']['columns']['header'] = [];
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'readFields' => ['header'],
@@ -191,7 +193,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$queryBuilder->method('setFirstResult')->willReturn($queryBuilder);
 		$queryBuilder->method('setMaxResults')->willReturn($queryBuilder);
 		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
-		$concreteQueryBuilder = $this->createStub(\Doctrine\DBAL\Query\QueryBuilder::class);
+		$concreteQueryBuilder = $this->createMock(\Doctrine\DBAL\Query\QueryBuilder::class);
 		$queryBuilder->method('getConcreteQueryBuilder')->willReturn($concreteQueryBuilder);
 
 		$expressionBuilder->expects($this->atLeastOnce())
@@ -204,7 +206,7 @@ class ResourceControllerTest extends UnitTestCase {
 			->with('header = :ptr')
 			->willReturn($queryBuilder);
 
-		$result = $this->createStub(Result::class);
+		$result = $this->createMock(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$this->paginationService->method('getPaginationParams')->willReturn(['offset' => 0, 'limit' => 10]);
 
@@ -212,7 +214,7 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testGetActionReturns404IfNotFound(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'idField' => 'uid',
@@ -220,14 +222,14 @@ class ResourceControllerTest extends UnitTestCase {
 		];
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 
-		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$queryBuilder = $this->createMock(QueryBuilder::class);
 		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
 		$queryBuilder->method('select')->willReturn($queryBuilder);
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('where')->willReturn($queryBuilder);
-		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+		$queryBuilder->method('expr')->willReturn($this->createMock(ExpressionBuilder::class));
 
-		$result = $this->createStub(Result::class);
+		$result = $this->createMock(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn(FALSE);
 
@@ -241,7 +243,7 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testCreateActionUsesProvidedPid(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'writeFields' => ['header'],
@@ -274,13 +276,13 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testCreateActionUsesTenantRootPageIdIfPidMissing(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'writeFields' => ['header'],
 		];
 
-		$site = $this->createStub(Site::class);
+		$site = $this->createMock(Site::class);
 		$site->method('getRootPageId')->willReturn(456);
 		$tenantContext = new TenantContext('test-tenant', NULL, NULL, $site);
 
@@ -315,7 +317,7 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testUpdateActionUpdatesCorrectRecord(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$resourceConfig = [
 			'table' => 'tt_content',
 			'idField' => 'uid',
@@ -325,14 +327,14 @@ class ResourceControllerTest extends UnitTestCase {
 		$request->method('getAttribute')->with('api.resource')->willReturn($resourceConfig);
 		$request->method('getParsedBody')->willReturn(['header' => 'Updated Header']);
 
-		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$queryBuilder = $this->createMock(QueryBuilder::class);
 		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
 		$queryBuilder->method('select')->willReturn($queryBuilder);
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('where')->willReturn($queryBuilder);
-		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+		$queryBuilder->method('expr')->willReturn($this->createMock(ExpressionBuilder::class));
 
-		$result = $this->createStub(Result::class);
+		$result = $this->createMock(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchOne')->willReturn(4471);
 

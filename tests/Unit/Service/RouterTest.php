@@ -36,9 +36,10 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for Router
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class RouterTest extends UnitTestCase {
 	public function testDispatchMatchesRouteAndCallsController(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
 		$router = $this->createRouter([MockController::class]);
@@ -51,7 +52,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchReturns404ForUnmatchedRoute(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
 		$router = $this->createRouter([MockController::class]);
@@ -62,7 +63,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchFiltersByApiId(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
 		$router = $this->createRouter([MockController::class]);
@@ -159,7 +160,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchAllowsPublicEndpointInUserApi(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
 		$router = $this->createRouter([MockController::class]);
@@ -170,7 +171,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchFiltersHybridAuthModeCorrectly(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
 		$router = $this->createRouter([MockHybridRouterController::class]);
@@ -185,7 +186,7 @@ class RouterTest extends UnitTestCase {
 	}
 
 	public function testDispatchFiltersMixedAuthModeCorrectly(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 
 		$router = $this->createRouter([MockMixedRouterController::class]);
@@ -235,15 +236,15 @@ class RouterTest extends UnitTestCase {
 			$instances[] = new $controllerClass();
 		}
 		$controllersIterator = new \ArrayIterator($instances);
-		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry = $this->createMock(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 
 		$discoveryService = new EndpointDiscoveryService(
 			$controllersIterator,
@@ -253,7 +254,7 @@ class RouterTest extends UnitTestCase {
 			$apiRegistry
 		);
 		$validator = new \SGalinski\SgApiCore\Service\RequestValidator();
-		$responseService = $this->createStub(ResponseService::class);
+		$responseService = $this->createMock(ResponseService::class);
 		$responseService->method('createErrorResponse')->willReturnCallback(function ($title, $detail, $status) {
 			return new JsonResponse(['title' => $title, 'detail' => $detail], $status);
 		});
@@ -302,7 +303,7 @@ class MockController {
  * Mock controller for hybrid auth
  */
 class MockHybridRouterController {
-	#[ApiRoute(path: '/hybrid', methods: ['GET'], authMode: ['user', 'public'])]
+	#[ApiRoute(path: '/hybrid', methods: ['GET'], apiId: 'user', authMode: ['user', 'public'])]
 	public function hybridAction(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse(['matched' => TRUE]);
 	}

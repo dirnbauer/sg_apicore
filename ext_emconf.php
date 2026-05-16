@@ -8,11 +8,11 @@ $EM_CONF['sg_apicore'] = [
 	'author_email' => 'support@sgalinski.de',
 	'author_company' => 'sgalinski Internet Services (https://www.sgalinski.de)',
 	'state' => 'stable',
-	'version' => '1.20.0',
+	'version' => '14.0.0',
 	'constraints' => [
 		'depends' => [
 			'typo3' => '14.3.0-14.9.99',
-			'php' => '8.3.0-8.4.99',
+			'php' => '8.2.0-8.5.99',
 		],
 		'conflicts' => [],
 		'suggests' => [],

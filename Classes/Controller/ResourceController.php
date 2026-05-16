@@ -244,7 +244,10 @@ class ResourceController {
 		$this->expandFileReferencePayloads($tableName, 'NEW1', $dataMap, (int) $filteredData['pid']);
 
 		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
-		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
+		$errorResponse = $this->initializeBackendUser(
+			$writeBackendUserId,
+			$this->extensionConfiguration->getApiResourceWriteWorkspaceId()
+		);
 		if ($errorResponse instanceof ResponseInterface) {
 			return $errorResponse;
 		}
@@ -314,7 +317,10 @@ class ResourceController {
 		$this->expandFileReferencePayloads($tableName, $uid, $dataMap, (int) ($filteredData['pid'] ?? $record['pid'] ?? 0));
 
 		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
-		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
+		$errorResponse = $this->initializeBackendUser(
+			$writeBackendUserId,
+			$this->extensionConfiguration->getApiResourceWriteWorkspaceId()
+		);
 		if ($errorResponse instanceof ResponseInterface) {
 			return $errorResponse;
 		}
@@ -369,7 +375,10 @@ class ResourceController {
 		];
 
 		$writeBackendUserId = $this->extensionConfiguration->getApiResourceWriteBackendUserId();
-		$errorResponse = $this->initializeBackendUser($writeBackendUserId);
+		$errorResponse = $this->initializeBackendUser(
+			$writeBackendUserId,
+			$this->extensionConfiguration->getApiResourceWriteWorkspaceId()
+		);
 		if ($errorResponse instanceof ResponseInterface) {
 			return $errorResponse;
 		}
@@ -401,10 +410,13 @@ class ResourceController {
 	 * Initializes the backend user context for resource write operations
 	 *
 	 * @param int $writeBackendUserId
+	 * @param int $writeWorkspaceId
 	 * @return ResponseInterface|null
 	 */
-	protected function initializeBackendUser(int $writeBackendUserId): ?ResponseInterface {
-		if (($GLOBALS['BE_USER'] ?? NULL) instanceof BackendUserAuthentication) {
+	protected function initializeBackendUser(int $writeBackendUserId, int $writeWorkspaceId): ?ResponseInterface {
+		$existingBackendUser = $GLOBALS['BE_USER'] ?? NULL;
+		if ($existingBackendUser instanceof BackendUserAuthentication) {
+			$this->applyWorkspace($existingBackendUser, $writeWorkspaceId);
 			return NULL;
 		}
 
@@ -421,8 +433,8 @@ class ResourceController {
 			}
 
 			$backendUser->fetchGroupData();
-			$backendUser->workspace = 0;
-			$backendUser->workspaceRec = [];
+			$backendUser->workspaceInit();
+			$this->applyWorkspace($backendUser, $writeWorkspaceId);
 			$GLOBALS['BE_USER'] = $backendUser;
 			$this->initializeLanguageService();
 			return NULL;
@@ -430,11 +442,18 @@ class ResourceController {
 
 		$backendUser->user['admin'] = 1;
 		$backendUser->user['uid'] = 0;
-		$backendUser->workspace = 0;
-		$backendUser->workspaceRec = [];
+		$this->applyWorkspace($backendUser, $writeWorkspaceId);
 		$GLOBALS['BE_USER'] = $backendUser;
 		$this->initializeLanguageService();
 		return NULL;
+	}
+
+	protected function applyWorkspace(BackendUserAuthentication $backendUser, int $writeWorkspaceId): void {
+		if ($writeWorkspaceId < 0) {
+			return;
+		}
+
+		$backendUser->setWorkspace($writeWorkspaceId);
 	}
 
 	/**

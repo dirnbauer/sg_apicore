@@ -257,4 +257,14 @@ class ExtensionConfiguration implements SingletonInterface {
 	public function getApiResourceWriteBackendUserId(): int {
 		return (int) $this->get('apiResourceWriteBackendUserId', 0);
 	}
+
+	/**
+	 * Returns the workspace uid for Auto-CRUD resource write operations.
+	 * A value below 0 keeps the current/default backend user workspace.
+	 *
+	 * @return int
+	 */
+	public function getApiResourceWriteWorkspaceId(): int {
+		return (int) $this->get('apiResourceWriteWorkspaceId', -1);
+	}
 }

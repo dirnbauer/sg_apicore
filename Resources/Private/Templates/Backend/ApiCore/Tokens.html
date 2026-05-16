@@ -112,20 +112,28 @@
 								Edit
 							</a>
 							<f:if condition="!{token.revoked_at}">
-								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'regenerateToken', uid: token.uid, returnUrl: resolvedTokenListReturnUrl})}"
-								   class="btn btn-primary btn-sm"
-								   onclick="return confirm('Are you sure you want to regenerate the key? The old key will stop working immediately!')"
-								   title="Generate new plaintext key">
-									<core:icon identifier="actions-refresh" size="small"/>
-									Re-generate
-								</a>
-								<a href="{f:be.uri(route: 'system_SgApiCore', parameters: {action: 'revokeToken', uid: token.uid, returnUrl: resolvedTokenListReturnUrl})}"
-								   class="btn btn-danger btn-sm"
-								   onclick="return confirm('Are you sure you want to revoke this token?')"
-								   title="Deactivate token">
-									<core:icon identifier="actions-edit-delete" size="small"/>
-									Revoke
-								</a>
+								<f:form action="regenerateToken" method="POST" class="d-inline">
+									<f:form.hidden name="uid" value="{token.uid}"/>
+									<f:form.hidden name="returnUrl" value="{resolvedTokenListReturnUrl}"/>
+									<f:form.hidden name="formToken" value="{formToken}"/>
+									<button class="btn btn-primary btn-sm" type="submit"
+											onclick="return confirm('Are you sure you want to regenerate the key? The old key will stop working immediately!')"
+											title="Generate new plaintext key">
+										<core:icon identifier="actions-refresh" size="small"/>
+										Re-generate
+									</button>
+								</f:form>
+								<f:form action="revokeToken" method="POST" class="d-inline">
+									<f:form.hidden name="uid" value="{token.uid}"/>
+									<f:form.hidden name="returnUrl" value="{resolvedTokenListReturnUrl}"/>
+									<f:form.hidden name="formToken" value="{formToken}"/>
+									<button class="btn btn-danger btn-sm" type="submit"
+											onclick="return confirm('Are you sure you want to revoke this token?')"
+											title="Deactivate token">
+										<core:icon identifier="actions-edit-delete" size="small"/>
+										Revoke
+									</button>
+								</f:form>
 							</f:if>
 						</td>
 					</tr>
@@ -151,6 +159,7 @@
 				<div class="card-body">
 					<f:form action="createToken" name="newToken" method="POST">
 						<f:form.hidden name="returnUrl" value="{resolvedTokenListReturnUrl}"/>
+						<f:form.hidden name="formToken" value="{formToken}"/>
 						<div class="form-group">
 							<label for="apiId">API ID</label>
 							<f:form.select name="apiId" options="{apis}" class="form-control"/>

@@ -22,6 +22,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for LogService
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class LogServiceTest extends UnitTestCase {
 	/**
 	 * @var LogService

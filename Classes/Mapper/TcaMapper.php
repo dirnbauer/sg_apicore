@@ -112,7 +112,6 @@ class TcaMapper implements SingletonInterface {
 			't3ver_stage',
 			't3ver_count',
 			't3ver_tstamp',
-			't3ver_move_id',
 			't3_origuid',
 			'l10n_parent',
 			'l10n_diffsource',
@@ -216,7 +215,6 @@ class TcaMapper implements SingletonInterface {
 			't3ver_stage',
 			't3ver_count',
 			't3ver_tstamp',
-			't3ver_move_id',
 			't3_origuid',
 			'l10n_parent',
 			'l10n_diffsource',
@@ -554,36 +552,18 @@ class TcaMapper implements SingletonInterface {
 		}
 
 		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
-		if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+		if (!$request instanceof ServerRequestInterface) {
+			$request = NULL;
+		}
+		if ($request instanceof ServerRequestInterface) {
 			$this->contentObjectRenderer->setRequest($request);
 		}
 		$this->contentObjectRenderer->start([]);
 
-		$this->ensureParseFuncConfiguration();
-		$parseFuncConf = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		if (empty($parseFuncConf) && $request instanceof \Psr\Http\Message\ServerRequestInterface) {
-			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
-			if ($frontendTypoScript instanceof \TYPO3\CMS\Core\TypoScript\FrontendTypoScript) {
-				$setup = $frontendTypoScript->getSetupArray();
-				$parseFuncConf = $setup['lib.']['parseFunc_RTE.'] ?? [];
-				if (empty($parseFuncConf)) {
-					$parseFuncConf = $setup['lib.']['parseFunc.'] ?? [];
-				}
-			}
-		}
+		$parseFuncConf = $this->resolveParseFuncConfiguration($request);
 
 		if (empty($parseFuncConf)) {
 			return $content;
-		}
-
-		if ($this->hasUsableParseFuncReferenceConfiguration()) {
-			try {
-				return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
-			} catch (\LogicException $exception) {
-				if ($exception->getCode() !== 1641989097) {
-					throw $exception;
-				}
-			}
 		}
 
 		try {
@@ -598,59 +578,50 @@ class TcaMapper implements SingletonInterface {
 	}
 
 	/**
-	 * @return bool
+	 * @return array<string, mixed>
 	 */
-	protected function hasUsableParseFuncReferenceConfiguration(): bool {
-		if (!isset($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'])) {
-			return FALSE;
-		}
-
-		$parseFuncReference = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		return \is_array($parseFuncReference) && \count($parseFuncReference) > 1;
-	}
-
-	/**
-	 * Ensures a usable parseFunc_RTE setup exists.
-	 * Some environments expose an empty/partial parseFunc_RTE key which still causes parseFunc crashes.
-	 *
-	 * @return void
-	 */
-	protected function ensureParseFuncConfiguration(): void {
-		if (!isset($GLOBALS['TSFE']->tmpl->setup) || !\is_array($GLOBALS['TSFE']->tmpl->setup)) {
-			return;
-		}
-
-		$currentParseFunc = $GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] ?? [];
-		if (\is_array($currentParseFunc) && \count($currentParseFunc) > 1) {
-			return;
-		}
-
-		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+	protected function resolveParseFuncConfiguration(?ServerRequestInterface $request): array {
 		if ($request instanceof ServerRequestInterface) {
 			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
 			if ($frontendTypoScript instanceof FrontendTypoScript) {
 				$setup = $frontendTypoScript->getSetupArray();
-				$resolvedParseFunc = $setup['lib.']['parseFunc_RTE.'] ?? [];
+				$libConfiguration = $setup['lib.'] ?? [];
+				if (!\is_array($libConfiguration)) {
+					return [];
+				}
+
+				$resolvedParseFunc = $libConfiguration['parseFunc_RTE.'] ?? [];
 				if (!\is_array($resolvedParseFunc) || \count($resolvedParseFunc) <= 1) {
-					$resolvedParseFunc = $setup['lib.']['parseFunc.'] ?? [];
+					$resolvedParseFunc = $libConfiguration['parseFunc.'] ?? [];
 				}
 
 				if (\is_array($resolvedParseFunc) && \count($resolvedParseFunc) > 1) {
-					$GLOBALS['TSFE']->tmpl->setup['lib.'] ??= [];
-					$GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] = $resolvedParseFunc;
-					return;
+					return $this->normalizeStringKeyArray($resolvedParseFunc);
 				}
 			}
 		}
 
-		$GLOBALS['TSFE']->tmpl->setup['lib.'] ??= [];
-		$GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.'] = [
+		return [
 			'externalBlocks' => 'table, blockquote, ol, ul, div, dl, header, section, footer, address, article, aside, figure, figcaption',
 			'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
 			'proc.' => [
 				'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
 			],
 		];
+	}
+
+	/**
+	 * @param array<mixed> $values
+	 * @return array<string, mixed>
+	 */
+	protected function normalizeStringKeyArray(array $values): array {
+		$normalizedValues = [];
+		foreach ($values as $key => $value) {
+			if (\is_string($key)) {
+				$normalizedValues[$key] = $value;
+			}
+		}
+		return $normalizedValues;
 	}
 
 	/**

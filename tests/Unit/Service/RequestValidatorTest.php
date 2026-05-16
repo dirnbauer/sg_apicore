@@ -21,6 +21,7 @@ use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Service\RequestValidator;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class RequestValidatorTest extends UnitTestCase {
 	protected RequestValidator $validator;
 

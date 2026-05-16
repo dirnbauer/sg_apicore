@@ -25,6 +25,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for TokenService
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class TokenServiceTest extends UnitTestCase {
 	protected $tokenRepository;
 	protected $jwtService;

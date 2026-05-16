@@ -29,6 +29,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for OpenApiController
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class OpenApiControllerTest extends UnitTestCase {
 	public function testJsonActionUsesCachedSpec(): void {
 		$cachedSpec = [
@@ -45,20 +46,20 @@ class OpenApiControllerTest extends UnitTestCase {
 			],
 		];
 
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn($cachedSpec);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
 		$endpointDiscovery = $this->createMock(EndpointDiscoveryService::class);
 		$endpointDiscovery->method('getDiscoverySignature')->willReturn('signature');
 		$endpointDiscovery->expects($this->never())->method('getAllEndpoints');
 
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
-		$schemaRegistry = $this->createStub(SchemaRegistry::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+		$schemaRegistry = $this->createMock(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn([]);
 		$openApiService = new OpenApiService(
 			$endpointDiscovery,

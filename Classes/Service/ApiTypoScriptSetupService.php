@@ -16,26 +16,26 @@ namespace SGalinski\SgApiCore\Service;
 
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
-use TYPO3\CMS\Core\Context\Context;
-use TYPO3\CMS\Core\Information\Typo3Version;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use TYPO3\CMS\Core\Cache\Frontend\PhpFrontend;
 use TYPO3\CMS\Core\Routing\PageArguments;
-use TYPO3\CMS\Core\Site\Entity\Site;
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
+use TYPO3\CMS\Core\Site\Entity\SiteInterface;
 use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
 use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\RootlineUtility;
-use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
-use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use TYPO3\CMS\Core\TypoScript\FrontendTypoScriptFactory;
+use TYPO3\CMS\Frontend\Page\PageInformation;
+use TYPO3\CMS\Frontend\Page\PageInformationFactory;
 
 /**
  * Ensures full TypoScript context for API requests
  */
 class ApiTypoScriptSetupService {
 	public function __construct(
-		protected readonly Context $context,
 		protected readonly LogService $logService,
-		protected readonly Typo3Version $typo3Version
+		protected readonly FrontendTypoScriptFactory $frontendTypoScriptFactory,
+		#[Autowire(service: 'cache.typoscript')]
+		protected readonly PhpFrontend $typoScriptCache,
+		protected readonly PageInformationFactory $pageInformationFactory
 	) {
 	}
 
@@ -53,239 +53,79 @@ class ApiTypoScriptSetupService {
 			return $request;
 		}
 
-		if ($this->typo3Version->getMajorVersion() >= 13) {
-			$request = $this->initializeTypoScriptV13($request, $siteRootPageId);
-		} else {
-			$request = $this->initializeTypoScriptV12($request, $siteRootPageId);
-		}
-
-		if (isset($GLOBALS['TSFE']) && $GLOBALS['TSFE'] instanceof TypoScriptFrontendController) {
-			if ($GLOBALS['TSFE']->id <= 0) {
-				$GLOBALS['TSFE']->id = $siteRootPageId;
-			}
-
-			try {
-				$request = $request->withoutAttribute('frontend.typoscript');
-				if (method_exists($GLOBALS['TSFE'], 'getFromCache')) {
-					/** @phpstan-ignore-next-line */
-					$request = $GLOBALS['TSFE']->getFromCache($request);
-				}
-				$GLOBALS['TYPO3_REQUEST'] = $request;
-
-				if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
-					&& isset($GLOBALS['TSFE']->tmpl)
-					&& $GLOBALS['TSFE']->tmpl instanceof \TYPO3\CMS\Core\TypoScript\TemplateService
-				) {
-					if (isset($GLOBALS['TSFE']->rootLine) && \is_array($GLOBALS['TSFE']->rootLine)) {
-						/** @phpstan-ignore-next-line */
-						$GLOBALS['TSFE']->tmpl->runThroughTemplates($GLOBALS['TSFE']->rootLine);
-					}
-					/** @phpstan-ignore-next-line */
-					$GLOBALS['TSFE']->tmpl->generateConfig();
-					/** @phpstan-ignore-next-line */
-					$GLOBALS['TSFE']->config = $GLOBALS['TSFE']->tmpl->setup['config.'] ?? [];
-				}
-
-				$frontendTypoScript = $request->getAttribute('frontend.typoscript');
-				if (!($frontendTypoScript instanceof FrontendTypoScript)) {
-					$frontendTypoScript = $this->createEmptyFrontendTypoScript();
-				}
-				if (!$this->hasInitializedSetupArray($frontendTypoScript)) {
-					$setupArray = $this->resolveSetupArrayFromTemplateService($siteRootPageId);
-					$frontendTypoScript->setSetupArray($setupArray);
-					$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
-					$GLOBALS['TYPO3_REQUEST'] = $request;
-				}
-			} catch (\Throwable $e) {
-				$this->logService->logException($e, $request);
-			}
-		}
-
-		return $request;
-	}
-
-	/**
-	 * @param ServerRequestInterface $request
-	 * @param int $siteRootPageId
-	 * @return ServerRequestInterface
-	 */
-	protected function initializeTypoScriptV13(
-		ServerRequestInterface $request,
-		int $siteRootPageId
-	): ServerRequestInterface {
-		/** @phpstan-ignore-next-line */
-		$pageInformationAttribute = $request->getAttribute('frontend.page.information');
-		if ($pageInformationAttribute || isset($GLOBALS['TSFE'])) {
-			return $request;
-		}
-
-		$pageInformationClass = 'TYPO3\\CMS\\Frontend\\Page\\PageInformation';
-		$rootline = [];
-		if (class_exists($pageInformationClass)) {
-			/** @var \TYPO3\CMS\Frontend\Page\PageInformation $pageInformation */
-			$pageInformation = new $pageInformationClass();
-			if (method_exists($pageInformation, 'setId')) {
-				$pageInformation->setId($siteRootPageId);
-			}
-
-			try {
-				$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
-				$rootline = $rootlineUtility->get();
-			} catch (\Throwable) {
-				// Fallback if the rootline cannot be generated
-			}
-			if (method_exists($pageInformation, 'setRootLine')) {
-				$pageInformation->setRootLine($rootline);
-			}
-
-			$request = $request->withAttribute('frontend.page.information', $pageInformation);
-		} else {
-			$pageInformation = NULL;
-		}
-
-		$site = $request->getAttribute('site');
-		$language = $request->getAttribute('language');
-		if (!($site instanceof Site) || !($language instanceof SiteLanguage)) {
-			return $request;
-		}
-
-		$tsfe = GeneralUtility::makeInstance(
-			TypoScriptFrontendController::class,
-			$this->context,
-			$site,
-			$language,
-			$pageInformation,
-			$request->getAttribute('frontend.user')
-		);
-
-		$setupArray = [
-			'config.' => [
-				'tx_sgapicore.' => [
-					'persistence.' => [
-						'storagePid' => $siteRootPageId,
-					],
-				],
-			],
-		];
-
-		if ($this->typo3Version->getMajorVersion() >= 13) {
-			/** @phpstan-ignore-next-line */
-			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], []);
-		} else {
-			/** @phpstan-ignore-next-line */
-			$frontendTypoScript = new FrontendTypoScript(new RootNode(), []);
-		}
-
-		$frontendTypoScript->setSetupArray($setupArray);
-		$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
-		$tsfe->page = [
-			'uid' => $siteRootPageId,
-			'starttime' => 0,
-			'endtime' => 0,
-			'fe_group' => '',
-			'tx_staticfilecache_cache_priority' => 0,
-		];
-		$tsfe->id = $siteRootPageId;
-		$tsfe->rootLine = $rootline;
-		$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
-		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
-			/** @phpstan-ignore-next-line */
-			$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
-		}
-		$GLOBALS['TSFE'] = $tsfe;
-		$GLOBALS['TYPO3_REQUEST'] = $request;
-
-		return $request;
-	}
-
-	/**
-	 * @param ServerRequestInterface $request
-	 * @param int $siteRootPageId
-	 * @return ServerRequestInterface
-	 */
-	protected function initializeTypoScriptV12(
-		ServerRequestInterface $request,
-		int $siteRootPageId
-	): ServerRequestInterface {
-		if (isset($GLOBALS['TSFE'])) {
-			return $request;
-		}
-
-		$site = $request->getAttribute('site');
-		$language = $request->getAttribute('language');
-		if (!$site || !$language) {
-			return $request;
-		}
-
-		$frontendUser = $request->getAttribute('frontend.user');
-		if (!($frontendUser instanceof FrontendUserAuthentication)) {
-			$frontendUser = GeneralUtility::makeInstance(FrontendUserAuthentication::class);
-		}
-
-		$pageArguments = $request->getAttribute('routing');
-		if (!($pageArguments instanceof PageArguments)) {
-			$pageArguments = new PageArguments($siteRootPageId, '0', []);
-		}
-
-		$tsfe = GeneralUtility::makeInstance(
-			TypoScriptFrontendController::class,
-			$this->context,
-			$site,
-			$language,
-			$pageArguments,
-			$frontendUser
-		);
-		$tsfe->sys_page = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Domain\Repository\PageRepository::class);
-
-		$rootline = [];
 		try {
-			$rootlineUtility = GeneralUtility::makeInstance(RootlineUtility::class, $siteRootPageId);
-			$rootline = $rootlineUtility->get();
-		} catch (\Throwable) {
-			// Fallback if the rootline cannot be generated
-		}
-		$tsfe->rootLine = $rootline;
+			$request = $this->initializePageInformation($request, $siteRootPageId);
+			$site = $request->getAttribute('site');
+			$pageInformation = $request->getAttribute('frontend.page.information');
+			if (!($site instanceof SiteInterface) || !($pageInformation instanceof PageInformation)) {
+				return $this->withFallbackTypoScript($request, $siteRootPageId);
+			}
 
-		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)) {
-			/** @phpstan-ignore-next-line */
-			$tsfe->tmpl = GeneralUtility::makeInstance(\TYPO3\CMS\Core\TypoScript\TemplateService::class);
-		}
+			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
+			if (!($frontendTypoScript instanceof FrontendTypoScript)) {
+				$frontendTypoScript = $this->frontendTypoScriptFactory->createSettingsAndSetupConditions(
+					$site,
+					$pageInformation->getSysTemplateRows(),
+					$this->createConditionMatcherVariables($request, $pageInformation),
+					$this->typoScriptCache
+				);
+			}
 
-		$tsfe->page = [
-			'uid' => $siteRootPageId,
-			'starttime' => 0,
-			'endtime' => 0,
-			'fe_group' => '',
-			'tx_staticfilecache_cache_priority' => 0,
-		];
-		$tsfe->id = $siteRootPageId;
-		$GLOBALS['TSFE'] = $tsfe;
-		$GLOBALS['TYPO3_REQUEST'] = $request;
+			if (!$this->hasInitializedSetupArray($frontendTypoScript)) {
+				$frontendTypoScript = $this->frontendTypoScriptFactory->createSetupConfigOrFullSetup(
+					TRUE,
+					$frontendTypoScript,
+					$site,
+					$pageInformation->getSysTemplateRows(),
+					$this->createConditionMatcherVariables($request, $pageInformation),
+					'0',
+					$this->typoScriptCache,
+					$request
+				);
+			}
+
+			$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
+			$GLOBALS['TYPO3_REQUEST'] = $request;
+		} catch (\Throwable $e) {
+			$this->logService->logException($e, $request);
+			$request = $this->withFallbackTypoScript($request, $siteRootPageId);
+		}
 
 		return $request;
+	}
+
+	private function initializePageInformation(ServerRequestInterface $request, int $siteRootPageId): ServerRequestInterface {
+		if ($request->getAttribute('frontend.page.information') instanceof PageInformation) {
+			return $request;
+		}
+		if (!($request->getAttribute('routing') instanceof PageArguments)) {
+			$request = $request->withAttribute(
+				'routing',
+				new PageArguments($siteRootPageId, '0', ['id' => (string) $siteRootPageId])
+			);
+		}
+
+		return $request->withAttribute('frontend.page.information', $this->pageInformationFactory->create($request));
 	}
 
 	/**
 	 * @return array<string, mixed>
 	 */
-	private function resolveSetupArrayFromTemplateService(int $siteRootPageId): array {
-		if (class_exists(\TYPO3\CMS\Core\TypoScript\TemplateService::class)
-			&& isset($GLOBALS['TSFE']->tmpl->setup)
-			&& \is_array($GLOBALS['TSFE']->tmpl->setup)
-		) {
-			/** @var array<string, mixed> $setupArray */
-			$setupArray = $GLOBALS['TSFE']->tmpl->setup;
-			return $setupArray;
-		}
+	private function createConditionMatcherVariables(
+		ServerRequestInterface $request,
+		PageInformation $pageInformation
+	): array {
+		$fullRootLine = $pageInformation->getRootLine();
+		ksort($fullRootLine);
 
 		return [
-			'config.' => [
-				'tx_sgapicore.' => [
-					'persistence.' => [
-						'storagePid' => $siteRootPageId,
-					],
-				],
-			],
+			'request' => $request,
+			'pageId' => $pageInformation->getId(),
+			'page' => $pageInformation->getPageRecord(),
+			'fullRootLine' => $fullRootLine,
+			'localRootLine' => $pageInformation->getLocalRootLine(),
+			'site' => $request->getAttribute('site'),
+			'siteLanguage' => $request->getAttribute('language'),
 		];
 	}
 
@@ -298,12 +138,20 @@ class ApiTypoScriptSetupService {
 		}
 	}
 
-	private function createEmptyFrontendTypoScript(): FrontendTypoScript {
-		if ($this->typo3Version->getMajorVersion() >= 13) {
-			return new FrontendTypoScript(new RootNode(), [], [], []);
-		}
+	private function withFallbackTypoScript(ServerRequestInterface $request, int $siteRootPageId): ServerRequestInterface {
+		$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], []);
+		$frontendTypoScript->setSetupArray([
+			'config.' => [
+				'tx_sgapicore.' => [
+					'persistence.' => [
+						'storagePid' => $siteRootPageId,
+					],
+				],
+			],
+		]);
 
-		/** @phpstan-ignore-next-line */
-		return new FrontendTypoScript(new RootNode(), []);
+		$request = $request->withAttribute('frontend.typoscript', $frontendTypoScript);
+		$GLOBALS['TYPO3_REQUEST'] = $request;
+		return $request;
 	}
 }

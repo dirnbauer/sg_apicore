@@ -33,6 +33,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for UserAuthService
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class UserAuthServiceTest extends UnitTestCase {
 	/**
 	 * @var UserAuthService
@@ -119,18 +120,18 @@ class UserAuthServiceTest extends UnitTestCase {
 
 		$tenantContext = new TenantContext('test-tenant');
 
-		$queryBuilder = $this->createStub(QueryBuilder::class);
+		$queryBuilder = $this->createMock(QueryBuilder::class);
 		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
 		$queryBuilder->method('select')->willReturn($queryBuilder);
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('where')->willReturn($queryBuilder);
-		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
+		$queryBuilder->method('expr')->willReturn($this->createMock(ExpressionBuilder::class));
 
-		$result = $this->createStub(\Doctrine\DBAL\Result::class);
+		$result = $this->createMock(\Doctrine\DBAL\Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn($userRecord);
 
-		$hashInstance = $this->createStub(PasswordHashInterface::class);
+		$hashInstance = $this->createMock(PasswordHashInterface::class);
 		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
 		$hashInstance->method('checkPassword')->with($password, $hashedPassword)->willReturn(TRUE);
 
@@ -158,7 +159,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$queryBuilder->method('where')->willReturn($queryBuilder);
 		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
 
-		$result = $this->createStub(\Doctrine\DBAL\Result::class);
+		$result = $this->createMock(\Doctrine\DBAL\Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn(FALSE);
 
@@ -167,7 +168,7 @@ class UserAuthServiceTest extends UnitTestCase {
 	}
 
 	public function testResolveUserStoragePidsFromSiteConfig(): void {
-		$site = $this->createStub(Site::class);
+		$site = $this->createMock(Site::class);
 		$site->method('getConfiguration')->willReturn([
 			'apicore' => ['userStoragePids' => '10,20'],
 		]);

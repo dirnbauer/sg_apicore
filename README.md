@@ -13,6 +13,9 @@ Please report bugs here: https://gitlab.sgalinski.de/typo3/sg_apicore/-/issues
 Provides an API framework for TYPO3: Multi-API, Multi-Tenants, Attribute-based endpoint configuration, Logging,
 Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints.
 
+Version `14.x` is TYPO3 v14-only. The package requires TYPO3 `^14.3`, `typo3/cms-workspaces` `^14.3`, and PHP `^8.2`.
+TYPO3 13 compatibility is intentionally not maintained in this release line.
+
 For detailed information, please refer to the Documentation in docs/.
 For website-ready end-user communication, see `docs/Website-End-User-Documentation.md`.
 
@@ -45,6 +48,25 @@ The extension follows a standard TYPO3 extension structure with a focus on clean
    ```
 
 2. Activate the extension in the TYPO3 Extension Manager.
+
+3. Make sure `typo3/cms-workspaces` is installed if Auto-CRUD writes should stage changes in a non-live workspace.
+
+## Development Quality Gates
+
+The repository ships PHPStan configuration adapted from the TYPO3 v14.3 core setup and runs at max level:
+
+```bash
+composer phpstan
+composer test
+Build/Scripts/runTests.sh -s ci -p 8.3
+```
+
+The CI runner performs PHP linting, PHPStan at `level: max`, PHPUnit, and Composer audit.
+
+Older `ddev-demo-setup-visual-editor` Composer files patched `sgalinski/sg-apicore` while the TYPO3 v14 upgrade branch
+was still external. Those patch changes are now part of this repository, so this extension does not include a Composer
+patch setup. The current demo project still uses `cweagans/composer-patches` for a `friendsoftypo3/content-blocks`
+project patch, which does not belong in this extension package.
 
 ## Quick Start (3 Steps)
 
@@ -134,6 +156,10 @@ See [TCA Mapper Documentation](docs/TcaMapper.md).
 You can expose TYPO3 tables as API resources with full CRUD support.
 See [Auto-CRUD Resources Documentation](docs/Resources.md).
 
+Auto-CRUD write operations use TYPO3 `DataHandler`. If a backend user is already authenticated, the current TYPO3
+workspace is preserved. If a dedicated write backend user is configured, TYPO3 initializes that user's default
+workspace; set `apiResourceWriteWorkspaceId` only when writes must be forced into a specific `sys_workspace` UID.
+
 ## OpenAPI Documentation
 
 The extension automatically generates OpenAPI 3.0 specifications. You can access Swagger UI at
@@ -148,6 +174,8 @@ The extension provides a TYPO3 Backend Module under **System > API Core**.
   - Supports optional FE-user bound tokens (`user_id` mapped to `fe_users`) for per-user API key flows.
   - Token list keeps current filter state while editing/revoking/regenerating.
 - **Endpoints**: List of all registered endpoints and their requirements.
+
+The module is available in both live and offline workspaces.
 
 See [Authentication & Scopes - Backend](docs/AuthScopes.md#token-management-in-the-backend) for details.
 

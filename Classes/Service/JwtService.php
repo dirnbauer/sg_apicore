@@ -75,6 +75,9 @@ class JwtService implements SingletonInterface {
 		$headerJson = $this->urlsafeB64Decode($jwtHeaderEncoded);
 		$payloadJson = $this->urlsafeB64Decode($jwtPayloadEncoded);
 		$signature = $this->urlsafeB64Decode($jwtSignatureEncoded);
+		if ($headerJson === NULL || $payloadJson === NULL || $signature === NULL) {
+			return NULL;
+		}
 
 		$header = json_decode($headerJson, TRUE, 512, JSON_THROW_ON_ERROR);
 		$payload = json_decode($payloadJson, TRUE, 512, JSON_THROW_ON_ERROR);
@@ -146,14 +149,19 @@ class JwtService implements SingletonInterface {
 	 * URL-safe Base64 Decode
 	 *
 	 * @param string $input
-	 * @return string
+	 * @return string|null
 	 */
-	protected function urlsafeB64Decode(string $input): string {
+	protected function urlsafeB64Decode(string $input): ?string {
+		if ($input === '' || preg_match('/^[A-Za-z0-9_-]+$/', $input) !== 1) {
+			return NULL;
+		}
+
 		$remainder = \strlen($input) % 4;
 		if ($remainder) {
 			$input .= str_repeat('=', 4 - $remainder);
 		}
-		return base64_decode(strtr($input, '-_', '+/'));
+		$decoded = base64_decode(strtr($input, '-_', '+/'), TRUE);
+		return $decoded === FALSE ? NULL : $decoded;
 	}
 
 	/**

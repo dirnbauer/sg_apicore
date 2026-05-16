@@ -16,8 +16,11 @@ namespace SGalinski\SgApiCore\Tests\Unit\Mapper;
 
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Resource\FileRepository;
 use TYPO3\CMS\Core\Resource\ResourceFactory;
+use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
+use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
 use TYPO3\CMS\Extbase\Persistence\Generic\PersistenceManager;
 use TYPO3\CMS\Frontend\ContentObject\ContentObjectRenderer;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -114,64 +117,35 @@ class TcaMapperTest extends UnitTestCase {
 		$this->assertArrayNotHasKey('title', $result);
 	}
 
-	public function testEnsureParseFuncConfigurationSetsFallbackForEmptyParseFuncConfiguration(): void {
-		$previousTsfe = $GLOBALS['TSFE'] ?? NULL;
-		$previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+	public function testResolveParseFuncConfigurationReturnsFallbackWithoutFrontendTypoScript(): void {
+		$method = new \ReflectionMethod(TcaMapper::class, 'resolveParseFuncConfiguration');
+		$method->setAccessible(TRUE);
+		$result = $method->invoke($this->mapper, NULL);
 
-		try {
-			$GLOBALS['TSFE'] = (object) [
-				'tmpl' => (object) [
-					'setup' => [
-						'lib.' => [
-							'parseFunc_RTE.' => [],
-						],
-					],
-				],
-			];
-			unset($GLOBALS['TYPO3_REQUEST']);
-
-			$method = new \ReflectionMethod(TcaMapper::class, 'ensureParseFuncConfiguration');
-			$method->setAccessible(TRUE);
-			$method->invoke($this->mapper);
-
-			$this->assertArrayHasKey('parseFunc_RTE.', $GLOBALS['TSFE']->tmpl->setup['lib.']);
-			$this->assertGreaterThan(1, \count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
-		} finally {
-			if ($previousTsfe !== NULL) {
-				$GLOBALS['TSFE'] = $previousTsfe;
-			} else {
-				unset($GLOBALS['TSFE']);
-			}
-
-			if ($previousRequest !== NULL) {
-				$GLOBALS['TYPO3_REQUEST'] = $previousRequest;
-			} else {
-				unset($GLOBALS['TYPO3_REQUEST']);
-			}
-		}
+		$this->assertIsArray($result);
+		$this->assertGreaterThan(1, \count($result));
+		$this->assertArrayHasKey('allowTags', $result);
 	}
 
-	public function testProcessRteContentFallsBackToLocalParseFuncConfigurationIfReferenceFails(): void {
-		$previousTsfe = $GLOBALS['TSFE'] ?? NULL;
+	public function testProcessRteContentUsesFrontendTypoScriptParseFuncConfiguration(): void {
 		$previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
 		$parseFuncCalls = [];
 
 		try {
-			$GLOBALS['TSFE'] = (object) [
-				'tmpl' => (object) [
-					'setup' => [
-						'lib.' => [
-							'parseFunc_RTE.' => [
-								'externalBlocks' => 'p',
-								'allowTags' => 'p',
-							],
-						],
+			$frontendTypoScript = new FrontendTypoScript(new RootNode(), [], [], []);
+			$frontendTypoScript->setSetupArray([
+				'lib.' => [
+					'parseFunc_RTE.' => [
+						'externalBlocks' => 'p',
+						'allowTags' => 'p',
 					],
 				],
-			];
-			unset($GLOBALS['TYPO3_REQUEST']);
+			]);
+			$request = (new ServerRequest())->withAttribute('frontend.typoscript', $frontendTypoScript);
+			$GLOBALS['TYPO3_REQUEST'] = $request;
 
 			$contentObjectRenderer = $this->createMock(ContentObjectRenderer::class);
+			$contentObjectRenderer->expects($this->once())->method('setRequest')->with($request);
 			$contentObjectRenderer->expects($this->once())->method('start')->with([]);
 			$contentObjectRenderer->method('parseFunc')->willReturnCallback(
 				function (string $content, ?array $configuration, ?string $reference = NULL) use (&$parseFuncCalls) {
@@ -180,10 +154,6 @@ class TcaMapperTest extends UnitTestCase {
 						'configuration' => $configuration,
 						'reference' => $reference,
 					];
-
-					if (\count($parseFuncCalls) === 1) {
-						throw new \LogicException('Invoked ContentObjectRenderer::parseFunc without any configuration', 1641989097);
-					}
 
 					return '<p>processed</p>';
 				}
@@ -201,18 +171,10 @@ class TcaMapperTest extends UnitTestCase {
 			$result = $method->invoke($mapper, '<p>source</p>');
 
 			$this->assertSame('<p>processed</p>', $result);
-			$this->assertCount(2, $parseFuncCalls);
-			$this->assertSame('< lib.parseFunc_RTE', $parseFuncCalls[0]['reference']);
-			$this->assertNull($parseFuncCalls[1]['reference']);
-			$this->assertIsArray($parseFuncCalls[1]['configuration']);
-			$this->assertNotEmpty($parseFuncCalls[1]['configuration']);
+			$this->assertCount(1, $parseFuncCalls);
+			$this->assertNull($parseFuncCalls[0]['reference']);
+			$this->assertSame(['externalBlocks' => 'p', 'allowTags' => 'p'], $parseFuncCalls[0]['configuration']);
 		} finally {
-			if ($previousTsfe !== NULL) {
-				$GLOBALS['TSFE'] = $previousTsfe;
-			} else {
-				unset($GLOBALS['TSFE']);
-			}
-
 			if ($previousRequest !== NULL) {
 				$GLOBALS['TYPO3_REQUEST'] = $previousRequest;
 			} else {

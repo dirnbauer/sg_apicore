@@ -1,0 +1,5233 @@
+parameters:
+	ignoreErrors:
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiBodyParam::__set_state() has parameter $properties with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #1 $name of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #10 $minLength of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #11 $maxLength of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #2 $type of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #3 $required of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #4 $description of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #5 $pattern of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #7 $requiredIf of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #8 $min of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects float|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Parameter #9 $max of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects float|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiBodyParam.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiCache::__construct() has parameter $additionalVary with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiCache::__construct() has parameter $tags with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiCache::__set_state() has parameter $properties with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Parameter #1 $enabled of class SGalinski\SgApiCore\Attribute\ApiCache constructor expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Parameter #2 $lifetime of class SGalinski\SgApiCore\Attribute\ApiCache constructor expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Parameter #3 $tags of class SGalinski\SgApiCore\Attribute\ApiCache constructor expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Parameter #4 $useUserGroups of class SGalinski\SgApiCore\Attribute\ApiCache constructor expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Parameter #5 $useLanguage of class SGalinski\SgApiCore\Attribute\ApiCache constructor expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Parameter #6 $additionalVary of class SGalinski\SgApiCore\Attribute\ApiCache constructor expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiCache.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiEndpoint::__construct() has parameter $tags with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiEndpoint.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiPathParam::__set_state() has parameter $properties with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #1 $name of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #2 $type of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #3 $description of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #4 $pattern of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #6 $min of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects float|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #7 $max of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects float|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #8 $minLength of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Parameter #9 $maxLength of class SGalinski\SgApiCore\Attribute\ApiPathParam constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiPathParam.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiQueryParam::__set_state() has parameter $properties with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #1 $name of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #10 $minLength of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #11 $maxLength of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #2 $type of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #3 $required of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects bool, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #4 $description of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #5 $pattern of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #7 $requiredIf of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #8 $min of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects float|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #9 $max of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects float|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiResponse::__set_state() has parameter $properties with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiResponse.php
+
+		-
+			rawMessage: 'Parameter #1 $status of class SGalinski\SgApiCore\Attribute\ApiResponse constructor expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiResponse.php
+
+		-
+			rawMessage: 'Parameter #2 $description of class SGalinski\SgApiCore\Attribute\ApiResponse constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiResponse.php
+
+		-
+			rawMessage: 'Parameter #3 $schema of class SGalinski\SgApiCore\Attribute\ApiResponse constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiResponse.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiRoute::__construct() has parameter $apiId with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiRoute.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiRoute::__construct() has parameter $authMode with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiRoute.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiRoute::__construct() has parameter $methods with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiRoute.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiRoute::__construct() has parameter $tenants with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiRoute.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\ApiRoute::__construct() has parameter $version with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/ApiRoute.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Attribute\RequireScopes::__construct() has parameter $scopes with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Attribute/RequireScopes.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 4
+			path: ../../Classes/Command/GenerateOpenApiCommand.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 11
+			path: ../../Classes/Configuration/ExtensionConfiguration.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 2
+			path: ../../Classes/Configuration/ExtensionConfiguration.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Configuration\ExtensionConfiguration::getRedactKeys() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Configuration/ExtensionConfiguration.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function trim expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Configuration/ExtensionConfiguration.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Configuration\ExtensionConfiguration::$configuration type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Configuration/ExtensionConfiguration.php
+
+		-
+			rawMessage: 'Cannot call method getCache() on TYPO3\CMS\Core\Cache\CacheManager|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Controller/Backend/Ajax/CacheController.php
+
+		-
+			rawMessage: 'Cannot call method getCacheDirectoriesToClear() on SGalinski\SgApiCore\Service\CachePathService|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Controller/Backend/Ajax/CacheController.php
+
+		-
+			rawMessage: 'Parameter #1 $filename of function is_dir expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/Backend/Ajax/CacheController.php
+
+		-
+			rawMessage: 'Parameter #1 $path of static method TYPO3\CMS\Core\Utility\GeneralUtility::rmdir() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/Backend/Ajax/CacheController.php
+
+		-
+			rawMessage: 'Call to function is_array() with array will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Cannot call method getPagePermsClause() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 2
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 4
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Controller\Backend\ApiCoreController::logsAction() has parameter $filters with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Controller\Backend\ApiCoreController::tokensAction() has parameter $filters with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Parameter #1 $filters of method SGalinski\SgApiCore\Controller\Backend\ApiCoreController::resolveAndPersistTokenFilters() expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Parameter #1 $href of method TYPO3\CMS\Backend\Template\Components\Buttons\LinkButton::setHref() expects string, array<string, bool|string|null>|bool|string|null given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Parameter #2 $perms_clause of static method TYPO3\CMS\Backend\Utility\BackendUtility::readPageAccess() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/Backend/ApiCoreController.php
+
+		-
+			rawMessage: 'Parameter #4 $legacyMode of method SGalinski\SgApiCore\Service\ResponseService::createSuccessResponse() expects SGalinski\SgApiCore\Attribute\ApiLegacyMode|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/LegacyExampleController.php
+
+		-
+			rawMessage: 'Parameter #6 $legacyMode of method SGalinski\SgApiCore\Service\ResponseService::createErrorResponse() expects SGalinski\SgApiCore\Attribute\ApiLegacyMode|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/LegacyExampleController.php
+
+		-
+			rawMessage: 'Cannot call method getTenantId() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Controller/OpenApiController.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 5
+			path: ../../Classes/Controller/OpenApiController.php
+
+		-
+			rawMessage: 'Parameter #4 $tenantId of method SGalinski\SgApiCore\Service\OpenApiService::generateSpec() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/OpenApiController.php
+
+		-
+			rawMessage: 'Parameter #4 $tenantId of method SGalinski\SgApiCore\Service\OpenApiService::getCacheDebugInfo() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/OpenApiController.php
+
+		-
+			rawMessage: 'Binary operation "." between ''DataHandler Error: '' and mixed results in an error.'
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Call to protected method workspaceInit() of class TYPO3\CMS\Core\Authentication\BackendUserAuthentication.'
+			identifier: method.protected
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'columns' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'config' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'deleteMode' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'fieldConfiguration' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'idField' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'readFields' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset 'writeFields' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Cannot access offset (int|string) on mixed.'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset mixed on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot access offset string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Cannot call method getRootPageId() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Cannot call method getSite() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 9
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Controller\ResourceController::applyResourceVisibilityRestrictions() has parameter $resourceConfig with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Controller\ResourceController::createDataHandlerErrorResponse() has parameter $errors with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $fieldName of method TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder::eq() expects string, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $table of method TYPO3\CMS\Core\Database\Query\QueryBuilder::from() expects string, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Controller\ResourceController::expandFileReferencePayloads() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method TYPO3\CMS\Core\Database\Connection::delete() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method TYPO3\CMS\Core\Database\ConnectionPool::getConnectionForTable() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method TYPO3\CMS\Core\Database\ConnectionPool::getQueryBuilderForTable() expects string, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #2 $resourceConfig of method SGalinski\SgApiCore\Controller\ResourceController::applyResourceVisibilityRestrictions() expects array, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #3 $allowedFields of method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() expects array, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #3 $allowedFields of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #3 $allowedFields of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #3 $dataMap of method SGalinski\SgApiCore\Controller\ResourceController::expandFileReferencePayloads() expects array<string, array<int|string, array<string, mixed>>>, array<array<int, array>> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #3 $dataMap of method SGalinski\SgApiCore\Controller\ResourceController::expandFileReferencePayloads() expects array<string, array<int|string, array<string, mixed>>>, array<array<string, array>> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter $fieldConfiguration of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter $fieldConfiguration of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: array.invalidKey
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 2
+			path: ../../Classes/Controller/TestController.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 7
+			path: ../../Classes/Controller/TestController.php
+
+		-
+			rawMessage: Cannot access offset 'access_token' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot access offset 'pass' on array|object.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot access offset 'password' on array|object.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot access offset 'refresh_token' on array|object.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot access offset 'user' on array|object.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot access offset 'username' on array|object.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 4
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: 'Parameter #1 $refreshToken of method SGalinski\SgApiCore\Service\UserAuthService::refreshTokens() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: 'Parameter #1 $username of method SGalinski\SgApiCore\Service\UserAuthService::authenticateUser() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: 'Parameter #2 $password of method SGalinski\SgApiCore\Service\UserAuthService::authenticateUser() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 2
+			path: ../../Classes/Domain/Repository/TokenRepository.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findAllWithFilters() has parameter $filters with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Domain/Repository/TokenRepository.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findAllWithFilters() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Domain/Repository/TokenRepository.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findByApiAndTenant() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Domain/Repository/TokenRepository.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findByHashApiAndTenant() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Domain/Repository/TokenRepository.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findByHashGlobally() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Domain/Repository/TokenRepository.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Event\AfterUserAuthenticationEvent::__construct() has parameter $user with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Event/AfterUserAuthenticationEvent.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Event\AfterUserAuthenticationEvent::getUser() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Event/AfterUserAuthenticationEvent.php
+
+		-
+			rawMessage: 'Parameter #1 $cacheAction of method TYPO3\CMS\Backend\Backend\Event\ModifyClearCacheActionsEvent::addCacheAction() expects array{id: non-empty-string, endpoint: non-empty-string, iconIdentifier: non-empty-string, title: non-empty-string, description?: non-empty-string, severity?: ''danger''|''error''|''info''|''notice''|''succcess''|''warning''}, array{id: ''sg_apicore_clear…'', title: ''LLL:EXT:sg_apicore…'', description: ''LLL:EXT:sg_apicore…'', href: string, iconIdentifier: ''actions-system…''} given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/EventListener/ClearCacheEventListener.php
+
+		-
+			rawMessage: Binary operation "." between mixed and ':' results in an error.
+			identifier: binaryOp.invalid
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'allowed' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'columns' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'config' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'ctrl' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'default_sortby' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'excluded' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset 'sortby' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Cannot access offset (int|string) on mixed.'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset mixed on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot access offset string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot cast mixed to float.
+			identifier: cast.double
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 9
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 5
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::applyContentReplacer() should return string but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::getRawData() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() has parameter $allowedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() has parameter $data with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() has parameter $allowedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() has parameter $customCallbacks with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() has parameter $excludedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() has parameter $fieldConfiguration with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() has parameter $record with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() has parameter $renamedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() has parameter $allowedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() has parameter $customCallbacks with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() has parameter $excludedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() has parameter $fieldConfiguration with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() has parameter $records with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() has parameter $renamedFields with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::resolveFileReferences() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::transformValue() has parameter $config with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::transformValue() has parameter $fieldConfiguration with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Mapper\TcaMapper::transformValueForDatabase() has parameter $config with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_keys expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $className of static method TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance() expects class-string<SGalinski\Citypower\Service\ContentReplacementService>, string given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $fieldName of method TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder::eq() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $fieldName of method TYPO3\CMS\Core\Database\Query\QueryBuilder::orderBy() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_contains expects string, mixed given.'
+			identifier: argument.type
+			count: 5
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $table of method TYPO3\CMS\Core\Database\Query\QueryBuilder::from() expects string, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects string, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method TYPO3\CMS\Core\Database\ConnectionPool::getQueryBuilderForTable() expects string, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array<mixed, mixed> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #2 $config of method SGalinski\SgApiCore\Mapper\TcaMapper::transformValue() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #2 $config of method SGalinski\SgApiCore\Mapper\TcaMapper::transformValueForDatabase() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #2 $record of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects array, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #5 $uid of method SGalinski\SgApiCore\Mapper\TcaMapper::transformValue() expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Parameter #6 $fieldName of method SGalinski\SgApiCore\Mapper\TcaMapper::transformValue() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 4
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Mapper\TcaMapper::$recordCache type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Mapper/TcaMapper.php
+
+		-
+			rawMessage: 'Cannot call method getTenantId() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: Offset 'versions' might not exist on array|null.
+			identifier: offsetAccess.notFound
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::getApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::hasApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $apiId of method SGalinski\SgApiCore\Security\LoginProviderInterface::authenticate() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $version of method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #3 $tenantId of method SGalinski\SgApiCore\Security\LoginProviderInterface::authenticate() expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: 'Parameter #4 $activeProviders of method SGalinski\SgApiCore\Security\LoginProviderInterface::authenticate() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiAuthMiddleware.php
+
+		-
+			rawMessage: Binary operation "." between 'extra_' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Binary operation "." between 'tenant_' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'apiCache' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'authMode' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'methods' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'path' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'usergroup' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot access property $user on mixed.
+			identifier: property.nonObject
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method getIdentifier() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method getLanguageId() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method getSiteRootPageId() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getEndpointsForApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $code of method TYPO3\CMS\Core\Http\Response::withStatus() expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $name of method Psr\Http\Message\MessageInterface::getHeaderLine() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $string of method TYPO3\CMS\Core\Http\Stream::write() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $tags of method TYPO3\CMS\Core\Cache\Frontend\FrontendInterface::flushByTags() expects array<string>, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $value of method TYPO3\CMS\Core\Http\Message::withHeader() expects array<string>|string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $version of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getEndpointsForApi() expects string|null, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: ../../Classes/Middleware/ApiCacheMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\ApiCorsMiddleware::applyCorsHeaders() has parameter $policy with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\ApiCorsMiddleware::normalizeAllowedOrigins() has parameter $allowedOrigins with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $allowedOrigins of method SGalinski\SgApiCore\Middleware\ApiCorsMiddleware::normalizeAllowedOrigins() expects array|string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::hasApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $value of method Psr\Http\Message\MessageInterface::withHeader() expects array<string>|string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Middleware/ApiCorsMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 2
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: Offset 'versions' might not exist on array|null.
+			identifier: offsetAccess.notFound
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::getApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\ApiRegistry::hasApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $apiId of method SGalinski\SgApiCore\Service\Router::dispatch() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $version of method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #3 $version of method SGalinski\SgApiCore\Service\Router::dispatch() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter #4 $path of method SGalinski\SgApiCore\Service\Router::dispatch() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter $legacyMode of method SGalinski\SgApiCore\Service\ResponseService::createErrorResponse() expects SGalinski\SgApiCore\Attribute\ApiLegacyMode|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiRequestMiddleware.php
+
+		-
+			rawMessage: 'Parameter $legacyMode of method SGalinski\SgApiCore\Service\ResponseService::createErrorResponse() expects SGalinski\SgApiCore\Attribute\ApiLegacyMode|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiSetupMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'requireFullTypoScript' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Middleware/ApiTypoScriptMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 5
+			path: ../../Classes/Middleware/ApiTypoScriptMiddleware.php
+
+		-
+			rawMessage: 'Parameter #2 $tenantContext of method SGalinski\SgApiCore\Service\ApiTypoScriptSetupService::ensureTypoScript() expects SGalinski\SgApiCore\Context\TenantContext|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/ApiTypoScriptMiddleware.php
+
+		-
+			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Middleware/LegacyRoutingMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'request' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Middleware/LegacyRoutingMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 1
+			path: ../../Classes/Middleware/LegacyRoutingMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function trim expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/LegacyRoutingMiddleware.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function trim expects string, string|null given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Middleware/LegacyRoutingMiddleware.php
+
+		-
+			rawMessage: Binary operation "." between 'token:' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: Binary operation "." between 'user:' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: Cannot access offset 'basePath' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method getTenantId() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method getTokenUid() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method getUserId() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 3
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 5
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\RateLimitMiddleware::getClientIp() should return string but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\RateLimitMiddleware::resolveRateLimitConfig() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\RateLimitMiddleware::resolveResourceConfig() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\RateLimitMiddleware::resolveResourceConfig() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Middleware/RateLimitMiddleware.php
+
+		-
+			rawMessage: 'Cannot call method decode() on SGalinski\SgApiCore\Service\JwtService|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Cannot call method findByHashGlobally() on SGalinski\SgApiCore\Domain\Repository\TokenRepository|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Cannot call method getQueryBuilderForTable() on TYPO3\CMS\Core\Database\ConnectionPool|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 5
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::authUser() has parameter $user with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::fetchUserRecordById() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::getExtensionConfiguration() should return SGalinski\SgApiCore\Configuration\ExtensionConfiguration but returns SGalinski\SgApiCore\Configuration\ExtensionConfiguration|null.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::getUser() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function substr expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/ApiTokenAuthenticationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\AuthContext::__construct() has parameter $scopes with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/AuthContext.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\AuthContext::getScopes() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/AuthContext.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\BackendUserProvider::authenticate() has parameter $activeProviders with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/BackendUserProvider.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 5
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider::authenticate() has parameter $activeProviders with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider::findMatchingToken() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $json of function json_decode expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function substr expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 2
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\JwtAccessTokenProvider::authenticate() has parameter $activeProviders with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\JwtAccessTokenProvider::isTokenRevoked() has parameter $tokenRecord with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function substr expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $tokenHash of method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findByHashGlobally() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Parameter $scopes of class SGalinski\SgApiCore\Security\AuthContext constructor expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Parameter $tokenUid of class SGalinski\SgApiCore\Security\AuthContext constructor expects int|string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Parameter $userId of class SGalinski\SgApiCore\Security\AuthContext constructor expects int|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: Using nullsafe method call on non-nullable type TYPO3\CMS\Core\Database\ConnectionPool. Use -> instead.
+			identifier: nullsafe.neverNull
+			count: 2
+			path: ../../Classes/Security/JwtAccessTokenProvider.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\LoginProviderChain::__construct() has parameter $providers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/LoginProviderChain.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\LoginProviderChain::authenticate() has parameter $activeProviders with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/LoginProviderChain.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strtolower expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Security/LoginProviderChain.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Security\LoginProviderChain::$providers (array<SGalinski\SgApiCore\Security\LoginProviderInterface>) does not accept array.'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../Classes/Security/LoginProviderChain.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Security\LoginProviderInterface::authenticate() has parameter $activeProviders with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Security/LoginProviderInterface.php
+
+		-
+			rawMessage: Cannot access offset 'versions' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: Cannot access offset string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getApi() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getApi() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getApis() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getRateLimitConfig() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getRateLimitConfig() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::getSecurityConfig() should return array but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::registerApi() has parameter $options with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::registerApi() has parameter $security with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ApiRegistry::registerApi() has parameter $versions with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\ApiRegistry::$apis type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ApiRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\CachePathService::getCacheDirectoriesToClear() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/CachePathService.php
+
+		-
+			rawMessage: 'Argument of an invalid type mixed supplied for foreach, only iterables are supported.'
+			identifier: foreach.nonIterable
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Create ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Creates a new ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Delete ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Deletes an existing ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Binary operation "." between ''Field: '' and mixed results in an error.'
+			identifier: binaryOp.invalid
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Get ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'List ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Returns a paginated…' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Returns a single ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Update ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Binary operation "." between 'Updates an existing ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Binary operation "." between mixed and ''[]'' results in an error.'
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'MM' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'apiId' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'authMode' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'columns' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'config' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'create' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'delete' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'eval' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'foreign_table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'format' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'get' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'internal_type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'items' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'label' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'list' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'lower' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'path' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'range' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'tenants' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'update' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'upper' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'value' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'version' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 1 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset mixed on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot cast mixed to float.
+			identifier: cast.double
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::__construct() has parameter $controllers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::generateResourceEndpoints() has parameter $config with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::generateResourceEndpoints() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getAllEndpoints() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getControllerClasses() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getEndpointsForApi() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_filter expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_keys expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_unique expects an array of values castable to string, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_contains expects string, class-string|false given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_contains expects string, mixed given.'
+			identifier: argument.type
+			count: 9
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $input of method TYPO3\CMS\Core\Localization\LanguageService::sL() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $object of function get_class expects object, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $objectOrClass of class ReflectionClass constructor expects class-string<T of object>|T of object, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function rtrim expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strlen expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function array_map expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array<mixed> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $callback of function array_filter expects (callable(mixed): bool)|null, Closure(string): bool given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $config of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::generateResourceEndpoints() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
+			identifier: argument.type
+			count: 6
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter $name of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter $schema of class SGalinski\SgApiCore\Attribute\ApiResponse constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter $type of class SGalinski\SgApiCore\Attribute\ApiBodyParam constructor expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 3
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\EndpointDiscoveryService::$controllerClasses type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\EndpointDiscoveryService::$endpoints type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Strict comparison using === between non-falsy-string and '''' will always evaluate to false.'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Using nullsafe property access "?->scopes" on left side of ?? is unnecessary. Use -> instead.
+			identifier: nullsafe.neverNull
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot access offset 'SYS' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: Cannot access offset 'alg' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: Cannot access offset 'encryptionKey' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: Cannot access offset 'exp' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: Cannot access offset 'jti' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Cannot access offset (int|string) on mixed.'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\JwtService::decode() has parameter $expectedClaims with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\JwtService::decode() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\JwtService::decode() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\JwtService::encode() has parameter $payload with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Service\JwtService::$privateKey (string) does not accept mixed.'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../Classes/Service/JwtService.php
+
+		-
+			rawMessage: 'Argument of an invalid type mixed supplied for foreach, only iterables are supported.'
+			identifier: foreach.nonIterable
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Binary operation "." between non-falsy-string and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'LOG' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'LogService' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'SGalinski' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'Service' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'SgApiCore' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'logFile' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'writerConfiguration' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot access offset int|string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot cast mixed to float.
+			identifier: cast.double
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 7
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\LogDashboardService::getDashboardData() should return array<string, mixed> but returns array<mixed>.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_keys expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: 'Parameter #1 $duration of method SGalinski\SgApiCore\Service\LogDashboardService::parseDuration() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: 'Parameter #1 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: 'Parameter #2 $callback of function array_filter expects (callable(non-empty-array<string, mixed>): bool)|null, Closure(array): mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 4
+			path: ../../Classes/Service/LogDashboardService.php
+
+		-
+			rawMessage: 'Cannot call method getTenantId() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 5
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\LogService::log() has parameter $context with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\LogService::logError() has parameter $context with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\LogService::logInfo() has parameter $context with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\LogService::redact() has parameter $redactKeys with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, ''strtolower'' given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Parameter #2 ...$values of function sprintf expects bool|float|int|string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Parameter #3 ...$values of function sprintf expects bool|float|int|string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/LogService.php
+
+		-
+			rawMessage: 'Argument of an invalid type mixed supplied for foreach, only iterables are supported.'
+			identifier: foreach.nonIterable
+			count: 11
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Binary operation ".=" between mixed and non-falsy-string results in an error.'
+			identifier: assignOp.invalid
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset '$ref' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'bearerAuth' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'columns' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'config' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'cookieAuth' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'description' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'fieldMetadata' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'foreign_table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'items' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'label' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'methods' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'path' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'properties' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'resource' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'schemas' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'securitySchemes' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'tags' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 'x-tca-field' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Cannot access offset (int|string) on mixed.'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset 0 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset mixed on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset non-empty-string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset non-falsy-string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot access offset string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::addRouteToSpec() has parameter $endpoint with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::addRouteToSpec() has parameter $spec with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::enrichGlobalSchemas() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::enrichSchemaWithTca() has parameter $schema with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::enrichSchemaWithTca() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::generateResourceSchema() has parameter $endpoint with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::generateResourceSchema() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::generateSchemaFromExample() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::generateSpec() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::generateStubFromProp() has parameter $prop with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::generateStubFromSchema() has parameter $schema with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::parseSchema() has parameter $knownSchemas with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\OpenApiService::parseSchema() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_keys expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $input of method TYPO3\CMS\Core\Localization\LanguageService::sL() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $path of function basename expects string, mixed given.'
+			identifier: argument.type
+			count: 5
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $phpType of method SGalinski\SgApiCore\Service\OpenApiService::mapPhpTypeToOpenApi() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function ltrim expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strtolower expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $string1 of function strcasecmp expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 $value of function count expects array|Countable, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #1 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 $endpoint of method SGalinski\SgApiCore\Service\OpenApiService::generateResourceSchema() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 $prop of method SGalinski\SgApiCore\Service\OpenApiService::generateStubFromProp() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 $schema of method SGalinski\SgApiCore\Service\OpenApiService::enrichSchemaWithTca() expects array, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 $schema of method SGalinski\SgApiCore\Service\OpenApiService::generateStubFromSchema() expects array, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 $string2 of function strcasecmp expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #2 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #3 $authMode of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getEndpointsForApi() expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #3 $authMode of method SGalinski\SgApiCore\Service\OpenApiService::getSpecCacheKey() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #3 $endpoint of method SGalinski\SgApiCore\Service\OpenApiService::addRouteToSpec() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #3 $tableName of method SGalinski\SgApiCore\Service\OpenApiService::enrichSchemaWithTca() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: 'Parameter #3 $tableName of method SGalinski\SgApiCore\Service\OpenApiService::generateSchemaFromExample() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 6
+			path: ../../Classes/Service/OpenApiService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 3
+			path: ../../Classes/Service/PaginationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\PaginationService::buildPaginationMeta() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/PaginationService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\PathAnalysisService::analyze() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/PathAnalysisService.php
+
+		-
+			rawMessage: 'Argument of an invalid type mixed supplied for foreach, only iterables are supported.'
+			identifier: foreach.nonIterable
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Binary operation "-" between mixed and int results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'basePath' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'rateLimit' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'security' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot access offset 'versions' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 13
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 6
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\RateLimitDashboardService::matchesCounterFilters() has parameter $parsedIdentifier with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: 'Parameter #1 $rateLimit of method SGalinski\SgApiCore\Service\RateLimitDashboardService::normalizeRateLimitConfig() expects array<string, mixed>|null, array<mixed, mixed> given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: 'Parameter #1 $rateLimit of method SGalinski\SgApiCore\Service\RateLimitDashboardService::normalizeRateLimitConfig() expects array<string, mixed>|null, array<mixed, mixed>|null given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: ../../Classes/Service/RateLimitDashboardService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 2
+			path: ../../Classes/Service/RateLimitService.php
+
+		-
+			rawMessage: Access to an undefined property object::$name.
+			identifier: property.notFound
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Access to an undefined property object::$pattern.
+			identifier: property.notFound
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Access to an undefined property object::$type.
+			identifier: property.notFound
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Argument of an invalid type mixed supplied for foreach, only iterables are supported.'
+			identifier: foreach.nonIterable
+			count: 4
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Binary operation "." between 'Value does not…' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Binary operation "." between 'Value length must…' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 2
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Binary operation "." between 'Value must be at…' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 4
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Binary operation "." between mixed and '[' results in an error.
+			identifier: binaryOp.invalid
+			count: 2
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Call to function is_array() with array will always evaluate to true.'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Cannot access property $required on mixed.
+			identifier: property.nonObject
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Cannot access property $requiredIf on mixed.
+			identifier: property.nonObject
+			count: 2
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 2
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\RequestValidator::checkCondition() has parameter $values with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\RequestValidator::validate() has parameter $endpoint with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\RequestValidator::validate() has parameter $pathParams with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\RequestValidator::validate() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\RequestValidator::validateValue() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Parameter #1 $condition of method SGalinski\SgApiCore\Service\RequestValidator::checkCondition() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_ends_with expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Parameter #1 $pattern of function preg_match expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strtolower expects string, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: 'Parameter #3 $subject of function str_replace expects array<string>|string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/RequestValidator.php
+
+		-
+			rawMessage: Cannot access offset string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResourceRegistry::getResource() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResourceRegistry::getResource() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResourceRegistry::getResources() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResourceRegistry::getResources() should return array but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResourceRegistry::registerResource() has parameter $config with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\ResourceRegistry::$resources type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResourceRegistry.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 1
+			path: ../../Classes/Service/ResponseService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 4
+			path: ../../Classes/Service/ResponseService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResponseService::createErrorResponse() has parameter $additionalData with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResponseService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResponseService::createLocalizedErrorResponse() has parameter $additionalData with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResponseService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\ResponseService::createSuccessResponse() has parameter $meta with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/ResponseService.php
+
+		-
+			rawMessage: 'Parameter #1 $data of class TYPO3\CMS\Core\Http\JsonResponse constructor expects array|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/ResponseService.php
+
+		-
+			rawMessage: Binary operation "." between 'You do not have the…' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'action' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'apiCache' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'authMode' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'controller' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'endpoint' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'methods' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'path' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'requireFullTypoScript' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset 'resource' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset non-empty-string on array|object.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access property $name on mixed.
+			identifier: property.nonObject
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access property $type on mixed.
+			identifier: property.nonObject
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Cannot call method getTenantId() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Cannot call method getUserId() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Cannot call method hasHeader() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Cannot call method hasScope() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Cannot call method withHeader() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot cast mixed to float.
+			identifier: cast.double
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::__construct() has parameter $controllers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::createDispatcher() has parameter $filteredEndpoints with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::createErrorResponse() has parameter $additionalData with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::dispatch() should return Psr\Http\Message\ResponseInterface but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::getControllerInstances() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::getFilteredEndpoints() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::matchEndpoint() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::matchEndpoint() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::resolveArguments() has parameter $endpoint with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::resolveArguments() has parameter $pathParams with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router::resolveArguments() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $callback of function call_user_func_array expects callable(): mixed, array{mixed, mixed} given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $haystack of function str_contains expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $httpMethod of method FastRoute\RouteCollector::addRoute() expects array<string>|string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $name of method ReflectionClass<object>::getMethod() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $object of function get_class expects object, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $objectOrClass of class ReflectionClass constructor expects class-string<T of object>|T of object, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strlen expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strtolower expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #1 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function implode expects array<string>, array<mixed, mixed> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #2 $endpoint of method SGalinski\SgApiCore\Service\RequestValidator::validate() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #2 $endpoint of method SGalinski\SgApiCore\Service\Router::resolveArguments() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #2 $route of method FastRoute\RouteCollector::addRoute() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #2 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #3 $authMode of method SGalinski\SgApiCore\Service\Router::getFilteredEndpoints() expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #3 $pathParams of method SGalinski\SgApiCore\Service\RequestValidator::validate() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #3 $pathParams of method SGalinski\SgApiCore\Service\Router::resolveArguments() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #3 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #4 $tenantId of method SGalinski\SgApiCore\Service\Router::getFilteredEndpoints() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter #5 $tenantId of method SGalinski\SgApiCore\Service\Router::createDispatcher() expects string, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: 'Parameter $legacyMode of method SGalinski\SgApiCore\Service\ResponseService::createErrorResponse() expects SGalinski\SgApiCore\Attribute\ApiLegacyMode|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\Router::$controllerInstances type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Router.php
+
+		-
+			rawMessage: Cannot access offset string on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\SchemaRegistry::getSchema() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\SchemaRegistry::getSchema() should return array|null but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\SchemaRegistry::getSchemas() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\SchemaRegistry::getSchemas() should return array but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\SchemaRegistry::getTableNameForSchema() should return string but returns mixed.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\SchemaRegistry::registerSchema() has parameter $schema with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\SchemaRegistry::$schemaToTableMapping type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Service\SchemaRegistry::$schemas type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/SchemaRegistry.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Tenant\TenantResolverChain::__construct() has parameter $resolvers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/Tenant/TenantResolverChain.php
+
+		-
+			rawMessage: 'Parameter #1 $error of static method SGalinski\SgApiCore\Service\Tenant\TenantContextResult::failure() expects string, string|null given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/Tenant/TenantResolverChain.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Service\Tenant\TenantResolverChain::$resolvers (array<SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface>) does not accept array.'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../Classes/Service/Tenant/TenantResolverChain.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\TokenService::createToken() has parameter $scopes with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/TokenService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\TokenService::generateJwtAccessToken() has parameter $scopes with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/TokenService.php
+
+		-
+			rawMessage: Binary operation "." between 'Refresh Token for ' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Binary operation "." between 'login-' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Binary operation "." between 'refresh-' and mixed results in an error.
+			identifier: binaryOp.invalid
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Cannot access offset 'frontendUserStoragePage' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Cannot access offset 'uid' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Cannot access offset 'userStoragePids' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Cannot access offset 'user_id' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Cannot call method decode() on SGalinski\SgApiCore\Service\JwtService|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Cannot call method getSettings() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
+			count: 16
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 3
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::authenticateUser() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::findUserByUsername() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateAccessToken() has parameter $scopes with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateAccessToken() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateTokensForUser() has parameter $scopes with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateTokensForUser() has parameter $user with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateTokensForUser() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateTokensForUserWithScopeHandling() has parameter $user with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::generateTokensForUserWithScopeHandling() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::refreshTokens() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\UserAuthService::resolveUserStoragePids() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_unique expects an array of values castable to string, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #1 $array of function array_unique expects an array of values castable to string, array<mixed, mixed> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #1 $callback of function array_map expects (callable(mixed): mixed)|null, ''strtolower'' given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #1 $hash of method TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory::get() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #1 $json of function json_decode expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #1 $tokenHash of method SGalinski\SgApiCore\Domain\Repository\TokenRepository::findByHashGlobally() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #2 $array of function array_map expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #2 $saltedHashPW of method TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashInterface::checkPassword() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #2 ...$arrays of function array_merge expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #5 $scopes of method SGalinski\SgApiCore\Service\TokenService::createToken() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: 'Parameter #5 $scopes of method SGalinski\SgApiCore\Service\UserAuthService::generateAccessToken() expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/UserAuthService.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: array.invalidKey
+			count: 2
+			path: ../../Classes/ViewHelpers/Backend/EditLinkViewHelper.php
+
+		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 2
+			path: ../../Classes/ViewHelpers/EffectiveAuthModeViewHelper.php
+
+		-
+			rawMessage: Cannot access offset 'LOG' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'LogService' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'SC_OPTIONS' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'SGalinski' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'SYS' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'Service' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'SgApiCore' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'TYPO3\\CMS\\Scheduler\\Task\\TableGarbageCollectionTask' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'cacheConfigurations' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'caching' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'options' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'scheduler' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'sg_apicore_dashboard' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'sg_apicore_discovery' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'sg_apicore_responses' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'tables' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'tasks' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'tx_apicore_rate_limit' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: Cannot access offset 'writerConfiguration' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../ext_localconf.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Mapper\TcaMapper::method().'
+			identifier: method.notFound
+			count: 5
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\PaginationService::method().'
+			identifier: method.notFound
+			count: 3
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\ResponseService::method().'
+			identifier: method.notFound
+			count: 5
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|TYPO3\CMS\Core\Database\ConnectionPool::method().'
+			identifier: method.notFound
+			count: 5
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'NEW1' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'columns' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'header' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'pid' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'tt_content' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 7
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 4471 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #1 $data of class TYPO3\CMS\Core\Http\JsonResponse constructor expects array|null, mixed given.'
+			identifier: argument.type
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #2 $status of class TYPO3\CMS\Core\Http\JsonResponse constructor expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'access_token' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Controller/UserAuthControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'bearerToken' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Controller/UserAuthControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'refresh_token' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Controller/UserAuthControllerTest.php
+
+		-
+			rawMessage: 'Parameter #1 $data of class TYPO3\CMS\Core\Http\JsonResponse constructor expects array|null, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Controller/UserAuthControllerTest.php
+
+		-
+			rawMessage: 'Parameter #2 $status of class TYPO3\CMS\Core\Http\JsonResponse constructor expects int, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Controller/UserAuthControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'tx_test' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Mapper/TcaMapperTest.php
+
+		-
+			rawMessage: 'Cannot call method expects() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method method() on mixed.'
+			identifier: method.nonObject
+			count: 4
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method process() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method willReturn() on mixed.'
+			identifier: method.nonObject
+			count: 4
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method with() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiAuthMiddlewareTest::$apiRegistry has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiAuthMiddlewareTest::$loginProvider has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiAuthMiddlewareTest::$middleware has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiAuthMiddlewareTest::$pathAnalysisService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiAuthMiddlewareTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\ApiRegistry::expects().'
+			identifier: method.notFound
+			count: 7
+			path: ../../tests/Unit/Middleware/ApiCorsMiddlewareTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\PathAnalysisService::expects().'
+			identifier: method.notFound
+			count: 4
+			path: ../../tests/Unit/Middleware/ApiCorsMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method method() on mixed.'
+			identifier: method.nonObject
+			count: 9
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method process() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method willReturn() on mixed.'
+			identifier: method.nonObject
+			count: 9
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method with() on mixed.'
+			identifier: method.nonObject
+			count: 6
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Parameter #1 $extensionConfiguration of class SGalinski\SgApiCore\Middleware\ApiRequestMiddleware constructor expects SGalinski\SgApiCore\Configuration\ExtensionConfiguration, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Parameter #2 $apiRegistry of class SGalinski\SgApiCore\Middleware\ApiRequestMiddleware constructor expects SGalinski\SgApiCore\Service\ApiRegistry, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Parameter #4 $pathAnalysisService of class SGalinski\SgApiCore\Middleware\ApiRequestMiddleware constructor expects SGalinski\SgApiCore\Service\PathAnalysisService, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Parameter #5 $responseService of class SGalinski\SgApiCore\Middleware\ApiRequestMiddleware constructor expects SGalinski\SgApiCore\Service\ResponseService, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Parameter #6 $persistenceManager of class SGalinski\SgApiCore\Middleware\ApiRequestMiddleware constructor expects TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$apiRegistry has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$extensionConfiguration has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$middleware has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$pathAnalysisService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$persistenceManager has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$responseService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiRequestMiddlewareTest::$router has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiRequestMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method method() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method process() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: 'Cannot call method willReturn() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$context has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$extensionConfiguration has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$logService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$middleware has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$pathAnalysisService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$responseService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Middleware\ApiSetupMiddlewareTest::$tenantResolver has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Middleware/ApiSetupMiddlewareTest.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Tests\Unit\Middleware\LegacyRoutingMiddlewareTest::$extensionConfiguration (PHPUnit\Framework\MockObject\MockObject&SGalinski\SgApiCore\Configuration\ExtensionConfiguration) does not accept PHPUnit\Framework\MockObject\Stub&SGalinski\SgApiCore\Configuration\ExtensionConfiguration.'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../tests/Unit/Middleware/LegacyRoutingMiddlewareTest.php
+
+		-
+			rawMessage: 'Call to method PHPUnit\Framework\Assert::assertInstanceOf() with ''Psr\\Http\\Message\\ResponseInterface'' and Psr\Http\Message\ResponseInterface will always evaluate to true.'
+			identifier: method.alreadyNarrowedType
+			count: 1
+			path: ../../tests/Unit/Middleware/RateLimitMiddlewareTest.php
+
+		-
+			rawMessage: Cannot access offset 'action' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'apiId' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'bodyParams' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'controller' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'description' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'fieldMetadata' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'methods' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'path' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'pathParams' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'queryParams' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'resource' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'responses' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'scopes' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'summary' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tags' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'title' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tx_test' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'version' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 0 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of method PHPUnit\Framework\Assert::assertCount() expects Countable|iterable, mixed given.'
+			identifier: argument.type
+			count: 4
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'Authorization' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'method' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'nested' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'password' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'requestBody' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'requestId' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'safe' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'secret' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'token' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'username' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: 'Parameter #1 $json of function json_decode expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strlen expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strrev expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of method PHPUnit\Framework\Assert::assertStringContainsString() expects string, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Tests\Unit\Service\LogServiceTest::$extensionConfiguration (PHPUnit\Framework\MockObject\MockObject&SGalinski\SgApiCore\Configuration\ExtensionConfiguration) does not accept PHPUnit\Framework\MockObject\Stub&SGalinski\SgApiCore\Configuration\ExtensionConfiguration.'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Tests\Unit\Service\LogServiceTest::$logManager (PHPUnit\Framework\MockObject\MockObject&TYPO3\CMS\Core\Log\LogManager) does not accept PHPUnit\Framework\MockObject\Stub&TYPO3\CMS\Core\Log\LogManager.'
+			identifier: assign.propertyType
+			count: 1
+			path: ../../tests/Unit/Service/LogServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '$ref' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/complex' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/enveloped-tca-example' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/error-test' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Cannot access offset ''/example/{id}'' on mixed.'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/partner-only' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/recursive-tca' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/tca' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/tca-example' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '200' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'GlobalObject' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'application/json' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 9
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'child' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'content' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 9
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'count' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'data' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'description' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'example' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'foo' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'get' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 11
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'id' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'items' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'name' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'parameters' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'post' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'properties' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 16
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'remapped_field' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'required' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'responses' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'schema' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 12
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'schemas' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'securitySchemes' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'summary' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'title' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tx_child_table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tx_parent_table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tx_test_table' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 11
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'url' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 0 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 8
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 1 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\OpenApiServiceTest::getDiscoveryService() has parameter $controllers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\OpenApiServiceTest::getOpenApiService() has parameter $globalSchemas with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $array of method PHPUnit\Framework\Assert::assertArrayHasKey() expects array<mixed>|ArrayAccess<(int|string), mixed>, mixed given.'
+			identifier: argument.type
+			count: 31
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $array of method PHPUnit\Framework\Assert::assertArrayNotHasKey() expects array<mixed>|ArrayAccess<(int|string), mixed>, mixed given.'
+			identifier: argument.type
+			count: 6
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of method PHPUnit\Framework\Assert::assertContains() expects iterable, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset '/placeholder' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset '200' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'application/json' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'content' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'data' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 5
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'example' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'flag' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'get' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'id' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'media' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'meta' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'name' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'responses' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'status' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'tags' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'url' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 0 on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 6
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\PlaceholderTest::getDiscoveryService() has parameter $controllers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/PlaceholderTest.php
+
+		-
+			rawMessage: Cannot access offset 'identifier' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'remaining' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\TestableRateLimitDashboardService::buildCountersForTest() has parameter $apiOverrides with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\TestableRateLimitDashboardService::buildCountersForTest() has parameter $filters with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\TestableRateLimitDashboardService::buildCountersForTest() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\TestableRateLimitDashboardService::fetchRateLimitRows() should return array<int, array<string, mixed>> but returns array.'
+			identifier: return.type
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: 'Parameter #1 $apiOverrides of method SGalinski\SgApiCore\Service\RateLimitDashboardService::buildCounters() expects array<int, array<string, mixed>>, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: 'Parameter #3 $filters of method SGalinski\SgApiCore\Service\RateLimitDashboardService::buildCounters() expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Service\TestableRateLimitDashboardService::$rows type has no value type specified in iterable type array.
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RateLimitDashboardServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'field' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 4
+			path: ../../tests/Unit/Service/RequestValidatorTest.php
+
+		-
+			rawMessage: Cannot access offset 'message' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 10
+			path: ../../tests/Unit/Service/RequestValidatorTest.php
+
+		-
+			rawMessage: Offset 0 might not exist on array|null.
+			identifier: offsetAccess.notFound
+			count: 2
+			path: ../../tests/Unit/Service/RequestValidatorTest.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of method PHPUnit\Framework\Assert::assertStringContainsString() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/RequestValidatorTest.php
+
+		-
+			rawMessage: Cannot access offset 'code' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'detail' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'error' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'message' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'status' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'title' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $array of method PHPUnit\Framework\Assert::assertArrayNotHasKey() expects array<mixed>|ArrayAccess<(int|string), mixed>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/ResponseServiceTest.php
+
+		-
+			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\EndpointDiscoveryService::method().'
+			identifier: method.notFound
+			count: 1
+			path: ../../tests/Unit/Service/RouterRouteConflictTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router@anonymous/tests/Unit/Service/RouterRouteConflictTest.php:57::__construct() has parameter $controllers with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RouterRouteConflictTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\Router@anonymous/tests/Unit/Service/RouterRouteConflictTest.php:57::getControllerInstances() return type has no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RouterRouteConflictTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\DummyController::getAction() has no return type specified.'
+			identifier: missingType.return
+			count: 1
+			path: ../../tests/Unit/Service/RouterRouteConflictTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\DummyController::listAction() has no return type specified.'
+			identifier: missingType.return
+			count: 1
+			path: ../../tests/Unit/Service/RouterRouteConflictTest.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Tests\Unit\Service\RouterTest::createRouter() has parameter $controllers with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../tests/Unit/Service/RouterTest.php
+
+		-
+			rawMessage: 'Parameter #2 $status of class TYPO3\CMS\Core\Http\JsonResponse constructor expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/RouterTest.php
+
+		-
+			rawMessage: 'Cannot call method getSiteIdentifier() on SGalinski\SgApiCore\Context\TenantContext|null.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../tests/Unit/Service/Tenant/SiteTenantResolverTest.php
+
+		-
+			rawMessage: 'Cannot call method getTenantId() on SGalinski\SgApiCore\Context\TenantContext|null.'
+			identifier: method.nonObject
+			count: 3
+			path: ../../tests/Unit/Service/Tenant/SiteTenantResolverTest.php
+
+		-
+			rawMessage: Cannot access offset 'apiId' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'api_id' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'exp' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'jti' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'scopes' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tenantId' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tenant_id' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'token_hash' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'userId' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method createToken() on mixed.'
+			identifier: method.nonObject
+			count: 2
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method expects() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method generateJwtAccessToken() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method generateRandomToken() on mixed.'
+			identifier: method.nonObject
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method method() on mixed.'
+			identifier: method.nonObject
+			count: 4
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method willReturn() on mixed.'
+			identifier: method.nonObject
+			count: 4
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Cannot call method with() on mixed.'
+			identifier: method.nonObject
+			count: 3
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: 'Parameter #1 $string of function strlen expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Service\TokenServiceTest::$connectionPool has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Service\TokenServiceTest::$extensionConfiguration has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Service\TokenServiceTest::$jwtService has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Service\TokenServiceTest::$service has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Property SGalinski\SgApiCore\Tests\Unit\Service\TokenServiceTest::$tokenRepository has no type specified.
+			identifier: missingType.property
+			count: 1
+			path: ../../tests/Unit/Service/TokenServiceTest.php
+
+		-
+			rawMessage: Cannot use ++ on mixed.
+			identifier: postInc.type
+			count: 1
+			path: ../../tests/Unit/Service/UserAuthServiceTest.php
+
+		-
+			rawMessage: Possibly invalid array key type mixed.
+			identifier: offsetAccess.invalidOffset
+			count: 1
+			path: ../../tests/Unit/Service/UserAuthServiceTest.php

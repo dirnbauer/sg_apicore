@@ -60,3 +60,6 @@ rateLimitDefaultBurst = 0
 
 # cat=basic/security; type=int; label=Backend user UID for Auto-CRUD resource writes:Use this BE user for create/update/delete in Auto-CRUD resources. Leave empty or 0 to keep the admin bypass.
 apiResourceWriteBackendUserId = 0
+
+# cat=basic/security; type=int; label=Workspace UID for Auto-CRUD resource writes:Use -1 to keep the current/default backend user workspace, 0 for live, or a positive sys_workspace UID.
+apiResourceWriteWorkspaceId = -1

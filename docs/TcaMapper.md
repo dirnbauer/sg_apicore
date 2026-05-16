@@ -5,7 +5,8 @@ structures. It uses the information from the Table Configuration Array (TCA).
 
 ## Features
 
-* **Automatic Whitelisting**: Internal TYPO3 fields (such as `tstamp`, `crdate`, `hidden`) are excluded by default.
+* **Automatic Whitelisting**: Internal TYPO3 fields (such as `tstamp`, `crdate`, `deleted`, and workspace metadata) are
+  excluded by default.
 * **Type Conversion**:
     * Booleans (for `type => check`)
     * Integers (for `eval => int` or `type => number`)

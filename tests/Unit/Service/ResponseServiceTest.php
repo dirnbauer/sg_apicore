@@ -25,6 +25,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for ResponseService
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ResponseServiceTest extends UnitTestCase {
 	public function testCreateSuccessResponseWithoutEnvelope(): void {
 		$config = $this->createStub(ExtensionConfiguration::class);

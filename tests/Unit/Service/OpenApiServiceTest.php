@@ -34,12 +34,13 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for OpenApiService
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class OpenApiServiceTest extends UnitTestCase {
 	public function testEnrichSchemaWithXTagField(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockGlobalSchemaController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -63,12 +64,12 @@ class OpenApiServiceTest extends UnitTestCase {
 			],
 		];
 
-		$schemaRegistry = $this->createStub(SchemaRegistry::class);
+		$schemaRegistry = $this->createMock(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
 		$schemaRegistry->method('getTableNameForSchema')->with('public', 'GlobalObject')->willReturn('tx_test_table');
 
-		$cache = $this->createStub(FrontendInterface::class);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cache = $this->createMock(FrontendInterface::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
 		$service = new OpenApiService(
@@ -87,10 +88,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSchemaFromExampleEnrichesWithTca(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockTcaEnrichmentController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -113,10 +114,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecWithGlobalSchema(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockGlobalSchemaController()]);
@@ -148,10 +149,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecContainsPaths(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
@@ -167,10 +168,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecUsesProvidedBaseUrl(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
@@ -181,10 +182,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecFiltersByApiId(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
@@ -202,7 +203,7 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecFiltersHybridAuthModeCorrectly(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturnMap([
 			['public', '1', ['authMode' => 'public']],
 			['public', '', ['authMode' => 'public']],
@@ -212,7 +213,7 @@ class OpenApiServiceTest extends UnitTestCase {
 			['backend', '', ['authMode' => 'backend']],
 		]);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([
 			new MockHybridController(),
 			new MockUserOnlyController(),
@@ -271,10 +272,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecContainsRequestBody(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockBodyParamController()]);
@@ -297,10 +298,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecContainsExamples(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
 
 		$controllers = new \ArrayIterator([new MockExampleController()]);
@@ -330,10 +331,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecGeneratesComplexSchemaFromExample(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockComplexExampleController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -351,10 +352,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecContainsSecurity(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'backend']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -372,10 +373,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecWithHybridAuthMode(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockHybridController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -389,10 +390,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecWithTokenAuth(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -406,10 +407,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecWithPublicAuthMode(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockOpenApiController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -427,10 +428,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecUsesTcaLabelsForRegularEndpoints(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockTcaExampleController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -453,10 +454,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecUsesRecursiveTcaLabels(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockRecursiveTcaController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -491,10 +492,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecFixesMissingDescriptionAndMissingArrayItems(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockSchemaErrorController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -525,10 +526,10 @@ class OpenApiServiceTest extends UnitTestCase {
 	}
 
 	public function testGenerateSpecUsesTcaLabelsForEnvelopedRegularEndpoints(): void {
-		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry = $this->createMock(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
 
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$controllers = new \ArrayIterator([new MockEnvelopedTcaExampleController()]);
 		$discoveryService = $this->getDiscoveryService($controllers);
 
@@ -557,15 +558,15 @@ class OpenApiServiceTest extends UnitTestCase {
 		iterable $controllers,
 		?ApiRegistry $apiRegistry = NULL
 	): EndpointDiscoveryService {
-		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry = $this->createMock(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$languageService = $this->createStub(\TYPO3\CMS\Core\Localization\LanguageService::class);
+		$languageService = $this->createMock(\TYPO3\CMS\Core\Localization\LanguageService::class);
 		$languageService->method('sL')->willReturnCallback(function ($key) {
 			if ($key === 'LLL:EXT:test/locallang.xlf:title') {
 				return 'Translated Title';
@@ -573,11 +574,11 @@ class OpenApiServiceTest extends UnitTestCase {
 			return $key;
 		});
 
-		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
 
 		if ($apiRegistry === NULL) {
-			$apiRegistry = $this->createStub(ApiRegistry::class);
+			$apiRegistry = $this->createMock(ApiRegistry::class);
 		}
 
 		return new EndpointDiscoveryService(
@@ -595,13 +596,13 @@ class OpenApiServiceTest extends UnitTestCase {
 		ExtensionConfiguration $extensionConfiguration,
 		array $globalSchemas = []
 	): OpenApiService {
-		$cache = $this->createStub(FrontendInterface::class);
+		$cache = $this->createMock(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
 
-		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager = $this->createMock(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$schemaRegistry = $this->createStub(SchemaRegistry::class);
+		$schemaRegistry = $this->createMock(SchemaRegistry::class);
 		$schemaRegistry->method('getSchemas')->willReturn($globalSchemas);
 		$schemaRegistry->method('getSchema')->willReturnCallback(function ($apiId, $schemaName) use ($globalSchemas) {
 			return $globalSchemas[$schemaName] ?? NULL;

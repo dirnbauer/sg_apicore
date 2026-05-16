@@ -24,12 +24,13 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for BearerOpaqueTokenProvider
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class BearerOpaqueTokenProviderTest extends UnitTestCase {
 	public function testAuthenticateReturnsNullIfNoBearerToken(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('');
 
-		$tokenRepository = $this->createStub(TokenRepository::class);
+		$tokenRepository = $this->createMock(TokenRepository::class);
 		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
 
 		$result = $provider->authenticate($request, 'public', 'tenant-1');
@@ -37,10 +38,10 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 	}
 
 	public function testAuthenticateReturnsNullIfTokenNotFound(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer valid-token');
 
-		$tokenRepository = $this->createStub(TokenRepository::class);
+		$tokenRepository = $this->createMock(TokenRepository::class);
 		$tokenRepository->method('findByHashApiAndTenant')->willReturn(NULL);
 
 		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
@@ -52,7 +53,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 	public function testAuthenticateReturnsAuthContextIfTokenValid(): void {
 		$token = 'test-token';
 		$tokenHash = hash('sha256', $token);
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
 
 		$tokenRecord = [
@@ -84,7 +85,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 	public function testAuthenticateReturnsNullIfTokenExpired(): void {
 		$token = 'test-token';
 		$tokenHash = hash('sha256', $token);
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
 
 		$tokenRecord = [
@@ -93,7 +94,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 			'expires_at' => time() - 3600, // Expired 1 hour ago
 		];
 
-		$tokenRepository = $this->createStub(TokenRepository::class);
+		$tokenRepository = $this->createMock(TokenRepository::class);
 		$tokenRepository->method('findByHashApiAndTenant')->willReturn($tokenRecord);
 
 		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
@@ -105,7 +106,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 	public function testAuthenticateRespectsSiteRootPageIdFromTenantContext(): void {
 		$token = 'test-token';
 		$tokenHash = hash('sha256', $token);
-		$request = $this->createStub(ServerRequestInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Bearer ' . $token);
 
 		$tenantContext = new \SGalinski\SgApiCore\Context\TenantContext(tenantId: 'tenant-1', siteRootPageId: 456);
@@ -132,7 +133,7 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$this->assertInstanceOf(AuthContext::class, $result);
 	}
 	protected function createExtensionConfiguration(): ExtensionConfiguration {
-		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isActivateLegacySupport')->willReturn(FALSE);
 		return $extensionConfiguration;
 	}

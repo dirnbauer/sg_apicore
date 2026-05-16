@@ -30,7 +30,7 @@ use TYPO3\CMS\Core\Context\LanguageAspectFactory;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
- * Middleware to setup API request context (Tenant, TSFE, etc.)
+ * Middleware to setup the API request context.
  */
 class ApiSetupMiddleware implements MiddlewareInterface {
 	protected ExtensionConfiguration $extensionConfiguration;

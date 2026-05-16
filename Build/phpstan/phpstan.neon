@@ -1,0 +1,32 @@
+includes:
+  - phpstan-baseline.neon
+  - ../../vendor/bnf/phpstan-psr-container/extension.neon
+  - ../../vendor/phpstan/phpstan-phpunit/extension.neon
+  - ../../vendor/phpstan/phpstan-phpunit/rules.neon
+
+parameters:
+  # Adapted from TYPO3 core Build/phpstan/phpstan.neon on main/v14.3.
+  # TYPO3 core's internal PHPStan rule classes are not shipped in Composer
+  # distributions, so this extension keeps the public extension includes and
+  # shared parameters, then raises the required level to max.
+  tmpDir: ../../.cache/phpstan
+
+  level: max
+
+  bootstrapFiles:
+    - phpstan-constants.php
+
+  paths:
+    - ../../Classes
+    - ../../Configuration
+    - ../../tests
+    - ../../ext_localconf.php
+
+  excludePaths:
+    - ../../ext_emconf.php
+    - ../../Resources/Public/Vendor/*
+
+  treatPhpDocTypesAsCertain: false
+
+  featureToggles:
+    rawMessageInBaseline: true

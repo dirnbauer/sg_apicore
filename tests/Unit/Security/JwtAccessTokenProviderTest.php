@@ -26,6 +26,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for JwtAccessTokenProvider
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class JwtAccessTokenProviderTest extends UnitTestCase {
 	/**
 	 * @var JwtAccessTokenProvider

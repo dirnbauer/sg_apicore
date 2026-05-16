@@ -7,7 +7,7 @@ return [
 		'parent' => 'system',
 		'position' => ['after' => 'belog'],
 		'access' => 'admin',
-		'workspaces' => 'live',
+		'workspaces' => '*',
 		'path' => '/module/system/sgapicore',
 		'iconIdentifier' => 'module-sg_apicore',
 		'labels' => 'LLL:EXT:sg_apicore/Resources/Private/Language/locallang_backend.xlf',

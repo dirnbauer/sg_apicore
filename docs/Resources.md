@@ -124,3 +124,21 @@ If set, the configured backend user's permissions and groups are used for resour
 the extension keeps the admin bypass behavior for write operations.
 
 This setting only affects Auto-CRUD resource endpoints and does not apply to custom controllers.
+
+### Workspaces
+
+`sg_apicore` uses TYPO3's `DataHandler` for Auto-CRUD writes, so workspace handling is delegated to TYPO3 instead of
+being implemented separately in the extension.
+
+By default, `apiResourceWriteWorkspaceId = -1` keeps the current/default backend user workspace:
+
+* Requests authenticated with an existing backend user keep that user's selected workspace.
+* Requests using `apiResourceWriteBackendUserId` use TYPO3's workspace initialization for that user.
+* Set `apiResourceWriteWorkspaceId = 0` only when writes must go directly to live.
+* Set `apiResourceWriteWorkspaceId` to a positive `sys_workspace.uid` to force writes into that workspace.
+
+For production write endpoints, configure a dedicated backend user with the required page mounts, table permissions, and
+workspace access. Avoid the admin bypass fallback for public or partner-facing write APIs.
+
+TYPO3 workspaces do not version physical FAL files. When APIs create or update file references in workspace content,
+upload files with unique, non-guessable names and avoid overwriting existing files.

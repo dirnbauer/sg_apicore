@@ -28,6 +28,7 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for ApiAuthMiddleware
  */
+#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ApiAuthMiddlewareTest extends UnitTestCase {
 	protected $apiRegistry;
 	protected $loginProvider;
@@ -36,9 +37,9 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
-		$this->apiRegistry = $this->createStub(ApiRegistry::class);
+		$this->apiRegistry = $this->createMock(ApiRegistry::class);
 		$this->loginProvider = $this->createMock(LoginProviderInterface::class);
-		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
+		$this->pathAnalysisService = $this->createMock(PathAnalysisService::class);
 
 		$this->middleware = new ApiAuthMiddleware($this->apiRegistry, $this->loginProvider, $this->pathAnalysisService);
 	}
@@ -47,8 +48,8 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 	 * @test
 	 */
 	public function testProcessCallsLoginProvider(): void {
-		$request = $this->createStub(ServerRequestInterface::class);
-		$uri = $this->createStub(UriInterface::class);
+		$request = $this->createMock(ServerRequestInterface::class);
+		$uri = $this->createMock(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/test/v1/foo');
 		$request->method('getUri')->willReturn($uri);
 		$request->method('getAttribute')->willReturnCallback(static function ($name) {
@@ -75,8 +76,8 @@ class ApiAuthMiddlewareTest extends UnitTestCase {
 			->method('authenticate')
 			->willReturn($authContext);
 
-		$handler = $this->createStub(RequestHandlerInterface::class);
-		$handler->method('handle')->willReturn($this->createStub(ResponseInterface::class));
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->method('handle')->willReturn($this->createMock(ResponseInterface::class));
 
 		$this->middleware->process($request, $handler);
 	}

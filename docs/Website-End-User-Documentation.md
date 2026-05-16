@@ -5,6 +5,9 @@ It enables teams to build secure, documented, and maintainable APIs directly in 
 
 This text is designed for website publication and product communication.
 
+Current version line: `14.x` is TYPO3 v14-only and targets TYPO3 `^14.3` with PHP `^8.2`. TYPO3 13 support is not
+maintained in this release line.
+
 ## What sg_apicore Solves
 
 Modern TYPO3 projects often need more than page rendering:
