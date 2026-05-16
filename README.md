@@ -13,7 +13,7 @@ Please report bugs here: https://gitlab.sgalinski.de/typo3/sg_apicore/-/issues
 Provides an API framework for TYPO3: Multi-API, Multi-Tenants, Attribute-based endpoint configuration, Logging,
 Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints.
 
-Version `14.x` is TYPO3 v14-only. The package requires TYPO3 `^14.3`, `typo3/cms-workspaces` `^14.3`, and PHP `^8.2`.
+Version `14.x` is TYPO3 v14-only. The package requires TYPO3 `^14.3`, `typo3/cms-workspaces` `^14.3`, and PHP `^8.3`.
 TYPO3 13 compatibility is intentionally not maintained in this release line.
 
 For detailed information, please refer to the Documentation in docs/.
