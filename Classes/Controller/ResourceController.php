@@ -66,6 +66,9 @@ class ResourceController {
 		}
 
 		$tableName = $resourceConfig['table'];
+		if (!\is_string($tableName)) {
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
+		}
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
 		$this->applyResourceVisibilityRestrictions($queryBuilder, $resourceConfig);
 		$queryBuilder->select('*')->from($tableName);
@@ -92,6 +95,9 @@ class ResourceController {
 
 		if (\is_array($filters) && \count($filters) > 0) {
 			foreach ($filters as $field => $value) {
+				if (!\is_string($field)) {
+					continue;
+				}
 				// Only filter by whitelisted fields
 				if (!empty($resourceConfig['readFields']) && !\in_array($field, $resourceConfig['readFields'], TRUE)) {
 					// Also check if uid or pid is requested, which is always allowed if not explicitly restricted
@@ -101,7 +107,7 @@ class ResourceController {
 				}
 
 				// Basic check if field exists in TCA
-				if (!isset($GLOBALS['TCA'][$tableName]['columns'][$field]) && $field !== 'uid' && $field !== 'pid') {
+				if (!$this->hasTcaColumn($tableName, $field) && $field !== 'uid' && $field !== 'pid') {
 					continue;
 				}
 
@@ -125,7 +131,7 @@ class ResourceController {
 			}
 
 			// Validate sort field
-			if (isset($GLOBALS['TCA'][$tableName]['columns'][$sortField]) || $sortField === 'uid') {
+			if ($this->hasTcaColumn($tableName, $sortField) || $sortField === 'uid') {
 				$queryBuilder->orderBy($sortField, $sortOrder);
 			}
 		}
@@ -149,7 +155,7 @@ class ResourceController {
 		$queryBuilder->setFirstResult($pagination['offset'])->setMaxResults($pagination['limit']);
 
 		$result = $queryBuilder->executeQuery();
-		$records = $result->fetchAllAssociative();
+		$records = $this->normalizeRecordList($result->fetchAllAssociative());
 		$records = $this->applyWorkspaceVisibilityToRecords($tableName, $records);
 
 		$mappedRecords = $this->tcaMapper->mapRecords(
@@ -181,6 +187,9 @@ class ResourceController {
 		}
 
 		$tableName = $resourceConfig['table'];
+		if (!\is_string($tableName)) {
+			return $this->responseService->createErrorResponse('Internal Error', 'Resource configuration missing.', 500);
+		}
 		$idField = $resourceConfig['idField'] ?? 'uid';
 
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
@@ -354,7 +363,7 @@ class ResourceController {
 			if ($visibleRecord === NULL) {
 				continue;
 			}
-			$uid = (int) ($visibleRecord['uid'] ?? 0);
+			$uid = $this->toInteger($visibleRecord['uid'] ?? 0);
 			if ($uid > 0 && isset($seenRecordIds[$uid])) {
 				continue;
 			}
@@ -364,6 +373,32 @@ class ResourceController {
 			$visibleRecords[] = $visibleRecord;
 		}
 		return $visibleRecords;
+	}
+
+	/**
+	 * @param array<int, array<array-key, mixed>> $records
+	 * @return array<int, array<string, mixed>>
+	 */
+	protected function normalizeRecordList(array $records): array {
+		$normalizedRecords = [];
+		foreach ($records as $record) {
+			$normalizedRecords[] = $this->normalizeRecord($record);
+		}
+		return $normalizedRecords;
+	}
+
+	/**
+	 * @param array<array-key, mixed> $record
+	 * @return array<string, mixed>
+	 */
+	protected function normalizeRecord(array $record): array {
+		$normalizedRecord = [];
+		foreach ($record as $fieldName => $value) {
+			if (\is_string($fieldName)) {
+				$normalizedRecord[$fieldName] = $value;
+			}
+		}
+		return $normalizedRecord;
 	}
 
 	/**
@@ -382,8 +417,8 @@ class ResourceController {
 		}
 
 		$workspaceId = $this->getCurrentWorkspaceId();
-		$recordWorkspaceId = (int) ($record['t3ver_wsid'] ?? 0);
-		$versionParentId = (int) ($record['t3ver_oid'] ?? 0);
+		$recordWorkspaceId = $this->toInteger($record['t3ver_wsid'] ?? 0);
+		$versionParentId = $this->toInteger($record['t3ver_oid'] ?? 0);
 
 		if ($workspaceId <= 0) {
 			return $recordWorkspaceId > 0 ? NULL : $record;
@@ -404,7 +439,11 @@ class ResourceController {
 		}
 
 		BackendUtility::workspaceOL($tableName, $record, $workspaceId);
-		if (!\is_array($record) || $this->isWorkspaceDeletePlaceholder($record)) {
+		if (!\is_array($record)) {
+			return NULL;
+		}
+		$record = $this->normalizeRecord($record);
+		if ($this->isWorkspaceDeletePlaceholder($record)) {
 			return NULL;
 		}
 		return $record;
@@ -414,7 +453,46 @@ class ResourceController {
 	 * @param array<string, mixed> $record
 	 */
 	protected function isWorkspaceDeletePlaceholder(array $record): bool {
-		return VersionState::tryFrom((int) ($record['t3ver_state'] ?? 0)) === VersionState::DELETE_PLACEHOLDER;
+		return VersionState::tryFrom($this->toInteger($record['t3ver_state'] ?? 0)) === VersionState::DELETE_PLACEHOLDER;
+	}
+
+	protected function toInteger(mixed $value): int {
+		if (\is_int($value)) {
+			return $value;
+		}
+		if (\is_float($value) || \is_numeric($value)) {
+			return (int) $value;
+		}
+		return 0;
+	}
+
+	protected function hasTcaColumn(string $tableName, string $fieldName): bool {
+		$tableConfiguration = $GLOBALS['TCA'][$tableName] ?? NULL;
+		if (!\is_array($tableConfiguration)) {
+			return FALSE;
+		}
+		$columns = $tableConfiguration['columns'] ?? NULL;
+		return \is_array($columns) && isset($columns[$fieldName]);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function getTcaFieldConfiguration(string $tableName, string $fieldName): array {
+		$tableConfiguration = $GLOBALS['TCA'][$tableName] ?? NULL;
+		if (!\is_array($tableConfiguration)) {
+			return [];
+		}
+		$columns = $tableConfiguration['columns'] ?? NULL;
+		if (!\is_array($columns)) {
+			return [];
+		}
+		$columnConfiguration = $columns[$fieldName] ?? NULL;
+		if (!\is_array($columnConfiguration)) {
+			return [];
+		}
+		$fieldConfiguration = $columnConfiguration['config'] ?? NULL;
+		return \is_array($fieldConfiguration) ? $this->normalizeRecord($fieldConfiguration) : [];
 	}
 
 	protected function getCurrentWorkspaceId(): int {
@@ -582,7 +660,10 @@ class ResourceController {
 		}
 
 		foreach ($recordData as $fieldName => $value) {
-			$fieldConfiguration = $GLOBALS['TCA'][$tableName]['columns'][$fieldName]['config'] ?? [];
+			if (!\is_string($fieldName)) {
+				continue;
+			}
+			$fieldConfiguration = $this->getTcaFieldConfiguration($tableName, $fieldName);
 			if (($fieldConfiguration['type'] ?? '') !== 'file' || !\is_array($value)) {
 				continue;
 			}

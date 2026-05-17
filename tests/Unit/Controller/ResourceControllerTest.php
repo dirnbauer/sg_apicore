@@ -52,6 +52,7 @@ class ResourceControllerTest extends UnitTestCase {
 	protected ExtensionConfiguration|MockObject $extensionConfiguration;
 	protected LanguageServiceFactory|MockObject $languageServiceFactory;
 	protected Typo3Version|MockObject $typo3Version;
+	protected BackendUserAuthentication&MockObject $backendUser;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -71,7 +72,8 @@ class ResourceControllerTest extends UnitTestCase {
 		GeneralUtility::setSingletonInstance(LogManager::class, $logManager);
 
 		// Mock BE_USER
-		$GLOBALS['BE_USER'] = $this->createMock(BackendUserAuthentication::class);
+		$this->backendUser = $this->createMock(BackendUserAuthentication::class);
+		$GLOBALS['BE_USER'] = $this->backendUser;
 
 		$this->logService = $this->createMock(LogService::class);
 
@@ -373,7 +375,7 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testWorkspaceVisibilityHidesDraftRowsInLiveWorkspace(): void {
-		$GLOBALS['BE_USER']->workspace = 0;
+		$this->backendUser->workspace = 0;
 
 		$record = $this->applyWorkspaceVisibilityToRecord([
 			'uid' => 7788,
@@ -388,7 +390,7 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testWorkspaceVisibilityReturnsCurrentWorkspaceDraftWithLiveUid(): void {
-		$GLOBALS['BE_USER']->workspace = 7;
+		$this->backendUser->workspace = 7;
 
 		$record = $this->applyWorkspaceVisibilityToRecord([
 			'uid' => 7788,
@@ -399,13 +401,13 @@ class ResourceControllerTest extends UnitTestCase {
 			'header' => 'Draft Header',
 		]);
 
-		$this->assertSame(4471, $record['uid']);
-		$this->assertSame(7788, $record['_ORIG_uid']);
-		$this->assertSame('Draft Header', $record['header']);
+		$this->assertSame(4471, $record['uid'] ?? NULL);
+		$this->assertSame(7788, $record['_ORIG_uid'] ?? NULL);
+		$this->assertSame('Draft Header', $record['header'] ?? NULL);
 	}
 
 	public function testWorkspaceVisibilitySkipsVersionRowsInLists(): void {
-		$GLOBALS['BE_USER']->workspace = 7;
+		$this->backendUser->workspace = 7;
 
 		$record = $this->applyWorkspaceVisibilityToRecord([
 			'uid' => 7788,
@@ -420,7 +422,7 @@ class ResourceControllerTest extends UnitTestCase {
 	}
 
 	public function testWorkspaceVisibilityHidesDeletePlaceholders(): void {
-		$GLOBALS['BE_USER']->workspace = 7;
+		$this->backendUser->workspace = 7;
 
 		$record = $this->applyWorkspaceVisibilityToRecord([
 			'uid' => 7788,
@@ -434,8 +436,30 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->assertNull($record);
 	}
 
+	/**
+	 * @param array<string, mixed> $record
+	 * @return array<string, mixed>|null
+	 */
 	protected function applyWorkspaceVisibilityToRecord(array $record, bool $skipVersionRows = FALSE): ?array {
 		$method = new \ReflectionMethod(ResourceController::class, 'applyWorkspaceVisibilityToRecord');
-		return $method->invoke($this->controller, 'tt_content', $record, $skipVersionRows);
+		$result = $method->invoke($this->controller, 'tt_content', $record, $skipVersionRows);
+		if (!\is_array($result)) {
+			return NULL;
+		}
+		return $this->normalizeRecord($result);
+	}
+
+	/**
+	 * @param array<array-key, mixed> $record
+	 * @return array<string, mixed>
+	 */
+	protected function normalizeRecord(array $record): array {
+		$normalizedRecord = [];
+		foreach ($record as $fieldName => $value) {
+			if (\is_string($fieldName)) {
+				$normalizedRecord[$fieldName] = $value;
+			}
+		}
+		return $normalizedRecord;
 	}
 }

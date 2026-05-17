@@ -469,18 +469,6 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
-			rawMessage: Cannot access offset 'columns' on mixed.
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
-			rawMessage: Cannot access offset 'config' on mixed.
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
 			rawMessage: Cannot access offset 'deleteMode' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -511,25 +499,7 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
-			rawMessage: Cannot access offset 'type' on mixed.
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
 			rawMessage: Cannot access offset 'writeFields' on mixed.
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
-			rawMessage: 'Cannot access offset (int|string) on mixed.'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
-			rawMessage: Cannot access offset mixed on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 2
 			path: ../../Classes/Controller/ResourceController.php
@@ -537,7 +507,7 @@ parameters:
 		-
 			rawMessage: Cannot access offset string on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 2
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -585,7 +555,7 @@ parameters:
 		-
 			rawMessage: 'Parameter #1 $table of method TYPO3\CMS\Core\Database\Query\QueryBuilder::from() expects string, mixed given.'
 			identifier: argument.type
-			count: 4
+			count: 2
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -598,18 +568,6 @@ parameters:
 			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() expects string, mixed given.'
 			identifier: argument.type
 			count: 2
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
-			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects string, mixed given.'
-			identifier: argument.type
-			count: 1
-			path: ../../Classes/Controller/ResourceController.php
-
-		-
-			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecords() expects string, mixed given.'
-			identifier: argument.type
-			count: 1
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -627,7 +585,7 @@ parameters:
 		-
 			rawMessage: 'Parameter #1 $tableName of method TYPO3\CMS\Core\Database\ConnectionPool::getQueryBuilderForTable() expects string, mixed given.'
 			identifier: argument.type
-			count: 4
+			count: 2
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
