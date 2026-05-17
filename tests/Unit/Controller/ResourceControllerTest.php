@@ -35,6 +35,7 @@ use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Versioning\VersionState;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -369,5 +370,72 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->assertEquals(200, $response->getStatusCode());
 		$data = json_decode((string) $response->getBody(), TRUE);
 		$this->assertEquals('Updated Header', $data['header']);
+	}
+
+	public function testWorkspaceVisibilityHidesDraftRowsInLiveWorkspace(): void {
+		$GLOBALS['BE_USER']->workspace = 0;
+
+		$record = $this->applyWorkspaceVisibilityToRecord([
+			'uid' => 7788,
+			'pid' => 123,
+			't3ver_wsid' => 7,
+			't3ver_oid' => 4471,
+			't3ver_state' => VersionState::DEFAULT_STATE->value,
+			'header' => 'Draft Header',
+		]);
+
+		$this->assertNull($record);
+	}
+
+	public function testWorkspaceVisibilityReturnsCurrentWorkspaceDraftWithLiveUid(): void {
+		$GLOBALS['BE_USER']->workspace = 7;
+
+		$record = $this->applyWorkspaceVisibilityToRecord([
+			'uid' => 7788,
+			'pid' => 123,
+			't3ver_wsid' => 7,
+			't3ver_oid' => 4471,
+			't3ver_state' => VersionState::DEFAULT_STATE->value,
+			'header' => 'Draft Header',
+		]);
+
+		$this->assertSame(4471, $record['uid']);
+		$this->assertSame(7788, $record['_ORIG_uid']);
+		$this->assertSame('Draft Header', $record['header']);
+	}
+
+	public function testWorkspaceVisibilitySkipsVersionRowsInLists(): void {
+		$GLOBALS['BE_USER']->workspace = 7;
+
+		$record = $this->applyWorkspaceVisibilityToRecord([
+			'uid' => 7788,
+			'pid' => 123,
+			't3ver_wsid' => 7,
+			't3ver_oid' => 4471,
+			't3ver_state' => VersionState::DEFAULT_STATE->value,
+			'header' => 'Draft Header',
+		], TRUE);
+
+		$this->assertNull($record);
+	}
+
+	public function testWorkspaceVisibilityHidesDeletePlaceholders(): void {
+		$GLOBALS['BE_USER']->workspace = 7;
+
+		$record = $this->applyWorkspaceVisibilityToRecord([
+			'uid' => 7788,
+			'pid' => 123,
+			't3ver_wsid' => 7,
+			't3ver_oid' => 4471,
+			't3ver_state' => VersionState::DELETE_PLACEHOLDER->value,
+			'header' => 'Deleted Header',
+		]);
+
+		$this->assertNull($record);
+	}
+
+	protected function applyWorkspaceVisibilityToRecord(array $record, bool $skipVersionRows = FALSE): ?array {
+		$method = new \ReflectionMethod(ResourceController::class, 'applyWorkspaceVisibilityToRecord');
+		return $method->invoke($this->controller, 'tt_content', $record, $skipVersionRows);
 	}
 }

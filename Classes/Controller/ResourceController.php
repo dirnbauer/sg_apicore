@@ -22,6 +22,7 @@ use SGalinski\SgApiCore\Mapper\TcaMapper;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PaginationService;
 use SGalinski\SgApiCore\Service\ResponseService;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -33,6 +34,7 @@ use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Core\Versioning\VersionState;
 
 /**
  * Generic Controller for Resource CRUD operations (Auto-CRUD)
@@ -148,6 +150,7 @@ class ResourceController {
 
 		$result = $queryBuilder->executeQuery();
 		$records = $result->fetchAllAssociative();
+		$records = $this->applyWorkspaceVisibilityToRecords($tableName, $records);
 
 		$mappedRecords = $this->tcaMapper->mapRecords(
 			$tableName,
@@ -187,6 +190,7 @@ class ResourceController {
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
 			->executeQuery()
 			->fetchAssociative();
+		$record = $this->applyWorkspaceVisibilityToRecord($tableName, $record, FALSE);
 
 		if (!$record) {
 			return $this->responseService->createErrorResponse('Not Found', 'Resource not found.', 404);
@@ -336,6 +340,86 @@ class ResourceController {
 		}
 
 		return $this->getAction($request, (string) $uid);
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $records
+	 * @return array<int, array<string, mixed>>
+	 */
+	protected function applyWorkspaceVisibilityToRecords(string $tableName, array $records): array {
+		$visibleRecords = [];
+		$seenRecordIds = [];
+		foreach ($records as $record) {
+			$visibleRecord = $this->applyWorkspaceVisibilityToRecord($tableName, $record, TRUE);
+			if ($visibleRecord === NULL) {
+				continue;
+			}
+			$uid = (int) ($visibleRecord['uid'] ?? 0);
+			if ($uid > 0 && isset($seenRecordIds[$uid])) {
+				continue;
+			}
+			if ($uid > 0) {
+				$seenRecordIds[$uid] = TRUE;
+			}
+			$visibleRecords[] = $visibleRecord;
+		}
+		return $visibleRecords;
+	}
+
+	/**
+	 * Applies TYPO3 workspace visibility rules to raw database rows.
+	 *
+	 * Raw QueryBuilder reads do not apply workspace overlays. For live workspace, draft
+	 * rows must be hidden. For custom workspaces, live rows are overlaid with their
+	 * workspace version so API saves return the staged record values.
+	 *
+	 * @param array<string, mixed>|false|null $record
+	 * @return array<string, mixed>|null
+	 */
+	protected function applyWorkspaceVisibilityToRecord(string $tableName, array|false|null $record, bool $skipVersionRows): ?array {
+		if (!\is_array($record)) {
+			return NULL;
+		}
+
+		$workspaceId = $this->getCurrentWorkspaceId();
+		$recordWorkspaceId = (int) ($record['t3ver_wsid'] ?? 0);
+		$versionParentId = (int) ($record['t3ver_oid'] ?? 0);
+
+		if ($workspaceId <= 0) {
+			return $recordWorkspaceId > 0 ? NULL : $record;
+		}
+
+		if ($recordWorkspaceId > 0) {
+			if ($recordWorkspaceId !== $workspaceId || $this->isWorkspaceDeletePlaceholder($record)) {
+				return NULL;
+			}
+			if ($skipVersionRows && $versionParentId > 0) {
+				return NULL;
+			}
+			if ($versionParentId > 0) {
+				$record['_ORIG_uid'] = $record['uid'];
+				$record['uid'] = $versionParentId;
+			}
+			return $record;
+		}
+
+		BackendUtility::workspaceOL($tableName, $record, $workspaceId);
+		if (!\is_array($record) || $this->isWorkspaceDeletePlaceholder($record)) {
+			return NULL;
+		}
+		return $record;
+	}
+
+	/**
+	 * @param array<string, mixed> $record
+	 */
+	protected function isWorkspaceDeletePlaceholder(array $record): bool {
+		return VersionState::tryFrom((int) ($record['t3ver_state'] ?? 0)) === VersionState::DELETE_PLACEHOLDER;
+	}
+
+	protected function getCurrentWorkspaceId(): int {
+		$backendUser = $GLOBALS['BE_USER'] ?? NULL;
+		return $backendUser instanceof BackendUserAuthentication ? (int) $backendUser->workspace : 0;
 	}
 
 	/**
