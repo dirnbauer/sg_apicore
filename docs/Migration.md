@@ -2,6 +2,7 @@
 
 This document describes how to migrate existing APIs from the deprecated `sg_rest` extension to the new `sg_apicore`
 architecture.
+The guide targets the `14.x` release line for TYPO3 `^14.3`.
 
 ## 0. Preparation
 
@@ -41,10 +42,11 @@ These requests are internally mapped to the new structure:
 
 ### Token Authentication (Bearer Token)
 
-The old `sg_rest` authentication via `authentication/authentication/getBearerToken` is supported through a special
-mapping to `/api/legacy/v1/auth/login`.
+The old `sg_rest` authentication route `authentication/authentication/getBearerToken` is supported through a special
+mapping to `/api/legacy/v1/auth/legacyLogin`.
 
-**Response Format**: It returns the expected `{"bearerToken": "..."}` format.
+**Response Format**: It returns the expected `{"bearerToken": "..."}` format. Legacy `authtoken` and `bearertoken`
+headers are still detected and mapped into the new authentication pipeline.
 
 ### Manual Endpoint Mapping
 
@@ -93,7 +95,7 @@ class MyLegacyController {
 1. **API Registration**: Register a new API in `ext_localconf.php` using the name of your old API key.
 2. **Create Controller**: Create a new controller and use `#[ApiRoute]` to map the old paths.
 3. **Data Access**:
-    - For simple CRUD operations, use **TCA Mapping** (Phase K).
+    - For simple CRUD operations, use Auto-CRUD resources or the `TcaMapper`.
     - For complex logic, inject your repositories or services into the controller.
 4. **Auth**: The `LegacyTokenProvider` was removed. You must issue new tokens via the login endpoints.
 

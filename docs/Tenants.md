@@ -1,7 +1,8 @@
 # Tenants
 
-In `sg_apicore`, every request is executed within a **TenantContext**. This enables the operation of multiple tenants (
-e.g., different websites or departments) within a single TYPO3 instance.
+In `sg_apicore`, every request is executed within a **TenantContext**. This enables the operation of multiple tenants
+(e.g., different websites or departments) within a single TYPO3 instance.
+This document applies to the TYPO3 `14.x` release line.
 
 ## Tenant Resolution
 
@@ -21,6 +22,9 @@ Manager):
     * `baseHost`: Uses the site's hostname (e.g., `www.example.com`).
     * `rootPageId`: Uses the UID of the root page.
 * `onMissingTenant`: HTTP status code when no tenant is found (default: `404`).
+
+If no tenant can be resolved, request handling stops before routing so tokens, scopes, and cache keys cannot leak across
+sites.
 
 ## Usage in Code
 

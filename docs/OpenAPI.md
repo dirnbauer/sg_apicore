@@ -1,6 +1,7 @@
 # OpenAPI Documentation
 
 `sg_apicore` automatically generates OpenAPI 3.0 specifications based on the attributes in your controllers.
+This document covers the TYPO3 `14.x` release line.
 
 ## Browser Access
 
@@ -10,6 +11,7 @@ Every registered API provides endpoints for documentation:
 * **Swagger UI**: `/api/{apiId}/v{version}/docs/ui`
 
 Example: `https://your-website.com/api/public/v1/docs/ui`
+Requests to an API root such as `/api/public/v1` redirect to the Swagger UI when documentation is enabled for that API.
 
 ## Metadata Attributes
 
@@ -136,3 +138,4 @@ vendor/bin/typo3 api:openapi:generate --api=public --api-version=1 --out=openapi
 
 The generated specification automatically includes a `bearerAuth` scheme. If an API does not run in `public` mode, this
 scheme is marked as required globally for all endpoints.
+Endpoint-level `authMode` overrides are reflected in the generated operation metadata.

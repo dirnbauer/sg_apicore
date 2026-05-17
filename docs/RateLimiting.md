@@ -1,6 +1,7 @@
 # Rate Limiting
 
 `sg_apicore` provides a fixed window rate limiter backed by a database table.
+The feature is enabled by default in the TYPO3 `14.x` release line.
 
 ## Global Configuration
 
@@ -70,7 +71,7 @@ $resourceRegistry->registerResource('partner', 'tx_myext_domain_model_item', '/i
 ]);
 ```
 
-Resource-level configuration takes precedence over API-level configuration.
+Resource-level configuration takes precedence over version-level and API-level configuration.
 Set `enabled` to `FALSE` to disable rate limiting for a specific API or resource.
 
 ## Key Strategy

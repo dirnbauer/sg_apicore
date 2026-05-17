@@ -2,6 +2,7 @@
 
 `sg_apicore` offers a comprehensive logging system for API requests and responses. It is designed to ensure traceability
 without compromising sensitive data.
+The defaults below match the TYPO3 `14.x` release line.
 
 ## Global Configuration
 
@@ -38,6 +39,7 @@ Every API request receives a unique **Request ID** (Correlation ID). This ID:
 3. Is returned as an `X-Request-ID` HTTP header in the response.
 
 This allows an API call to be tracked from the client deep into the server logs.
+Error responses include the same request ID so support teams can correlate client reports with log entries.
 
 ## Customizing the Log Destination
 

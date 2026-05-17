@@ -2,21 +2,22 @@
 
 <img src="https://www.sgalinski.de/typo3conf/ext/project_theme/Resources/Public/Images/logo.svg" alt=""/>
 
-License: [GNU GPL, Version 2](https://www.gnu.org/licenses/gpl-2.0.html)
+License: [GNU GPL, Version 2 or later](https://www.gnu.org/licenses/gpl-2.0.html)
 
-Repository: https://gitlab.sgalinski.de/typo3/sg_apicore
+Repository: https://github.com/dirnbauer/sg_apicore
 
-Please report bugs here: https://gitlab.sgalinski.de/typo3/sg_apicore/-/issues
+Please report bugs here: https://github.com/dirnbauer/sg_apicore/issues
 
 ## Short Summary
 
-Provides an API framework for TYPO3: Multi-API, Multi-Tenants, Attribute-based endpoint configuration, Logging,
-Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints.
+Provides an API framework for TYPO3: multi-API and multi-version routing, site-aware tenants, attribute-based endpoint
+configuration, OpenAPI output, structured logging, opaque bearer tokens, JWT user tokens, backend-session auth,
+Auto-CRUD resources, and custom endpoints.
 
 Version `14.x` is TYPO3 v14-only. The package requires TYPO3 `^14.3`, `typo3/cms-workspaces` `^14.3`, and PHP `^8.3`.
 TYPO3 13 compatibility is intentionally not maintained in this release line.
 
-For detailed information, please refer to the Documentation in docs/.
+For detailed information, please refer to the documentation in [docs/](docs/).
 For website-ready end-user communication, see `docs/Website-End-User-Documentation.md`.
 
 ## Directory Structure
@@ -50,6 +51,19 @@ The extension follows a standard TYPO3 extension structure with a focus on clean
 2. Activate the extension in the TYPO3 Extension Manager.
 
 3. Make sure `typo3/cms-workspaces` is installed if Auto-CRUD writes should stage changes in a non-live workspace.
+
+## Documentation
+
+- [APIs and registration](docs/APIs.md)
+- [Writing endpoints](docs/WritingEndpoints.md)
+- [Authentication and scopes](docs/AuthScopes.md)
+- [Auto-CRUD resources](docs/Resources.md)
+- [TCA mapper](docs/TcaMapper.md)
+- [OpenAPI](docs/OpenAPI.md)
+- [Rate limiting](docs/RateLimiting.md)
+- [Tenants](docs/Tenants.md)
+- [Logging](docs/Logging.md)
+- [Migration from sg_rest](docs/Migration.md)
 
 ## Development Quality Gates
 
@@ -143,8 +157,7 @@ See [Writing Endpoints - Responses](docs/WritingEndpoints.md#standardized-respon
 ### Pagination
 
 The extension provides a `PaginationService` to handle consistent pagination across endpoints.
-See [Writing Endpoints - Pagination](docs/WritingEndpoints.md#pagination) (Note: Add pagination details to docs if
-missing).
+See [Writing Endpoints - Pagination](docs/WritingEndpoints.md#pagination).
 
 ## TCA Mapper
 
@@ -159,6 +172,8 @@ See [Auto-CRUD Resources Documentation](docs/Resources.md).
 Auto-CRUD write operations use TYPO3 `DataHandler`. If a backend user is already authenticated, the current TYPO3
 workspace is preserved. If a dedicated write backend user is configured, TYPO3 initializes that user's default
 workspace; set `apiResourceWriteWorkspaceId` only when writes must be forced into a specific `sys_workspace` UID.
+Raw read operations apply TYPO3 workspace visibility as well: live requests hide draft rows, workspace requests overlay
+live rows with the current workspace version, and delete placeholders are omitted from API responses.
 
 ## OpenAPI Documentation
 

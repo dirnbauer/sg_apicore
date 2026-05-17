@@ -29,6 +29,7 @@ Modern TYPO3 projects often need more than page rendering:
 - Built-in response caching and cache invalidation
 - Optional multi-tenant operation (site-based by default)
 - TYPO3 backend module for API and token operations
+- Workspace-aware Auto-CRUD endpoints for TYPO3 records
 - Legacy migration bridge for old `sg_rest` setups
 
 ## Typical Use Cases
@@ -37,7 +38,7 @@ Modern TYPO3 projects often need more than page rendering:
 - Partner APIs with scope-based access
 - User APIs with login, access token, and refresh token
 - BFF endpoints for SPAs and native apps
-- Controlled CRUD endpoints for TYPO3 tables
+- Controlled CRUD endpoints for TYPO3 tables, including workspace-aware content reads
 
 ## Authentication and Security
 
@@ -120,3 +121,7 @@ For implementation details, see:
 - `docs/OpenAPI.md`
 - `docs/RateLimiting.md`
 - `docs/Tenants.md`
+- `docs/Resources.md`
+- `docs/TcaMapper.md`
+- `docs/Logging.md`
+- `docs/Migration.md`

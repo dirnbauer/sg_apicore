@@ -1,6 +1,7 @@
 # Writing Endpoints
 
 In `sg_apicore`, endpoints are defined via standard PHP classes (controllers) configured using PHP attributes.
+This guide targets the TYPO3 `14.x` release line.
 
 ## Recommended Template
 
@@ -13,6 +14,8 @@ Use `docs/examples/ExampleController.php` as the reference implementation. It co
 - pagination with metadata
 - response caching via `ApiCache`
 - full TypoScript requirement via `RequireFullTypoScript`
+
+For a smaller first endpoint, start with [Hello World](examples/HelloWorld.md).
 
 ## Controller Registration
 

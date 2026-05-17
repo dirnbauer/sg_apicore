@@ -1,6 +1,7 @@
 # Example: Hello World API
 
 This guide shows a minimal but current `sg_apicore` setup with route metadata and parameter validation.
+It targets the TYPO3 `14.x` release line.
 
 ## 1. Register an API
 
@@ -79,6 +80,6 @@ Expected response:
 
 ## 5. Use the full template
 
-For a larger real-world template (auth scopes, pagination, body validation, cache and TypoScript requirements), use:
+For a larger real-world template with auth scopes, pagination, body validation, cache and TypoScript requirements, use:
 
 - `docs/examples/ExampleController.php`

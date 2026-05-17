@@ -1,6 +1,7 @@
 # APIs & Registration
 
 `sg_apicore` supports multiple APIs in parallel, each of which can have its own versions and security configurations.
+This guide targets the `14.x` release line for TYPO3 `^14.3` and PHP `^8.3`.
 
 ## API Registration
 
@@ -45,6 +46,8 @@ When registering, the following options can be passed in the third parameter:
     * `user`: A user login (Access/Refresh Token) is required.
     * `backend`: A valid TYPO3 backend user session is required.
 * `authProviders`: List of allowed providers (e.g., `['beareropaquetokenprovider', 'backenduserprovider']`).
+* `basePath`: Optional path override in the fourth argument. The default is `/api/{apiId}/v{version}`.
+* `rateLimit`: Optional rate-limit override in the fifth argument (see [Rate Limiting](RateLimiting.md)).
 
 ### Backend API Example
 
@@ -61,8 +64,6 @@ This configuration ensures that the API is only accessible if a valid backend us
 `backenduserprovider` automatically resolves the user and provides standard scopes like `backend`, `partner:read`,
 `partner:write`, and `user`.
 
-Use the fourth parameter to override the base path (default: `/api/{apiId}/v{version}`).
-
 ### Endpoint Overrides
 
 While the API-level `authMode` must be a string, individual endpoints can define multiple modes using an array in the
@@ -72,10 +73,6 @@ While the API-level `authMode` must be a string, individual endpoints can define
 // Available via public access OR with a valid user token
 #[ApiRoute(path: '/login', methods: ['POST'], authMode: ['public', 'user'])]
 ```
-
-Use the fifth parameter for additional options:
-
-* `rateLimit`: Overrides rate limit settings for this API (see `RateLimiting.md`).
 
 ## Versioning
 

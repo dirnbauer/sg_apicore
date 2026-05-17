@@ -2,13 +2,15 @@
 
 `sg_apicore` allows you to expose TYPO3 database tables as API resources with full CRUD (Create, Read, Update, Delete)
 support without writing any controller code.
+The resource controller in the `14.x` release line is workspace-aware for both reads and writes.
 
 ## Resource Registration
 
 Resources are registered in your extension's `ext_localconf.php` via the `ResourceRegistry` service.
 
 ```php
-use SGalinski\SgApiCore\Service\ResourceRegistry;use TYPO3\CMS\Core\Utility\GeneralUtility;
+use SGalinski\SgApiCore\Service\ResourceRegistry;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 $resourceRegistry = GeneralUtility::makeInstance(ResourceRegistry::class);
 
@@ -125,7 +127,20 @@ the extension keeps the admin bypass behavior for write operations.
 
 This setting only affects Auto-CRUD resource endpoints and does not apply to custom controllers.
 
-### Workspaces
+### Workspace Reads
+
+Raw QueryBuilder reads do not apply TYPO3 workspace overlays automatically. Auto-CRUD resources therefore apply
+workspace visibility before mapping records:
+
+* Live workspace requests hide draft/version rows.
+* Workspace requests hide records from other workspaces.
+* Detail requests overlay live rows with the current workspace version via TYPO3's workspace overlay logic.
+* List requests skip standalone version rows to avoid duplicate live and draft records.
+* Delete placeholders are omitted from API responses.
+
+This means `GET` responses match the current backend workspace context instead of exposing raw version rows.
+
+### Workspace Writes
 
 `sg_apicore` uses TYPO3's `DataHandler` for Auto-CRUD writes, so workspace handling is delegated to TYPO3 instead of
 being implemented separately in the extension.

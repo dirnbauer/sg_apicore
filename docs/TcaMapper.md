@@ -2,6 +2,7 @@
 
 The `TcaMapper` service allows TYPO3 database records (arrays) to be automatically converted into API-compliant
 structures. It uses the information from the Table Configuration Array (TCA).
+This document applies to the TYPO3 `14.x` release line.
 
 ## Features
 
@@ -77,6 +78,9 @@ Supported relations:
 - **1:n**: IRRE relations using `foreign_field` and optional `foreign_table_field`.
 - **M:M**: Relations using an MM table.
 - **Select/Group**: Fields with a `foreign_table` and comma-separated UIDs.
+
+For Auto-CRUD resources, workspace overlays are applied before records are handed to the mapper. The mapper therefore
+receives the effective record for the current workspace and can keep workspace metadata out of the public payload.
 
 ### Field Configuration
 

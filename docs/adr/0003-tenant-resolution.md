@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted for the TYPO3 `14.x` release line.
 
 ## Context
 

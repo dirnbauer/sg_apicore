@@ -1,6 +1,7 @@
 # Authentication & Scopes
 
 `sg_apicore` provides a flexible system for authentication and authorization.
+The current `14.x` release line supports public, token, frontend-user, and backend-session API access.
 
 ## Authentication Modes
 
@@ -9,7 +10,8 @@ can override or extend this using the `#[ApiRoute]` attribute (supporting both *
 
 1. **Public**: No authentication required.
 2. **Token (Opaque Bearer)**: Requires an API key in the header: `Authorization: Bearer <token>`.
-3. **User**: Requires a user login. Supports access and refresh tokens.
+3. **User**: Requires a frontend user login. Supports JWT access tokens and opaque refresh tokens.
+4. **Backend**: Requires a valid TYPO3 backend user session. Intended for internal APIs.
 
 Example for an endpoint that is both public and user-accessible:
 
@@ -93,16 +95,6 @@ public function __invoke(AfterUserAuthenticationEvent $event): void {
 }
 ```
 
-## Authentication Error Responses
-
-Authentication failures return RFC 7807 Problem JSON, include `requestId` for tracing, and set `X-Request-ID`.
-If rate limiting is applied, use `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers and
-optionally provide a `rateLimit` object in the response body.
-
-* **401 Unauthorized**: Missing credentials (`Authentication required.`).
-* **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).
-* **403 Forbidden**: Authenticated but missing required scopes or `#[RequireUser]`.
-
 ## Rate Limit Configuration
 
 Use the extension configuration to enable and tune rate limits:
@@ -111,7 +103,7 @@ Use the extension configuration to enable and tune rate limits:
 * `rateLimitDefaultLimit` (int, requests per window)
 * `rateLimitWindowSeconds` (int, window size)
 
-See also: `docs/RateLimiting.md`.
+See also: [Rate Limiting](RateLimiting.md).
 
 ## Authentication Error Responses
 
@@ -122,6 +114,12 @@ optionally provide a `rateLimit` object in the response body.
 * **401 Unauthorized**: Missing credentials (`Authentication required.`).
 * **401 Unauthorized**: Invalid or expired token (`Invalid or expired token.`).
 * **403 Forbidden**: Authenticated but missing required scopes or `#[RequireUser]`.
+
+## Backend Authentication
+
+Use `authMode: 'backend'` together with the `backenduserprovider` for internal endpoints that should only be reachable
+from an active TYPO3 backend session. Backend authentication contributes standard scopes such as `backend`,
+`partner:read`, `partner:write`, and `user`.
 
 ## Token Management in the Backend
 
