@@ -1,11 +1,6 @@
 /.cache/
-/.DS_Store
+.DS_Store
 /.idea/
-/Classes/.DS_Store
-/Build/.DS_Store
-/Configuration/.DS_Store
-/Resources/.DS_Store
-/docs/.DS_Store
 /public/
 /var/
 /vendor/
