@@ -22,6 +22,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class LegacyRoutingMiddlewareTest extends UnitTestCase {
@@ -81,7 +82,7 @@ class LegacyRoutingMiddlewareTest extends UnitTestCase {
 			'type' => '1595576052',
 		]);
 
-		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
+		$language = $this->createStub(SiteLanguage::class);
 		$base = $this->createStub(UriInterface::class);
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);

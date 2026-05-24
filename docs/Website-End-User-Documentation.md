@@ -1,7 +1,8 @@
 # sg_apicore for TYPO3
 
-`sg_apicore` is a high-performance API framework for TYPO3 projects.  
-It enables teams to build secure, documented, and maintainable APIs directly in TYPO3 without adding a separate API platform.
+`sg_apicore` is a high-performance API framework for TYPO3 projects.
+It enables teams to build secure, documented, and maintainable APIs directly in TYPO3 without adding a separate API
+platform.
 
 This text is designed for website publication and product communication.
 
@@ -17,7 +18,8 @@ Modern TYPO3 projects often need more than page rendering:
 - mobile apps and authenticated user APIs
 - high-throughput machine-to-machine APIs
 
-`sg_apicore` provides one consistent framework for these use cases, including routing, authentication, scopes, OpenAPI docs, caching, and observability.
+`sg_apicore` provides one consistent framework for these use cases, including routing, authentication, scopes, OpenAPI
+docs, caching, and observability.
 
 ## Core Benefits
 
@@ -89,7 +91,7 @@ In TYPO3 backend under `System > API Core`, teams can:
 
 ## Multi-Tenant Readiness
 
-Each request is processed in a tenant context.  
+Each request is processed in a tenant context.
 By default, tenant resolution is site-aware and can be extended through resolver chains.
 
 This allows one TYPO3 instance to provide separated API behavior for multiple sites or clients.

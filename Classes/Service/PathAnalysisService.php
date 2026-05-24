@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 

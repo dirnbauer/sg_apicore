@@ -14,8 +14,16 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use Exception;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
+use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -30,30 +38,30 @@ class LogServiceTest extends UnitTestCase {
 	protected LogService $service;
 
 	/**
-	 * @var LogManager|\PHPUnit\Framework\MockObject\MockObject
+	 * @var LogManager|MockObject
 	 */
 	protected $logManager;
 
 	/**
-	 * @var \Psr\Log\LoggerInterface|\PHPUnit\Framework\MockObject\MockObject
+	 * @var LoggerInterface|MockObject
 	 */
 	protected $logger;
 
 	/**
-	 * @var \Psr\Log\LoggerInterface|\PHPUnit\Framework\MockObject\Stub
+	 * @var LoggerInterface|Stub
 	 */
 	protected $loggerStub;
 
 	/**
-	 * @var ExtensionConfiguration|\PHPUnit\Framework\MockObject\MockObject
+	 * @var ExtensionConfiguration|MockObject
 	 */
 	protected $extensionConfiguration;
 
 	protected function setUp(): void {
 		parent::setUp();
 		$this->logManager = $this->createStub(LogManager::class);
-		$this->logger = $this->createMock(\Psr\Log\LoggerInterface::class);
-		$this->loggerStub = $this->createStub(\Psr\Log\LoggerInterface::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->loggerStub = $this->createStub(LoggerInterface::class);
 		$this->logManager->method('getLogger')->willReturn($this->loggerStub);
 		$this->extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$this->service = new LogService($this->logManager, $this->extensionConfiguration);
@@ -103,7 +111,7 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testLogErrorCallsLoggerWhenEnabled(): void {
-		$reflection = new \ReflectionClass(LogService::class);
+		$reflection = new ReflectionClass(LogService::class);
 		$property = $reflection->getProperty('logger');
 		$property->setAccessible(TRUE);
 		$property->setValue($this->service, $this->logger);
@@ -116,17 +124,17 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testLogExceptionCallsLoggerWithContext(): void {
-		$reflection = new \ReflectionClass(LogService::class);
+		$reflection = new ReflectionClass(LogService::class);
 		$property = $reflection->getProperty('logger');
 		$property->setAccessible(TRUE);
 		$property->setValue($this->service, $this->logger);
 
 		$this->extensionConfiguration->method('isLoggingEnabled')->willReturn(TRUE);
 
-		$exception = new \Exception('Test Exception');
-		$request = $this->createStub(\Psr\Http\Message\ServerRequestInterface::class);
+		$exception = new Exception('Test Exception');
+		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturnMap([['api.requestId', '', 'req-123'], ['language', NULL, NULL]]);
-		$uri = new \TYPO3\CMS\Core\Http\Uri('https://example.org/api/v1/test');
+		$uri = new Uri('https://example.org/api/v1/test');
 		$request->method('getUri')->willReturn($uri);
 		$request->method('getMethod')->willReturn('GET');
 
@@ -143,7 +151,7 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testLogRequestResponseCallsLoggerWithRedactedData(): void {
-		$reflection = new \ReflectionClass(LogService::class);
+		$reflection = new ReflectionClass(LogService::class);
 		$property = $reflection->getProperty('logger');
 		$property->setAccessible(TRUE);
 		$property->setValue($this->service, $this->logger);
@@ -152,9 +160,9 @@ class LogServiceTest extends UnitTestCase {
 		$this->extensionConfiguration->method('getRedactKeys')->willReturn(['password']);
 		$this->extensionConfiguration->method('isLogBodyEnabled')->willReturn(TRUE);
 
-		$request = $this->createStub(\Psr\Http\Message\ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('POST');
-		$request->method('getUri')->willReturn(new \TYPO3\CMS\Core\Http\Uri('https://example.org/api/v1/test'));
+		$request->method('getUri')->willReturn(new Uri('https://example.org/api/v1/test'));
 		$request->method('getParsedBody')->willReturn(['password' => 'secret']);
 		$request->method('getAttribute')->willReturnMap([
 			['api.requestId', '', 'req-123'],
@@ -163,7 +171,7 @@ class LogServiceTest extends UnitTestCase {
 			['language', NULL, NULL],
 		]);
 
-		$response = $this->createStub(\Psr\Http\Message\ResponseInterface::class);
+		$response = $this->createStub(ResponseInterface::class);
 		$response->method('getStatusCode')->willReturn(200);
 
 		$this->logger->expects($this->once())
@@ -179,7 +187,7 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testTruncateString(): void {
-		$reflection = new \ReflectionClass(LogService::class);
+		$reflection = new ReflectionClass(LogService::class);
 		$method = $reflection->getMethod('truncateString');
 		$method->setAccessible(TRUE);
 
@@ -192,7 +200,7 @@ class LogServiceTest extends UnitTestCase {
 	}
 
 	public function testTruncateLogDataWithArray(): void {
-		$reflection = new \ReflectionClass(LogService::class);
+		$reflection = new ReflectionClass(LogService::class);
 		$method = $reflection->getMethod('truncateLogData');
 		$method->setAccessible(TRUE);
 

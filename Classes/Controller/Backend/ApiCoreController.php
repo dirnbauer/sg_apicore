@@ -14,16 +14,21 @@
 
 namespace SGalinski\SgApiCore\Controller\Backend;
 
+use Doctrine\DBAL\Exception;
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Random\RandomException;
+use ReflectionException;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\BackendMcpOverviewService;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\LogDashboardService;
 use SGalinski\SgApiCore\Service\RateLimitDashboardService;
 use SGalinski\SgApiCore\Service\TokenService;
 use TYPO3\CMS\Backend\Attribute\AsController;
+use TYPO3\CMS\Backend\Routing\Exception\RouteNotFoundException;
 use TYPO3\CMS\Backend\Routing\UriBuilder as BackendUriBuilder;
 use TYPO3\CMS\Backend\Template\Components\ButtonBar;
 use TYPO3\CMS\Backend\Template\ModuleTemplate;
@@ -53,6 +58,7 @@ class ApiCoreController extends ActionController {
 	 * @param TokenRepository $tokenRepository
 	 * @param TokenService $tokenService
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
+	 * @param BackendMcpOverviewService $backendMcpOverviewService
 	 * @param ModuleTemplateFactory $moduleTemplateFactory
 	 * @param FormProtectionFactory $formProtectionFactory
 	 * @param IconFactory $iconFactory
@@ -65,6 +71,7 @@ class ApiCoreController extends ActionController {
 		protected readonly TokenRepository $tokenRepository,
 		protected readonly TokenService $tokenService,
 		protected readonly EndpointDiscoveryService $endpointDiscoveryService,
+		protected readonly BackendMcpOverviewService $backendMcpOverviewService,
 		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
 		protected readonly BackendUriBuilder $backendUriBuilder,
 		protected readonly FormProtectionFactory $formProtectionFactory,
@@ -96,7 +103,7 @@ class ApiCoreController extends ActionController {
 	 *
 	 * @param array $filters
 	 * @return ResponseInterface
-	 * @throws \Doctrine\DBAL\Exception
+	 * @throws Exception
 	 */
 	public function tokensAction(array $filters = []): ResponseInterface {
 		$filters = $this->resolveAndPersistTokenFilters($filters);
@@ -148,7 +155,7 @@ class ApiCoreController extends ActionController {
 	 * @param string $scopes
 	 * @param int $expiresDays
 	 * @return ResponseInterface
-	 * @throws \JsonException
+	 * @throws JsonException
 	 * @throws RandomException
 	 */
 	public function createTokenAction(
@@ -220,6 +227,7 @@ class ApiCoreController extends ActionController {
 	 * Regenerate a token key
 	 *
 	 * @param int $uid
+	 * @param string $returnUrl
 	 * @return ResponseInterface
 	 * @throws RandomException
 	 */
@@ -262,14 +270,27 @@ class ApiCoreController extends ActionController {
 	 * Endpoint Overview
 	 *
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function endpointsAction(): ResponseInterface {
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+		$endpoints = $this->backendMcpOverviewService->enrichEndpointsWithMcpInfo($endpoints);
+		$mcpSummary = [
+			'endpointsWithMcpTools' => \count(array_filter(
+				$endpoints,
+				static fn (array $endpoint): bool => (bool) ($endpoint['mcpInfo']['isExposed'] ?? FALSE)
+			)),
+			'endpointsExcludedByAttribute' => \count(array_filter(
+				$endpoints,
+				static fn (array $endpoint): bool => (bool) ($endpoint['mcpInfo']['excludedByAttribute'] ?? FALSE)
+			)),
+			'totalEndpoints' => \count($endpoints),
+		];
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
 		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Endpoints');
 		$moduleTemplate->assign('endpoints', $endpoints);
+		$moduleTemplate->assign('mcpSummary', $mcpSummary);
 		$moduleTemplate->assign('apiPathPrefix', $this->extensionConfiguration->getApiPathPrefix());
 		$moduleTemplate->assign('currentTab', 'endpoints');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Endpoints');
@@ -360,7 +381,7 @@ class ApiCoreController extends ActionController {
 		$storedFilters = $beUser instanceof BackendUserAuthentication
 			? $beUser->getModuleData(self::TOKEN_FILTER_STATE_KEY, 'ses')
 			: NULL;
-		if ((!\is_array($filters) || $filters === []) && \is_array($storedFilters)) {
+		if (($filters === []) && \is_array($storedFilters)) {
 			$filters = $storedFilters;
 		}
 
@@ -390,6 +411,8 @@ class ApiCoreController extends ActionController {
 
 	/**
 	 * @param array<string,mixed> $filters
+	 * @return string
+	 * @throws RouteNotFoundException
 	 */
 	private function buildTokensModuleUrl(array $filters = []): string {
 		$parameters = ['action' => 'tokens'];

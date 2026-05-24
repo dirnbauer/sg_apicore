@@ -15,10 +15,13 @@
 namespace SGalinski\SgApiCore\Security;
 
 use Doctrine\DBAL\Exception;
+use JsonException;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\JwtService;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * JWT Access Token login provider
@@ -46,7 +49,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	 * @param string $tenantId
 	 * @param array $activeProviders
 	 * @return AuthContext|null
-	 * @throws \JsonException
+	 * @throws JsonException
 	 * @throws Exception
 	 */
 	public function authenticate(
@@ -85,7 +88,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 				// If a token never existed in DB, findByHashGlobally also returns NULL.
 
 				// Let's do a more specific check: Does it exist and is it revoked?
-				$connection = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Database\ConnectionPool::class)
+				$connection = GeneralUtility::makeInstance(ConnectionPool::class)
 					?->getConnectionForTable('tx_apicore_token');
 				$revokedRecord = $connection->select(['uid'], 'tx_apicore_token', ['token_hash' => $jti])->fetchAssociative();
 
@@ -117,7 +120,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	 * @throws Exception
 	 */
 	protected function isTokenRevoked(array $tokenRecord): bool {
-		$connection = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Database\ConnectionPool::class)
+		$connection = GeneralUtility::makeInstance(ConnectionPool::class)
 			?->getConnectionForTable('tx_apicore_token');
 		$record = $connection->select(
 			['revoked_at'],

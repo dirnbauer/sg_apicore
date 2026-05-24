@@ -172,7 +172,7 @@ class ApiCorsMiddleware implements MiddlewareInterface {
 	 * @return array<int, string>
 	 */
 	protected function normalizeAllowedOrigins(array|string $allowedOrigins): array {
-		$origins = \is_array($allowedOrigins) ? $allowedOrigins : explode(',', (string) $allowedOrigins);
+		$origins = \is_array($allowedOrigins) ? $allowedOrigins : explode(',', $allowedOrigins);
 		$normalized = [];
 		foreach ($origins as $origin) {
 			if (!\is_string($origin)) {

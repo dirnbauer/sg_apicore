@@ -14,12 +14,15 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use Throwable;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Service for logging API requests and responses
@@ -66,11 +69,11 @@ class LogService implements SingletonInterface {
 	/**
 	 * Logs an exception
 	 *
-	 * @param \Throwable $exception
+	 * @param Throwable $exception
 	 * @param ServerRequestInterface|null $request
 	 * @return void
 	 */
-	public function logException(\Throwable $exception, ?ServerRequestInterface $request = NULL): void {
+	public function logException(Throwable $exception, ?ServerRequestInterface $request = NULL): void {
 		if (!$this->extensionConfiguration->isLoggingEnabled()) {
 			return;
 		}
@@ -87,7 +90,7 @@ class LogService implements SingletonInterface {
 			$context['method'] = $request->getMethod();
 			$context['path'] = $request->getUri()->getPath();
 			$language = $request->getAttribute('language');
-			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+			if ($language instanceof SiteLanguage) {
 				$context['languageId'] = $language->getLanguageId();
 			}
 		}
@@ -130,7 +133,7 @@ class LogService implements SingletonInterface {
 		];
 
 		$language = $request->getAttribute('language');
-		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+		if ($language instanceof SiteLanguage) {
 			$context['languageId'] = $language->getLanguageId();
 		}
 
@@ -266,7 +269,7 @@ class LogService implements SingletonInterface {
 				try {
 					$decoded = json_decode($data, TRUE, 512, JSON_THROW_ON_ERROR);
 					return json_encode($this->redact($decoded, $redactKeys), JSON_THROW_ON_ERROR);
-				} catch (\JsonException) {
+				} catch (JsonException) {
 					return $data;
 				}
 			}

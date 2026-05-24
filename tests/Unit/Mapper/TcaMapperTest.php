@@ -14,6 +14,9 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Mapper;
 
+use LogicException;
+use ReflectionClass;
+use ReflectionMethod;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ServerRequest;
@@ -92,7 +95,7 @@ class TcaMapperTest extends UnitTestCase {
 	}
 
 	public function testTransformValueHandlesTypes(): void {
-		$reflection = new \ReflectionClass(TcaMapper::class);
+		$reflection = new ReflectionClass(TcaMapper::class);
 		$method = $reflection->getMethod('transformValue');
 		$method->setAccessible(TRUE);
 
@@ -118,13 +121,50 @@ class TcaMapperTest extends UnitTestCase {
 	}
 
 	public function testResolveParseFuncConfigurationReturnsFallbackWithoutFrontendTypoScript(): void {
-		$method = new \ReflectionMethod(TcaMapper::class, 'resolveParseFuncConfiguration');
+		$method = new ReflectionMethod(TcaMapper::class, 'resolveParseFuncConfiguration');
 		$method->setAccessible(TRUE);
 		$result = $method->invoke($this->mapper, NULL);
 
 		$this->assertIsArray($result);
 		$this->assertGreaterThan(1, \count($result));
 		$this->assertArrayHasKey('allowTags', $result);
+	}
+
+	public function testEnsureParseFuncConfigurationSetsFallbackForEmptyParseFuncConfiguration(): void {
+		$previousTsfe = $GLOBALS['TSFE'] ?? NULL;
+		$previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+
+		try {
+			$GLOBALS['TSFE'] = (object) [
+				'tmpl' => (object) [
+					'setup' => [
+						'lib.' => [
+							'parseFunc_RTE.' => [],
+						],
+					],
+				],
+			];
+			unset($GLOBALS['TYPO3_REQUEST']);
+
+			$method = new ReflectionMethod(TcaMapper::class, 'ensureParseFuncConfiguration');
+			$method->setAccessible(TRUE);
+			$method->invoke($this->mapper);
+
+			$this->assertArrayHasKey('parseFunc_RTE.', $GLOBALS['TSFE']->tmpl->setup['lib.']);
+			$this->assertGreaterThan(1, \count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
+		} finally {
+			if ($previousTsfe !== NULL) {
+				$GLOBALS['TSFE'] = $previousTsfe;
+			} else {
+				unset($GLOBALS['TSFE']);
+			}
+
+			if ($previousRequest !== NULL) {
+				$GLOBALS['TYPO3_REQUEST'] = $previousRequest;
+			} else {
+				unset($GLOBALS['TYPO3_REQUEST']);
+			}
+		}
 	}
 
 	public function testProcessRteContentUsesFrontendTypoScriptParseFuncConfiguration(): void {
@@ -166,7 +206,7 @@ class TcaMapperTest extends UnitTestCase {
 				$this->createStub(FileRepository::class),
 				$contentObjectRenderer
 			);
-			$method = new \ReflectionMethod(TcaMapper::class, 'processRteContent');
+			$method = new ReflectionMethod(TcaMapper::class, 'processRteContent');
 			$method->setAccessible(TRUE);
 			$result = $method->invoke($mapper, '<p>source</p>');
 
@@ -175,6 +215,76 @@ class TcaMapperTest extends UnitTestCase {
 			$this->assertNull($parseFuncCalls[0]['reference']);
 			$this->assertSame(['externalBlocks' => 'p', 'allowTags' => 'p'], $parseFuncCalls[0]['configuration']);
 		} finally {
+			if ($previousRequest !== NULL) {
+				$GLOBALS['TYPO3_REQUEST'] = $previousRequest;
+			} else {
+				unset($GLOBALS['TYPO3_REQUEST']);
+			}
+		}
+	}
+
+	public function testProcessRteContentFallsBackToLocalParseFuncConfigurationIfReferenceFails(): void {
+		$previousTsfe = $GLOBALS['TSFE'] ?? NULL;
+		$previousRequest = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+		$parseFuncCalls = [];
+
+		try {
+			$GLOBALS['TSFE'] = (object) [
+				'tmpl' => (object) [
+					'setup' => [
+						'lib.' => [
+							'parseFunc_RTE.' => [
+								'externalBlocks' => 'p',
+								'allowTags' => 'p',
+							],
+						],
+					],
+				],
+			];
+			unset($GLOBALS['TYPO3_REQUEST']);
+
+			$contentObjectRenderer = $this->createMock(ContentObjectRenderer::class);
+			$contentObjectRenderer->expects($this->once())->method('start')->with([]);
+			$contentObjectRenderer->method('parseFunc')->willReturnCallback(
+				function (string $content, ?array $configuration, ?string $reference = NULL) use (&$parseFuncCalls) {
+					$parseFuncCalls[] = [
+						'content' => $content,
+						'configuration' => $configuration,
+						'reference' => $reference,
+					];
+
+					if (\count($parseFuncCalls) === 1) {
+						throw new LogicException('Invoked ContentObjectRenderer::parseFunc without any configuration', 1641989097);
+					}
+
+					return '<p>processed</p>';
+				}
+			);
+
+			$mapper = new TcaMapper(
+				$this->createStub(PersistenceManager::class),
+				$this->createStub(ConnectionPool::class),
+				$this->createStub(ResourceFactory::class),
+				$this->createStub(FileRepository::class),
+				$contentObjectRenderer
+			);
+			$method = new ReflectionMethod(TcaMapper::class, 'processRteContent');
+			$method->setAccessible(TRUE);
+			$result = $method->invoke($mapper, '<p>source</p>');
+
+			$this->assertSame('<p>processed</p>', $result);
+			$this->assertCount(2, $parseFuncCalls);
+			$this->assertSame('< lib.parseFunc_RTE', $parseFuncCalls[0]['reference']);
+			$this->assertNull($parseFuncCalls[1]['reference']);
+			$this->assertIsArray($parseFuncCalls[1]['configuration']);
+			$this->assertNotEmpty($parseFuncCalls[1]['configuration']);
+		} finally {
+			if ($previousTsfe !== NULL) {
+				$GLOBALS['TSFE'] = $previousTsfe;
+			} else {
+				unset($GLOBALS['TSFE']);
+			}
+
 			if ($previousRequest !== NULL) {
 				$GLOBALS['TYPO3_REQUEST'] = $previousRequest;
 			} else {

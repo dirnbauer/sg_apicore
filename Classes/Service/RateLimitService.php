@@ -8,13 +8,14 @@
  *
  *  This file is part of the TYPO3 CMS project.
  *  It is free software; you can redistribute it and/or modify it under
- *  the terms of the GNU General Public License, either version 3
- *  of the License, or any later version.
+ *  the terms of the "GNU General Public License", either version 3
+ *  of the License or any later version.
  ***************************************************************/
 
 namespace SGalinski\SgApiCore\Service;
 
 use Doctrine\DBAL\Exception;
+use Throwable;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\SingletonInterface;
 
@@ -83,7 +84,7 @@ class RateLimitService implements SingletonInterface {
 			}
 
 			$connection->commit();
-		} catch (\Throwable) {
+		} catch (Throwable) {
 			$connection->rollBack();
 			// Fail open on limiter errors
 			return [

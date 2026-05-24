@@ -15,11 +15,15 @@
 namespace SGalinski\SgApiCore\Service;
 
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Attribute\ApiCache;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Service for creating standardized API responses
@@ -41,16 +45,16 @@ class ResponseService implements SingletonInterface {
 	 * @param mixed $data The response data
 	 * @param array $meta Optional metadata (e.g., pagination)
 	 * @param int $status HTTP status code
-	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
-	 * @param \SGalinski\SgApiCore\Attribute\ApiCache|null $apiCache
+	 * @param ApiLegacyMode|null $legacyMode
+	 * @param ApiCache|null $apiCache
 	 * @return ResponseInterface
 	 */
 	public function createSuccessResponse(
 		mixed $data = [],
 		array $meta = [],
 		int $status = 200,
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL,
-		?\SGalinski\SgApiCore\Attribute\ApiCache $apiCache = NULL
+		?ApiLegacyMode $legacyMode = NULL,
+		?ApiCache $apiCache = NULL
 	): ResponseInterface {
 		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || \count($meta) > 0;
 		if ($legacyMode !== NULL) {
@@ -90,7 +94,7 @@ class ResponseService implements SingletonInterface {
 	 * @param int $status
 	 * @param string $type
 	 * @param array $additionalData
-	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
+	 * @param ApiLegacyMode|null $legacyMode
 	 * @return ResponseInterface
 	 */
 	public function createLocalizedErrorResponse(
@@ -99,17 +103,17 @@ class ResponseService implements SingletonInterface {
 		int $status,
 		string $type = 'about:blank',
 		array $additionalData = [],
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+		?ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
 		/** @var LanguageService|null $languageService */
 		$languageService = $GLOBALS['LANG'] ?? NULL;
 		if ($languageService === NULL) {
 			$language = NULL;
 			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
-			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+			if ($request instanceof ServerRequestInterface) {
 				$language = $request->getAttribute('language');
 			}
-			if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+			if ($language instanceof SiteLanguage) {
 				$languageService = $this->languageServiceFactory->createFromSiteLanguage($language);
 			} else {
 				$languageService = $this->languageServiceFactory->create('default');
@@ -137,7 +141,7 @@ class ResponseService implements SingletonInterface {
 	 * @param int $status
 	 * @param string $type
 	 * @param array $additionalData
-	 * @param \SGalinski\SgApiCore\Attribute\ApiLegacyMode|null $legacyMode
+	 * @param ApiLegacyMode|null $legacyMode
 	 * @return ResponseInterface
 	 */
 	public function createErrorResponse(
@@ -146,7 +150,7 @@ class ResponseService implements SingletonInterface {
 		int $status,
 		string $type = 'about:blank',
 		array $additionalData = [],
-		?\SGalinski\SgApiCore\Attribute\ApiLegacyMode $legacyMode = NULL
+		?ApiLegacyMode $legacyMode = NULL
 	): ResponseInterface {
 		$contentType = 'application/problem+json';
 		$headers = [
@@ -180,7 +184,7 @@ class ResponseService implements SingletonInterface {
 		if (!isset($additionalData['requestId'])) {
 			$requestId = NULL;
 			$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
-			if ($request instanceof \Psr\Http\Message\ServerRequestInterface) {
+			if ($request instanceof ServerRequestInterface) {
 				$requestId = $request->getAttribute('api.requestId');
 			}
 			if (\is_string($requestId) && $requestId !== '') {

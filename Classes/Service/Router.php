@@ -18,6 +18,9 @@ use FastRoute\Dispatcher;
 use FastRoute\RouteCollector;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionClass;
+use ReflectionException;
+use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Attribute\RequireScopes;
 use SGalinski\SgApiCore\Attribute\RequireUser;
@@ -64,7 +67,7 @@ class Router implements SingletonInterface {
 	 * @param string $path
 	 * @param mixed $authMode
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 * @throws AbstractServerErrorException
 	 * @throws PropagateResponseException
 	 */
@@ -125,7 +128,7 @@ class Router implements SingletonInterface {
 				}
 
 				// 2. Authentication Enforcement
-				$reflectionClass = new \ReflectionClass($handler['controller']);
+				$reflectionClass = new ReflectionClass($handler['controller']);
 				$reflectionMethod = $reflectionClass->getMethod($handler['action']);
 
 				$effectiveAuthMode = (!empty($handler['authMode'])) ? $handler['authMode'] : ($authMode ?? 'public');
@@ -186,7 +189,7 @@ class Router implements SingletonInterface {
 				$response = \call_user_func_array([$controller, $handler['action']], $arguments);
 
 				// Add Cache-Control headers if not already set by the controller, and an ApiCache attribute exists
-				if ($apiCache instanceof \SGalinski\SgApiCore\Attribute\ApiCache &&
+				if ($apiCache instanceof ApiCache &&
 					!$response->hasHeader('Cache-Control')
 				) {
 					if ($apiCache->enabled && $apiCache->lifetime > 0) {
@@ -211,7 +214,7 @@ class Router implements SingletonInterface {
 	 * @param string $path
 	 * @param string|null $authMode
 	 * @return array|null
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function matchEndpoint(
 		ServerRequestInterface $request,
@@ -265,7 +268,7 @@ class Router implements SingletonInterface {
 	 * @param array $endpoint
 	 * @param array $pathParams
 	 * @return array
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	protected function resolveArguments(ServerRequestInterface $request, array $endpoint, array $pathParams): array {
 		$arguments = [$request];
@@ -273,7 +276,7 @@ class Router implements SingletonInterface {
 		$bodyParams = $request->getParsedBody();
 
 		// We need to match the action's parameter names and order
-		$reflectionClass = new \ReflectionClass($endpoint['controller']);
+		$reflectionClass = new ReflectionClass($endpoint['controller']);
 		$reflectionMethod = $reflectionClass->getMethod($endpoint['action']);
 
 		foreach ($reflectionMethod->getParameters() as $index => $parameter) {
@@ -324,7 +327,7 @@ class Router implements SingletonInterface {
 	 * @param string|null $authMode
 	 * @param string $tenantId
 	 * @return array
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	protected function getFilteredEndpoints(
 		string $apiId,
@@ -372,7 +375,10 @@ class Router implements SingletonInterface {
 
 		$authKey = \is_array($authMode) ? implode(',', $authMode) : (string) $authMode;
 		$endpointSignature = sha1(serialize($filteredEndpoints));
-		$cacheFile = $cacheDirectory . '/routes_' . md5($apiId . '|' . $version . '|' . $authKey . '|' . $tenantId . '|' . $endpointSignature) . '.php';
+		$discoverySignature = $this->endpointDiscoveryService->getDiscoverySignature();
+		$cacheFile = $cacheDirectory . '/routes_' . md5(
+			$apiId . '|' . $version . '|' . $authKey . '|' . $tenantId . '|' . $discoverySignature . '|' . $endpointSignature
+		) . '.php';
 
 		return cachedDispatcher(function (RouteCollector $r) use ($filteredEndpoints) {
 			foreach ($filteredEndpoints as $endpoint) {

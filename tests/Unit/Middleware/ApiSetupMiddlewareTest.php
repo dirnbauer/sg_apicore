@@ -27,6 +27,7 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**
@@ -72,7 +73,7 @@ class ApiSetupMiddlewareTest extends UnitTestCase {
 		$uri->method('getPath')->willReturn('/en/api/test/v1/foo');
 		$request->method('getUri')->willReturn($uri);
 
-		$language = $this->createStub(\TYPO3\CMS\Core\Site\Entity\SiteLanguage::class);
+		$language = $this->createStub(SiteLanguage::class);
 		$base = $this->createStub(UriInterface::class);
 		$base->method('getPath')->willReturn('/en/');
 		$language->method('getBase')->willReturn($base);

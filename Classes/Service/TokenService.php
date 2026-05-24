@@ -14,6 +14,8 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use JsonException;
+use Random\RandomException;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use TYPO3\CMS\Core\Database\ConnectionPool;
@@ -41,7 +43,7 @@ class TokenService implements SingletonInterface {
 	 * Generates a new random token
 	 *
 	 * @return string
-	 * @throws \Random\RandomException
+	 * @throws RandomException
 	 */
 	public function generateRandomToken(): string {
 		return bin2hex(random_bytes(32));
@@ -61,7 +63,7 @@ class TokenService implements SingletonInterface {
 	 * @param string $label
 	 * @param bool $isJwt (If true, $token is treated as a jti, not hashed)
 	 * @return int The UID of the new token record
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	public function createToken(
 		string $token,
@@ -104,7 +106,7 @@ class TokenService implements SingletonInterface {
 	 * @param array $scopes
 	 * @param int|string $jti Unique ID for the token (usually the UID of the database record or a unique string)
 	 * @return string
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	public function generateJwtAccessToken(
 		int $userId,

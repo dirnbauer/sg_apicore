@@ -14,8 +14,10 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use ArrayIterator;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiMcp;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
@@ -33,19 +35,18 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for EndpointDiscoveryService
  */
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class EndpointDiscoveryServiceTest extends UnitTestCase {
 	public function testGetAllEndpointsReturnsCompleteData(): void {
-		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
-		$resourceRegistry = $this->createMock(ResourceRegistry::class);
+		$controllers = new ArrayIterator([new DiscoveryMockController()]);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
 		$resourceRegistry->method('getResources')->willReturn([]);
 
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
-		$apiRegistry = $this->createMock(ApiRegistry::class);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$service = new EndpointDiscoveryService(
 			$controllers,
@@ -88,13 +89,13 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 	}
 
 	public function testDiscoverySignatureChangesOnResourceChange(): void {
-		$controllers = new \ArrayIterator([new DiscoveryMockController()]);
-		$cache = $this->createMock(FrontendInterface::class);
+		$controllers = new ArrayIterator([new DiscoveryMockController()]);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
-		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
-		$apiRegistry = $this->createMock(ApiRegistry::class);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$resourceRegistry = new ResourceRegistry();
 		$resourceRegistry->registerResource('public', 'tt_content', '/contents', [
@@ -125,8 +126,32 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$this->assertTrue($serviceA->getDiscoverySignature() !== $serviceB->getDiscoverySignature());
 	}
 
+	public function testDiscoverySignatureIsCachedInMemory(): void {
+		$controllers = new ArrayIterator([new DiscoveryMockController()]);
+		$resourceRegistry = $this->createMock(ResourceRegistry::class);
+		$resourceRegistry->expects($this->once())->method('getResources')->willReturn([]);
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+
+		$service = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+
+		$signature = $service->getDiscoverySignature();
+
+		$this->assertSame($signature, $service->getDiscoverySignature());
+	}
+
 	public function testGenerateResourceEndpointsUsesTcaLabels(): void {
-		$controllers = new \ArrayIterator([]);
+		$controllers = new ArrayIterator([]);
 		$resourceRegistry = new ResourceRegistry();
 		$resourceRegistry->registerResource('public', 'tx_test', '/tests', [
 			'allowedOperations' => ['list'],
@@ -142,18 +167,18 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			],
 		];
 
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$cache->method('get')->willReturn(NULL);
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
 
-		$languageService = $this->createMock(LanguageService::class);
+		$languageService = $this->createStub(LanguageService::class);
 		$languageService->method('sL')->with('LLL:EXT:test/Resources/Private/Language/locallang_db.xlf:tx_test.title')
 			->willReturn('Translated Title');
 
-		$languageServiceFactory = $this->createMock(LanguageServiceFactory::class);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
 		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
-		$apiRegistry = $this->createMock(ApiRegistry::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
 
 		$service = new EndpointDiscoveryService(
 			$controllers,
@@ -170,6 +195,33 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 
 		unset($GLOBALS['TCA']['tx_test']);
 	}
+
+	public function testGetAllEndpointsIncludesMcpMetadata(): void {
+		$controllers = new ArrayIterator([new DiscoveryMcpController()]);
+		$resourceRegistry = $this->createStub(ResourceRegistry::class);
+		$resourceRegistry->method('getResources')->willReturn([]);
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+
+		$service = new EndpointDiscoveryService(
+			$controllers,
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+		$endpoints = $service->getAllEndpoints();
+
+		$this->assertCount(1, $endpoints);
+		$this->assertInstanceOf(ApiMcp::class, $endpoints[0]['mcp']);
+		$this->assertTrue($endpoints[0]['mcp']->exclude);
+		$this->assertSame('custom_tool', $endpoints[0]['mcp']->name);
+	}
 }
 
 /**
@@ -184,5 +236,12 @@ class DiscoveryMockController {
 	#[ApiPathParam(name: 'id', type: 'integer')]
 	#[ApiResponse(status: 200, description: 'Success')]
 	public function testAction(): void {
+	}
+}
+
+class DiscoveryMcpController {
+	#[ApiRoute(path: '/mcp-test', methods: ['GET'], apiId: 'public', version: '1')]
+	#[ApiMcp(exclude: TRUE, name: 'custom_tool')]
+	public function testMcpAction(): void {
 	}
 }

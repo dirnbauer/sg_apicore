@@ -14,6 +14,9 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use InvalidArgumentException;
+use JsonException;
+use RuntimeException;
 use TYPO3\CMS\Core\SingletonInterface;
 
 /**
@@ -28,7 +31,7 @@ class JwtService implements SingletonInterface {
 	public function __construct() {
 		$this->privateKey = $GLOBALS['TYPO3_CONF_VARS']['SYS']['encryptionKey'] ?? '';
 		if (\strlen($this->privateKey) < 32) {
-			throw new \RuntimeException(
+			throw new RuntimeException(
 				'Insecure or missing encryptionKey in TYPO3 configuration. A key with at least 32 characters is required.'
 			);
 		}
@@ -40,7 +43,7 @@ class JwtService implements SingletonInterface {
 	 * @param array $payload
 	 * @param string $algo
 	 * @return string
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	public function encode(array $payload, string $algo = 'HS256'): string {
 		$header = ['typ' => 'JWT', 'alg' => $algo];
@@ -62,7 +65,7 @@ class JwtService implements SingletonInterface {
 	 * @param string $jwt
 	 * @param array $expectedClaims (e.g. ['tenantId' => '...', 'apiId' => '...'])
 	 * @return array|null
-	 * @throws \JsonException
+	 * @throws JsonException
 	 */
 	public function decode(string $jwt, array $expectedClaims = []): ?array {
 		$tokenSegments = explode('.', $jwt);
@@ -139,7 +142,7 @@ class JwtService implements SingletonInterface {
 		];
 
 		if (empty($methods[$method])) {
-			throw new \InvalidArgumentException('Algorithm not supported');
+			throw new InvalidArgumentException('Algorithm not supported');
 		}
 
 		return hash_hmac($methods[$method], $message, $key, TRUE);

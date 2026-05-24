@@ -14,7 +14,9 @@
 
 namespace SGalinski\SgApiCore\Mapper;
 
+use DateTimeInterface;
 use Doctrine\DBAL\Exception;
+use LogicException;
 use Psr\Http\Message\ServerRequestInterface;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Http\ImmediateResponseException;
@@ -362,7 +364,7 @@ class TcaMapper implements SingletonInterface {
 					(isset($config['dbType']) && ($config['dbType'] === 'datetime' || $config['dbType'] === 'date'))
 				) {
 					if (is_numeric($value)) {
-						return date(\DateTimeInterface::ATOM, (int) $value);
+						return date(DateTimeInterface::ATOM, (int) $value);
 					}
 					return $value;
 				}
@@ -560,15 +562,26 @@ class TcaMapper implements SingletonInterface {
 		}
 		$this->contentObjectRenderer->start([]);
 
+		$this->ensureParseFuncConfiguration();
 		$parseFuncConf = $this->resolveParseFuncConfiguration($request);
 
 		if (empty($parseFuncConf)) {
 			return $content;
 		}
 
+		if ($this->hasUsableParseFuncReferenceConfiguration()) {
+			try {
+				return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf, '< lib.parseFunc_RTE');
+			} catch (LogicException $exception) {
+				if ($exception->getCode() !== 1641989097) {
+					throw $exception;
+				}
+			}
+		}
+
 		try {
 			return $this->contentObjectRenderer->parseFunc($content, $parseFuncConf);
-		} catch (\LogicException $exception) {
+		} catch (LogicException $exception) {
 			if ($exception->getCode() !== 1641989097) {
 				throw $exception;
 			}
@@ -581,6 +594,13 @@ class TcaMapper implements SingletonInterface {
 	 * @return array<string, mixed>
 	 */
 	protected function resolveParseFuncConfiguration(?ServerRequestInterface $request): array {
+		$globalSetup = $this->getGlobalTypoScriptSetup();
+		$globalLibConfiguration = $globalSetup['lib.'] ?? [];
+		$globalParseFunc = \is_array($globalLibConfiguration) ? ($globalLibConfiguration['parseFunc_RTE.'] ?? []) : [];
+		if (\is_array($globalParseFunc) && \count($globalParseFunc) > 1) {
+			return $this->normalizeStringKeyArray($globalParseFunc);
+		}
+
 		if ($request instanceof ServerRequestInterface) {
 			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
 			if ($frontendTypoScript instanceof FrontendTypoScript) {
@@ -608,6 +628,109 @@ class TcaMapper implements SingletonInterface {
 				'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
 			],
 		];
+	}
+
+	/**
+	 * @return bool
+	 */
+	protected function hasUsableParseFuncReferenceConfiguration(): bool {
+		$globalSetup = $this->getGlobalTypoScriptSetup();
+		$globalLibConfiguration = $globalSetup['lib.'] ?? [];
+		if (!\is_array($globalLibConfiguration) || !isset($globalLibConfiguration['parseFunc_RTE.'])) {
+			return FALSE;
+		}
+
+		$parseFuncReference = $globalLibConfiguration['parseFunc_RTE.'] ?? [];
+		return \is_array($parseFuncReference) && \count($parseFuncReference) > 1;
+	}
+
+	/**
+	 * Ensures a usable parseFunc_RTE setup exists when a TSFE template setup is available.
+	 *
+	 * @return void
+	 */
+	protected function ensureParseFuncConfiguration(): void {
+		$globalSetup = $this->getGlobalTypoScriptSetup();
+		if ($globalSetup === []) {
+			return;
+		}
+
+		$globalLibConfiguration = $globalSetup['lib.'] ?? [];
+		$currentParseFunc = \is_array($globalLibConfiguration) ? ($globalLibConfiguration['parseFunc_RTE.'] ?? []) : [];
+		if (\is_array($currentParseFunc) && \count($currentParseFunc) > 1) {
+			return;
+		}
+
+		$request = $GLOBALS['TYPO3_REQUEST'] ?? NULL;
+		if ($request instanceof ServerRequestInterface) {
+			$frontendTypoScript = $request->getAttribute('frontend.typoscript');
+			if ($frontendTypoScript instanceof FrontendTypoScript) {
+				$setup = $frontendTypoScript->getSetupArray();
+				$libConfiguration = $setup['lib.'] ?? [];
+				$resolvedParseFunc = \is_array($libConfiguration) ? ($libConfiguration['parseFunc_RTE.'] ?? []) : [];
+				if (!\is_array($resolvedParseFunc) || \count($resolvedParseFunc) <= 1) {
+					$resolvedParseFunc = \is_array($libConfiguration) ? ($libConfiguration['parseFunc.'] ?? []) : [];
+				}
+
+				if (\is_array($resolvedParseFunc) && \count($resolvedParseFunc) > 1) {
+					$globalSetup['lib.'] ??= [];
+					$globalSetup['lib.']['parseFunc_RTE.'] = $resolvedParseFunc;
+					$this->setGlobalTypoScriptSetup($globalSetup);
+					return;
+				}
+			}
+		}
+
+		$globalSetup['lib.'] ??= [];
+		$globalSetup['lib.']['parseFunc_RTE.'] = [
+			'externalBlocks' => 'table, blockquote, ol, ul, div, dl, header, section, footer, address, article, aside, figure, figcaption',
+			'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
+			'proc.' => [
+				'allowTags' => 'a, b, br, div, em, h1, h2, h3, h4, h5, h6, i, li, ol, p, span, strong, sub, sup, table, tbody, td, th, tr, u, ul',
+			],
+		];
+		$this->setGlobalTypoScriptSetup($globalSetup);
+	}
+
+	/**
+	 * @return array<string, mixed>
+	 */
+	protected function getGlobalTypoScriptSetup(): array {
+		$tsfe = $GLOBALS['TSFE'] ?? NULL;
+		if (!\is_object($tsfe)) {
+			return [];
+		}
+
+		$tmpl = get_object_vars($tsfe)['tmpl'] ?? NULL;
+		if (!\is_object($tmpl)) {
+			return [];
+		}
+
+		$setup = get_object_vars($tmpl)['setup'] ?? NULL;
+		return \is_array($setup) ? $this->normalizeStringKeyArray($setup) : [];
+	}
+
+	/**
+	 * @param array<string, mixed> $setup
+	 */
+	protected function setGlobalTypoScriptSetup(array $setup): void {
+		$tsfe = $GLOBALS['TSFE'] ?? NULL;
+		if (!\is_object($tsfe)) {
+			return;
+		}
+
+		$tmpl = get_object_vars($tsfe)['tmpl'] ?? NULL;
+		if (!\is_object($tmpl)) {
+			return;
+		}
+
+		$reflection = new \ReflectionObject($tmpl);
+		if (!$reflection->hasProperty('setup')) {
+			return;
+		}
+
+		$property = $reflection->getProperty('setup');
+		$property->setValue($tmpl, $setup);
 	}
 
 	/**

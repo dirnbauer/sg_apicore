@@ -125,11 +125,9 @@ class RequestValidator implements SingletonInterface {
 		string $parameterName
 	): UploadedFileInterface|array|NULL {
 		$uploadedFiles = $request->getUploadedFiles();
-		if (!\is_array($uploadedFiles) || !\array_key_exists($parameterName, $uploadedFiles)) {
-			return NULL;
-		}
-
-		return $this->normalizeUploadedFileValue($uploadedFiles[$parameterName]);
+		return !\array_key_exists($parameterName, $uploadedFiles) ? NULL : $this->normalizeUploadedFileValue(
+			$uploadedFiles[$parameterName]
+		);
 	}
 
 	/**

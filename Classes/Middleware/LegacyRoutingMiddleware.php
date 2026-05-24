@@ -19,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Middleware to handle legacy sg_rest URLs and map them to sg_apicore
@@ -55,7 +56,7 @@ class LegacyRoutingMiddleware implements MiddlewareInterface {
 		// Respect TYPO3 Language Prefix
 		$language = $request->getAttribute('language');
 		$languagePrefix = NULL;
-		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+		if ($language instanceof SiteLanguage) {
 			$languagePrefix = $language->getBase()->getPath();
 		}
 		$hasLanguagePrefix = FALSE;

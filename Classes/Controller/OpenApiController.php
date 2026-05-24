@@ -16,6 +16,7 @@ namespace SGalinski\SgApiCore\Controller;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Service\OpenApiService;
@@ -44,7 +45,7 @@ class OpenApiController {
 	 *
 	 * @param ServerRequestInterface $request
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	#[ApiRoute(path: '/docs.json', methods: ['GET'], authMode: 'public')]
 	#[ApiEndpoint(summary: 'openAPI Docs', tags: ['OpenAPI'])]

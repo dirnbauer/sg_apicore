@@ -1,8 +1,10 @@
 <?php
 
+use SGalinski\SgApiCore\Controller\Backend\Ajax\CacheController;
+
 return [
 	'apicore_clear_cache' => [
 		'path' => '/apicore/clear-cache',
-		'target' => \SGalinski\SgApiCore\Controller\Backend\Ajax\CacheController::class . '::clearCacheAction',
+		'target' => CacheController::class . '::clearCacheAction',
 	],
 ];

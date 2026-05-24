@@ -282,7 +282,7 @@ class TestController {
 		$body = \is_array($body) ? $body : [];
 
 		$item = [
-			'id' => ((int) time() % 100000),
+			'id' => (time() % 100000),
 			'name' => (string) ($body['name'] ?? ''),
 			'type' => (string) ($body['type'] ?? ''),
 			'isDraft' => $this->isTruthy($body['isDraft'] ?? FALSE),

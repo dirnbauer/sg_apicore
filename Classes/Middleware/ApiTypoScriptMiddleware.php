@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\ApiTypoScriptSetupService;
 use SGalinski\SgApiCore\Service\Router;
@@ -25,11 +26,11 @@ use SGalinski\SgApiCore\Service\Router;
 /**
  * Initializes TypoScript only when required by an endpoint
  */
-class ApiTypoScriptMiddleware implements MiddlewareInterface {
+readonly class ApiTypoScriptMiddleware implements MiddlewareInterface {
 	public function __construct(
-		protected readonly ApiRegistry $apiRegistry,
-		protected readonly Router $router,
-		protected readonly ApiTypoScriptSetupService $typoScriptSetupService
+		protected ApiRegistry $apiRegistry,
+		protected Router $router,
+		protected ApiTypoScriptSetupService $typoScriptSetupService
 	) {
 	}
 
@@ -37,7 +38,7 @@ class ApiTypoScriptMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');

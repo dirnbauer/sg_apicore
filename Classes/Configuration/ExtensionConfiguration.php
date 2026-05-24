@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Configuration;
 
+use Exception;
 use TYPO3\CMS\Core\Configuration\ExtensionConfiguration as Typo3ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -43,7 +44,7 @@ class ExtensionConfiguration implements SingletonInterface {
 		);
 		try {
 			$this->configuration = (array) $this->typo3ExtensionConfiguration->get('sg_apicore');
-		} catch (\Exception) {
+		} catch (Exception) {
 			// Fallback to empty configuration
 			$this->configuration = [];
 		}
@@ -266,5 +267,42 @@ class ExtensionConfiguration implements SingletonInterface {
 	 */
 	public function getApiResourceWriteWorkspaceId(): int {
 		return (int) $this->get('apiResourceWriteWorkspaceId', -1);
+	}
+
+	/**
+	 * Returns whether MCP support is enabled globally.
+	 *
+	 * @return bool
+	 */
+	public function isMcpEnabled(): bool {
+		return (bool) $this->get('mcpEnabled', TRUE);
+	}
+
+	/**
+	 * Returns API IDs for which MCP is globally disabled via extension config.
+	 *
+	 * @return list<string>
+	 */
+	public function getMcpDisabledApis(): array {
+		$apiIds = $this->get('mcpDisabledApis', '');
+		if (!\is_scalar($apiIds)) {
+			return [];
+		}
+		return GeneralUtility::trimExplode(',', (string) $apiIds, TRUE);
+	}
+
+	/**
+	 * Returns a global MCP denylist.
+	 *
+	 * Each entry can match a generated endpoint ID or tool name.
+	 *
+	 * @return list<string>
+	 */
+	public function getMcpDenylist(): array {
+		$entries = $this->get('mcpDenylist', '');
+		if (!\is_scalar($entries)) {
+			return [];
+		}
+		return GeneralUtility::trimExplode(',', (string) $entries, TRUE);
 	}
 }

@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
+use PHPUnit\Framework\MockObject\Stub;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -45,12 +46,12 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 	protected ApiCacheMiddleware $middleware;
 
 	/**
-	 * @var EndpointDiscoveryService|\PHPUnit\Framework\MockObject\Stub
+	 * @var EndpointDiscoveryService|Stub
 	 */
 	protected $discoveryService;
 
 	/**
-	 * @var PathAnalysisService|\PHPUnit\Framework\MockObject\Stub
+	 * @var PathAnalysisService|Stub
 	 */
 	protected $pathAnalysisService;
 

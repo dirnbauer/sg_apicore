@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\ApiRegistry;
@@ -26,6 +27,7 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\RedirectResponse;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Extbase\Persistence\PersistenceManagerInterface;
 
 /**
@@ -61,7 +63,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		$uri = $request->getUri();
@@ -71,7 +73,7 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		// Respect TYPO3 Language Prefix
 		$language = $request->getAttribute('language');
 		$languagePrefix = NULL;
-		if ($language instanceof \TYPO3\CMS\Core\Site\Entity\SiteLanguage) {
+		if ($language instanceof SiteLanguage) {
 			$languagePrefix = $language->getBase()->getPath();
 		}
 

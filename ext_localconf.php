@@ -2,11 +2,17 @@
 
 use Psr\Log\LogLevel;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Security\ApiTokenAuthenticationService;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
+use TYPO3\CMS\Core\Cache\Backend\FileBackend;
+use TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend;
+use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Log\Writer\FileWriter;
+use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask;
 
 (static function () {
 	// Default Log Configuration
@@ -67,10 +73,10 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 	}
 
 	// Register Authentication Service
-	\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addService(
+	ExtensionManagementUtility::addService(
 		'sg_apicore',
 		'auth',
-		\SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::class,
+		ApiTokenAuthenticationService::class,
 		[
 			'title' => 'API Token Authentication',
 			'description' => 'Authenticates users based on API tokens (JWT, Opaque, Legacy)',
@@ -80,36 +86,36 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 			'quality' => 80,
 			'os' => '',
 			'exec' => '',
-			'className' => \SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::class,
+			'className' => ApiTokenAuthenticationService::class,
 		]
 	);
 	// Register cache
 	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_responses'])) {
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_responses'] = [
-			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
-			'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
+			'frontend' => VariableFrontend::class,
+			'backend' => Typo3DatabaseBackend::class,
 			'groups' => ['all'],
 		];
 	}
 
 	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_discovery'])) {
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_discovery'] = [
-			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
-			'backend' => \TYPO3\CMS\Core\Cache\Backend\Typo3DatabaseBackend::class,
+			'frontend' => VariableFrontend::class,
+			'backend' => Typo3DatabaseBackend::class,
 			'groups' => ['system'],
 		];
 	}
 
 	if (!isset($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_dashboard'])) {
 		$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['sg_apicore_dashboard'] = [
-			'frontend' => \TYPO3\CMS\Core\Cache\Frontend\VariableFrontend::class,
-			'backend' => \TYPO3\CMS\Core\Cache\Backend\FileBackend::class,
+			'frontend' => VariableFrontend::class,
+			'backend' => FileBackend::class,
 			'groups' => ['system'],
 		];
 	}
 
-	if (class_exists(\TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask::class)) {
-		$taskClass = \TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask::class;
+	if (class_exists(TableGarbageCollectionTask::class)) {
+		$taskClass = TableGarbageCollectionTask::class;
 		$tables = $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][$taskClass]['options']['tables'] ?? [];
 		if (!is_array($tables['tx_apicore_rate_limit'] ?? FALSE)) {
 			$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks'][$taskClass]['options']['tables']['tx_apicore_rate_limit'] = [

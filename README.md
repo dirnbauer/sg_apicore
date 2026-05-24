@@ -12,7 +12,7 @@ Please report bugs here: https://github.com/dirnbauer/sg_apicore/issues
 
 Provides an API framework for TYPO3: multi-API and multi-version routing, site-aware tenants, attribute-based endpoint
 configuration, OpenAPI output, structured logging, opaque bearer tokens, JWT user tokens, backend-session auth,
-Auto-CRUD resources, and custom endpoints.
+MCP tool exposure, Auto-CRUD resources, and custom endpoints.
 
 Version `14.x` is TYPO3 v14-only. The package requires TYPO3 `^14.3`, `typo3/cms-workspaces` `^14.3`, and PHP `^8.3`.
 TYPO3 13 compatibility is intentionally not maintained in this release line.
@@ -60,6 +60,7 @@ The extension follows a standard TYPO3 extension structure with a focus on clean
 - [Auto-CRUD resources](docs/Resources.md)
 - [TCA mapper](docs/TcaMapper.md)
 - [OpenAPI](docs/OpenAPI.md)
+- [MCP integration](docs/MCP.md)
 - [Rate limiting](docs/RateLimiting.md)
 - [Tenants](docs/Tenants.md)
 - [Logging](docs/Logging.md)
@@ -180,6 +181,16 @@ live rows with the current workspace version, and delete placeholders are omitte
 The extension automatically generates OpenAPI 3.0 specifications. You can access Swagger UI at
 `/api/{apiId}/v{version}/docs/ui`. See [OpenAPI Documentation](docs/OpenAPI.md).
 
+## MCP Integration
+
+The extension can expose endpoints as MCP tools through a JSON-RPC endpoint:
+
+- `POST /api/{apiId}/v{version}/mcp`
+- `GET /api/{apiId}/v{version}/mcp` for the optional Streamable HTTP SSE channel
+
+Use `api:mcp:list` to see the effective tool exposure after configuration, denylist, and endpoint-level exclusions.
+See [MCP Documentation](docs/MCP.md).
+
 ## Backend Module
 
 The extension provides a TYPO3 Backend Module under **System > API Core**.
@@ -188,7 +199,8 @@ The extension provides a TYPO3 Backend Module under **System > API Core**.
 - **Token Management**: Create and manage Opaque and Refresh tokens.
   - Supports optional FE-user bound tokens (`user_id` mapped to `fe_users`) for per-user API key flows.
   - Token list keeps current filter state while editing/revoking/regenerating.
-- **Endpoints**: List of all registered endpoints and their requirements.
+- **Endpoints**: List of all registered endpoints and their requirements, including effective MCP exposure (tool names,
+  attribute-based exclusions, and API/version mapping).
 
 The module is available in both live and offline workspaces.
 

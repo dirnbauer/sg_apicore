@@ -14,12 +14,16 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
+use Doctrine\DBAL\Result;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\EventDispatcher\EventDispatcherInterface;
+use RuntimeException;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\JwtService;
+use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\TokenService;
 use SGalinski\SgApiCore\Service\UserAuthService;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
@@ -33,7 +37,6 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for UserAuthService
  */
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class UserAuthServiceTest extends UnitTestCase {
 	/**
 	 * @var UserAuthService
@@ -66,12 +69,12 @@ class UserAuthServiceTest extends UnitTestCase {
 	protected $tokenRepository;
 
 	/**
-	 * @var \SGalinski\SgApiCore\Configuration\ExtensionConfiguration|MockObject
+	 * @var ExtensionConfiguration|MockObject
 	 */
 	protected $extensionConfiguration;
 
 	/**
-	 * @var \SGalinski\SgApiCore\Service\LogService|MockObject
+	 * @var LogService|MockObject
 	 */
 	protected $logService;
 
@@ -92,10 +95,8 @@ class UserAuthServiceTest extends UnitTestCase {
 		$this->apiRegistry = $this->createMock(ApiRegistry::class);
 		$this->tokenService = $this->createMock(TokenService::class);
 		$this->tokenRepository = $this->createMock(TokenRepository::class);
-		$this->extensionConfiguration = $this->createMock(
-			\SGalinski\SgApiCore\Configuration\ExtensionConfiguration::class
-		);
-		$this->logService = $this->createMock(\SGalinski\SgApiCore\Service\LogService::class);
+		$this->extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+		$this->logService = $this->createMock(LogService::class);
 		$this->jwtService = $this->createMock(JwtService::class);
 		$this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
@@ -120,18 +121,18 @@ class UserAuthServiceTest extends UnitTestCase {
 
 		$tenantContext = new TenantContext('test-tenant');
 
-		$queryBuilder = $this->createMock(QueryBuilder::class);
+		$queryBuilder = $this->createStub(QueryBuilder::class);
 		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
 		$queryBuilder->method('select')->willReturn($queryBuilder);
 		$queryBuilder->method('from')->willReturn($queryBuilder);
 		$queryBuilder->method('where')->willReturn($queryBuilder);
-		$queryBuilder->method('expr')->willReturn($this->createMock(ExpressionBuilder::class));
+		$queryBuilder->method('expr')->willReturn($this->createStub(ExpressionBuilder::class));
 
-		$result = $this->createMock(\Doctrine\DBAL\Result::class);
+		$result = $this->createStub(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn($userRecord);
 
-		$hashInstance = $this->createMock(PasswordHashInterface::class);
+		$hashInstance = $this->createStub(PasswordHashInterface::class);
 		$this->passwordHashFactory->method('get')->willReturn($hashInstance);
 		$hashInstance->method('checkPassword')->with($password, $hashedPassword)->willReturn(TRUE);
 
@@ -159,7 +160,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$queryBuilder->method('where')->willReturn($queryBuilder);
 		$queryBuilder->method('andWhere')->willReturn($queryBuilder);
 
-		$result = $this->createMock(\Doctrine\DBAL\Result::class);
+		$result = $this->createStub(Result::class);
 		$queryBuilder->method('executeQuery')->willReturn($result);
 		$result->method('fetchAssociative')->willReturn(FALSE);
 
@@ -168,7 +169,7 @@ class UserAuthServiceTest extends UnitTestCase {
 	}
 
 	public function testResolveUserStoragePidsFromSiteConfig(): void {
-		$site = $this->createMock(Site::class);
+		$site = $this->createStub(Site::class);
 		$site->method('getConfiguration')->willReturn([
 			'apicore' => ['userStoragePids' => '10,20'],
 		]);
@@ -223,7 +224,7 @@ class UserAuthServiceTest extends UnitTestCase {
 		$thrown = FALSE;
 		try {
 			$this->service->refreshTokens('expired-refresh-token', 'public', '1', $tenantContext);
-		} catch (\RuntimeException $e) {
+		} catch (RuntimeException $e) {
 			$thrown = TRUE;
 			$this->assertSame('Refresh token expired.', $e->getMessage());
 		}

@@ -21,6 +21,7 @@ use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Middleware\RateLimitMiddleware;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\EndpointExecutionGuardService;
 use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\RateLimitService;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
@@ -53,7 +54,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 		$responseService->method('createErrorResponse')->willReturn(new JsonResponse(['status' => 429], 429));
 		$logService = $this->createStub(LogService::class);
 
-		$middleware = new RateLimitMiddleware(
+		$endpointExecutionGuardService = new EndpointExecutionGuardService(
 			$config,
 			$apiRegistry,
 			$resourceRegistry,
@@ -61,6 +62,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 			$responseService,
 			$logService
 		);
+		$middleware = new RateLimitMiddleware($endpointExecutionGuardService);
 
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturnCallback(static function ($name) {
@@ -103,7 +105,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 		$responseService = $this->createStub(ResponseService::class);
 		$logService = $this->createStub(LogService::class);
 
-		$middleware = new RateLimitMiddleware(
+		$endpointExecutionGuardService = new EndpointExecutionGuardService(
 			$config,
 			$apiRegistry,
 			$resourceRegistry,
@@ -111,6 +113,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 			$responseService,
 			$logService
 		);
+		$middleware = new RateLimitMiddleware($endpointExecutionGuardService);
 
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturnCallback(static function ($name) {
@@ -180,7 +183,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 		$responseService = $this->createStub(ResponseService::class);
 		$logService = $this->createStub(LogService::class);
 
-		$middleware = new RateLimitMiddleware(
+		$endpointExecutionGuardService = new EndpointExecutionGuardService(
 			$config,
 			$apiRegistry,
 			$resourceRegistry,
@@ -188,6 +191,7 @@ class RateLimitMiddlewareTest extends UnitTestCase {
 			$responseService,
 			$logService
 		);
+		$middleware = new RateLimitMiddleware($endpointExecutionGuardService);
 
 		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getAttribute')->willReturnCallback(static function ($name) {

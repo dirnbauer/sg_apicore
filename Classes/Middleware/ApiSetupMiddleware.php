@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Middleware;
 
+use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
@@ -25,6 +26,7 @@ use SGalinski\SgApiCore\Service\LogService;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
+use Throwable;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\LanguageAspectFactory;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
@@ -148,7 +150,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 					if (\is_array($parsedBody)) {
 						$request = $request->withParsedBody($parsedBody);
 					}
-				} catch (\JsonException) {
+				} catch (JsonException) {
 					// Only throw an error for application/json if it's invalid
 					if (str_contains($contentType, 'application/json')) {
 						$this->logService->logRejectedRequest($request, 'invalid_json', 400, [
@@ -171,7 +173,7 @@ class ApiSetupMiddleware implements MiddlewareInterface {
 		$startTime = microtime(TRUE);
 		try {
 			$response = $handler->handle($request);
-		} catch (\Throwable $e) {
+		} catch (Throwable $e) {
 			$this->logService->logException($e, $request);
 			$status = (int) $e->getCode();
 			if ($status < 400 || $status > 599) {

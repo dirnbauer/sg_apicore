@@ -18,6 +18,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
@@ -78,7 +79,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface {
 		if (!$this->extensionConfiguration->isCacheEnabled()) {
@@ -109,7 +110,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	 * @param ServerRequestInterface $request
 	 * @param RequestHandlerInterface $handler
 	 * @return ResponseInterface
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	protected function handleGetRequest(
 		ServerRequestInterface $request,
@@ -193,7 +194,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	 * Handles cache invalidation for writing requests
 	 *
 	 * @param ServerRequestInterface $request
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	protected function handleInvalidation(ServerRequestInterface $request): void {
 		$apiId = $request->getAttribute('api.id');
@@ -282,7 +283,7 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 
 		foreach ($cacheAttr->additionalVary as $item) {
 			$headerLine = $request->getHeaderLine($item);
-			$vary['extra_' . $item] = $request->getQueryParams()[$item] ?? ($headerLine !== '' ? $headerLine : '');
+			$vary['extra_' . $item] = $request->getQueryParams()[$item] ?? ($headerLine);
 		}
 
 		return hash('sha256', serialize($vary));

@@ -19,6 +19,7 @@ use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
+use RuntimeException;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
@@ -211,7 +212,7 @@ class UserAuthController {
 
 		try {
 			$tokens = $this->userAuthService->refreshTokens($refreshToken, $apiId, $version, $tenantContext);
-		} catch (\RuntimeException $e) {
+		} catch (RuntimeException $e) {
 			return $this->responseService->createErrorResponse('Unauthorized', $e->getMessage(), 401);
 		}
 

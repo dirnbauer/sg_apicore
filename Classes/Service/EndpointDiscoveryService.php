@@ -14,9 +14,12 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use ReflectionClass;
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
+use SGalinski\SgApiCore\Attribute\ApiMcp;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
 use SGalinski\SgApiCore\Attribute\ApiResponse;
@@ -32,17 +35,45 @@ use TYPO3\CMS\Core\SingletonInterface;
 
 /**
  * Service to discover all registered API endpoints
+ *
+ * @phpstan-type Endpoint array{
+ *   apiId: list<string>,
+ *   version: list<string>,
+ *   path: string,
+ *   methods: list<string>,
+ *   authMode: list<string>,
+ *   tenants: list<string>,
+ *   summary: string,
+ *   description: string,
+ *   tags: list<string>,
+ *   scopes: list<string>,
+ *   bodyParams: list<ApiBodyParam>,
+ *   queryParams: list<ApiQueryParam>,
+ *   pathParams: list<ApiPathParam>,
+ *   responses: list<ApiResponse>,
+ *   apiCache: ApiCache|null,
+ *   mcp: ApiMcp|null,
+ *   requireFullTypoScript: bool,
+ *   controller: class-string,
+ *   action: string,
+ *   resource?: array<string, mixed>
+ * }
  */
 class EndpointDiscoveryService implements SingletonInterface {
 	/**
-	 * @var array|null
+	 * @var list<class-string>|null
 	 */
 	protected ?array $controllerClasses = NULL;
 
 	/**
-	 * @var array|null
+	 * @var list<Endpoint>|null
 	 */
 	protected ?array $endpoints = NULL;
+
+	/**
+	 * @var string|null
+	 */
+	protected ?string $discoverySignature = NULL;
 
 	/**
 	 * @var FrontendInterface
@@ -50,7 +81,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 	protected FrontendInterface $cache;
 
 	/**
-	 * @param iterable $controllers
+	 * @param iterable<object> $controllers
 	 * @param ResourceRegistry $resourceRegistry
 	 * @param CacheManager $cacheManager
 	 * @param LanguageServiceFactory $languageServiceFactory
@@ -76,8 +107,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 	/**
 	 * Returns all discovered endpoints
 	 *
-	 * @return array
-	 * @throws \ReflectionException
+	 * @return list<Endpoint>
+	 * @throws ReflectionException
 	 */
 	public function getAllEndpoints(): array {
 		if ($this->endpoints !== NULL) {
@@ -91,9 +122,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 			return $this->endpoints;
 		}
 
+		/** @var list<Endpoint> $endpoints */
 		$endpoints = [];
 		foreach ($this->getControllerClasses() as $controllerClass) {
-			$reflectionClass = new \ReflectionClass($controllerClass);
+			$reflectionClass = new ReflectionClass($controllerClass);
 			foreach ($reflectionClass->getMethods() as $method) {
 				$routeAttributes = $method->getAttributes(ApiRoute::class);
 				foreach ($routeAttributes as $routeAttr) {
@@ -134,6 +166,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$apiCache = $cacheAttr[0]->newInstance();
 					}
 
+					$mcp = NULL;
+					$mcpAttr = $method->getAttributes(ApiMcp::class);
+					if (\count($mcpAttr) > 0) {
+						$mcp = $mcpAttr[0]->newInstance();
+					}
+
 					$requireTypoScript = FALSE;
 					$typoScriptAttributes = $method->getAttributes(RequireFullTypoScript::class);
 					if (\count($typoScriptAttributes) === 0) {
@@ -143,7 +181,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$requireTypoScript = TRUE;
 					}
 
-					$tags = $endpoint->tags ?? [];
+					$tags = $this->normalizeStringList($endpoint->tags ?? []);
 					if (empty($tags)) {
 						$pathSegments = explode('/', trim($route->path, '/'));
 						if ($pathSegments !== []) {
@@ -158,31 +196,28 @@ class EndpointDiscoveryService implements SingletonInterface {
 						$path = '/';
 					}
 
-					$apiIds = \is_array($route->apiId) ?
-						$route->apiId : ($route->apiId !== NULL ? [$route->apiId] : []);
-					$authModes = [];
-					if ($route->authMode !== NULL) {
-						$authModes = (array) $route->authMode;
-					}
+					$apiIds = $this->normalizeStringList($route->apiId);
+					$versions = $this->normalizeStringList($route->version);
+					$authModes = $this->normalizeStringList($route->authMode);
+					$tenants = $this->normalizeStringList($route->tenants);
 
 					$endpoints[] = [
 						'apiId' => $apiIds,
-						'version' => \is_array($route->version) ?
-							$route->version : ($route->version !== NULL ? [$route->version] : []),
+						'version' => $versions,
 						'path' => $path,
-						'methods' => $route->methods,
+						'methods' => $this->normalizeStringList($route->methods),
 						'authMode' => $authModes,
-						'tenants' => \is_array($route->tenants) ?
-							$route->tenants : ($route->tenants !== NULL ? [$route->tenants] : []),
+						'tenants' => $tenants,
 						'summary' => $summary,
 						'description' => $description,
 						'tags' => $tags,
-						'scopes' => $requireScopes?->scopes ?? [],
+						'scopes' => $this->normalizeStringList($requireScopes?->scopes ?? []),
 						'bodyParams' => $bodyParams,
 						'queryParams' => $queryParams,
 						'pathParams' => $pathParams,
 						'responses' => $responses,
 						'apiCache' => $apiCache,
+						'mcp' => $mcp,
 						'requireFullTypoScript' => $requireTypoScript,
 						'controller' => $controllerClass,
 						'action' => $method->getName(),
@@ -229,12 +264,16 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * Builds a cache signature to detect changes in routes/resources.
 	 *
 	 * @return string
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function getDiscoverySignature(): string {
+		if ($this->discoverySignature !== NULL) {
+			return $this->discoverySignature;
+		}
+
 		$controllers = [];
 		foreach ($this->getControllerClasses() as $controllerClass) {
-			$reflectionClass = new \ReflectionClass($controllerClass);
+			$reflectionClass = new ReflectionClass($controllerClass);
 			$fileName = $reflectionClass->getFileName();
 			$mtime = $fileName !== FALSE && is_file($fileName) ? (int) filemtime($fileName) : 0;
 			$controllers[] = [
@@ -254,7 +293,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 			$encoded = serialize($signaturePayload);
 		}
 
-		return sha1($encoded);
+		$this->discoverySignature = sha1($encoded);
+		return $this->discoverySignature;
 	}
 
 	/**
@@ -264,8 +304,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @param string|null $version
 	 * @param string|null $authMode
 	 * @param string $tenantId
-	 * @return array
-	 * @throws \ReflectionException
+	 * @return list<Endpoint>
+	 * @throws ReflectionException
 	 */
 	public function getEndpointsForApi(
 		string $apiId,
@@ -274,6 +314,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 		string $tenantId = ''
 	): array {
 		$endpoints = $this->getAllEndpoints();
+		/** @var list<Endpoint> $filteredEndpoints */
 		$filteredEndpoints = [];
 
 		foreach ($endpoints as $endpoint) {
@@ -328,10 +369,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * Generates CRUD endpoints for a resource
 	 *
 	 * @param string $apiId
-	 * @param array $config
-	 * @return array
+	 * @param array<string, mixed> $config
+	 * @return list<Endpoint>
 	 */
 	protected function generateResourceEndpoints(string $apiId, array $config): array {
+		/** @var list<Endpoint> $endpoints */
 		$endpoints = [];
 		$basePath = $config['basePath'] !== '/' ? rtrim($config['basePath'], '/') : $config['basePath'];
 		$basePath = '/' . ltrim($basePath, '/');
@@ -343,7 +385,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$scopes = $config['requiredScopes'] ?? [];
 		$writeFields = $config['writeFields'] ?? [];
 		$readFields = $config['readFields'] ?? [];
-		$tags = $config['tags'] ?? [];
+		$tags = $this->normalizeStringList($config['tags'] ?? []);
 		if (empty($tags)) {
 			$tags = [$tableName];
 		}
@@ -526,6 +568,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [],
 				'responses' => [new ApiResponse(status: 200, description: 'Success', schema: $tableName . '[]')],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'listAction',
@@ -553,6 +596,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'getAction',
@@ -577,6 +621,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pathParams' => [],
 				'responses' => [new ApiResponse(status: 201, description: 'Created', schema: $tableName)],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'createAction',
@@ -604,6 +649,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'updateAction',
@@ -635,6 +681,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 					new ApiResponse(status: 404, description: 'Not Found'),
 				],
 				'apiCache' => new ApiCache(tags: [$tableName]),
+				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
 				'controller' => ResourceController::class,
 				'action' => 'deleteAction',
@@ -648,8 +695,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 	/**
 	 * Returns the class names of all registered controllers
 	 *
-	 * @return array
-	 * @throws \ReflectionException
+	 * @return list<class-string>
+	 * @throws ReflectionException
 	 */
 	protected function getControllerClasses(): array {
 		if ($this->controllerClasses === NULL) {
@@ -657,7 +704,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 			foreach ($this->controllers as $controller) {
 				$className = \get_class($controller);
 				if (str_contains($className, '@anonymous')) {
-					$reflectionClass = new \ReflectionClass($controller);
+					$reflectionClass = new ReflectionClass($controller);
 					$className = $reflectionClass->getName();
 				}
 				$this->controllerClasses[] = $className;
@@ -665,5 +712,26 @@ class EndpointDiscoveryService implements SingletonInterface {
 		}
 
 		return $this->controllerClasses;
+	}
+
+	/**
+	 * @param mixed $value
+	 * @return list<string>
+	 */
+	protected function normalizeStringList(mixed $value): array {
+		if ($value === NULL) {
+			return [];
+		}
+		$values = \is_array($value) ? $value : [$value];
+		$strings = [];
+		foreach ($values as $item) {
+			if (\is_scalar($item)) {
+				$string = trim((string) $item);
+				if ($string !== '') {
+					$strings[] = $string;
+				}
+			}
+		}
+		return array_values(array_unique($strings));
 	}
 }

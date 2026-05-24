@@ -14,6 +14,7 @@
 
 namespace SGalinski\SgApiCore\Service;
 
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiPathParam;
 use SGalinski\SgApiCore\Attribute\ApiQueryParam;
@@ -81,7 +82,7 @@ class OpenApiService implements SingletonInterface {
 	 * @param string $baseUrl
 	 * @param string $tenantId
 	 * @return array
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function generateSpec(string $apiId, string $version, string $baseUrl = '', string $tenantId = ''): array {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
@@ -156,7 +157,7 @@ class OpenApiService implements SingletonInterface {
 		// Sort tags alphabetically but keep specific tags at the end
 		$tagNames = array_keys($allTags);
 		natcasesort($tagNames);
-		$bottomTags = ['openapi', 'health'];
+		$bottomTags = ['mcp', 'openapi', 'health'];
 		$sortedTags = [];
 		$tagsToPutAtBottom = [];
 
@@ -203,7 +204,7 @@ class OpenApiService implements SingletonInterface {
 	 * @param string $baseUrl
 	 * @param string $tenantId
 	 * @return array<string, string>
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	public function getCacheDebugInfo(string $apiId, string $version, string $baseUrl = '', string $tenantId = ''): array {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
@@ -226,7 +227,7 @@ class OpenApiService implements SingletonInterface {
 	 * @param string $baseUrl
 	 * @param string $tenantId
 	 * @return string
-	 * @throws \ReflectionException
+	 * @throws ReflectionException
 	 */
 	protected function getSpecCacheKey(
 		string $apiId,
@@ -299,7 +300,7 @@ class OpenApiService implements SingletonInterface {
 				$type = $this->mapPhpTypeToOpenApi($param->type);
 				$propertySpec = [
 					'type' => $type,
-					'description' => (string) $param->description,
+					'description' => $param->description,
 				];
 				if ($type === 'array') {
 					$propertySpec['items'] = [
@@ -693,7 +694,7 @@ class OpenApiService implements SingletonInterface {
 			$columnConfig = $tca['columns'][$tcaFieldName] ?? NULL;
 			if ($columnConfig !== NULL) {
 				if (isset($columnConfig['label'])) {
-					$label = (string) $languageService->sL($columnConfig['label']);
+					$label = $languageService->sL($columnConfig['label']);
 					if ($label !== '') {
 						$property['description'] = $label;
 					}
@@ -751,7 +752,7 @@ class OpenApiService implements SingletonInterface {
 				$type = $this->mapPhpTypeToOpenApi($param->type);
 				$property = [
 					'type' => $type,
-					'description' => (string) $param->description,
+					'description' => $param->description,
 				];
 				if ($type === 'array') {
 					$property['items'] = [
@@ -852,7 +853,7 @@ class OpenApiService implements SingletonInterface {
 						}
 
 						if (isset($tca['columns'][$tcaFieldName]['label'])) {
-							$label = (string) $languageService->sL($tca['columns'][$tcaFieldName]['label']);
+							$label = $languageService->sL($tca['columns'][$tcaFieldName]['label']);
 							if ($label !== '') {
 								$schema['description'] = $label;
 							}
