@@ -16,8 +16,10 @@ namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionClass;
 use RuntimeException;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
+use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\UserAuthController;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
@@ -78,6 +80,17 @@ class UserAuthControllerTest extends UnitTestCase {
 			$this->responseService,
 			$this->userAuthService
 		);
+	}
+
+	public function testTokenIssuingRoutesAllowPublicAccessInUserApi(): void {
+		$reflectionClass = new ReflectionClass(UserAuthController::class);
+		foreach (['login', 'legacyLogin', 'refresh'] as $methodName) {
+			$routeAttributes = $reflectionClass->getMethod($methodName)->getAttributes(ApiRoute::class);
+			$this->assertNotEmpty($routeAttributes);
+
+			$route = $routeAttributes[0]->newInstance();
+			$this->assertSame(['public', 'user'], $route->authMode, $methodName);
+		}
 	}
 
 	public function testLoginSuccessful(): void {

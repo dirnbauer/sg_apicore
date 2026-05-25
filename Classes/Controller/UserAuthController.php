@@ -95,7 +95,7 @@ class UserAuthController {
 	 * @throws JsonException
 	 * @throws InvalidPasswordHashException
 	 */
-	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: 'user')]
+	#[ApiRoute(path: '/auth/login', methods: ['POST'], authMode: ['public', 'user'])]
 	#[ApiEndpoint(
 		summary: 'User login',
 		description: 'Authenticates a user with username and password and returns access and refresh tokens.',
@@ -134,7 +134,7 @@ class UserAuthController {
 	 * @throws RandomException
 	 * @throws JsonException
 	 */
-	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: 'user')]
+	#[ApiRoute(path: '/auth/legacyLogin', methods: ['POST'], apiId: 'legacy', authMode: ['public', 'user'])]
 	#[ApiEndpoint(
 		summary: 'Legacy User login',
 		description: 'Authenticates a user and returns a bearer token in the legacy sg_rest format.',
@@ -173,7 +173,7 @@ class UserAuthController {
 	 * @throws JsonException
 	 * @throws RandomException
 	 */
-	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: 'user')]
+	#[ApiRoute(path: '/auth/refresh', methods: ['POST'], authMode: ['public', 'user'])]
 	#[ApiEndpoint(
 		summary: 'Refresh access token',
 		description: 'Exchange a refresh token for a new access token and a new refresh token (rotation).',

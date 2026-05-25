@@ -85,7 +85,10 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		if (!str_starts_with($pathWithoutLanguage, $apiPathPrefix)) {
+		$normalizedApiPathPrefix = rtrim($apiPathPrefix, '/');
+		if ($pathWithoutLanguage !== $normalizedApiPathPrefix &&
+			!str_starts_with($pathWithoutLanguage, $normalizedApiPathPrefix . '/')
+		) {
 			return $handler->handle($request);
 		}
 
@@ -99,11 +102,11 @@ class ApiRequestMiddleware implements MiddlewareInterface {
 		$normalizedPath = $pathWithoutLanguage !== '/' ? rtrim($pathWithoutLanguage, '/') : $pathWithoutLanguage;
 
 		// basic API health check
-		if ($normalizedPath === rtrim($apiPathPrefix, '/')) {
+		if ($normalizedPath === $normalizedApiPathPrefix) {
 			return new JsonResponse(['status' => 'ok']);
 		}
 
-		if ($normalizedPath === rtrim($apiPathPrefix, '/') . '/health') {
+		if ($normalizedPath === $normalizedApiPathPrefix . '/health') {
 			return new JsonResponse(['status' => 'ok']);
 		}
 

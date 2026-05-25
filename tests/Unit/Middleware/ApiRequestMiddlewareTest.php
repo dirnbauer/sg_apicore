@@ -181,6 +181,34 @@ class ApiRequestMiddlewareTest extends UnitTestCase {
 	/**
 	 * @test
 	 */
+	public function testProcessReturnsJsonResponseForApiRootWithoutTrailingSlash(): void {
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+		$middleware = new ApiRequestMiddleware(
+			$extensionConfiguration,
+			$this->createStub(ApiRegistry::class),
+			$this->createStub(Router::class),
+			$this->createStub(PathAnalysisService::class),
+			$this->createStub(ResponseService::class),
+			$this->createStub(PersistenceManagerInterface::class)
+		);
+		$request = $this->createStub(ServerRequestInterface::class);
+		$uri = $this->createStub(UriInterface::class);
+		$uri->method('getPath')->willReturn('/api');
+		$request->method('getUri')->willReturn($uri);
+		$request->method('hasHeader')->willReturn(FALSE);
+
+		$handler = $this->createStub(RequestHandlerInterface::class);
+		$handler->method('handle')->willReturn($this->createStub(ResponseInterface::class));
+
+		$response = $middleware->process($request, $handler);
+		$this->assertInstanceOf(JsonResponse::class, $response);
+		$this->assertEquals(200, $response->getStatusCode());
+	}
+
+	/**
+	 * @test
+	 */
 	public function testProcessDelegatesToRouterForValidApiRequest(): void {
 		$request = $this->createStub(ServerRequestInterface::class);
 		$uri = $this->createStub(UriInterface::class);
