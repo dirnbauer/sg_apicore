@@ -22,6 +22,7 @@ use ReflectionException;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\ApiRegistry;
+use SGalinski\SgApiCore\Service\BackendMcpOverviewService;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
 use SGalinski\SgApiCore\Service\LogDashboardService;
 use SGalinski\SgApiCore\Service\RateLimitDashboardService;
@@ -54,6 +55,7 @@ class ApiCoreController extends ActionController {
 	 * @param TokenRepository $tokenRepository
 	 * @param TokenService $tokenService
 	 * @param EndpointDiscoveryService $endpointDiscoveryService
+	 * @param BackendMcpOverviewService $backendMcpOverviewService
 	 * @param ModuleTemplateFactory $moduleTemplateFactory
 	 * @param IconFactory $iconFactory
 	 * @param ExtensionConfiguration $extensionConfiguration
@@ -65,6 +67,7 @@ class ApiCoreController extends ActionController {
 		protected readonly TokenRepository $tokenRepository,
 		protected readonly TokenService $tokenService,
 		protected readonly EndpointDiscoveryService $endpointDiscoveryService,
+		protected readonly BackendMcpOverviewService $backendMcpOverviewService,
 		protected readonly ModuleTemplateFactory $moduleTemplateFactory,
 		protected readonly BackendUriBuilder $backendUriBuilder,
 		protected readonly IconFactory $iconFactory,
@@ -252,10 +255,23 @@ class ApiCoreController extends ActionController {
 	 */
 	public function endpointsAction(): ResponseInterface {
 		$endpoints = $this->endpointDiscoveryService->getAllEndpoints();
+		$endpoints = $this->backendMcpOverviewService->enrichEndpointsWithMcpInfo($endpoints);
+		$mcpSummary = [
+			'endpointsWithMcpTools' => \count(array_filter(
+				$endpoints,
+				static fn (array $endpoint): bool => (bool) ($endpoint['mcpInfo']['isExposed'] ?? FALSE)
+			)),
+			'endpointsExcludedByAttribute' => \count(array_filter(
+				$endpoints,
+				static fn (array $endpoint): bool => (bool) ($endpoint['mcpInfo']['excludedByAttribute'] ?? FALSE)
+			)),
+			'totalEndpoints' => \count($endpoints),
+		];
 		$moduleTemplate = $this->moduleTemplateFactory->create($this->request);
 		$this->prepareDocHeader($moduleTemplate);
 		$moduleTemplate->setTitle('API Core - Endpoints');
 		$moduleTemplate->assign('endpoints', $endpoints);
+		$moduleTemplate->assign('mcpSummary', $mcpSummary);
 		$moduleTemplate->assign('apiPathPrefix', $this->extensionConfiguration->getApiPathPrefix());
 		$moduleTemplate->assign('currentTab', 'endpoints');
 		return $moduleTemplate->renderResponse('Backend/ApiCore/Endpoints');
