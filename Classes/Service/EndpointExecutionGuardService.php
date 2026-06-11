@@ -19,8 +19,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\SingletonInterface;
-use function array_key_exists;
-use function is_array;
 
 /**
  * Shared endpoint execution guards used by HTTP middleware and internal dispatches.
@@ -54,7 +52,7 @@ class EndpointExecutionGuardService implements SingletonInterface {
 		}
 
 		$rateLimitConfig = $this->resolveRateLimitConfig($request, $apiId);
-		if (is_array($rateLimitConfig) && array_key_exists('enabled', $rateLimitConfig) && !$rateLimitConfig['enabled']) {
+		if (\is_array($rateLimitConfig) && \array_key_exists('enabled', $rateLimitConfig) && !$rateLimitConfig['enabled']) {
 			return $this->createAllowedResult($request);
 		}
 
@@ -157,7 +155,7 @@ class EndpointExecutionGuardService implements SingletonInterface {
 	 */
 	protected function resolveRateLimitConfig(ServerRequestInterface $request, string $apiId): ?array {
 		$resourceConfig = $this->resolveResourceConfig($request, $apiId);
-		if (is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && is_array($resourceConfig['rateLimit'])) {
+		if (\is_array($resourceConfig) && isset($resourceConfig['rateLimit']) && \is_array($resourceConfig['rateLimit'])) {
 			return $resourceConfig['rateLimit'];
 		}
 

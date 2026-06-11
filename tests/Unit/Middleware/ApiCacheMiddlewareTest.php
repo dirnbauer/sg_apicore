@@ -45,14 +45,14 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 	protected ApiCacheMiddleware $middleware;
 
 	/**
-     * @var EndpointDiscoveryService|Stub
-     */
-    protected $discoveryService;
+	 * @var EndpointDiscoveryService|Stub
+	 */
+	protected $discoveryService;
 
 	/**
-     * @var PathAnalysisService|Stub
-     */
-    protected $pathAnalysisService;
+	 * @var PathAnalysisService|Stub
+	 */
+	protected $pathAnalysisService;
 
 	protected function setUp(): void {
 		parent::setUp();

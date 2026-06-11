@@ -75,16 +75,16 @@ class OpenApiService implements SingletonInterface {
 	}
 
 	/**
-     * Generates the OpenAPI specification for a given API ID and version
-     *
-     * @param string $apiId
-     * @param string $version
-     * @param string $baseUrl
-     * @param string $tenantId
-     * @return array
-     * @throws ReflectionException
-     */
-    public function generateSpec(string $apiId, string $version, string $baseUrl = '', string $tenantId = ''): array {
+	 * Generates the OpenAPI specification for a given API ID and version
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $baseUrl
+	 * @param string $tenantId
+	 * @return array
+	 * @throws ReflectionException
+	 */
+	public function generateSpec(string $apiId, string $version, string $baseUrl = '', string $tenantId = ''): array {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
 		if ($baseUrl === '') {
@@ -94,7 +94,7 @@ class OpenApiService implements SingletonInterface {
 
 		$cacheKey = $this->getSpecCacheKey($apiId, $version, $authMode, $baseUrl, $tenantId);
 		$cachedSpec = $this->cache->get($cacheKey);
-		if (is_array($cachedSpec)) {
+		if (\is_array($cachedSpec)) {
 			return $cachedSpec;
 		}
 
@@ -162,7 +162,7 @@ class OpenApiService implements SingletonInterface {
 		$tagsToPutAtBottom = [];
 
 		foreach ($tagNames as $tagName) {
-			if (in_array(strtolower($tagName), $bottomTags, TRUE)) {
+			if (\in_array(strtolower($tagName), $bottomTags, TRUE)) {
 				$tagsToPutAtBottom[] = ['name' => $tagName];
 			} else {
 				$sortedTags[] = ['name' => $tagName];
@@ -197,16 +197,16 @@ class OpenApiService implements SingletonInterface {
 	}
 
 	/**
-     * Returns debug information for OpenAPI caching
-     *
-     * @param string $apiId
-     * @param string $version
-     * @param string $baseUrl
-     * @param string $tenantId
-     * @return array<string, string>
-     * @throws ReflectionException
-     */
-    public function getCacheDebugInfo(string $apiId, string $version, string $baseUrl = '', string $tenantId = ''): array {
+	 * Returns debug information for OpenAPI caching
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $baseUrl
+	 * @param string $tenantId
+	 * @return array<string, string>
+	 * @throws ReflectionException
+	 */
+	public function getCacheDebugInfo(string $apiId, string $version, string $baseUrl = '', string $tenantId = ''): array {
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$authMode = $securityConfig['authMode'] ?? 'token';
 		if ($baseUrl === '') {
@@ -221,15 +221,15 @@ class OpenApiService implements SingletonInterface {
 	}
 
 	/**
-     * @param string $apiId
-     * @param string $version
-     * @param string $authMode
-     * @param string $baseUrl
-     * @param string $tenantId
-     * @return string
-     * @throws ReflectionException
-     */
-    protected function getSpecCacheKey(
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $authMode
+	 * @param string $baseUrl
+	 * @param string $tenantId
+	 * @return string
+	 * @throws ReflectionException
+	 */
+	protected function getSpecCacheKey(
 		string $apiId,
 		string $version,
 		string $authMode,
@@ -287,12 +287,12 @@ class OpenApiService implements SingletonInterface {
 			unset($operation['security']);
 		}
 
-		if (count($endpoint['scopes']) > 0) {
+		if (\count($endpoint['scopes']) > 0) {
 			$operation['description'] .= "\n\n**Required Scopes:** " . implode(', ', $endpoint['scopes']);
 		}
 
 		// Request Body (JSON)
-		if (count($endpoint['bodyParams']) > 0) {
+		if (\count($endpoint['bodyParams']) > 0) {
 			$properties = [];
 			$required = [];
 			/** @var ApiBodyParam $param */
@@ -362,7 +362,7 @@ class OpenApiService implements SingletonInterface {
 		/** @var ApiQueryParam $param */
 		foreach ($endpoint['queryParams'] as $param) {
 			$type = $this->mapPhpTypeToOpenApi($param->type);
-			if ($type === 'string' && is_array($param->example)) {
+			if ($type === 'string' && \is_array($param->example)) {
 				$type = 'array';
 			}
 
@@ -408,7 +408,7 @@ class OpenApiService implements SingletonInterface {
 				'description' => $description,
 				'schema' => $schema,
 			];
-			if ($type === 'array' || str_ends_with($param->name, '[]') || is_array($param->example)) {
+			if ($type === 'array' || str_ends_with($param->name, '[]') || \is_array($param->example)) {
 				$parameterSpec['explode'] = str_ends_with($param->name, '[]');
 				$parameterSpec['style'] = 'form';
 			}
@@ -551,7 +551,7 @@ class OpenApiService implements SingletonInterface {
 	 * @return mixed
 	 */
 	protected function resolveExamplePlaceholders(string $apiId, mixed $example): mixed {
-		if (is_string($example) && str_starts_with($example, 'schema:')) {
+		if (\is_string($example) && str_starts_with($example, 'schema:')) {
 			$schemaStr = substr($example, 7);
 			$isArray = str_ends_with($schemaStr, '[]');
 			$schemaName = $isArray ? substr($schemaStr, 0, -2) : $schemaStr;
@@ -566,7 +566,7 @@ class OpenApiService implements SingletonInterface {
 			return $isArray ? [$stub] : $stub;
 		}
 
-		if (is_array($example)) {
+		if (\is_array($example)) {
 			foreach ($example as $key => $value) {
 				$example[$key] = $this->resolveExamplePlaceholders($apiId, $value);
 			}
@@ -790,7 +790,7 @@ class OpenApiService implements SingletonInterface {
 	 * @return array
 	 */
 	protected function generateSchemaFromExample(string $apiId, mixed $example, string $tableName = ''): array {
-		if (is_string($example) && str_starts_with($example, 'schema:')) {
+		if (\is_string($example) && str_starts_with($example, 'schema:')) {
 			$schemaStr = substr($example, 7);
 			return $this->parseSchema(
 				$apiId,
@@ -799,7 +799,7 @@ class OpenApiService implements SingletonInterface {
 			);
 		}
 
-		if (is_array($example)) {
+		if (\is_array($example)) {
 			// Try to map global schema name to table name for TCA enrichment
 			if ($tableName !== '' && !isset($GLOBALS['TCA'][$tableName])) {
 				$mappedTableName = $this->schemaRegistry->getTableNameForSchema($apiId, $tableName);
@@ -809,7 +809,7 @@ class OpenApiService implements SingletonInterface {
 			}
 
 			// Check if it's an associative array (object) or sequential (array)
-			$isAssoc = count($example) > 0 && array_keys($example) !== range(0, count($example) - 1);
+			$isAssoc = \count($example) > 0 && array_keys($example) !== range(0, \count($example) - 1);
 			if ($isAssoc) {
 				$properties = [];
 				$tca = ($tableName !== '' && isset($GLOBALS['TCA'][$tableName])) ? $GLOBALS['TCA'][$tableName] : NULL;
@@ -870,7 +870,7 @@ class OpenApiService implements SingletonInterface {
 			}
 
 			$items = ['type' => 'object'];
-			if (count($example) > 0) {
+			if (\count($example) > 0) {
 				$items = $this->generateSchemaFromExample($apiId, reset($example), $tableName);
 			}
 
@@ -880,13 +880,13 @@ class OpenApiService implements SingletonInterface {
 			];
 		}
 
-		if (is_int($example)) {
+		if (\is_int($example)) {
 			return ['type' => 'integer'];
 		}
-		if (is_float($example)) {
+		if (\is_float($example)) {
 			return ['type' => 'number'];
 		}
-		if (is_bool($example)) {
+		if (\is_bool($example)) {
 			return ['type' => 'boolean'];
 		}
 
@@ -941,7 +941,7 @@ class OpenApiService implements SingletonInterface {
 		}
 		if (str_ends_with($schemaStr, '[]')) {
 			$baseSchema = substr($schemaStr, 0, -2);
-			if (in_array($baseSchema, $knownSchemas, TRUE)) {
+			if (\in_array($baseSchema, $knownSchemas, TRUE)) {
 				return [
 					'type' => 'array',
 					'items' => ['$ref' => '#/components/schemas/' . $baseSchema],
@@ -954,7 +954,7 @@ class OpenApiService implements SingletonInterface {
 			];
 		}
 
-		if (in_array($schemaStr, $knownSchemas, TRUE)) {
+		if (\in_array($schemaStr, $knownSchemas, TRUE)) {
 			return ['$ref' => '#/components/schemas/' . $schemaStr];
 		}
 

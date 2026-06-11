@@ -14,9 +14,9 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Security;
 
-use SGalinski\SgApiCore\Context\TenantContext;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;

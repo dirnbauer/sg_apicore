@@ -14,9 +14,9 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Mapper;
 
+use LogicException;
 use ReflectionClass;
 use ReflectionMethod;
-use LogicException;
 use SGalinski\SgApiCore\Mapper\TcaMapper;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\FileRepository;
@@ -138,7 +138,7 @@ class TcaMapperTest extends UnitTestCase {
 			$method->invoke($this->mapper);
 
 			$this->assertArrayHasKey('parseFunc_RTE.', $GLOBALS['TSFE']->tmpl->setup['lib.']);
-			$this->assertGreaterThan(1, count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
+			$this->assertGreaterThan(1, \count($GLOBALS['TSFE']->tmpl->setup['lib.']['parseFunc_RTE.']));
 		} finally {
 			if ($previousTsfe !== NULL) {
 				$GLOBALS['TSFE'] = $previousTsfe;
@@ -184,7 +184,7 @@ class TcaMapperTest extends UnitTestCase {
 						'reference' => $reference,
 					];
 
-					if (count($parseFuncCalls) === 1) {
+					if (\count($parseFuncCalls) === 1) {
 						throw new LogicException('Invoked ContentObjectRenderer::parseFunc without any configuration', 1641989097);
 					}
 

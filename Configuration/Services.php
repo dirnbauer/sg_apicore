@@ -1,34 +1,34 @@
 <?php
 
-use SGalinski\SgApiCore\Service\Router;
-use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
-use SGalinski\SgApiCore\Service\OpenApiService;
-use SGalinski\SgApiCore\Controller\OpenApiController;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Controller\TestController;
-use SGalinski\SgApiCore\Controller\LegacyExampleController;
-use SGalinski\SgApiCore\Controller\UserAuthController;
-use SGalinski\SgApiCore\Controller\McpController;
-use SGalinski\SgApiCore\Controller\ResourceController;
 use SGalinski\SgApiCore\Command\GenerateOpenApiCommand;
 use SGalinski\SgApiCore\Command\McpListCommand;
-use SGalinski\SgApiCore\Security\BackendUserProvider;
+use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Controller\LegacyExampleController;
+use SGalinski\SgApiCore\Controller\McpController;
+use SGalinski\SgApiCore\Controller\OpenApiController;
+use SGalinski\SgApiCore\Controller\ResourceController;
+use SGalinski\SgApiCore\Controller\TestController;
+use SGalinski\SgApiCore\Controller\UserAuthController;
 use SGalinski\SgApiCore\EventListener\ClearCacheEventListener;
-use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
-use SGalinski\SgApiCore\Middleware\ApiCorsMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiAuthMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
+use SGalinski\SgApiCore\Middleware\ApiCorsMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
+use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
+use SGalinski\SgApiCore\Security\BackendUserProvider;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
 use SGalinski\SgApiCore\Security\JwtAccessTokenProvider;
 use SGalinski\SgApiCore\Security\LoginProviderChain;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;
+use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\OpenApiService;
+use SGalinski\SgApiCore\Service\Router;
 use SGalinski\SgApiCore\Service\Tenant\HeaderTenantResolver;
 use SGalinski\SgApiCore\Service\Tenant\SiteTenantResolver;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverChain;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return static function (ContainerConfigurator $containerConfigurator): void {
@@ -44,16 +44,15 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 		->arg('$controllers', tagged_iterator('sg_apicore.router'));
 
 	$services->set(EndpointDiscoveryService::class)
-		->arg('$controllers', tagged_iterator('sg_apicore.router'));
+		->arg('$controllers', tagged_iterator('sg_apicore.router'))
+		->arg('$endpointFilters', tagged_iterator('sg_apicore.endpoint_filter'));
 
 	$services->set(OpenApiService::class);
 
 	$services->set(OpenApiController::class)
 		->tag('sg_apicore.router');
 
-	$extensionConfiguration = GeneralUtility::makeInstance(
-		ExtensionConfiguration::class
-	);
+	$extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
 	if ($extensionConfiguration->isActivateDemoApis()) {
 		$services->set(TestController::class)
 			->tag('sg_apicore.router');

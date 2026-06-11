@@ -14,7 +14,6 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -23,6 +22,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\LegacyRoutingMiddleware;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class LegacyRoutingMiddlewareTest extends UnitTestCase {

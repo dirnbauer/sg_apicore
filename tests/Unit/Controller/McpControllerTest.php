@@ -27,7 +27,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
 		$request = $request->withParsedBody([
 			'jsonrpc' => '2.0',
@@ -60,7 +60,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
 		$request = $request
 			->withAttribute('api.id', 'sgai')
@@ -86,7 +86,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
 			->withAttribute('api.id', 'sgai')
 			->withAttribute('api.version', '1')
@@ -110,7 +110,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
 			->withAttribute('api.id', 'sgai')
 			->withAttribute('api.version', '1')
@@ -140,7 +140,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
 			->withAttribute('api.id', 'sgai')
 			->withAttribute('api.version', '1')
@@ -170,7 +170,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
 			->withAttribute('api.id', 'sgai')
 			->withAttribute('api.version', '1')
@@ -198,7 +198,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST'))
 			->withAttribute('api.id', 'sgai')
 			->withAttribute('api.version', '1')
@@ -225,7 +225,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
 		$request = $request->withParsedBody([
 			'jsonrpc' => '2.0',
@@ -245,7 +245,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
 		$request = $request
 			->withAttribute('api.id', 'sgai')
@@ -279,7 +279,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
 		$request = $request->withParsedBody([
 			'jsonrpc' => '2.0',
@@ -298,7 +298,7 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'GET'))
 			->withAttribute('api.id', 'sgai')
 			->withHeader('Accept', 'text/event-stream');
@@ -317,7 +317,7 @@ class McpControllerTest extends UnitTestCase {
 		$mcpToolService->method('isMcpAvailableForApi')->with('sgai')->willReturn(FALSE);
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'GET'))
 			->withAttribute('api.id', 'sgai')
 			->withHeader('Accept', 'text/event-stream');
@@ -332,12 +332,19 @@ class McpControllerTest extends UnitTestCase {
 		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isMcpEnabled')->willReturn(TRUE);
 
-		$controller = new McpController($mcpToolService, $extensionConfiguration);
+		$controller = $this->createController($mcpToolService, $extensionConfiguration);
 		$request = (new ServerRequest('https://example.com/api/sgai/v1/mcp', 'GET'))
 			->withHeader('Accept', 'application/json');
 
 		$response = $controller->streamAction($request);
 
 		$this->assertSame(406, $response->getStatusCode());
+	}
+
+	protected function createController(
+		McpToolService $mcpToolService,
+		ExtensionConfiguration $extensionConfiguration
+	): McpController {
+		return new McpController($mcpToolService, $extensionConfiguration);
 	}
 }

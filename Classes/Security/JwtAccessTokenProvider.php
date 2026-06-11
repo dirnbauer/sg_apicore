@@ -14,14 +14,14 @@
 
 namespace SGalinski\SgApiCore\Security;
 
-use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Database\ConnectionPool;
-use JsonException;
 use Doctrine\DBAL\Exception;
+use JsonException;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Service\JwtService;
+use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * JWT Access Token login provider
@@ -42,17 +42,17 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	}
 
 	/**
-     * Authenticates the request and returns an AuthContext if successful
-     *
-     * @param ServerRequestInterface $request
-     * @param string $apiId
-     * @param string $tenantId
-     * @param array $activeProviders
-     * @return AuthContext|null
-     * @throws JsonException
-     * @throws Exception
-     */
-    public function authenticate(
+	 * Authenticates the request and returns an AuthContext if successful
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @param string $tenantId
+	 * @param array $activeProviders
+	 * @return AuthContext|null
+	 * @throws JsonException
+	 * @throws Exception
+	 */
+	public function authenticate(
 		ServerRequestInterface $request,
 		string $apiId,
 		?string $tenantId,
@@ -60,7 +60,7 @@ class JwtAccessTokenProvider implements LoginProviderInterface {
 	): ?AuthContext {
 		$tenantId ??= '';
 		$token = $this->extractToken($request);
-		if ($token === '' || count(explode('.', $token)) !== 3) {
+		if ($token === '' || \count(explode('.', $token)) !== 3) {
 			return NULL;
 		}
 

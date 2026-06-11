@@ -14,11 +14,11 @@
 
 namespace SGalinski\SgApiCore\Security;
 
-use JsonException;
-use SGalinski\SgApiCore\Context\TenantContext;
 use Doctrine\DBAL\Exception;
+use JsonException;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 
 /**
@@ -60,7 +60,7 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 		}
 
 		/** @var TenantContext|null $tenantContext */
-        $tenantContext = $request->getAttribute('api.tenant');
+		$tenantContext = $request->getAttribute('api.tenant');
 		$siteRootPageId = $tenantContext?->getSiteRootPageId();
 
 		$tokenRecord = $this->findMatchingToken($token, $apiId, $tenantId, $siteRootPageId);
@@ -84,7 +84,7 @@ class BearerOpaqueTokenProvider implements LoginProviderInterface {
 				$scopes = [];
 			}
 
-			if (!is_array($scopes)) {
+			if (!\is_array($scopes)) {
 				$scopes = [];
 			}
 		}

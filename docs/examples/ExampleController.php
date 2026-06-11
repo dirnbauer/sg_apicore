@@ -137,8 +137,8 @@ class ExampleController {
 		$pagination = $this->paginationService->getPaginationParams($request);
 		$items = $this->filterExampleItems($this->getExampleItems(), $search, $includeDrafts);
 
-		$total = count($items);
-		$slicedData = array_slice($items, $pagination['offset'], $pagination['limit']);
+		$total = \count($items);
+		$slicedData = \array_slice($items, $pagination['offset'], $pagination['limit']);
 		$meta = $this->paginationService->buildPaginationMeta($total, $pagination['offset'], $pagination['limit']);
 		$meta['filters'] = [
 			'search' => $search,
@@ -203,7 +203,7 @@ class ExampleController {
 	#[ApiResponse(status: 403, description: 'Insufficient scope')]
 	public function createAction(ServerRequestInterface $request): ResponseInterface {
 		$body = $request->getParsedBody();
-		$body = is_array($body) ? $body : [];
+		$body = \is_array($body) ? $body : [];
 
 		$item = [
 			'id' => ((int) time() % 100000),
@@ -216,7 +216,7 @@ class ExampleController {
 		if (isset($body['channelId'])) {
 			$item['channelId'] = (int) $body['channelId'];
 		}
-		if (isset($body['tags']) && is_array($body['tags'])) {
+		if (isset($body['tags']) && \is_array($body['tags'])) {
 			$item['tags'] = array_values(array_map(static fn ($tag): string => (string) $tag, $body['tags']));
 		}
 
@@ -279,6 +279,6 @@ class ExampleController {
 	 * @return bool
 	 */
 	protected function isTruthy(mixed $value): bool {
-		return in_array($value, [TRUE, 1, '1', 'true', 'yes', 'on'], TRUE);
+		return \in_array($value, [TRUE, 1, '1', 'true', 'yes', 'on'], TRUE);
 	}
 }

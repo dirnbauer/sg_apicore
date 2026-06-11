@@ -14,23 +14,23 @@
 
 namespace SGalinski\SgApiCore\Service;
 
-use TYPO3\CMS\Core\TypoScript\TemplateService;
-use Throwable;
-use TYPO3\CMS\Core\Domain\Repository\PageRepository;
-use TYPO3\CMS\Frontend\Page\PageInformation;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Context\TenantContext;
+use Throwable;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Routing\PageArguments;
 use TYPO3\CMS\Core\Site\Entity\Site;
 use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\TypoScript\AST\Node\RootNode;
 use TYPO3\CMS\Core\TypoScript\FrontendTypoScript;
+use TYPO3\CMS\Core\TypoScript\TemplateService;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\RootlineUtility;
 use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
 use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
+use TYPO3\CMS\Frontend\Page\PageInformation;
 
 /**
  * Ensures full TypoScript context for API requests
@@ -80,7 +80,7 @@ readonly class ApiTypoScriptSetupService {
 					&& isset($GLOBALS['TSFE']->tmpl)
 					&& $GLOBALS['TSFE']->tmpl instanceof TemplateService
 				) {
-					if (isset($GLOBALS['TSFE']->rootLine) && is_array($GLOBALS['TSFE']->rootLine)) {
+					if (isset($GLOBALS['TSFE']->rootLine) && \is_array($GLOBALS['TSFE']->rootLine)) {
 						/** @phpstan-ignore-next-line */
 						$GLOBALS['TSFE']->tmpl->runThroughTemplates($GLOBALS['TSFE']->rootLine);
 					}
@@ -127,7 +127,7 @@ readonly class ApiTypoScriptSetupService {
 		$rootline = [];
 		if (class_exists($pageInformationClass)) {
 			/** @var PageInformation $pageInformation */
-            $pageInformation = new $pageInformationClass();
+			$pageInformation = new $pageInformationClass();
 			if (method_exists($pageInformation, 'setId')) {
 				$pageInformation->setId($siteRootPageId);
 			}
@@ -275,7 +275,7 @@ readonly class ApiTypoScriptSetupService {
 	private function resolveSetupArrayFromTemplateService(int $siteRootPageId): array {
 		if (class_exists(TemplateService::class)
 			&& isset($GLOBALS['TSFE']->tmpl->setup)
-			&& is_array($GLOBALS['TSFE']->tmpl->setup)
+			&& \is_array($GLOBALS['TSFE']->tmpl->setup)
 		) {
 			/** @var array<string, mixed> $setupArray */
 			$setupArray = $GLOBALS['TSFE']->tmpl->setup;

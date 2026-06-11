@@ -14,16 +14,16 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
-use Psr\Log\LoggerInterface;
-use ReflectionClass;
 use Exception;
-use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Http\Uri;
-use Psr\Http\Message\ResponseInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\MockObject\Stub;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Service\LogService;
+use TYPO3\CMS\Core\Http\Uri;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
@@ -37,24 +37,24 @@ class LogServiceTest extends UnitTestCase {
 	protected LogService $service;
 
 	/**
-     * @var LogManager|MockObject
-     */
-    protected $logManager;
+	 * @var LogManager|MockObject
+	 */
+	protected $logManager;
 
 	/**
-     * @var LoggerInterface|MockObject
-     */
-    protected $logger;
+	 * @var LoggerInterface|MockObject
+	 */
+	protected $logger;
 
 	/**
-     * @var LoggerInterface|Stub
-     */
-    protected $loggerStub;
+	 * @var LoggerInterface|Stub
+	 */
+	protected $loggerStub;
 
 	/**
-     * @var ExtensionConfiguration|MockObject
-     */
-    protected $extensionConfiguration;
+	 * @var ExtensionConfiguration|MockObject
+	 */
+	protected $extensionConfiguration;
 
 	protected function setUp(): void {
 		parent::setUp();
@@ -193,7 +193,7 @@ class LogServiceTest extends UnitTestCase {
 		$longString = str_repeat('a', 100);
 		$result = $method->invoke($this->service, $longString, 50);
 
-		$this->assertEquals(50 + strlen('... [truncated]'), strlen($result));
+		$this->assertEquals(50 + \strlen('... [truncated]'), \strlen($result));
 		$this->assertStringContainsString('... [truncated]', $result);
 		$this->assertEquals(0, strpos(strrev($result), strrev('... [truncated]')));
 	}

@@ -14,7 +14,6 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
@@ -28,6 +27,7 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Tenant\TenantContextResult;
 use SGalinski\SgApiCore\Service\Tenant\TenantResolverInterface;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 /**

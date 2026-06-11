@@ -136,18 +136,18 @@ class ApiCorsMiddleware implements MiddlewareInterface {
 		}
 
 		$securityConfig = $this->apiRegistry->getSecurityConfig($analysis['apiId'], (string) $analysis['version']);
-		$corsConfig = is_array($securityConfig['cors'] ?? NULL) ? $securityConfig['cors'] : [];
+		$corsConfig = \is_array($securityConfig['cors'] ?? NULL) ? $securityConfig['cors'] : [];
 		$allowedOrigins = $this->normalizeAllowedOrigins($corsConfig['allowedOrigins'] ?? []);
 
-		$isAllowed = in_array($this->normalizeOrigin($origin), $allowedOrigins, TRUE);
+		$isAllowed = \in_array($this->normalizeOrigin($origin), $allowedOrigins, TRUE);
 
 		$allowMethods = self::DEFAULT_ALLOW_METHODS;
-		if (is_string($corsConfig['allowMethods'] ?? NULL) && trim((string) $corsConfig['allowMethods']) !== '') {
+		if (\is_string($corsConfig['allowMethods'] ?? NULL) && trim((string) $corsConfig['allowMethods']) !== '') {
 			$allowMethods = trim((string) $corsConfig['allowMethods']);
 		}
 
 		$exposeHeaders = self::DEFAULT_EXPOSE_HEADERS;
-		if (is_string($corsConfig['exposeHeaders'] ?? NULL) && trim((string) $corsConfig['exposeHeaders']) !== '') {
+		if (\is_string($corsConfig['exposeHeaders'] ?? NULL) && trim((string) $corsConfig['exposeHeaders']) !== '') {
 			$exposeHeaders = trim((string) $corsConfig['exposeHeaders']);
 		}
 
@@ -172,10 +172,10 @@ class ApiCorsMiddleware implements MiddlewareInterface {
 	 * @return array<int, string>
 	 */
 	protected function normalizeAllowedOrigins(array|string $allowedOrigins): array {
-		$origins = is_array($allowedOrigins) ? $allowedOrigins : explode(',', $allowedOrigins);
+		$origins = \is_array($allowedOrigins) ? $allowedOrigins : explode(',', $allowedOrigins);
 		$normalized = [];
 		foreach ($origins as $origin) {
-			if (!is_string($origin)) {
+			if (!\is_string($origin)) {
 				continue;
 			}
 			$origin = $this->normalizeOrigin($origin);
@@ -239,7 +239,7 @@ class ApiCorsMiddleware implements MiddlewareInterface {
 			static fn (string $value): bool => $value !== ''
 		);
 		$normalizedExisting = array_map('strtolower', $varyHeaders);
-		if (in_array(strtolower($headerName), $normalizedExisting, TRUE)) {
+		if (\in_array(strtolower($headerName), $normalizedExisting, TRUE)) {
 			return $response;
 		}
 

@@ -14,11 +14,11 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Middleware;
 
-use SGalinski\SgApiCore\Context\TenantContext;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Middleware\ApiAuthMiddleware;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Security\LoginProviderInterface;

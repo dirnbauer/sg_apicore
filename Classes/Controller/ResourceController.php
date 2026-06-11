@@ -25,6 +25,8 @@ use SGalinski\SgApiCore\Service\ResponseService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Database\Query\QueryBuilder;
+use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Information\Typo3Version;
@@ -63,6 +65,7 @@ class ResourceController {
 
 		$tableName = $resourceConfig['table'];
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
 		$queryBuilder->select('*')->from($tableName);
 
 		// Pagination
@@ -71,12 +74,12 @@ class ResourceController {
 		// Filtering (minimal)
 		$queryParams = $request->getQueryParams();
 		$filters = $queryParams['filter'] ?? [];
-		if (is_string($filters)) {
+		if (\is_string($filters)) {
 			// Some clients might send filters as a string, e.g. filter[name]=value
 			// Or even name=value directly if they misinterpret the documentation
 			if (str_contains($filters, '[') && str_contains($filters, ']')) {
 				parse_str($filters, $parsedFilters);
-				if (isset($parsedFilters['filter']) && is_array($parsedFilters['filter'])) {
+				if (isset($parsedFilters['filter']) && \is_array($parsedFilters['filter'])) {
 					$filters = $parsedFilters['filter'];
 				}
 			} elseif (str_contains($filters, '=')) {
@@ -85,10 +88,10 @@ class ResourceController {
 			}
 		}
 
-		if (is_array($filters) && count($filters) > 0) {
+		if (\is_array($filters) && \count($filters) > 0) {
 			foreach ($filters as $field => $value) {
 				// Only filter by whitelisted fields
-				if (!empty($resourceConfig['readFields']) && !in_array($field, $resourceConfig['readFields'], TRUE)) {
+				if (!empty($resourceConfig['readFields']) && !\in_array($field, $resourceConfig['readFields'], TRUE)) {
 					// Also check if uid or pid is requested, which is always allowed if not explicitly restricted
 					if ($field !== 'uid' && $field !== 'pid') {
 						continue;
@@ -100,7 +103,7 @@ class ResourceController {
 					continue;
 				}
 
-				if (is_array($value)) {
+				if (\is_array($value)) {
 					$queryBuilder->andWhere(
 						$queryBuilder->expr()->in($field, $queryBuilder->createNamedParameter($value, Connection::PARAM_STR_ARRAY))
 					);
@@ -111,7 +114,7 @@ class ResourceController {
 		}
 
 		// Sorting
-		if (isset($queryParams['sort']) && is_string($queryParams['sort'])) {
+		if (isset($queryParams['sort']) && \is_string($queryParams['sort'])) {
 			$sortField = $queryParams['sort'];
 			$sortOrder = 'ASC';
 			if (str_starts_with($sortField, '-')) {
@@ -178,6 +181,7 @@ class ResourceController {
 		$idField = $resourceConfig['idField'] ?? 'uid';
 
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
 		$record = $queryBuilder->select('*')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
@@ -214,7 +218,7 @@ class ResourceController {
 		$tableName = $resourceConfig['table'];
 		$data = $request->getParsedBody();
 
-		if (!is_array($data)) {
+		if (!\is_array($data)) {
 			return $this->responseService->createErrorResponse('Bad Request', 'Invalid JSON body.', 400);
 		}
 
@@ -229,6 +233,11 @@ class ResourceController {
 				$pid = $tenantContext ? $tenantContext->getSite()->getRootPageId() : 0;
 			}
 			$filteredData['pid'] = $pid;
+		}
+
+		$positioningErrorResponse = $this->applyCreatePositioning($tableName, $filteredData, $data, $request);
+		if ($positioningErrorResponse instanceof ResponseInterface) {
+			return $positioningErrorResponse;
 		}
 
 		// Persistent via DataHandler
@@ -250,12 +259,24 @@ class ResourceController {
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
 
-		if (count($dataHandler->errorLog) > 0) {
+		if (\count($dataHandler->errorLog) > 0) {
 			return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 		}
 
 		$newUid = $dataHandler->substNEWwithIDs['NEW1'] ?? 0;
-		return $this->getAction($request, (string) $newUid);
+		if ($newUid <= 0) {
+			$this->logService->logError('DataHandler create did not resolve NEW1 to a persisted uid.', [
+				'table' => $tableName,
+				'dataMap' => $dataMap,
+			]);
+			return $this->responseService->createErrorResponse(
+				'Internal Error',
+				'The record could not be created successfully.',
+				500
+			);
+		}
+
+		return $this->fetchRecordByUidForResponse($tableName, $newUid, $resourceConfig, $request);
 	}
 
 	/**
@@ -276,12 +297,13 @@ class ResourceController {
 		$idField = $resourceConfig['idField'] ?? 'uid';
 		$data = $request->getParsedBody();
 
-		if (!is_array($data)) {
+		if (!\is_array($data)) {
 			return $this->responseService->createErrorResponse('Bad Request', 'Invalid JSON body.', 400);
 		}
 
 		// Check if a record exists
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
 		$uid = (int) $queryBuilder->select('uid')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
@@ -296,7 +318,7 @@ class ResourceController {
 		$filteredData = $this->tcaMapper->mapDataForDatabase($tableName, $data, $resourceConfig['writeFields']);
 
 		if (empty($filteredData)) {
-			return $this->getAction($request, (string) $uid);
+			return $this->fetchRecordByUidForResponse($tableName, $uid, $resourceConfig, $request);
 		}
 
 		$dataMap = [
@@ -317,11 +339,11 @@ class ResourceController {
 		$dataHandler->start($dataMap, []);
 		$dataHandler->process_datamap();
 
-		if (count($dataHandler->errorLog) > 0) {
+		if (\count($dataHandler->errorLog) > 0) {
 			return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 		}
 
-		return $this->getAction($request, (string) $uid);
+		return $this->fetchRecordByUidForResponse($tableName, $uid, $resourceConfig, $request);
 	}
 
 	/**
@@ -343,6 +365,7 @@ class ResourceController {
 
 		// Check if a record exists
 		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
 		$uid = (int) $queryBuilder->select('uid')
 			->from($tableName)
 			->where($queryBuilder->expr()->eq($idField, $queryBuilder->createNamedParameter($id)))
@@ -377,7 +400,7 @@ class ResourceController {
 			$dataHandler->start([], $cmdMap);
 			$dataHandler->process_cmdmap();
 
-			if (count($dataHandler->errorLog) > 0) {
+			if (\count($dataHandler->errorLog) > 0) {
 				return $this->createDataHandlerErrorResponse($dataHandler->errorLog);
 			}
 		}
@@ -396,6 +419,8 @@ class ResourceController {
 	 */
 	protected function initializeBackendUser(int $writeBackendUserId): ?ResponseInterface {
 		if (($GLOBALS['BE_USER'] ?? NULL) instanceof BackendUserAuthentication) {
+			$this->forceLiveWorkspaceContext($GLOBALS['BE_USER']);
+			$this->initializeLanguageService();
 			return NULL;
 		}
 
@@ -412,6 +437,7 @@ class ResourceController {
 			}
 
 			$backendUser->fetchGroupData();
+			$this->forceLiveWorkspaceContext($backendUser);
 			$GLOBALS['BE_USER'] = $backendUser;
 			$this->initializeLanguageService();
 			return NULL;
@@ -419,9 +445,211 @@ class ResourceController {
 
 		$backendUser->user['admin'] = 1;
 		$backendUser->user['uid'] = 0;
+		$this->forceLiveWorkspaceContext($backendUser);
 		$GLOBALS['BE_USER'] = $backendUser;
 		$this->initializeLanguageService();
 		return NULL;
+	}
+
+	protected function forceLiveWorkspaceContext(BackendUserAuthentication $backendUser): void {
+		$backendUser->workspace = 0;
+		$backendUser->workspaceRec = [];
+		$backendUser->user['workspace_id'] = 0;
+	}
+
+	/**
+	 * Fetches a persisted record by its physical uid for post-write responses.
+	 *
+	 * @param string $tableName
+	 * @param int $uid
+	 * @param array $resourceConfig
+	 * @return ResponseInterface
+	 * @throws Exception
+	 */
+	protected function fetchRecordByUidForResponse(
+		string $tableName,
+		int $uid,
+		array $resourceConfig,
+		?ServerRequestInterface $request = NULL
+	): ResponseInterface {
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		if ($request instanceof ServerRequestInterface) {
+			$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
+		}
+
+		$record = $queryBuilder->select('*')
+			->from($tableName)
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid)))
+			->executeQuery()
+			->fetchAssociative();
+
+		if (!$record) {
+			$this->logService->logError('Persisted record could not be reloaded after write operation.', [
+				'table' => $tableName,
+				'uid' => $uid,
+			]);
+			return $this->responseService->createErrorResponse('Not Found', 'Resource not found after write operation.', 404);
+		}
+
+		$mappedRecord = $this->tcaMapper->mapRecord(
+			$tableName,
+			$record,
+			$resourceConfig['readFields'],
+			resolveDepth: 1,
+			fieldConfiguration: $resourceConfig['fieldConfiguration'] ?? []
+		);
+		return $this->responseService->createSuccessResponse($mappedRecord);
+	}
+
+	/**
+	 * Applies optional positioning directives for create requests.
+	 *
+	 * @param string $tableName
+	 * @param array<string, mixed> $filteredData
+	 * @param array<string, mixed> $rawData
+	 * @return ResponseInterface|null
+	 * @throws Exception
+	 */
+	protected function applyCreatePositioning(
+		string $tableName,
+		array &$filteredData,
+		array $rawData,
+		?ServerRequestInterface $request = NULL
+	): ?ResponseInterface {
+		if ($tableName !== 'tt_content') {
+			return NULL;
+		}
+
+		$position = strtolower(trim((string) ($rawData['position'] ?? 'top')));
+		if ($position === '') {
+			$position = 'top';
+		}
+
+		if (!\in_array($position, ['top', 'bottom', 'after'], TRUE)) {
+			return $this->responseService->createErrorResponse(
+				'Bad Request',
+				'Invalid tt_content positioning. Supported values for "position" are: top, bottom, after.',
+				400
+			);
+		}
+
+		if ($position === 'top') {
+			return NULL;
+		}
+
+		if ($position === 'after') {
+			$afterUid = (int) ($rawData['afterUid'] ?? 0);
+			if ($afterUid <= 0) {
+				return $this->responseService->createErrorResponse(
+					'Bad Request',
+					'The field "afterUid" is required when "position" is set to "after".',
+					400
+				);
+			}
+
+			$anchorRecord = $this->fetchNonDeletedRecordByUid($tableName, $afterUid, $request);
+			if ($anchorRecord === NULL) {
+				return $this->responseService->createErrorResponse(
+					'Bad Request',
+					'The referenced tt_content record for "afterUid" was not found.',
+					400
+				);
+			}
+
+			if (!isset($filteredData['pid']) || (int) $filteredData['pid'] <= 0) {
+				$filteredData['pid'] = (int) ($anchorRecord['pid'] ?? 0);
+			}
+			if (!isset($filteredData['colPos']) && isset($anchorRecord['colPos'])) {
+				$filteredData['colPos'] = (int) $anchorRecord['colPos'];
+			}
+			if (!isset($filteredData['sys_language_uid']) && isset($anchorRecord['sys_language_uid'])) {
+				$filteredData['sys_language_uid'] = (int) $anchorRecord['sys_language_uid'];
+			}
+
+			$filteredData['pid'] = -$afterUid;
+			return NULL;
+		}
+
+		$lastSiblingUid = $this->findLastContentSiblingUidForBottomInsert($filteredData, $request);
+		if ($lastSiblingUid > 0) {
+			$filteredData['pid'] = -$lastSiblingUid;
+		}
+
+		return NULL;
+	}
+
+	/**
+	 * Finds the last tt_content sibling for bottom insertion in the current placement context.
+	 *
+	 * @param array<string, mixed> $filteredData
+	 * @return int
+	 * @throws Exception
+	 */
+	protected function findLastContentSiblingUidForBottomInsert(array $filteredData, ?ServerRequestInterface $request = NULL): int {
+		$pid = abs((int) ($filteredData['pid'] ?? 0));
+		if ($pid <= 0) {
+			return 0;
+		}
+
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable('tt_content');
+		if ($request instanceof ServerRequestInterface) {
+			$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
+		}
+		$queryBuilder->select('uid')
+			->from('tt_content')
+			->where($queryBuilder->expr()->eq('pid', $queryBuilder->createNamedParameter($pid)));
+
+		if (isset($filteredData['colPos'])) {
+			$queryBuilder->andWhere(
+				$queryBuilder->expr()->eq('colPos', $queryBuilder->createNamedParameter((int) $filteredData['colPos']))
+			);
+		}
+		if (isset($filteredData['sys_language_uid'])) {
+			$queryBuilder->andWhere(
+				$queryBuilder->expr()->eq(
+					'sys_language_uid',
+					$queryBuilder->createNamedParameter((int) $filteredData['sys_language_uid'])
+				)
+			);
+		}
+
+		return (int) $queryBuilder->orderBy('sorting', 'DESC')
+			->addOrderBy('uid', 'DESC')
+			->setMaxResults(1)
+			->executeQuery()
+			->fetchOne();
+	}
+
+	/**
+	 * Fetches a non-deleted record by uid for positioning logic.
+	 *
+	 * @param string $tableName
+	 * @param int $uid
+	 * @return array<string, mixed>|null
+	 * @throws Exception
+	 */
+	protected function fetchNonDeletedRecordByUid(
+		string $tableName,
+		int $uid,
+		?ServerRequestInterface $request = NULL
+	): ?array {
+		if ($uid <= 0) {
+			return NULL;
+		}
+
+		$queryBuilder = $this->connectionPool->getQueryBuilderForTable($tableName);
+		if ($request instanceof ServerRequestInterface) {
+			$this->applyDeletedOnlyReadRestrictions($queryBuilder, $request);
+		}
+
+		$record = $queryBuilder->select('*')
+			->from($tableName)
+			->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid)))
+			->setMaxResults(1)
+			->executeQuery()
+			->fetchAssociative();
+
+		return \is_array($record) ? $record : NULL;
 	}
 
 	/**
@@ -447,5 +675,18 @@ class ResourceController {
 		}
 
 		$GLOBALS['LANG'] = $this->languageServiceFactory->create('default');
+	}
+
+	protected function applyDeletedOnlyReadRestrictions(QueryBuilder $queryBuilder, ServerRequestInterface $request): void {
+		if (!$this->isMcpExecutionContext($request)) {
+			return;
+		}
+
+		$queryBuilder->getRestrictions()->removeAll();
+		$queryBuilder->getRestrictions()->add(GeneralUtility::makeInstance(DeletedRestriction::class));
+	}
+
+	protected function isMcpExecutionContext(ServerRequestInterface $request): bool {
+		return $request->getAttribute('api.executionContext') === 'mcp';
 	}
 }

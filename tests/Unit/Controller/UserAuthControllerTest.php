@@ -14,10 +14,10 @@
 
 namespace SGalinski\SgApiCore\Tests\Unit\Controller;
 
-use RuntimeException;
-use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Controller\UserAuthController;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;

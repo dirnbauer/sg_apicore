@@ -14,10 +14,9 @@
 
 namespace SGalinski\SgApiCore\Controller;
 
-use stdClass;
-use ReflectionException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiMcp;
@@ -25,6 +24,7 @@ use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\McpToolService;
+use stdClass;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Http\Response;
 
@@ -45,13 +45,13 @@ class McpController {
 	}
 
 	/**
-     * Handles MCP JSON-RPC methods over HTTP.
-     *
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     * @throws ReflectionException
-     */
-    #[ApiRoute(path: '/mcp', methods: ['POST'], authMode: 'public')]
+	 * Handles MCP JSON-RPC methods over HTTP.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws ReflectionException
+	 */
+	#[ApiRoute(path: '/mcp', methods: ['POST'], authMode: 'public')]
 	#[ApiEndpoint(summary: 'MCP JSON-RPC endpoint', tags: ['MCP'])]
 	#[ApiMcp(exclude: TRUE)]
 	#[ApiBodyParam(
@@ -69,7 +69,7 @@ class McpController {
 		}
 
 		$payload = $request->getParsedBody();
-		if (!is_array($payload)) {
+		if (!\is_array($payload)) {
 			return new JsonResponse($this->createErrorResponse(NULL, -32600, 'Invalid Request: JSON object expected.'));
 		}
 
@@ -84,8 +84,8 @@ class McpController {
 
 		$method = (string) ($payload['method'] ?? '');
 		$id = $payload['id'] ?? NULL;
-		$params = is_array($payload['params'] ?? NULL) ? $payload['params'] : [];
-		$isNotification = !array_key_exists('id', $payload);
+		$params = \is_array($payload['params'] ?? NULL) ? $payload['params'] : [];
+		$isNotification = !\array_key_exists('id', $payload);
 
 		// JSON-RPC notifications MUST NOT receive a JSON-RPC response.
 		// MCP streamable HTTP expects HTTP 202 Accepted with empty body.
@@ -135,8 +135,8 @@ class McpController {
 				return new JsonResponse($this->createErrorResponse($id, -32602, 'Invalid params: "name" is required.'));
 			}
 
-			if (array_key_exists('arguments', $params)) {
-				if (!is_array($params['arguments']) || ($params['arguments'] !== [] && array_is_list($params['arguments']))) {
+			if (\array_key_exists('arguments', $params)) {
+				if (!\is_array($params['arguments']) || ($params['arguments'] !== [] && array_is_list($params['arguments']))) {
 					return new JsonResponse($this->createErrorResponse(
 						$id,
 						-32602,
@@ -145,7 +145,7 @@ class McpController {
 				}
 			}
 
-			$arguments = is_array($params['arguments'] ?? NULL) ? $params['arguments'] : [];
+			$arguments = \is_array($params['arguments'] ?? NULL) ? $params['arguments'] : [];
 			$result = $this->mcpToolService->callTool($request, $apiId, $version, $toolName, $arguments, $authMode);
 			if ($result === NULL) {
 				return new JsonResponse($this->createErrorResponse($id, -32001, 'Tool not found: ' . $toolName));
@@ -218,8 +218,8 @@ class McpController {
 			'jsonrpc' => '2.0',
 			'id' => $id,
 			'error' => [
-				'code' => $code,
-				'message' => $message,
+			'code' => $code,
+			'message' => $message,
 			],
 		];
 	}

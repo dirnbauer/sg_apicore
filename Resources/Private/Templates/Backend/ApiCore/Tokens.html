@@ -4,6 +4,46 @@
 
 <f:section name="Content">
 	<f:variable name="resolvedTokenListReturnUrl" value="{tokenListReturnUrl}"/>
+	<style>
+		.sg-apicore-token-table {
+			table-layout: fixed;
+			width: 100%;
+		}
+
+		.sg-apicore-token-table td,
+		.sg-apicore-token-table th {
+			vertical-align: top;
+		}
+
+		.sg-apicore-token-label {
+			min-width: 18rem;
+		}
+
+		.sg-apicore-token-scopes {
+			display: block;
+			margin-top: 0.35rem;
+			max-width: 100%;
+			white-space: normal;
+			word-break: break-word;
+			overflow-wrap: anywhere;
+			line-height: 1.35;
+		}
+
+		.sg-apicore-token-actions {
+			white-space: nowrap;
+			min-width: 9rem;
+		}
+
+		.sg-apicore-token-actions .btn {
+			display: block;
+			width: 100%;
+			margin-bottom: 0.35rem;
+		}
+
+		.sg-apicore-token-actions .btn:last-child {
+			margin-bottom: 0;
+		}
+	</style>
 	<h1>Token Management</h1>
 
 	<div class="row">
@@ -35,7 +75,8 @@
 				<f:form.submit value="Filter" class="btn btn-default"/>
 			</f:form>
 
-			<table class="table table-striped table-hover">
+			<div class="table-responsive">
+			<table class="table table-striped table-hover sg-apicore-token-table">
 				<thead>
 				<tr>
 					<th>UID</th>
@@ -53,9 +94,11 @@
 				<f:for each="{tokens}" as="token">
 					<tr class="{f:if(condition: token.revoked_at, then: 'text-muted')}">
 						<td>{token.uid}</td>
-						<td>
+						<td class="sg-apicore-token-label">
 							<strong>{token.label}</strong>
-							<br/><small class="text-muted">Scopes: {token.scopes}</small>
+							<small class="text-muted sg-apicore-token-scopes">
+								<strong>Scopes:</strong> {token.scopes}
+							</small>
 						</td>
 						<td>
 							<span class="badge badge-info">{token.api_id}</span>
@@ -105,7 +148,7 @@
 								<f:else>-</f:else>
 							</f:if>
 						</td>
-						<td>
+						<td class="sg-apicore-token-actions">
 							<a href="{sg:backend.editLink(table: 'tx_apicore_token', uid: token.uid, returnUrl: resolvedTokenListReturnUrl)}"
 							   class="btn btn-default btn-sm" title="Edit Scopes/Metadata">
 								<core:icon identifier="actions-open" size="small"/>
@@ -132,6 +175,7 @@
 				</f:for>
 				</tbody>
 			</table>
+			</div>
 		</div>
 		<div class="col-md-4">
 			<div class="card mb-3">

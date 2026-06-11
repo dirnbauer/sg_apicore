@@ -15,7 +15,6 @@
 namespace SGalinski\SgApiCore\Tests\Unit\Service;
 
 use ArrayIterator;
-use SGalinski\SgApiCore\Service\RequestValidator;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
@@ -25,6 +24,7 @@ use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Security\AuthContext;
 use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\RequestValidator;
 use SGalinski\SgApiCore\Service\ResourceRegistry;
 use SGalinski\SgApiCore\Service\ResponseService;
 use SGalinski\SgApiCore\Service\Router;

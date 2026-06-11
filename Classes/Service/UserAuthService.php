@@ -14,19 +14,19 @@
 
 namespace SGalinski\SgApiCore\Service;
 
-use RuntimeException;
-use Throwable;
 use Doctrine\DBAL\Exception;
 use JsonException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
+use RuntimeException;
 use SGalinski\SgAccount\AccountConfiguration\ConfigurationFactory;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Context\TenantContext;
 use SGalinski\SgApiCore\Domain\Repository\TokenRepository;
 use SGalinski\SgApiCore\Event\AfterUserAuthenticationEvent;
 use SGalinski\SgApiCore\Security\AuthContext;
+use Throwable;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\InvalidPasswordHashException;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\Connection;
@@ -100,7 +100,7 @@ class UserAuthService implements SingletonInterface {
 				$queryBuilder->expr()->eq('deleted', 0)
 			);
 
-		if (count($storagePids) > 0) {
+		if (\count($storagePids) > 0) {
 			$queryBuilder->andWhere(
 				$queryBuilder->expr()->in('pid', $queryBuilder->createNamedParameter($storagePids, Connection::PARAM_INT_ARRAY))
 			);
@@ -261,7 +261,7 @@ class UserAuthService implements SingletonInterface {
 		$siteRootPageId = $tenantContext?->getSiteRootPageId() ?? 0;
 		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
 		$activeProviders = $securityConfig['authProviders'] ?? [];
-		$useJwt = in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
+		$useJwt = \in_array('jwtaccesstokenprovider', array_map('strtolower', $activeProviders), TRUE);
 
 		// Determine TTL dynamically based on the provider
 		$expiresIn = $useJwt
@@ -404,7 +404,7 @@ class UserAuthService implements SingletonInterface {
 		$tokenRecord = $this->tokenRepository->findByHashGlobally($tokenHash);
 
 		// If not found by hash, it might be a JWT
-		if ($tokenRecord === NULL && count(explode('.', $token)) === 3) {
+		if ($tokenRecord === NULL && \count(explode('.', $token)) === 3) {
 			$payload = $this->jwtService->decode($token);
 			$jti = $payload['jti'] ?? '';
 			if ($jti !== '') {

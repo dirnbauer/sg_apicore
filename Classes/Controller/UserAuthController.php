@@ -14,12 +14,12 @@
 
 namespace SGalinski\SgApiCore\Controller;
 
-use RuntimeException;
 use Doctrine\DBAL\Exception;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Random\RandomException;
+use RuntimeException;
 use SGalinski\SgApiCore\Attribute\ApiBodyParam;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiLegacyMode;

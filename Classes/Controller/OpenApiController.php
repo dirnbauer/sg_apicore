@@ -14,9 +14,9 @@
 
 namespace SGalinski\SgApiCore\Controller;
 
-use ReflectionException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiEndpoint;
 use SGalinski\SgApiCore\Attribute\ApiRoute;
 use SGalinski\SgApiCore\Service\OpenApiService;
@@ -41,13 +41,13 @@ class OpenApiController {
 	}
 
 	/**
-     * Serves the OpenAPI specification as JSON
-     *
-     * @param ServerRequestInterface $request
-     * @return ResponseInterface
-     * @throws ReflectionException
-     */
-    #[ApiRoute(path: '/docs.json', methods: ['GET'], authMode: 'public')]
+	 * Serves the OpenAPI specification as JSON
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return ResponseInterface
+	 * @throws ReflectionException
+	 */
+	#[ApiRoute(path: '/docs.json', methods: ['GET'], authMode: 'public')]
 	#[ApiEndpoint(summary: 'openAPI Docs', tags: ['OpenAPI'])]
 	public function jsonAction(ServerRequestInterface $request): ResponseInterface {
 		$apiId = (string) $request->getAttribute('api.id');
@@ -99,7 +99,7 @@ class OpenApiController {
 		$debugInfo = '';
 		$debugFlag = $request->getQueryParams()['debug'] ?? '';
 		$debugFlag = strtolower((string) $debugFlag);
-		if (in_array($debugFlag, ['1', 'true', 'yes'], TRUE)) {
+		if (\in_array($debugFlag, ['1', 'true', 'yes'], TRUE)) {
 			$tenantContext = $request->getAttribute('api.tenant');
 			$tenantId = $tenantContext?->getTenantId() ?? '';
 			$cacheInfo = $this->openApiService->getCacheDebugInfo($apiId, $version, $baseUrl, $tenantId);

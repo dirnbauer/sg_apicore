@@ -14,15 +14,15 @@
 
 namespace SGalinski\SgApiCore\Service;
 
-use Throwable;
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use JsonException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
+use Throwable;
 use TYPO3\CMS\Core\Log\LogManager;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Service for logging API requests and responses
@@ -67,13 +67,13 @@ class LogService implements SingletonInterface {
 	}
 
 	/**
-     * Logs an exception
-     *
-     * @param Throwable $exception
-     * @param ServerRequestInterface|null $request
-     * @return void
-     */
-    public function logException(Throwable $exception, ?ServerRequestInterface $request = NULL): void {
+	 * Logs an exception
+	 *
+	 * @param Throwable $exception
+	 * @param ServerRequestInterface|null $request
+	 * @return void
+	 */
+	public function logException(Throwable $exception, ?ServerRequestInterface $request = NULL): void {
 		if (!$this->extensionConfiguration->isLoggingEnabled()) {
 			return;
 		}
@@ -161,7 +161,7 @@ class LogService implements SingletonInterface {
 		}
 
 		$this->logger->info(
-			sprintf(
+			\sprintf(
 				'API Request: %s %s - Status %d - %s',
 				$context['method'],
 				$context['path'],
@@ -200,7 +200,7 @@ class LogService implements SingletonInterface {
 		$skipRequestBody = (bool) ($additionalContext['_skipRequestBody'] ?? FALSE);
 		unset($additionalContext['_skipRequestBody']);
 		$sanitizedAdditionalContext = $this->redact($additionalContext, $redactKeys);
-		if (!is_array($sanitizedAdditionalContext)) {
+		if (!\is_array($sanitizedAdditionalContext)) {
 			$sanitizedAdditionalContext = [];
 		}
 		if (!$this->extensionConfiguration->isLogBodyEnabled()) {
@@ -221,9 +221,9 @@ class LogService implements SingletonInterface {
 			$context['requestHeaders'] = $this->redact($request->getHeaders(), $redactKeys);
 		}
 
-		if ($this->extensionConfiguration->isLogBodyEnabled() && array_key_exists('requestBody', $context)) {
+		if ($this->extensionConfiguration->isLogBodyEnabled() && \array_key_exists('requestBody', $context)) {
 			$context['requestBody'] = $this->truncateLogData($context['requestBody'], $maxBodyLength);
-		} elseif ($this->extensionConfiguration->isLogBodyEnabled() && !$skipRequestBody && !array_key_exists(
+		} elseif ($this->extensionConfiguration->isLogBodyEnabled() && !$skipRequestBody && !\array_key_exists(
 			'requestBody',
 			$context
 		)) {
@@ -239,7 +239,7 @@ class LogService implements SingletonInterface {
 		}
 
 		$this->logger->warning(
-			sprintf(
+			\sprintf(
 				'API Request rejected: %s %s - Status %d - %s',
 				$context['method'],
 				$context['path'],
@@ -263,7 +263,7 @@ class LogService implements SingletonInterface {
 		}
 
 		$redactKeys = array_map('strtolower', $redactKeys);
-		if (is_string($data)) {
+		if (\is_string($data)) {
 			// Basic masking for strings if they look like JSON
 			if (str_starts_with($data, '{') || str_starts_with($data, '[')) {
 				try {
@@ -278,10 +278,10 @@ class LogService implements SingletonInterface {
 			return (string) preg_replace('/(Bearer\s+)[a-zA-Z0-9\._\-]+/', '$1***REDACTED***', $data);
 		}
 
-		if (is_array($data)) {
+		if (\is_array($data)) {
 			foreach ($data as $key => $value) {
 				$stringKey = strtolower((string) $key);
-				$shouldRedact = in_array($stringKey, $redactKeys, TRUE);
+				$shouldRedact = \in_array($stringKey, $redactKeys, TRUE);
 
 				// Special case for Authorization header or similar
 				if (!$shouldRedact && ($stringKey === 'authorization' || $stringKey === 'http_authorization')) {
@@ -289,14 +289,14 @@ class LogService implements SingletonInterface {
 				}
 
 				if ($shouldRedact) {
-					if (is_array($value)) {
+					if (\is_array($value)) {
 						$data[$key] = ['***REDACTED***'];
 					} else {
 						$data[$key] = '***REDACTED***';
 					}
-				} elseif (is_array($value)) {
+				} elseif (\is_array($value)) {
 					$data[$key] = $this->redact($value, $redactKeys);
-				} elseif (is_string($value)) {
+				} elseif (\is_string($value)) {
 					$data[$key] = $this->redact($value, $redactKeys);
 				}
 			}
@@ -331,13 +331,13 @@ class LogService implements SingletonInterface {
 			return $data;
 		}
 
-		if (is_string($data)) {
+		if (\is_string($data)) {
 			return $this->truncateString($data, $maxLength);
 		}
 
-		if (is_array($data)) {
+		if (\is_array($data)) {
 			$encoded = json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-			if (is_string($encoded) && strlen($encoded) > $maxLength) {
+			if (\is_string($encoded) && \strlen($encoded) > $maxLength) {
 				return $this->truncateString($encoded, $maxLength);
 			}
 		}
@@ -351,7 +351,7 @@ class LogService implements SingletonInterface {
 	 * @return string
 	 */
 	protected function truncateString(string $value, int $maxLength): string {
-		if (strlen($value) <= $maxLength) {
+		if (\strlen($value) <= $maxLength) {
 			return $value;
 		}
 

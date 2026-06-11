@@ -14,16 +14,16 @@
 
 namespace SGalinski\SgApiCore\Service;
 
-use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
-use SGalinski\SgApiCore\Attribute\ApiCache;
-use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use SGalinski\SgApiCore\Attribute\ApiCache;
+use SGalinski\SgApiCore\Attribute\ApiLegacyMode;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Http\JsonResponse;
 use TYPO3\CMS\Core\Localization\LanguageService;
 use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 
 /**
  * Service for creating standardized API responses
@@ -40,23 +40,23 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-     * Creates a success response
-     *
-     * @param mixed $data The response data
-     * @param array $meta Optional metadata (e.g., pagination)
-     * @param int $status HTTP status code
-     * @param ApiLegacyMode|null $legacyMode
-     * @param ApiCache|null $apiCache
-     * @return ResponseInterface
-     */
-    public function createSuccessResponse(
+	 * Creates a success response
+	 *
+	 * @param mixed $data The response data
+	 * @param array $meta Optional metadata (e.g., pagination)
+	 * @param int $status HTTP status code
+	 * @param ApiLegacyMode|null $legacyMode
+	 * @param ApiCache|null $apiCache
+	 * @return ResponseInterface
+	 */
+	public function createSuccessResponse(
 		mixed $data = [],
 		array $meta = [],
 		int $status = 200,
 		?ApiLegacyMode $legacyMode = NULL,
 		?ApiCache $apiCache = NULL
 	): ResponseInterface {
-		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || count($meta) > 0;
+		$wrapData = $this->extensionConfiguration->isResponseEnvelopeEnabled() || \count($meta) > 0;
 		if ($legacyMode !== NULL) {
 			$wrapData = $legacyMode->wrapData;
 		}
@@ -65,7 +65,7 @@ class ResponseService implements SingletonInterface {
 			$response = [
 				'data' => $data,
 			];
-			if (count($meta) > 0) {
+			if (\count($meta) > 0) {
 				$response['meta'] = $meta;
 			}
 		} else {
@@ -87,17 +87,17 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-     * Creates a localized error response
-     *
-     * @param string $title
-     * @param string $detail
-     * @param int $status
-     * @param string $type
-     * @param array $additionalData
-     * @param ApiLegacyMode|null $legacyMode
-     * @return ResponseInterface
-     */
-    public function createLocalizedErrorResponse(
+	 * Creates a localized error response
+	 *
+	 * @param string $title
+	 * @param string $detail
+	 * @param int $status
+	 * @param string $type
+	 * @param array $additionalData
+	 * @param ApiLegacyMode|null $legacyMode
+	 * @return ResponseInterface
+	 */
+	public function createLocalizedErrorResponse(
 		string $title,
 		string $detail,
 		int $status,
@@ -134,17 +134,17 @@ class ResponseService implements SingletonInterface {
 	}
 
 	/**
-     * Creates an error response (RFC 7807)
-     *
-     * @param string $title
-     * @param string $detail
-     * @param int $status
-     * @param string $type
-     * @param array $additionalData
-     * @param ApiLegacyMode|null $legacyMode
-     * @return ResponseInterface
-     */
-    public function createErrorResponse(
+	 * Creates an error response (RFC 7807)
+	 *
+	 * @param string $title
+	 * @param string $detail
+	 * @param int $status
+	 * @param string $type
+	 * @param array $additionalData
+	 * @param ApiLegacyMode|null $legacyMode
+	 * @return ResponseInterface
+	 */
+	public function createErrorResponse(
 		string $title,
 		string $detail,
 		int $status,
@@ -187,16 +187,16 @@ class ResponseService implements SingletonInterface {
 			if ($request instanceof ServerRequestInterface) {
 				$requestId = $request->getAttribute('api.requestId');
 			}
-			if (is_string($requestId) && $requestId !== '') {
+			if (\is_string($requestId) && $requestId !== '') {
 				$additionalData['requestId'] = $requestId;
 			}
 		}
 
-		if (isset($additionalData['requestId']) && is_string($additionalData['requestId'])) {
+		if (isset($additionalData['requestId']) && \is_string($additionalData['requestId'])) {
 			$headers['X-Request-ID'] = $additionalData['requestId'];
 		}
 
-		if (isset($additionalData['rateLimit']) && is_array($additionalData['rateLimit'])) {
+		if (isset($additionalData['rateLimit']) && \is_array($additionalData['rateLimit'])) {
 			if (isset($additionalData['rateLimit']['limit'])) {
 				$headers['X-RateLimit-Limit'] = (string) $additionalData['rateLimit']['limit'];
 			}
@@ -211,7 +211,7 @@ class ResponseService implements SingletonInterface {
 			}
 		}
 
-		if (count($additionalData) > 0) {
+		if (\count($additionalData) > 0) {
 			$response = array_merge($response, $additionalData);
 		}
 

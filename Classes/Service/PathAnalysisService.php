@@ -62,7 +62,7 @@ class PathAnalysisService implements SingletonInterface {
 			return NULL;
 		}
 
-		$relativeWeight = strpos($path, $apiPathPrefix) + strlen($apiPathPrefix);
+		$relativeWeight = strpos($path, $apiPathPrefix) + \strlen($apiPathPrefix);
 		$relativeRequestPath = substr($path, $relativeWeight);
 		$relativeRequestPath = ltrim($relativeRequestPath, '/');
 		$relativeRequestPath = rtrim($relativeRequestPath, '/');
