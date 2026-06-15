@@ -102,12 +102,12 @@ class ResourceControllerTest extends UnitTestCase {
 			'table' => 'tt_content',
 			'readFields' => ['header'],
 		];
-			$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
-				if ($name === 'api.resource') {
-					return $resourceConfig;
-				}
-				return NULL;
-			});
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			return NULL;
+		});
 		$request->method('getQueryParams')->willReturn([]);
 
 		$queryBuilder = $this->createStub(QueryBuilder::class);
@@ -147,12 +147,12 @@ class ResourceControllerTest extends UnitTestCase {
 			'table' => 'tt_content',
 			'readFields' => ['header'],
 		];
-			$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
-				if ($name === 'api.resource') {
-					return $resourceConfig;
-				}
-				return NULL;
-			});
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			return NULL;
+		});
 		$request->method('getQueryParams')->willReturn(['filter' => ['header' => 'Test']]);
 
 		$queryBuilder = $this->createMock(QueryBuilder::class);
@@ -192,12 +192,12 @@ class ResourceControllerTest extends UnitTestCase {
 			'table' => 'tt_content',
 			'readFields' => ['header'],
 		];
-			$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
-				if ($name === 'api.resource') {
-					return $resourceConfig;
-				}
-				return NULL;
-			});
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			return NULL;
+		});
 		// filter[header]=Test
 		$request->method('getQueryParams')->willReturn(['filter' => 'filter[header]=Test']);
 
@@ -238,12 +238,12 @@ class ResourceControllerTest extends UnitTestCase {
 			'idField' => 'uid',
 			'readFields' => [],
 		];
-			$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
-				if ($name === 'api.resource') {
-					return $resourceConfig;
-				}
-				return NULL;
-			});
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			return NULL;
+		});
 
 		$queryBuilder = $this->createStub(QueryBuilder::class);
 		$this->connectionPool->method('getQueryBuilderForTable')->willReturn($queryBuilder);
@@ -271,15 +271,15 @@ class ResourceControllerTest extends UnitTestCase {
 			'table' => 'pages',
 			'readFields' => ['title'],
 		];
-			$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
-				if ($name === 'api.resource') {
-					return $resourceConfig;
-				}
-				if ($name === 'api.executionContext') {
-					return 'mcp';
-				}
-				return NULL;
-			});
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			if ($name === 'api.executionContext') {
+				return 'mcp';
+			}
+			return NULL;
+		});
 		$request->method('getQueryParams')->willReturn([]);
 
 		$queryBuilder = $this->createStub(QueryBuilder::class);
@@ -848,15 +848,15 @@ class ResourceControllerTest extends UnitTestCase {
 			'readFields' => ['title'],
 			'writeFields' => ['title'],
 		];
-			$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
-				if ($name === 'api.resource') {
-					return $resourceConfig;
-				}
-				if ($name === 'api.executionContext') {
-					return 'mcp';
-				}
-				return NULL;
-			});
+		$request->method('getAttribute')->willReturnCallback(static function ($name) use ($resourceConfig) {
+			if ($name === 'api.resource') {
+				return $resourceConfig;
+			}
+			if ($name === 'api.executionContext') {
+				return 'mcp';
+			}
+			return NULL;
+		});
 		$request->method('getParsedBody')->willReturn([]);
 
 		$queryBuilder = $this->createStub(QueryBuilder::class);

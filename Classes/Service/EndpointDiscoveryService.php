@@ -887,12 +887,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 			: 'The resource identifier from field "' . $idField . '".';
 		$example = $fieldMetadata['example'] ?? $this->buildResourceBodyFieldExample($tableName, $idField, (string) $type);
 
-		return new ApiPathParam(
-			name: 'id',
-			type: (string) $type,
-			description: $description,
-			example: $example
-		);
+		return new ApiPathParam(name: 'id', type: (string) $type, description: $description, example: $example);
 	}
 
 	/**

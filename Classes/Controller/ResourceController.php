@@ -585,7 +585,10 @@ class ResourceController {
 	 * @return int
 	 * @throws Exception
 	 */
-	protected function findLastContentSiblingUidForBottomInsert(array $filteredData, ?ServerRequestInterface $request = NULL): int {
+	protected function findLastContentSiblingUidForBottomInsert(
+		array $filteredData,
+		?ServerRequestInterface $request = NULL
+	): int {
 		$pid = abs((int) ($filteredData['pid'] ?? 0));
 		if ($pid <= 0) {
 			return 0;
@@ -677,7 +680,10 @@ class ResourceController {
 		$GLOBALS['LANG'] = $this->languageServiceFactory->create('default');
 	}
 
-	protected function applyDeletedOnlyReadRestrictions(QueryBuilder $queryBuilder, ServerRequestInterface $request): void {
+	protected function applyDeletedOnlyReadRestrictions(
+		QueryBuilder $queryBuilder,
+		ServerRequestInterface $request
+	): void {
 		if (!$this->isMcpExecutionContext($request)) {
 			return;
 		}
