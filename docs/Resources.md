@@ -64,6 +64,15 @@ $resourceRegistry->registerResource('public', 'pages', '/pages', [
 * `rateLimit`: Optional rate limit overrides for this resource (see `RateLimiting.md`).
 * `requiredScopes`: Associative array mapping operations to required scope arrays.
 * `resolveDepth`: Default recursion depth for resolving relations (default: `1`).
+* `virtualBodyParams`: Optional additional request-body parameters that are documented in OpenAPI/MCP schemas but are
+  not mapped directly to table columns. Useful for controller-level behavior such as positioning or execution flags.
+* `operationDescriptions`: Optional per-operation description overrides, for example:
+  ```php
+  'operationDescriptions' => [
+      'create' => 'Creates a new record and accepts additional positioning controls.',
+      'update' => 'Updates an existing record.',
+  ]
+  ```
 
 If `writeFields` is empty, the OpenAPI request body is generated from `readFields`. If both are empty, the request body
 is generated from the table TCA (excluding `uid`).

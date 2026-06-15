@@ -280,6 +280,7 @@ class McpToolService implements SingletonInterface {
 			->withQueryParams($queryParameters)
 			->withAttribute('api.id', $apiId)
 			->withAttribute('api.version', $version)
+			->withAttribute('api.executionContext', 'mcp')
 			->withAttribute('api.remainingPath', $remainingPath)
 			->withParsedBody($bodyParameters);
 

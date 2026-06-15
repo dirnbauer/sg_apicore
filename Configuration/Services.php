@@ -44,7 +44,8 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 		->arg('$controllers', tagged_iterator('sg_apicore.router'));
 
 	$services->set(EndpointDiscoveryService::class)
-		->arg('$controllers', tagged_iterator('sg_apicore.router'));
+		->arg('$controllers', tagged_iterator('sg_apicore.router'))
+		->arg('$endpointFilters', tagged_iterator('sg_apicore.endpoint_filter'));
 
 	$services->set(OpenApiService::class);
 

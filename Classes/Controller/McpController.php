@@ -175,7 +175,6 @@ class McpController {
 				);
 				return new JsonResponse($this->createResultResponse($id, $compatResult));
 			}
-
 			$result = $this->mcpToolService->callTool($request, $apiId, $version, $toolName, $arguments, $authMode);
 			if ($result === NULL) {
 				return new JsonResponse($this->createErrorResponse($id, -32001, 'Tool not found: ' . $toolName));
@@ -324,8 +323,8 @@ class McpController {
 			'jsonrpc' => '2.0',
 			'id' => $id,
 			'error' => [
-				'code' => $code,
-				'message' => $message,
+			'code' => $code,
+			'message' => $message,
 			],
 		];
 	}
