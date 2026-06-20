@@ -1,17 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-labelledby="title" role="img">
-	<title>API Core</title>
-	<rect x="0" y="0" width="64" height="64" rx="8" ry="8" fill="#400a76"/>
-	<g fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-		<path d="M15 18l-6 14 6 14"/>
-		<path d="M49 18l6 14-6 14"/>
-		<path d="M24 20l16 24"/>
-	</g>
-	<g fill="#FFFFFF">
-		<circle cx="23" cy="19" r="4"/>
-		<circle cx="41" cy="45" r="4"/>
-		<circle cx="23" cy="45" r="4"/>
-		<circle cx="41" cy="19" r="4"/>
-		<circle cx="32" cy="32" r="4.2"/>
-	</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 18 12 32l8 14"/>
+    <path d="M44 18l8 14-8 14"/>
+    <path d="M27 45l10-26"/>
+  </g>
+  <g fill="currentColor" opacity=".4">
+    <circle cx="22" cy="21" r="4"/>
+    <circle cx="42" cy="43" r="4"/>
+    <circle cx="42" cy="21" r="4"/>
+    <circle cx="22" cy="43" r="4"/>
+  </g>
+  <circle cx="32" cy="32" r="6" fill="var(--icon-color-accent, #ff8700)"/>
 </svg>
