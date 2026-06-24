@@ -82,6 +82,34 @@ class BearerOpaqueTokenProviderTest extends UnitTestCase {
 		$this->assertEquals(['read', 'write'], $result->getScopes());
 	}
 
+	public function testAuthenticateAcceptsLowercaseBearerScheme(): void {
+		$token = 'test-token';
+		$tokenHash = hash('sha256', $token);
+		$request = $this->createStub(ServerRequestInterface::class);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('bearer ' . $token);
+
+		$tokenRecord = [
+			'uid' => 123,
+			'token_hash' => $tokenHash,
+			'api_id' => 'public',
+			'tenant_id' => 'tenant-1',
+			'scopes' => json_encode(['read']),
+			'expires_at' => 0,
+		];
+
+		$tokenRepository = $this->createMock(TokenRepository::class);
+		$tokenRepository->expects($this->once())
+			->method('findByHashApiAndTenant')
+			->with($tokenHash, 'public', 'tenant-1')
+			->willReturn($tokenRecord);
+		$tokenRepository->expects($this->once())->method('updateLastUsed')->with(123);
+
+		$provider = new BearerOpaqueTokenProvider($tokenRepository, $this->createExtensionConfiguration());
+
+		$result = $provider->authenticate($request, 'public', 'tenant-1');
+		$this->assertInstanceOf(AuthContext::class, $result);
+	}
+
 	public function testAuthenticateReturnsNullIfTokenExpired(): void {
 		$token = 'test-token';
 		$tokenHash = hash('sha256', $token);

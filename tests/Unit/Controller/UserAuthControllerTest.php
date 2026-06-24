@@ -269,6 +269,22 @@ class UserAuthControllerTest extends UnitTestCase {
 		$this->controller->logout($request);
 	}
 
+	public function testLogoutAcceptsLowercaseBearerScheme(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('bearer test-token');
+
+		$this->userAuthService->expects($this->once())
+			->method('revokeUserToken')
+			->with('test-token');
+
+		$this->responseService->expects($this->once())
+			->method('createSuccessResponse')
+			->with(['message' => 'Logged out successfully'])
+			->willReturn(new JsonResponse([]));
+
+		$this->controller->logout($request);
+	}
+
 	public function testLogoutDoesNotCallUserAuthServiceWithoutBearerToken(): void {
 		$request = $this->createMock(ServerRequestInterface::class);
 		$request->method('getHeaderLine')->with('Authorization')->willReturn('Basic auth');

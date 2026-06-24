@@ -39,8 +39,9 @@ trait TokenExtractionTrait {
 				?? '';
 		}
 
-		if (str_starts_with($authorizationHeader, 'Bearer ')) {
-			return substr($authorizationHeader, 7);
+		$bearerToken = $this->extractBearerTokenFromAuthorizationHeader($authorizationHeader);
+		if ($bearerToken !== '') {
+			return $bearerToken;
 		}
 
 		// 2. Custom 'authtoken' or 'bearertoken' header (common in legacy systems or weird clients)
@@ -59,6 +60,23 @@ trait TokenExtractionTrait {
 		}
 
 		return (string) ($request->getQueryParams()['authtoken'] ?? $request->getQueryParams()['bearertoken'] ?? '');
+	}
+
+	/**
+	 * Extracts a bearer token from an Authorization header value.
+	 *
+	 * The auth scheme is case-insensitive per RFC 9110, so clients may send
+	 * "Bearer", "bearer", or any other casing.
+	 *
+	 * @param string $authorizationHeader
+	 * @return string
+	 */
+	protected function extractBearerTokenFromAuthorizationHeader(string $authorizationHeader): string {
+		if (!preg_match('/^Bearer\s+(.+)$/i', trim($authorizationHeader), $matches)) {
+			return '';
+		}
+
+		return trim((string) ($matches[1] ?? ''));
 	}
 
 	/**
