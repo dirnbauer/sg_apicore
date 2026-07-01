@@ -304,7 +304,7 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$this->assertCount(1, $endpoints);
 		$this->assertStringContainsString('Custom create description', $endpoints[0]['description']);
 		$this->assertStringContainsString(
-			'The request body schema below is the exact writable field set for the current MCP setup.',
+			'The request body schema below is the exact writable field set for this resource configuration.',
 			$endpoints[0]['description']
 		);
 		$this->assertCount(2, $endpoints[0]['bodyParams']);
@@ -357,14 +357,20 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 			$endpoints[0]['description']
 		);
 		$this->assertStringContainsString(
-			'Example: `{"filter":{"title":"Example title"}}`',
+			'Returns a paginated list of resources from `pages`.',
 			$endpoints[0]['description']
 		);
-		$this->assertStringContainsString('This schema is permission-scoped.', $endpoints[0]['description']);
+		$this->assertStringContainsString('Example: `?filter[title]=Example title`', $endpoints[0]['description']);
 		$this->assertSame('filter', $endpoints[0]['queryParams'][3]->name);
+		$this->assertSame('object', $endpoints[0]['queryParams'][3]->type);
 		$this->assertSame(['title' => 'Example title'], $endpoints[0]['queryParams'][3]->example);
+		$this->assertSame('deepObject', $endpoints[0]['queryParams'][3]->style);
+		$this->assertTrue($endpoints[0]['queryParams'][3]->explode);
+		$this->assertSame('object', $endpoints[0]['queryParams'][3]->schema['type'] ?? NULL);
+		$this->assertSame('string', $endpoints[0]['queryParams'][3]->schema['properties']['title']['type'] ?? NULL);
+		$this->assertSame('integer', $endpoints[0]['queryParams'][3]->schema['properties']['pid']['type'] ?? NULL);
 		$this->assertStringContainsString(
-			'If a field is missing, treat it as not currently exposed',
+			'Allowed fields: pid, slug, title, uid.',
 			$endpoints[0]['queryParams'][3]->description
 		);
 
@@ -511,10 +517,10 @@ class EndpointDiscoveryServiceTest extends UnitTestCase {
 		$endpoints = $service->getAllEndpoints();
 
 		$this->assertCount(1, $endpoints);
-		$this->assertStringContainsString('Example: `{"filter":{"pid":123}}`', $endpoints[0]['description']);
+		$this->assertStringContainsString('Example: `?filter[pid]=123`', $endpoints[0]['description']);
 		$this->assertSame(['pid' => 123], $endpoints[0]['queryParams'][3]->example);
 		$this->assertStringContainsString(
-			'If a field is missing, treat it as not currently exposed',
+			'Allowed fields: bodytext, colPos, header, pid, uid.',
 			$endpoints[0]['queryParams'][3]->description
 		);
 

@@ -578,6 +578,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$listDescription = $this->buildResourceListDescription($tableName, $readFields);
 		$filterDescription = $this->buildResourceFilterDescription($readFields);
 		$filterExample = $this->buildResourceFilterExample($tableName, $readFields);
+		$filterSchema = $this->buildResourceFilterSchema($readFields, $fieldMetadata);
 
 		// List
 		if (\in_array('list', $allowedOps, TRUE)) {
@@ -607,13 +608,16 @@ class EndpointDiscoveryService implements SingletonInterface {
 						required: FALSE,
 						description: 'Sort field (prefix with - for DESC)'
 					),
-					new ApiQueryParam(
-						name: 'filter',
-						type: 'array',
-						required: FALSE,
-						description: $filterDescription,
-						example: $filterExample
-					),
+						new ApiQueryParam(
+							name: 'filter',
+							type: 'object',
+							required: FALSE,
+							description: $filterDescription,
+							example: $filterExample,
+							schema: $filterSchema,
+							style: 'deepObject',
+							explode: TRUE
+						),
 					new ApiQueryParam(
 						name: 'skipCount',
 						type: 'boolean',
@@ -756,16 +760,15 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 * @param array<int, string> $readFields
 	 */
 	protected function buildResourceListDescription(string $tableName, array $readFields): string {
-		$description = 'Returns a paginated list of ' . $tableName . ' resources.';
+		$description = 'Returns a paginated list of resources from `' . $tableName . '`.';
 		$filterFields = $this->getAllowedFilterFields($readFields);
 		if ($filterFields === []) {
-			return $description . ' ' . $this->buildPermissionScopedSchemaNote();
+			return $description;
 		}
 
 		return $description . ' Filter input uses the shape `filter[field]=value`.'
 			. ' Allowed filter fields include: ' . implode(', ', $filterFields) . '.'
-			. ' Example: ' . $this->buildResourceFilterExampleText($tableName, $filterFields)
-			. ' ' . $this->buildPermissionScopedSchemaNote();
+			. ' Example: ' . $this->buildResourceFilterExampleText($tableName, $filterFields);
 	}
 
 	/**
@@ -775,23 +778,36 @@ class EndpointDiscoveryService implements SingletonInterface {
 		$description = 'Filter by fields using the shape `filter[field]=value`.';
 		$filterFields = $this->getAllowedFilterFields($readFields);
 		if ($filterFields === []) {
-			return $description . ' ' . $this->buildPermissionScopedSchemaNote();
+			return $description;
 		}
 
-		return $description . ' Allowed fields: ' . implode(
-			', ',
-			$filterFields
-		) . '. ' . $this->buildPermissionScopedSchemaNote();
+		return $description . ' Allowed fields: ' . implode(', ', $filterFields) . '.';
 	}
 
-	protected function buildPermissionScopedSchemaNote(): string {
-		return 'This schema is permission-scoped. Only fields currently exposed by the active MCP backend-group permissions are listed here. If a field is missing, treat it as not currently exposed for this MCP setup instead of guessing a different field.';
+	/**
+	 * @param array<int, string> $readFields
+	 * @param array<string, array<string, mixed>> $fieldMetadata
+	 * @return array<string, mixed>
+	 */
+	protected function buildResourceFilterSchema(array $readFields, array $fieldMetadata): array {
+		$properties = [];
+		foreach ($this->getAllowedFilterFields($readFields) as $fieldName) {
+			$properties[$fieldName] = [
+				'type' => $this->mapFieldTypeToOpenApi((string) ($fieldMetadata[$fieldName]['type'] ?? 'string')),
+			];
+		}
+
+		return [
+			'type' => 'object',
+			'properties' => $properties,
+			'additionalProperties' => FALSE,
+		];
 	}
 
 	protected function appendWriteSchemaNote(string $description): string {
 		return rtrim(
 			$description
-		) . ' The request body schema below is the exact writable field set for the current MCP setup. If a field appears there, it is writable and can be used directly. If it is missing, it is not currently exposed for this MCP setup.';
+		) . ' The request body schema below is the exact writable field set for this resource configuration. If a field appears there, it is writable and can be used directly.';
 	}
 
 	/**
@@ -825,8 +841,12 @@ class EndpointDiscoveryService implements SingletonInterface {
 	 */
 	protected function buildResourceFilterExampleText(string $tableName, array $filterFields): string {
 		$example = $this->buildResourceFilterExample($tableName, $filterFields);
-		$encoded = json_encode(['filter' => $example], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-		return \is_string($encoded) ? '`' . $encoded . '`' : '`{"filter":{"uid":123}}`';
+		$fieldName = array_key_first($example);
+		if ($fieldName === NULL) {
+			return '`?filter[uid]=123`';
+		}
+
+		return '`?filter[' . $fieldName . ']=' . (string) $example[$fieldName] . '`';
 	}
 
 	protected function buildResourceBodyFieldExample(string $tableName, string $fieldName, string $type): mixed {
@@ -901,6 +921,15 @@ class EndpointDiscoveryService implements SingletonInterface {
 		)));
 		sort($filterFields);
 		return $filterFields;
+	}
+
+	protected function mapFieldTypeToOpenApi(string $fieldType): string {
+		return match (strtolower($fieldType)) {
+			'int', 'integer' => 'integer',
+			'float', 'double' => 'number',
+			'bool', 'boolean' => 'boolean',
+			default => 'string',
+		};
 	}
 
 	/**
