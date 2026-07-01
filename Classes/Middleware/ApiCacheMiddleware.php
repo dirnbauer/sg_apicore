@@ -21,8 +21,9 @@ use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
@@ -45,9 +46,14 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	protected PathAnalysisService $pathAnalysisService;
 
 	/**
-	 * @var EndpointDiscoveryService
+	 * @var ApiRegistry
 	 */
-	protected EndpointDiscoveryService $discoveryService;
+	protected ApiRegistry $apiRegistry;
+
+	/**
+	 * @var Router
+	 */
+	protected Router $router;
 
 	/**
 	 * @var ExtensionConfiguration
@@ -55,19 +61,22 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	protected ExtensionConfiguration $extensionConfiguration;
 
 	/**
-	 * @param EndpointDiscoveryService $discoveryService
+	 * @param ApiRegistry $apiRegistry
+	 * @param Router $router
 	 * @param PathAnalysisService $pathAnalysisService
 	 * @param CacheManager $cacheManager
 	 * @param ExtensionConfiguration $extensionConfiguration
 	 * @throws NoSuchCacheException
 	 */
 	public function __construct(
-		EndpointDiscoveryService $discoveryService,
+		ApiRegistry $apiRegistry,
+		Router $router,
 		PathAnalysisService $pathAnalysisService,
 		CacheManager $cacheManager,
 		ExtensionConfiguration $extensionConfiguration
 	) {
-		$this->discoveryService = $discoveryService;
+		$this->apiRegistry = $apiRegistry;
+		$this->router = $router;
 		$this->pathAnalysisService = $pathAnalysisService;
 		$this->extensionConfiguration = $extensionConfiguration;
 		$this->cache = $cacheManager->getCache('sg_apicore_responses');
@@ -133,17 +142,13 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		if (!$apiId || $path === NULL) {
+		if (!$apiId || $version === NULL || $path === NULL) {
 			return $handler->handle($request);
 		}
 
-		$endpoints = $this->discoveryService->getEndpointsForApi($apiId, $version);
-		$matchingEndpoint = NULL;
-		foreach ($endpoints as $endpoint) {
-			if ($endpoint['path'] === $path && \in_array('GET', $endpoint['methods'], TRUE)) {
-				$matchingEndpoint = $endpoint;
-				break;
-			}
+		$matchingEndpoint = $this->findMatchingEndpoint($request, (string) $apiId, (string) $version, (string) $path);
+		if ($matchingEndpoint === NULL) {
+			return $handler->handle($request);
 		}
 
 		/** @var ApiCache|null $cacheAttr */
@@ -210,19 +215,11 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		if (!$apiId || !$path) {
+		if (!$apiId || $version === NULL || !$path) {
 			return;
 		}
 
-		$endpoints = $this->discoveryService->getEndpointsForApi($apiId, $version);
-		$matchingEndpoint = NULL;
-		foreach ($endpoints as $endpoint) {
-			if ($endpoint['path'] === $path && \in_array($request->getMethod(), $endpoint['methods'], TRUE)) {
-				$matchingEndpoint = $endpoint;
-				break;
-			}
-		}
-
+		$matchingEndpoint = $this->findMatchingEndpoint($request, (string) $apiId, (string) $version, (string) $path);
 		if (!$matchingEndpoint) {
 			return;
 		}
@@ -316,5 +313,63 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		}
 
 		$this->cache->set($cacheKey, $data, $tags, $cacheAttr->lifetime > 0 ? $cacheAttr->lifetime : NULL);
+	}
+
+	/**
+	 * Returns the matched endpoint metadata for the current request.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $path
+	 * @return array<string, mixed>|null
+	 * @throws ReflectionException
+	 */
+	protected function findMatchingEndpoint(
+		ServerRequestInterface $request,
+		string $apiId,
+		string $version,
+		string $path
+	): ?array {
+		$authMode = $this->resolveApiAuthMode($apiId, $version);
+		$matchedRoute = $this->router->matchEndpoint($request, $apiId, $version, $path, $authMode);
+		if (!\is_array($matchedRoute)) {
+			return NULL;
+		}
+
+		$endpoint = $matchedRoute['endpoint'] ?? NULL;
+		if (!\is_array($endpoint)) {
+			return NULL;
+		}
+
+		$matchedAuthMode = $matchedRoute['authMode'] ?? NULL;
+		$effectiveAuthMode = (!\is_array($matchedAuthMode) && $matchedAuthMode !== '')
+			? $matchedAuthMode
+			: $authMode;
+		if (
+			(!isset($endpoint['authMode']) || $endpoint['authMode'] === [] || $endpoint['authMode'] === '')
+			&& $effectiveAuthMode !== NULL
+		) {
+			$endpoint['authMode'] = $effectiveAuthMode;
+		}
+
+		return $endpoint;
+	}
+
+	/**
+	 * Resolves the effective API auth mode for endpoint matching.
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @return string|null
+	 */
+	protected function resolveApiAuthMode(string $apiId, string $version): ?string {
+		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
+		$authMode = $securityConfig['authMode'] ?? 'token';
+		if (\is_array($authMode)) {
+			$authMode = reset($authMode);
+		}
+
+		return \is_string($authMode) && $authMode !== '' ? $authMode : NULL;
 	}
 }
