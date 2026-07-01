@@ -11,6 +11,20 @@ Every registered API provides endpoints for documentation:
 
 Example: `https://your-website.com/api/public/v1/docs/ui`
 
+## Auto-CRUD Query Parameters
+
+Auto-CRUD resource endpoints expose their list filter as a query object using the shape `filter[field]=value`.
+
+Example:
+
+```text
+/api/public/v1/pages?filter[title]=Example title
+```
+
+In the generated OpenAPI specification this parameter is modeled as an object-style query parameter (`deepObject`), not
+as a JSON request body. Swagger UI should therefore show `filter` as a structured query parameter with the allowed
+fields from the resource configuration.
+
 ## Metadata Attributes
 
 To make the specification meaningful, use the following attributes on your controller methods:

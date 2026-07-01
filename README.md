@@ -16,27 +16,6 @@ Token JWT Bearer auth, User auth, Entity CRUD registration, Custom Endpoints.
 For detailed information, please refer to the Documentation in docs/.
 For website-ready end-user communication, see [End-User-Documentation](docs/Website-End-User-Documentation.md).
 
-## Directory Structure
-
-The extension follows a standard TYPO3 extension structure with a focus on clean separation of concerns:
-
-- `Classes/`
-    - `Attribute/`: PHP attributes for routing, configuration, and security (e.g., `#[ApiRoute]`, `#[RequireScopes]`).
-    - `Configuration/`: Configuration readers and objects.
-    - `Context/`: Value objects for request context (e.g., `TenantContext`).
-    - `Controller/`: API controllers handling the requests.
-    - `Domain/`:
-        - `Repository/`: Repositories for database access (e.g., `TokenRepository`).
-    - `Middleware/`: PSR-15 middlewares (e.g., `ApiRequestMiddleware` for request interception).
-    - `Security/`: Authentication and authorization logic (e.g., `BearerTokenProvider`, `AuthContext`).
-    - `Service/`
-        - `Tenant/`: Tenant resolution logic and resolvers.
-        - `ApiRegistry.php`: Service to register APIs and versions.
-        - `Router.php`: FastRoute-based dispatcher.
-- `Configuration/`: TYPO3 configuration files (Services, Middlewares, TCA).
-- `docs/`: Technical documentation and guides.
-- `tests/`: Unit and functional tests.
-
 ## Installation
 
 1. Install the extension via composer:
@@ -70,7 +49,7 @@ public function helloAction(ServerRequestInterface $request): ResponseInterface 
 
 ### 3. Access the API
 
-Open your browser at `https://your-domain.local/api/docs/ui/` to see the generated Swagger UI and test your new
+Open your browser at `https://your-domain.local/api/public/v1/docs/ui` to see the generated Swagger UI and test your new
 endpoint!
 
 ## Testing
@@ -175,7 +154,7 @@ See [Tenants Documentation](docs/Tenants.md).
 
 ## Security & Authentication
 
-Supports multiple auth modes (`public`, `token`, `user`) and scope-based authorization.
+Supports multiple auth modes (`public`, `token`, `user`, `backend`) and scope-based authorization.
 
 - **API Level**: Define the default `authMode` as a **string** in the `ApiRegistry`.
 - **Endpoint Level**: Override or extend the `authMode` using the `#[ApiRoute]` attribute (supports **string** or **array**, e.g., `['public', 'user']`).
