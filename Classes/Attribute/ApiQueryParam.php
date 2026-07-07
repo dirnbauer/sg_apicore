@@ -33,6 +33,9 @@ final readonly class ApiQueryParam {
 	 * @param float|null $max Maximum value (for numeric types)
 	 * @param int|null $minLength Minimum length (for string types)
 	 * @param int|null $maxLength Maximum length (for string types)
+	 * @param array<string, mixed>|null $schema Optional explicit OpenAPI schema for the parameter
+	 * @param string|null $style Optional OpenAPI serialization style
+	 * @param bool|null $explode Optional OpenAPI explode flag
 	 */
 	public function __construct(
 		public string $name,
@@ -45,7 +48,10 @@ final readonly class ApiQueryParam {
 		public ?float $min = NULL,
 		public ?float $max = NULL,
 		public ?int $minLength = NULL,
-		public ?int $maxLength = NULL
+		public ?int $maxLength = NULL,
+		public ?array $schema = NULL,
+		public ?string $style = NULL,
+		public ?bool $explode = NULL
 	) {
 	}
 
@@ -61,7 +67,10 @@ final readonly class ApiQueryParam {
 			$properties['min'] ?? NULL,
 			$properties['max'] ?? NULL,
 			$properties['minLength'] ?? NULL,
-			$properties['maxLength'] ?? NULL
+			$properties['maxLength'] ?? NULL,
+			$properties['schema'] ?? NULL,
+			$properties['style'] ?? NULL,
+			$properties['explode'] ?? NULL
 		);
 	}
 }

@@ -183,6 +183,74 @@ class OpenApiServiceTest extends UnitTestCase {
 		$this->assertSame(['SGAI', 'MCP', 'OpenAPI'], array_column($spec['tags'], 'name'));
 	}
 
+	public function testGenerateSpecUsesDeepObjectSchemaForResourceFilterQueryParam(): void {
+		$apiRegistry = $this->createStub(ApiRegistry::class);
+		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
+		$extensionConfiguration->method('getApiPathPrefix')->willReturn('/api/');
+
+		$resourceRegistry = new ResourceRegistry();
+		$resourceRegistry->registerResource('public', 'pages', '/pages', [
+			'allowedOperations' => ['list'],
+			'readFields' => ['uid', 'pid', 'title', 'slug', 'doktype'],
+		]);
+
+		$GLOBALS['TCA']['pages'] = [
+			'columns' => [
+				'title' => [
+					'label' => 'Title',
+					'config' => ['type' => 'input'],
+				],
+				'slug' => [
+					'label' => 'Slug',
+					'config' => ['type' => 'input'],
+				],
+				'doktype' => [
+					'label' => 'Doktype',
+					'config' => ['type' => 'number'],
+				],
+			],
+		];
+
+		$cache = $this->createStub(FrontendInterface::class);
+		$cache->method('get')->willReturn(NULL);
+		$cacheManager = $this->createStub(CacheManager::class);
+		$cacheManager->method('getCache')->with('sg_apicore_discovery')->willReturn($cache);
+
+		$languageService = $this->createStub(LanguageService::class);
+		$languageService->method('sL')->willReturnArgument(0);
+		$languageServiceFactory = $this->createStub(LanguageServiceFactory::class);
+		$languageServiceFactory->method('create')->with('en')->willReturn($languageService);
+
+		$discoveryService = new EndpointDiscoveryService(
+			new ArrayIterator([]),
+			$resourceRegistry,
+			$cacheManager,
+			$languageServiceFactory,
+			$apiRegistry
+		);
+
+		$service = $this->getOpenApiService($discoveryService, $apiRegistry, $extensionConfiguration);
+		$spec = $service->generateSpec('public', '1');
+		$parameters = $spec['paths']['/pages']['get']['parameters'];
+		$filterParameter = array_values(array_filter(
+			$parameters,
+			static fn (array $parameter): bool => ($parameter['name'] ?? '') === 'filter'
+		))[0] ?? NULL;
+
+		$this->assertNotNull($filterParameter);
+		$this->assertSame('object', $filterParameter['schema']['type'] ?? NULL);
+		$this->assertSame('deepObject', $filterParameter['style'] ?? NULL);
+		$this->assertTrue($filterParameter['explode'] ?? FALSE);
+		$this->assertFalse($filterParameter['schema']['additionalProperties'] ?? TRUE);
+		$this->assertSame('string', $filterParameter['schema']['properties']['title']['type'] ?? NULL);
+		$this->assertSame('integer', $filterParameter['schema']['properties']['pid']['type'] ?? NULL);
+		$this->assertSame('integer', $filterParameter['schema']['properties']['doktype']['type'] ?? NULL);
+
+		unset($GLOBALS['TCA']['pages']);
+	}
+
 	public function testGenerateSpecUsesProvidedBaseUrl(): void {
 		$apiRegistry = $this->createStub(ApiRegistry::class);
 		$apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);

@@ -16,6 +16,7 @@ use SGalinski\SgApiCore\Middleware\ApiCorsMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiRequestMiddleware;
 use SGalinski\SgApiCore\Middleware\ApiSetupMiddleware;
 use SGalinski\SgApiCore\Security\BackendUserProvider;
+use SGalinski\SgApiCore\Security\BackendBearerOpaqueTokenProvider;
 use SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider;
 use SGalinski\SgApiCore\Security\JwtAccessTokenProvider;
 use SGalinski\SgApiCore\Security\LoginProviderChain;
@@ -38,13 +39,15 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 		->autowire()
 		->autoconfigure();
 
-	$services->load('SGalinski\\SgApiCore\\', __DIR__ . '/../Classes/');
+	$services->load('SGalinski\\SgApiCore\\', __DIR__ . '/../Classes/')
+		->exclude([__DIR__ . '/../Classes/Abilities']);
 
 	$services->set(Router::class)
 		->arg('$controllers', tagged_iterator('sg_apicore.router'));
 
 	$services->set(EndpointDiscoveryService::class)
-		->arg('$controllers', tagged_iterator('sg_apicore.router'));
+		->arg('$controllers', tagged_iterator('sg_apicore.router'))
+		->arg('$endpointFilters', tagged_iterator('sg_apicore.endpoint_filter'));
 
 	$services->set(OpenApiService::class);
 
@@ -111,4 +114,14 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
 	$services->alias(TenantResolverInterface::class, TenantResolverChain::class);
 	$services->alias(LoginProviderInterface::class, LoginProviderChain::class);
+
+	// --- fork-only: abilities REST projection --------------------------------
+	$services->set(BackendBearerOpaqueTokenProvider::class)
+		->tag('sg_apicore.login_provider');
+
+	if (class_exists(\Webconsulting\Abilities\Registry\AbilitiesRegistry::class)) {
+		$services->set(\SGalinski\SgApiCore\Abilities\AbilitiesController::class)
+			->tag('sg_apicore.router');
+	}
+	// -------------------------------------------------------------------------
 };

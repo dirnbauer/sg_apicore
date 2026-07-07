@@ -92,7 +92,8 @@ class EndpointDiscoveryService implements SingletonInterface {
 		protected ResourceRegistry $resourceRegistry,
 		CacheManager $cacheManager,
 		protected LanguageServiceFactory $languageServiceFactory,
-		protected ApiRegistry $apiRegistry
+		protected ApiRegistry $apiRegistry,
+		protected iterable $endpointFilters = []
 	) {
 		$this->cache = $cacheManager->getCache('sg_apicore_discovery');
 	}
@@ -255,6 +256,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 			return \strlen($pathB) <=> \strlen($pathA);
 		});
 
+		$endpoints = $this->applyEndpointFilters($endpoints);
 		$this->endpoints = $endpoints;
 		$this->cache->set($cacheKey, $endpoints, ['sg_apicore_discovery']);
 		return $endpoints;
@@ -283,9 +285,11 @@ class EndpointDiscoveryService implements SingletonInterface {
 		}
 
 		$resources = $this->normalizeSignatureData($this->resourceRegistry->getResources());
+		$endpointFilters = $this->getEndpointFilterSignatureData();
 		$signaturePayload = [
 			'controllers' => $controllers,
 			'resources' => $resources,
+			'endpointFilters' => $endpointFilters,
 		];
 
 		$encoded = json_encode($signaturePayload);
@@ -342,6 +346,46 @@ class EndpointDiscoveryService implements SingletonInterface {
 		}
 
 		return $filteredEndpoints;
+	}
+
+	/**
+	 * @param array<int, array<string, mixed>> $endpoints
+	 * @return array<int, array<string, mixed>>
+	 */
+	protected function applyEndpointFilters(array $endpoints): array {
+		foreach ($this->endpointFilters as $endpointFilter) {
+			if (!$endpointFilter instanceof EndpointFilterInterface) {
+				continue;
+			}
+
+			$endpoints = $endpointFilter->filterEndpoints($endpoints);
+		}
+
+		return array_values($endpoints);
+	}
+
+	/**
+	 * @return array<int, array<string, mixed>>
+	 * @throws ReflectionException
+	 */
+	protected function getEndpointFilterSignatureData(): array {
+		$filterData = [];
+		foreach ($this->endpointFilters as $index => $endpointFilter) {
+			if (!$endpointFilter instanceof EndpointFilterInterface) {
+				continue;
+			}
+
+			$reflectionClass = new ReflectionClass($endpointFilter);
+			$fileName = $reflectionClass->getFileName();
+			$mtime = $fileName !== FALSE && is_file($fileName) ? (int) filemtime($fileName) : 0;
+			$filterData[] = [
+				'index' => $index,
+				'class' => $reflectionClass->getName(),
+				'mtime' => $mtime,
+			];
+		}
+
+		return $filterData;
 	}
 
 	/**
@@ -493,6 +537,10 @@ class EndpointDiscoveryService implements SingletonInterface {
 				$description = 'Field: ' . $fieldName;
 			}
 
+			if ($tableName === 'tt_content' && $fieldName === 'colPos') {
+				$description .= ' Layout-specific content area. Do not assume that numeric values like `0` or `1` always mean the same section. Inspect existing content on the target page first or use `position=after` with `afterUid` so the correct `colPos` is inherited automatically.';
+			}
+
 			$fieldMetadata[$fieldName] = [
 				'name' => $fieldName,
 				'type' => $type,
@@ -501,6 +549,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'pattern' => $pattern,
 				'min' => $min,
 				'max' => $max,
+				'example' => $this->buildResourceBodyFieldExample($tableName, $fieldName, $type),
 			];
 		}
 
@@ -515,14 +564,43 @@ class EndpointDiscoveryService implements SingletonInterface {
 					required: $meta['required'],
 					description: $meta['description'],
 					pattern: $meta['pattern'],
+					example: $meta['example'] ?? NULL,
 					min: $meta['min'],
 					max: $meta['max']
 				);
 			}
 		}
+		foreach ($config['virtualBodyParams'] ?? [] as $virtualParamConfig) {
+			if (!\is_array($virtualParamConfig) || ($virtualParamConfig['name'] ?? '') === '') {
+				continue;
+			}
+
+			$bodyParams[] = new ApiBodyParam(
+				name: (string) $virtualParamConfig['name'],
+				type: (string) ($virtualParamConfig['type'] ?? 'string'),
+				required: (bool) ($virtualParamConfig['required'] ?? FALSE),
+				description: (string) ($virtualParamConfig['description'] ?? ''),
+				pattern: isset($virtualParamConfig['pattern']) ? (string) $virtualParamConfig['pattern'] : NULL,
+				example: $virtualParamConfig['example'] ?? NULL,
+				requiredIf: isset($virtualParamConfig['requiredIf']) ? (string) $virtualParamConfig['requiredIf'] : NULL,
+				min: isset($virtualParamConfig['min']) ? (float) $virtualParamConfig['min'] : NULL,
+				max: isset($virtualParamConfig['max']) ? (float) $virtualParamConfig['max'] : NULL,
+				minLength: isset($virtualParamConfig['minLength']) ? (int) $virtualParamConfig['minLength'] : NULL,
+				maxLength: isset($virtualParamConfig['maxLength']) ? (int) $virtualParamConfig['maxLength'] : NULL
+			);
+		}
 
 		$resourceInfo = $config;
 		$resourceInfo['fieldMetadata'] = $fieldMetadata;
+		$operationDescriptions = \is_array($config['operationDescriptions'] ?? NULL)
+			? $config['operationDescriptions']
+			: [];
+		$idField = (string) ($config['idField'] ?? 'uid');
+		$idPathParam = $this->buildResourceIdPathParam($tableName, $idField, $fieldMetadata[$idField] ?? NULL);
+		$listDescription = $this->buildResourceListDescription($tableName, $readFields);
+		$filterDescription = $this->buildResourceFilterDescription($readFields);
+		$filterExample = $this->buildResourceFilterExample($tableName, $readFields);
+		$filterSchema = $this->buildResourceFilterSchema($readFields, $fieldMetadata);
 
 		// List
 		if (\in_array('list', $allowedOps, TRUE)) {
@@ -533,7 +611,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'methods' => ['GET'],
 				'authMode' => [], // Default
 				'summary' => 'List ' . $tableName,
-				'description' => 'Returns a paginated list of ' . $tableName . ' resources.',
+				'description' => $listDescription,
 				'tags' => $tags,
 				'scopes' => $scopes['list'] ?? [],
 				'bodyParams' => [],
@@ -552,12 +630,16 @@ class EndpointDiscoveryService implements SingletonInterface {
 						required: FALSE,
 						description: 'Sort field (prefix with - for DESC)'
 					),
-					new ApiQueryParam(
-						name: 'filter',
-						type: 'array',
-						required: FALSE,
-						description: 'Filter by fields: filter[field]=value'
-					),
+						new ApiQueryParam(
+							name: 'filter',
+							type: 'object',
+							required: FALSE,
+							description: $filterDescription,
+							example: $filterExample,
+							schema: $filterSchema,
+							style: 'deepObject',
+							explode: TRUE
+						),
 					new ApiQueryParam(
 						name: 'skipCount',
 						type: 'boolean',
@@ -590,7 +672,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'scopes' => $scopes['get'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [],
-				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
+				'pathParams' => [$idPathParam],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Success', schema: $tableName),
 					new ApiResponse(status: 404, description: 'Not Found'),
@@ -613,13 +695,15 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'methods' => ['POST'],
 				'authMode' => [],
 				'summary' => 'Create ' . $tableName,
-				'description' => 'Creates a new ' . $tableName . ' resource.',
+				'description' => $this->appendWriteSchemaNote(
+					(string) ($operationDescriptions['create'] ?? ('Creates a new ' . $tableName . ' resource.'))
+				),
 				'tags' => $tags,
 				'scopes' => $scopes['create'] ?? [],
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
 				'pathParams' => [],
-				'responses' => [new ApiResponse(status: 201, description: 'Created', schema: $tableName)],
+				'responses' => [new ApiResponse(status: 200, description: 'Success', schema: $tableName)],
 				'apiCache' => new ApiCache(tags: [$tableName]),
 				'mcp' => NULL,
 				'requireFullTypoScript' => FALSE,
@@ -638,12 +722,14 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'methods' => ['PATCH'],
 				'authMode' => [],
 				'summary' => 'Update ' . $tableName,
-				'description' => 'Updates an existing ' . $tableName . ' resource.',
+				'description' => $this->appendWriteSchemaNote(
+					(string) ($operationDescriptions['update'] ?? ('Updates an existing ' . $tableName . ' resource.'))
+				),
 				'tags' => $tags,
 				'scopes' => $scopes['update'] ?? [],
 				'bodyParams' => $bodyParams,
 				'queryParams' => [],
-				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
+				'pathParams' => [$idPathParam],
 				'responses' => [
 					new ApiResponse(status: 200, description: 'Updated', schema: $tableName),
 					new ApiResponse(status: 404, description: 'Not Found'),
@@ -675,7 +761,7 @@ class EndpointDiscoveryService implements SingletonInterface {
 				'scopes' => $scopes['delete'] ?? [],
 				'bodyParams' => [],
 				'queryParams' => [],
-				'pathParams' => [new ApiPathParam(name: 'id', type: 'integer', description: 'The resource ID')],
+				'pathParams' => [$idPathParam],
 				'responses' => [
 					new ApiResponse(status: 204, description: 'Deleted (no content)'),
 					new ApiResponse(status: 404, description: 'Not Found'),
@@ -690,6 +776,182 @@ class EndpointDiscoveryService implements SingletonInterface {
 		}
 
 		return $endpoints;
+	}
+
+	/**
+	 * @param array<int, string> $readFields
+	 */
+	protected function buildResourceListDescription(string $tableName, array $readFields): string {
+		$description = 'Returns a paginated list of resources from `' . $tableName . '`.';
+		$filterFields = $this->getAllowedFilterFields($readFields);
+		if ($filterFields === []) {
+			return $description;
+		}
+
+		return $description . ' Filter input uses the shape `filter[field]=value`.'
+			. ' Allowed filter fields include: ' . implode(', ', $filterFields) . '.'
+			. ' Example: ' . $this->buildResourceFilterExampleText($tableName, $filterFields);
+	}
+
+	/**
+	 * @param array<int, string> $readFields
+	 */
+	protected function buildResourceFilterDescription(array $readFields): string {
+		$description = 'Filter by fields using the shape `filter[field]=value`.';
+		$filterFields = $this->getAllowedFilterFields($readFields);
+		if ($filterFields === []) {
+			return $description;
+		}
+
+		return $description . ' Allowed fields: ' . implode(', ', $filterFields) . '.';
+	}
+
+	/**
+	 * @param array<int, string> $readFields
+	 * @param array<string, array<string, mixed>> $fieldMetadata
+	 * @return array<string, mixed>
+	 */
+	protected function buildResourceFilterSchema(array $readFields, array $fieldMetadata): array {
+		$properties = [];
+		foreach ($this->getAllowedFilterFields($readFields) as $fieldName) {
+			$properties[$fieldName] = [
+				'type' => $this->mapFieldTypeToOpenApi((string) ($fieldMetadata[$fieldName]['type'] ?? 'string')),
+			];
+		}
+
+		return [
+			'type' => 'object',
+			'properties' => $properties,
+			'additionalProperties' => FALSE,
+		];
+	}
+
+	protected function appendWriteSchemaNote(string $description): string {
+		return rtrim(
+			$description
+		) . ' The request body schema below is the exact writable field set for this resource configuration. If a field appears there, it is writable and can be used directly.';
+	}
+
+	/**
+	 * @param array<int, string> $readFields
+	 * @return array<string, string|int>
+	 */
+	protected function buildResourceFilterExample(string $tableName, array $readFields): array {
+		$filterFields = $this->getAllowedFilterFields($readFields);
+		if ($tableName === 'tt_content' && \in_array('pid', $filterFields, TRUE)) {
+			return ['pid' => 123];
+		}
+		if (\in_array('title', $filterFields, TRUE)) {
+			return ['title' => 'Example title'];
+		}
+		if (\in_array('header', $filterFields, TRUE)) {
+			return ['header' => 'Example header'];
+		}
+		if (\in_array('slug', $filterFields, TRUE)) {
+			return ['slug' => '/example-slug'];
+		}
+		if (\in_array('uid', $filterFields, TRUE)) {
+			return ['uid' => 123];
+		}
+
+		$firstField = $filterFields[0] ?? 'uid';
+		return [$firstField => $tableName === 'pages' ? 'Example value' : 'Example value'];
+	}
+
+	/**
+	 * @param array<int, string> $filterFields
+	 */
+	protected function buildResourceFilterExampleText(string $tableName, array $filterFields): string {
+		$example = $this->buildResourceFilterExample($tableName, $filterFields);
+		$fieldName = array_key_first($example);
+		if ($fieldName === NULL) {
+			return '`?filter[uid]=123`';
+		}
+
+		return '`?filter[' . $fieldName . ']=' . (string) $example[$fieldName] . '`';
+	}
+
+	protected function buildResourceBodyFieldExample(string $tableName, string $fieldName, string $type): mixed {
+		if ($fieldName === 'pid') {
+			return 123;
+		}
+		if ($fieldName === 'sys_language_uid') {
+			return 0;
+		}
+		if ($fieldName === 'title') {
+			return $tableName === 'pages' ? 'Example page title' : 'Example title';
+		}
+		if ($fieldName === 'slug') {
+			return '/example-page-title';
+		}
+		if ($fieldName === 'header') {
+			return 'Example content headline';
+		}
+		if ($fieldName === 'bodytext') {
+			return '<p>Example body text</p>';
+		}
+		if ($fieldName === 'CType') {
+			return 'text';
+		}
+		if ($fieldName === 'colPos') {
+			return $tableName === 'tt_content' ? NULL : 0;
+		}
+		if ($fieldName === 'fieldname') {
+			return 'image';
+		}
+		if ($fieldName === 'tablenames') {
+			return 'tt_content';
+		}
+		if ($fieldName === 'uid_local' || $fieldName === 'uid_foreign') {
+			return 123;
+		}
+		if ($fieldName === 'sorting_foreign') {
+			return 1;
+		}
+		if ($type === 'integer') {
+			return 1;
+		}
+		if ($type === 'boolean') {
+			return FALSE;
+		}
+
+		return NULL;
+	}
+
+	protected function buildResourceIdPathParam(
+		string $tableName,
+		string $idField,
+		?array $fieldMetadata = NULL
+	): ApiPathParam {
+		$type = $fieldMetadata['type'] ?? ($idField === 'uid' ? 'integer' : 'string');
+		$description = $idField === 'uid'
+			? 'The resource ID'
+			: 'The resource identifier from field "' . $idField . '".';
+		$example = $fieldMetadata['example'] ?? $this->buildResourceBodyFieldExample($tableName, $idField, (string) $type);
+
+		return new ApiPathParam(name: 'id', type: (string) $type, description: $description, example: $example);
+	}
+
+	/**
+	 * @param array<int, string> $readFields
+	 * @return array<int, string>
+	 */
+	protected function getAllowedFilterFields(array $readFields): array {
+		$filterFields = array_values(array_unique(array_filter(
+			$readFields,
+			static fn (string $field): bool => $field !== ''
+		)));
+		sort($filterFields);
+		return $filterFields;
+	}
+
+	protected function mapFieldTypeToOpenApi(string $fieldType): string {
+		return match (strtolower($fieldType)) {
+			'int', 'integer' => 'integer',
+			'float', 'double' => 'number',
+			'bool', 'boolean' => 'boolean',
+			default => 'string',
+		};
 	}
 
 	/**

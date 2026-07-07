@@ -24,7 +24,7 @@
 	],
 	"homepage": "https://www.sgalinski.de",
 	"license": "GPL-2.0-or-later",
-	"version": "14.0.0",
+	"version": "14.1.0",
 	"config": {
 		"allow-plugins": {
 			"typo3/class-alias-loader": true,
@@ -43,7 +43,8 @@
 		"phpstan/phpstan": "^2.1",
 		"phpstan/phpstan-phpunit": "^2.0",
 		"phpunit/phpunit": "^12.1",
-		"typo3/testing-framework": "^9.5 || ^10.0"
+		"typo3/testing-framework": "^9.5 || ^10.0",
+		"webconsulting/typo3-abilities": "dev-main"
 	},
 	"replace": {
 		"sgalinski/sg_apicore": "self.version"
@@ -66,5 +67,11 @@
 	"scripts": {
 		"phpstan": "phpstan analyse --configuration=Build/phpstan/phpstan.neon --memory-limit=-1",
 		"test": "phpunit --configuration=phpunit.xml"
-	}
+	},
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/dirnbauer/typo3-abilities"
+		}
+	]
 }

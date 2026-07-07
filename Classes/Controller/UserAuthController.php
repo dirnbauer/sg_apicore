@@ -234,8 +234,8 @@ class UserAuthController {
 	#[RequireUser]
 	public function logout(ServerRequestInterface $request): ResponseInterface {
 		$authorizationHeader = $request->getHeaderLine('Authorization');
-		if (str_starts_with($authorizationHeader, 'Bearer ')) {
-			$token = substr($authorizationHeader, 7);
+		if (preg_match('/^Bearer\s+(.+)$/i', trim($authorizationHeader), $matches)) {
+			$token = trim((string) ($matches[1] ?? ''));
 			$this->userAuthService->revokeUserToken($token);
 		}
 

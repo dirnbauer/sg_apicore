@@ -305,4 +305,28 @@ class ExtensionConfiguration implements SingletonInterface {
 		}
 		return GeneralUtility::trimExplode(',', (string) $entries, TRUE);
 	}
+
+	// --- fork-only: abilities REST projection --------------------------------
+
+	/**
+	 * Returns whether the abilities registry REST API should be exposed
+	 *
+	 * @return bool
+	 */
+	public function isActivateAbilitiesApi(): bool {
+		return (bool) $this->get('activateAbilitiesApi', FALSE);
+	}
+
+	/**
+	 * Returns the allowed CORS origins for the abilities API
+	 *
+	 * @return array<int, string>
+	 */
+	public function getAbilitiesApiCorsOrigins(): array {
+		$origins = $this->get('abilitiesApiCorsOrigins', '');
+		if (!\is_scalar($origins)) {
+			return [];
+		}
+		return GeneralUtility::trimExplode(',', (string) $origins, TRUE);
+	}
 }

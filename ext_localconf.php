@@ -125,3 +125,30 @@ use TYPO3\CMS\Scheduler\Task\TableGarbageCollectionTask;
 		}
 	}
 })();
+
+// --- fork-only: abilities REST projection ---------------------------------
+// Registers the "abilities" API when the webconsulting/typo3-abilities
+// registry is installed and the activateAbilitiesApi setting is enabled.
+// The API exposes the registry via GET /api/abilities/v1/abilities,
+// GET .../{namespace}/{name} and POST .../{namespace}/{name}/run, guarded
+// by backend-user-bound opaque tokens (BackendBearerOpaqueTokenProvider).
+(static function () {
+	$extensionConfiguration = GeneralUtility::makeInstance(ExtensionConfiguration::class);
+	if (!$extensionConfiguration->isActivateAbilitiesApi()
+		|| !class_exists(\Webconsulting\Abilities\Registry\AbilitiesRegistry::class)
+	) {
+		return;
+	}
+
+	$security = [
+		'authMode' => 'token',
+		'authProviders' => ['backendbeareropaquetokenprovider'],
+	];
+	$corsOrigins = $extensionConfiguration->getAbilitiesApiCorsOrigins();
+	if ($corsOrigins !== []) {
+		$security['cors'] = ['allowedOrigins' => $corsOrigins];
+	}
+
+	GeneralUtility::makeInstance(ApiRegistry::class)->registerApi('abilities', ['1'], $security);
+})();
+// ---------------------------------------------------------------------------

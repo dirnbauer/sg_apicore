@@ -90,4 +90,23 @@ class JwtAccessTokenProviderTest extends UnitTestCase {
 		$this->assertEquals(123, $result->getUserId());
 		$this->assertEquals('test-jti', $result->getTokenUid());
 	}
+
+	public function testAuthenticateAcceptsLowercaseBearerScheme(): void {
+		$request = $this->createMock(ServerRequestInterface::class);
+		$request->method('getHeaderLine')->with('Authorization')->willReturn('bearer valid.jwt.token');
+
+		$payload = [
+			'jti' => 'test-jti',
+			'userId' => 123,
+			'tenantId' => 'tenant-1',
+			'apiId' => 'test-api',
+			'scopes' => ['user'],
+		];
+		$this->jwtService->method('decode')->willReturn($payload);
+		$this->tokenRepository->method('findByHashGlobally')->with('test-jti')->willReturn(['uid' => 1]);
+
+		$result = $this->provider->authenticate($request, 'test-api', 'tenant-1');
+		$this->assertNotNull($result);
+		$this->assertEquals(123, $result->getUserId());
+	}
 }
