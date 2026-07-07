@@ -57,6 +57,9 @@
 			<trans-unit id="backend.cache_menu.description" resname="backend.cache_menu.description">
 				<source>Clears the cache for all API responses.</source>
 			</trans-unit>
+			<trans-unit id="tx_apicore_token.be_user_uid" resname="tx_apicore_token.be_user_uid">
+				<source>Backend user (token acts as this user)</source>
+			</trans-unit>
 		</body>
 	</file>
 </xliff>

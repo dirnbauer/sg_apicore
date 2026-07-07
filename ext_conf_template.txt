@@ -72,3 +72,9 @@ mcpDisabledApis =
 
 # cat=basic/mcp; type=string; label=Global MCP denylist entries (comma-separated):Match generated endpoint IDs or tool names.
 mcpDenylist =
+
+# cat=basic/abilities; type=boolean; label=Activate Abilities API:Expose the webconsulting/typo3-abilities registry as REST API "abilities" (requires EXT:abilities). Endpoints: GET /api/abilities/v1/abilities, GET+POST .../{namespace}/{name}[/run].
+activateAbilitiesApi = 0
+
+# cat=basic/abilities; type=string; label=Abilities API CORS origins (comma-separated):Allowed origins for cross-origin browser access to the abilities API. Leave empty when only server-side or same-origin clients call it.
+abilitiesApiCorsOrigins =

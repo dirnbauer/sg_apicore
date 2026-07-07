@@ -33,3 +33,9 @@ CREATE TABLE tx_apicore_rate_limit (
 	UNIQUE KEY identifier_unique(identifier),
 	KEY expires_at(expires_at)
 );
+
+-- fork-only: backend-user binding for tokens (abilities REST projection / BackendBearerOpaqueTokenProvider)
+CREATE TABLE tx_apicore_token (
+	be_user_uid int(11) DEFAULT '0' NOT NULL,
+	KEY be_user_uid (be_user_uid)
+);
