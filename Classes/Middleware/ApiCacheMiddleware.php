@@ -21,11 +21,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 use ReflectionException;
 use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
-use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Exception\NoSuchCacheException;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\Response;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -45,9 +47,14 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	protected PathAnalysisService $pathAnalysisService;
 
 	/**
-	 * @var EndpointDiscoveryService
+	 * @var ApiRegistry
 	 */
-	protected EndpointDiscoveryService $discoveryService;
+	protected ApiRegistry $apiRegistry;
+
+	/**
+	 * @var Router
+	 */
+	protected Router $router;
 
 	/**
 	 * @var ExtensionConfiguration
@@ -55,21 +62,32 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 	protected ExtensionConfiguration $extensionConfiguration;
 
 	/**
-	 * @param EndpointDiscoveryService $discoveryService
+	 * @var Context
+	 */
+	protected Context $context;
+
+	/**
+	 * @param ApiRegistry $apiRegistry
+	 * @param Router $router
 	 * @param PathAnalysisService $pathAnalysisService
 	 * @param CacheManager $cacheManager
 	 * @param ExtensionConfiguration $extensionConfiguration
+	 * @param Context $context
 	 * @throws NoSuchCacheException
 	 */
 	public function __construct(
-		EndpointDiscoveryService $discoveryService,
+		ApiRegistry $apiRegistry,
+		Router $router,
 		PathAnalysisService $pathAnalysisService,
 		CacheManager $cacheManager,
-		ExtensionConfiguration $extensionConfiguration
+		ExtensionConfiguration $extensionConfiguration,
+		Context $context
 	) {
-		$this->discoveryService = $discoveryService;
+		$this->apiRegistry = $apiRegistry;
+		$this->router = $router;
 		$this->pathAnalysisService = $pathAnalysisService;
 		$this->extensionConfiguration = $extensionConfiguration;
+		$this->context = $context;
 		$this->cache = $cacheManager->getCache('sg_apicore_responses');
 	}
 
@@ -133,17 +151,13 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		if (!$apiId || $path === NULL) {
+		if (!$apiId || $version === NULL || $path === NULL) {
 			return $handler->handle($request);
 		}
 
-		$endpoints = $this->discoveryService->getEndpointsForApi($apiId, $version);
-		$matchingEndpoint = NULL;
-		foreach ($endpoints as $endpoint) {
-			if ($endpoint['path'] === $path && \in_array('GET', $endpoint['methods'], TRUE)) {
-				$matchingEndpoint = $endpoint;
-				break;
-			}
+		$matchingEndpoint = $this->findMatchingEndpoint($request, (string) $apiId, (string) $version, (string) $path);
+		if ($matchingEndpoint === NULL) {
+			return $handler->handle($request);
 		}
 
 		/** @var ApiCache|null $cacheAttr */
@@ -155,6 +169,18 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 
 		if (!$cacheAttr->enabled) {
 			return $handler->handle($request);
+		}
+
+		if ($this->shouldBypassCacheRead($request)) {
+			$response = $handler->handle($request);
+			if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300 &&
+				!$this->shouldSkipCacheStore($request)
+			) {
+				$cacheKey = $this->calculateCacheKey($request, $cacheAttr);
+				$this->storeInCache($cacheKey, $response, $cacheAttr, $request);
+			}
+
+			return $response;
 		}
 
 		// Security Check: If the endpoint is protected, we MUST have a valid auth context
@@ -183,7 +209,9 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 
 		$response = $handler->handle($request);
 
-		if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
+		if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300 &&
+			!$this->shouldSkipCacheStore($request)
+		) {
 			$this->storeInCache($cacheKey, $response, $cacheAttr, $request);
 		}
 
@@ -210,19 +238,11 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 			}
 		}
 
-		if (!$apiId || !$path) {
+		if (!$apiId || $version === NULL || !$path) {
 			return;
 		}
 
-		$endpoints = $this->discoveryService->getEndpointsForApi($apiId, $version);
-		$matchingEndpoint = NULL;
-		foreach ($endpoints as $endpoint) {
-			if ($endpoint['path'] === $path && \in_array($request->getMethod(), $endpoint['methods'], TRUE)) {
-				$matchingEndpoint = $endpoint;
-				break;
-			}
-		}
-
+		$matchingEndpoint = $this->findMatchingEndpoint($request, (string) $apiId, (string) $version, (string) $path);
 		if (!$matchingEndpoint) {
 			return;
 		}
@@ -316,5 +336,106 @@ class ApiCacheMiddleware implements MiddlewareInterface {
 		}
 
 		$this->cache->set($cacheKey, $data, $tags, $cacheAttr->lifetime > 0 ? $cacheAttr->lifetime : NULL);
+	}
+
+	/**
+	 * Returns the matched endpoint metadata for the current request.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @param string $apiId
+	 * @param string $version
+	 * @param string $path
+	 * @return array<string, mixed>|null
+	 * @throws ReflectionException
+	 */
+	protected function findMatchingEndpoint(
+		ServerRequestInterface $request,
+		string $apiId,
+		string $version,
+		string $path
+	): ?array {
+		$authMode = $this->resolveApiAuthMode($apiId, $version);
+		$matchedRoute = $this->router->matchEndpoint($request, $apiId, $version, $path, $authMode);
+		if (!\is_array($matchedRoute)) {
+			return NULL;
+		}
+
+		$endpoint = $matchedRoute['endpoint'] ?? NULL;
+		if (!\is_array($endpoint)) {
+			return NULL;
+		}
+
+		$matchedAuthMode = $matchedRoute['authMode'] ?? NULL;
+		$effectiveAuthMode = (!\is_array($matchedAuthMode) && $matchedAuthMode !== '')
+			? $matchedAuthMode
+			: $authMode;
+		if (
+			(!isset($endpoint['authMode']) || $endpoint['authMode'] === [] || $endpoint['authMode'] === '')
+			&& $effectiveAuthMode !== NULL
+		) {
+			$endpoint['authMode'] = $effectiveAuthMode;
+		}
+
+		return $endpoint;
+	}
+
+	/**
+	 * Resolves the effective API auth mode for endpoint matching.
+	 *
+	 * @param string $apiId
+	 * @param string $version
+	 * @return string|null
+	 */
+	protected function resolveApiAuthMode(string $apiId, string $version): ?string {
+		$securityConfig = $this->apiRegistry->getSecurityConfig($apiId, $version);
+		$authMode = $securityConfig['authMode'] ?? 'token';
+		if (\is_array($authMode)) {
+			$authMode = reset($authMode);
+		}
+
+		return \is_string($authMode) && $authMode !== '' ? $authMode : NULL;
+	}
+
+	/**
+	 * Returns whether the current request should bypass cache reads.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return bool
+	 */
+	protected function shouldBypassCacheRead(ServerRequestInterface $request): bool {
+		if ($this->isBackendUserLoggedIn()) {
+			return TRUE;
+		}
+
+		$cacheControl = strtolower($request->getHeaderLine('Cache-Control'));
+		$pragma = strtolower($request->getHeaderLine('Pragma'));
+
+		return str_contains($cacheControl, 'no-cache') ||
+			str_contains($cacheControl, 'no-store') ||
+			str_contains($pragma, 'no-cache');
+	}
+
+	/**
+	 * Returns whether the current request should skip writing API cache entries.
+	 *
+	 * @param ServerRequestInterface $request
+	 * @return bool
+	 */
+	protected function shouldSkipCacheStore(ServerRequestInterface $request): bool {
+		if ($this->isBackendUserLoggedIn()) {
+			return TRUE;
+		}
+
+		$cacheControl = strtolower($request->getHeaderLine('Cache-Control'));
+		return str_contains($cacheControl, 'no-store');
+	}
+
+	/**
+	 * Returns whether a backend user is actively logged in for the current request.
+	 *
+	 * @return bool
+	 */
+	protected function isBackendUserLoggedIn(): bool {
+		return (bool) $this->context->getPropertyFromAspect('backend.user', 'isLoggedIn', FALSE);
 	}
 }

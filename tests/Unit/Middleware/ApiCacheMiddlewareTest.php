@@ -22,10 +22,12 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SGalinski\SgApiCore\Attribute\ApiCache;
 use SGalinski\SgApiCore\Configuration\ExtensionConfiguration;
 use SGalinski\SgApiCore\Middleware\ApiCacheMiddleware;
-use SGalinski\SgApiCore\Service\EndpointDiscoveryService;
+use SGalinski\SgApiCore\Service\ApiRegistry;
 use SGalinski\SgApiCore\Service\PathAnalysisService;
+use SGalinski\SgApiCore\Service\Router;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
+use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Http\Stream;
 use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
@@ -33,7 +35,6 @@ use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 /**
  * Test case for ApiCacheMiddleware
  */
-#[\PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations]
 class ApiCacheMiddlewareTest extends UnitTestCase {
 	/**
 	 * @var bool
@@ -46,26 +47,40 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 	protected ApiCacheMiddleware $middleware;
 
 	/**
-	 * @var EndpointDiscoveryService|Stub
+	 * @var ApiRegistry|Stub
 	 */
-	protected $discoveryService;
+	protected $apiRegistry;
+
+	/**
+	 * @var Router|Stub
+	 */
+	protected $router;
 
 	/**
 	 * @var PathAnalysisService|Stub
 	 */
 	protected $pathAnalysisService;
 
+	/**
+	 * @var Context|Stub
+	 */
+	protected $context;
+
 	protected function setUp(): void {
 		parent::setUp();
-		$this->discoveryService = $this->createMock(EndpointDiscoveryService::class);
-		$this->pathAnalysisService = $this->createMock(PathAnalysisService::class);
+		$this->apiRegistry = $this->createStub(ApiRegistry::class);
+		$this->pathAnalysisService = $this->createStub(PathAnalysisService::class);
+		$this->router = $this->createStub(Router::class);
+		$this->context = $this->createStub(Context::class);
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'public']);
+		$this->context->method('getPropertyFromAspect')->willReturn(FALSE);
 	}
 
 	/**
 	 * @test
 	 */
 	public function testProcessReturnsCachedResponseIfAvailable(): void {
-		$cache = $this->createMock(FrontendInterface::class);
+		$cache = $this->createStub(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
 		$request = new ServerRequest('https://example.com/api/test/v1/foo', 'GET');
@@ -73,8 +88,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			->withAttribute('api.version', 'v1')
 			->withAttribute('api.remainingPath', '/foo');
 
-		$this->discoveryService->method('getEndpointsForApi')->willReturn([
-			[
+		$this->router->method('matchEndpoint')->willReturn([
+			'endpoint' => [
 				'path' => '/foo',
 				'methods' => ['GET'],
 				'apiCache' => new ApiCache(tags: ['test']),
@@ -87,7 +102,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			'body' => '{"cached": true}',
 		]);
 
-		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler = $this->createStub(RequestHandlerInterface::class);
 
 		$response = $middleware->process($request, $handler);
 
@@ -109,8 +124,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			->withAttribute('api.version', 'v1')
 			->withAttribute('api.remainingPath', '/foo');
 
-		$this->discoveryService->method('getEndpointsForApi')->willReturn([
-			[
+		$this->router->method('matchEndpoint')->willReturn([
+			'endpoint' => [
 				'path' => '/foo',
 				'methods' => ['GET'],
 				'apiCache' => new ApiCache(tags: ['test']),
@@ -120,7 +135,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache->method('get')->willReturn(NULL);
 		$cache->expects($this->once())->method('set');
 
-		$responseMock = $this->createMock(ResponseInterface::class);
+		$responseMock = $this->createStub(ResponseInterface::class);
 		$responseMock->method('getStatusCode')->willReturn(200);
 		$responseMock->method('getHeaderLine')->with('Content-Type')->willReturn('application/json');
 		$stream = new Stream('php://temp', 'wb+');
@@ -128,7 +143,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$responseMock->method('getBody')->willReturn($stream);
 		$responseMock->method('withHeader')->willReturnSelf();
 
-		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler = $this->createStub(RequestHandlerInterface::class);
 		$handler->method('handle')->willReturn($responseMock);
 
 		$middleware->process($request, $handler);
@@ -146,8 +161,8 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			->withAttribute('api.version', 'v1')
 			->withAttribute('api.remainingPath', '/foo');
 
-		$this->discoveryService->method('getEndpointsForApi')->willReturn([
-			[
+		$this->router->method('matchEndpoint')->willReturn([
+			'endpoint' => [
 				'path' => '/foo',
 				'methods' => ['POST'],
 				'apiCache' => new ApiCache(tags: ['test']),
@@ -156,7 +171,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 
 		$cache->expects($this->once())->method('flushByTags')->with(['test']);
 
-		$responseMock = $this->createMock(ResponseInterface::class);
+		$responseMock = $this->createStub(ResponseInterface::class);
 		$responseMock->method('getStatusCode')->willReturn(201);
 
 		$handler = $this->createMock(RequestHandlerInterface::class);
@@ -169,7 +184,7 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 		$cache = $this->createMock(FrontendInterface::class);
 		$middleware = $this->createMiddlewareWithCache($cache);
 
-		$request = $this->createMock(ServerRequestInterface::class);
+		$request = $this->createStub(ServerRequestInterface::class);
 		$request->method('getMethod')->willReturn('GET');
 		$request->method('getAttribute')->willReturnMap([
 			['api.id', 'test'],
@@ -177,12 +192,16 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 			['api.remainingPath', '/test'],
 			['api.auth', NULL], // NOT AUTHENTICATED
 		]);
-		$uri = $this->createMock(UriInterface::class);
+		$uri = $this->createStub(UriInterface::class);
 		$uri->method('getPath')->willReturn('/api/test/v1/test');
 		$request->method('getUri')->willReturn($uri);
 
-		$this->discoveryService->method('getEndpointsForApi')->willReturn([
-			[
+		$this->apiRegistry = $this->createStub(ApiRegistry::class);
+		$this->apiRegistry->method('getSecurityConfig')->willReturn(['authMode' => 'token']);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'endpoint' => [
 				'path' => '/test',
 				'methods' => ['GET'],
 				'authMode' => 'token', // PROTECTED
@@ -192,23 +211,234 @@ class ApiCacheMiddlewareTest extends UnitTestCase {
 
 		$cache->expects($this->never())->method('get');
 
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('withHeader')->willReturnSelf();
 		$handler = $this->createMock(RequestHandlerInterface::class);
-		$handler->expects($this->once())->method('handle')->willReturn($this->createMock(ResponseInterface::class));
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
+
+		$middleware->process($request, $handler);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessSkipsCachingForDynamicEndpointWhenApiCacheIsDisabled(): void {
+		$cache = $this->createMock(FrontendInterface::class);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$request = new ServerRequest('https://example.com/api/test/v1/resources/news/5', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/resources/news/5');
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'endpoint' => [
+				'path' => '/resources/{resource}/{id}',
+				'methods' => ['GET'],
+				'apiCache' => new ApiCache(enabled: FALSE, tags: ['news']),
+			],
+		]);
+
+		$cache->expects($this->never())->method('get');
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('withHeader')->willReturnSelf();
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
+
+		$this->assertSame($responseMock, $middleware->process($request, $handler));
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessTreatsEmptyEndpointAuthModeAsEffectivePublicRouteAuthMode(): void {
+		$cache = $this->createMock(FrontendInterface::class);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$request = new ServerRequest('https://example.com/api/test/v1/examples/5', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/examples/5');
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'authMode' => 'public',
+			'endpoint' => [
+				'path' => '/examples/{id}',
+				'methods' => ['GET'],
+				'authMode' => [],
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
+		]);
+
+		$cache->expects($this->once())->method('get')->willReturn(NULL);
+		$cache->expects($this->once())->method('set');
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
+		$responseMock->method('getHeaderLine')->with('Content-Type')->willReturn('application/json');
+		$stream = new Stream('php://temp', 'wb+');
+		$stream->write('{"id":5}');
+		$responseMock->method('getBody')->willReturn($stream);
+		$responseMock->method('withHeader')->willReturnSelf();
+
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
+
+		$middleware->process($request, $handler);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessBypassesCacheReadButStoresFreshResponseForNoCacheRequests(): void {
+		$cache = $this->createMock(FrontendInterface::class);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$request = new ServerRequest('https://example.com/api/test/v1/examples/5', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/examples/5')
+			->withHeader('Cache-Control', 'no-cache');
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'authMode' => 'public',
+			'endpoint' => [
+				'path' => '/examples/{id}',
+				'methods' => ['GET'],
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
+		]);
+
+		$cache->expects($this->never())->method('get');
+		$cache->expects($this->once())->method('set');
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
+		$responseMock->method('getHeaderLine')->with('Content-Type')->willReturn('application/json');
+		$stream = new Stream('php://temp', 'wb+');
+		$stream->write('{"id":5}');
+		$responseMock->method('getBody')->willReturn($stream);
+
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
+
+		$middleware->process($request, $handler);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessBypassesCacheReadAndWriteForNoStoreRequests(): void {
+		$cache = $this->createMock(FrontendInterface::class);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$request = new ServerRequest('https://example.com/api/test/v1/examples/5', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/examples/5')
+			->withHeader('Cache-Control', 'no-store');
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'authMode' => 'public',
+			'endpoint' => [
+				'path' => '/examples/{id}',
+				'methods' => ['GET'],
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
+		]);
+
+		$cache->expects($this->never())->method('get');
+		$cache->expects($this->never())->method('set');
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
+
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
+
+		$middleware->process($request, $handler);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessBypassesCacheReadAndWriteForBackendUsers(): void {
+		$cache = $this->createMock(FrontendInterface::class);
+		$this->context = $this->createStub(Context::class);
+		$this->context->method('getPropertyFromAspect')->with('backend.user', 'isLoggedIn', FALSE)->willReturn(TRUE);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$request = new ServerRequest('https://example.com/api/test/v1/examples/5', 'GET');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/examples/5');
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'authMode' => 'public',
+			'endpoint' => [
+				'path' => '/examples/{id}',
+				'methods' => ['GET'],
+				'apiCache' => new ApiCache(tags: ['test']),
+			],
+		]);
+
+		$cache->expects($this->never())->method('get');
+		$cache->expects($this->never())->method('set');
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
+
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
+
+		$middleware->process($request, $handler);
+	}
+
+	/**
+	 * @test
+	 */
+	public function testProcessInvalidatesCacheForDynamicEndpointUsingMatchedTags(): void {
+		$cache = $this->createMock(FrontendInterface::class);
+		$middleware = $this->createMiddlewareWithCache($cache);
+
+		$request = new ServerRequest('https://example.com/api/test/v1/resources/news/5', 'PATCH');
+		$request = $request->withAttribute('api.id', 'test')
+			->withAttribute('api.version', 'v1')
+			->withAttribute('api.remainingPath', '/resources/news/5');
+
+		$this->router->method('matchEndpoint')->willReturn([
+			'endpoint' => [
+				'path' => '/resources/{resource}/{id}',
+				'methods' => ['PATCH'],
+				'apiCache' => new ApiCache(tags: ['news']),
+			],
+		]);
+
+		$cache->expects($this->once())->method('flushByTags')->with(['news']);
+
+		$responseMock = $this->createStub(ResponseInterface::class);
+		$responseMock->method('getStatusCode')->willReturn(200);
+
+		$handler = $this->createMock(RequestHandlerInterface::class);
+		$handler->expects($this->once())->method('handle')->willReturn($responseMock);
 
 		$middleware->process($request, $handler);
 	}
 
 	protected function createMiddlewareWithCache(FrontendInterface $cache): ApiCacheMiddleware {
-		$cacheManager = $this->createMock(CacheManager::class);
+		$cacheManager = $this->createStub(CacheManager::class);
 		$cacheManager->method('getCache')->willReturn($cache);
-		$extensionConfiguration = $this->createMock(ExtensionConfiguration::class);
+		$extensionConfiguration = $this->createStub(ExtensionConfiguration::class);
 		$extensionConfiguration->method('isCacheEnabled')->willReturn(TRUE);
 
 		return new ApiCacheMiddleware(
-			$this->discoveryService,
+			$this->apiRegistry,
+			$this->router,
 			$this->pathAnalysisService,
 			$cacheManager,
-			$extensionConfiguration
+			$extensionConfiguration,
+			$this->context
 		);
 	}
 }

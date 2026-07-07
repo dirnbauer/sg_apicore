@@ -362,14 +362,12 @@ class OpenApiService implements SingletonInterface {
 		/** @var ApiQueryParam $param */
 		foreach ($endpoint['queryParams'] as $param) {
 			$type = $this->mapPhpTypeToOpenApi($param->type);
-			if ($type === 'string' && \is_array($param->example)) {
+			if ($type === 'string' && \is_array($param->example) && $param->schema === NULL) {
 				$type = 'array';
 			}
 
-			$schema = [
-				'type' => $type,
-			];
-			if ($type === 'array') {
+			$schema = $param->schema ?? ['type' => $type];
+			if ($type === 'array' && !isset($schema['items'])) {
 				$schema['items'] = [
 					'anyOf' => [
 						['type' => 'string'],
@@ -408,7 +406,17 @@ class OpenApiService implements SingletonInterface {
 				'description' => $description,
 				'schema' => $schema,
 			];
-			if ($type === 'array' || str_ends_with($param->name, '[]') || \is_array($param->example)) {
+			if ($param->style !== NULL) {
+				$parameterSpec['style'] = $param->style;
+			}
+			if ($param->explode !== NULL) {
+				$parameterSpec['explode'] = $param->explode;
+			}
+			if (
+				!isset($parameterSpec['style'])
+				&& !isset($parameterSpec['explode'])
+				&& ($type === 'array' || str_ends_with($param->name, '[]'))
+			) {
 				$parameterSpec['explode'] = str_ends_with($param->name, '[]');
 				$parameterSpec['style'] = 'form';
 			}
@@ -923,6 +931,7 @@ class OpenApiService implements SingletonInterface {
 			'float', 'double' => 'number',
 			'bool', 'boolean' => 'boolean',
 			'array' => 'array',
+			'object' => 'object',
 			default => 'string',
 		};
 	}

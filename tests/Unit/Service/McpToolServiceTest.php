@@ -356,6 +356,20 @@ class McpToolServiceTest extends UnitTestCase {
 		$this->assertSame(2, $result['structuredContent']['query']['page'] ?? NULL);
 	}
 
+	public function testCallToolMarksInternalRequestAsMcpExecutionContext(): void {
+		$apiRegistry = new ApiRegistry();
+		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public']);
+
+		$service = $this->createMcpToolService([McpContextMockController::class], $apiRegistry, TRUE, []);
+		$request = new ServerRequest('https://example.com/api/sgai/v1/mcp', 'POST');
+
+		$result = $service->callTool($request, 'sgai', '1', 'sgai_get_context', []);
+
+		$this->assertIsArray($result);
+		$this->assertFalse($result['isError']);
+		$this->assertSame('mcp', $result['structuredContent']['executionContext'] ?? NULL);
+	}
+
 	public function testCallToolAppliesTargetEndpointRateLimit(): void {
 		$apiRegistry = new ApiRegistry();
 		$apiRegistry->registerApi('sgai', ['1'], ['authMode' => 'public'], NULL, [
@@ -493,6 +507,15 @@ class McpListMockController {
 	#[ApiMcp(name: 'sgai_custom_tool')]
 	public function customAction(ServerRequestInterface $request): ResponseInterface {
 		return new JsonResponse(['custom' => TRUE]);
+	}
+}
+
+class McpContextMockController {
+	#[ApiRoute(path: '/context', methods: ['GET'], apiId: 'sgai', version: '1')]
+	public function contextAction(ServerRequestInterface $request): ResponseInterface {
+		return new JsonResponse([
+			'executionContext' => $request->getAttribute('api.executionContext'),
+		]);
 	}
 }
 

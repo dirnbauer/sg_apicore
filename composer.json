@@ -24,7 +24,7 @@
 	],
 	"homepage": "https://www.sgalinski.de",
 	"license": "GPL-2.0-or-later",
-	"version": "14.0.0",
+	"version": "14.1.0",
 	"config": {
 		"allow-plugins": {
 			"typo3/class-alias-loader": true,

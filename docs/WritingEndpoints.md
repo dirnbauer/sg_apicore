@@ -238,6 +238,9 @@ Caching is **enabled by default** for all `GET` requests. The cache key automati
 - The current Site and Language
 - The Frontend User Groups (sorted to ensure consistency)
 
+Public cache reads are bypassed for requests that explicitly ask for a fresh response (`Cache-Control: no-cache` or
+`Pragma: no-cache`) and for requests running in an active TYPO3 backend user context.
+
 ### Controlling Cache
 
 You can customize or disable caching using the `#[ApiCache]` attribute:
@@ -280,6 +283,15 @@ For example, if a `POST` request is sent to an endpoint with `#[ApiCache(tags: [
 
 **Note**: For automatic resources (CRUD), caching and invalidation are handled automatically using the table name as
 a cache tag.
+
+### Request-Driven Cache Bypass
+
+The middleware also respects request context when deciding whether to read from or write to the API response cache:
+
+* `Cache-Control: no-cache` or `Pragma: no-cache`: bypasses cache reads, but the freshly generated response may still be
+  stored afterwards.
+* `Cache-Control: no-store`: bypasses cache reads and skips storing the response.
+* Active TYPO3 backend user context: bypasses cache reads and writes for the request.
 
 ### Clearing Cache manually
 
