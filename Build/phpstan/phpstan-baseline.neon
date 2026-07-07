@@ -205,6 +205,24 @@ parameters:
 			path: ../../Classes/Attribute/ApiQueryParam.php
 
 		-
+			rawMessage: 'Parameter #12 $schema of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects array<string, mixed>|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #13 $style of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
+			rawMessage: 'Parameter #14 $explode of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects bool|null, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Attribute/ApiQueryParam.php
+
+		-
 			rawMessage: 'Parameter #2 $type of class SGalinski\SgApiCore\Attribute\ApiQueryParam constructor expects string, mixed given.'
 			identifier: argument.type
 			count: 1
@@ -711,7 +729,7 @@ parameters:
 		-
 			rawMessage: Cannot cast mixed to int.
 			identifier: cast.int
-			count: 9
+			count: 18
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -733,6 +751,12 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
+			rawMessage: 'Method SGalinski\SgApiCore\Controller\ResourceController::fetchRecordByUidForResponse() has parameter $resourceConfig with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
 			rawMessage: 'Parameter #1 $fieldName of method TYPO3\CMS\Core\Database\Query\Expression\ExpressionBuilder::eq() expects string, mixed given.'
 			identifier: argument.type
 			count: 3
@@ -745,9 +769,21 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Controller\ResourceController::applyCreatePositioning() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
 			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Controller\ResourceController::expandFileReferencePayloads() expects string, mixed given.'
 			identifier: argument.type
 			count: 2
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Controller\ResourceController::fetchRecordByUidForResponse() expects string, mixed given.'
+			identifier: argument.type
+			count: 3
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -775,6 +811,12 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
+			rawMessage: 'Parameter #2 $filteredData of method SGalinski\SgApiCore\Controller\ResourceController::applyCreatePositioning() expects array<string, mixed>, array given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
 			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
 			identifier: argument.type
 			count: 1
@@ -787,6 +829,12 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
+			rawMessage: 'Parameter #2 $uid of method SGalinski\SgApiCore\Controller\ResourceController::fetchRecordByUidForResponse() expects int, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
 			rawMessage: 'Parameter #3 $allowedFields of method SGalinski\SgApiCore\Mapper\TcaMapper::mapDataForDatabase() expects array, mixed given.'
 			identifier: argument.type
 			count: 2
@@ -795,7 +843,7 @@ parameters:
 		-
 			rawMessage: 'Parameter #3 $allowedFields of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects array, mixed given.'
 			identifier: argument.type
-			count: 1
+			count: 2
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -811,15 +859,27 @@ parameters:
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
-			rawMessage: 'Parameter #3 $dataMap of method SGalinski\SgApiCore\Controller\ResourceController::expandFileReferencePayloads() expects array<string, array<int|string, array<string, mixed>>>, array<array<string, array>> given.'
+			rawMessage: 'Parameter #3 $dataMap of method SGalinski\SgApiCore\Controller\ResourceController::expandFileReferencePayloads() expects array<string, array<int|string, array<string, mixed>>>, array<array<string, array<string, mixed>>> given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
-			rawMessage: 'Parameter $fieldConfiguration of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects array, mixed given.'
+			rawMessage: 'Parameter #3 $rawData of method SGalinski\SgApiCore\Controller\ResourceController::applyCreatePositioning() expects array<string, mixed>, array given.'
 			identifier: argument.type
 			count: 1
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter #3 $resourceConfig of method SGalinski\SgApiCore\Controller\ResourceController::fetchRecordByUidForResponse() expects array, mixed given.'
+			identifier: argument.type
+			count: 3
+			path: ../../Classes/Controller/ResourceController.php
+
+		-
+			rawMessage: 'Parameter $fieldConfiguration of method SGalinski\SgApiCore\Mapper\TcaMapper::mapRecord() expects array, mixed given.'
+			identifier: argument.type
+			count: 2
 			path: ../../Classes/Controller/ResourceController.php
 
 		-
@@ -886,6 +946,12 @@ parameters:
 			rawMessage: Cannot cast mixed to string.
 			identifier: cast.string
 			count: 4
+			path: ../../Classes/Controller/UserAuthController.php
+
+		-
+			rawMessage: 'Offset 1 on array{non-falsy-string, non-empty-string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
 			path: ../../Classes/Controller/UserAuthController.php
 
 		-
@@ -1389,13 +1455,13 @@ parameters:
 		-
 			rawMessage: Cannot cast mixed to string.
 			identifier: cast.string
-			count: 1
+			count: 7
 			path: ../../Classes/Middleware/ApiCacheMiddleware.php
 
 		-
-			rawMessage: 'Parameter #1 $apiId of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getEndpointsForApi() expects string, mixed given.'
-			identifier: argument.type
-			count: 2
+			rawMessage: 'Method SGalinski\SgApiCore\Middleware\ApiCacheMiddleware::findMatchingEndpoint() should return array<string, mixed>|null but returns array.'
+			identifier: return.type
+			count: 1
 			path: ../../Classes/Middleware/ApiCacheMiddleware.php
 
 		-
@@ -1426,12 +1492,6 @@ parameters:
 			rawMessage: 'Parameter #2 $value of method TYPO3\CMS\Core\Http\Message::withHeader() expects array<string>|string, mixed given.'
 			identifier: argument.type
 			count: 1
-			path: ../../Classes/Middleware/ApiCacheMiddleware.php
-
-		-
-			rawMessage: 'Parameter #2 $version of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getEndpointsForApi() expects string|null, mixed given.'
-			identifier: argument.type
-			count: 2
 			path: ../../Classes/Middleware/ApiCacheMiddleware.php
 
 		-
@@ -1657,13 +1717,13 @@ parameters:
 			path: ../../Classes/Security/ApiTokenAuthenticationService.php
 
 		-
-			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
-			identifier: argument.type
+			rawMessage: 'Offset 1 on array{non-falsy-string, non-empty-string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: ../../Classes/Security/ApiTokenAuthenticationService.php
 
 		-
-			rawMessage: 'Parameter #1 $string of function substr expects string, mixed given.'
+			rawMessage: 'Parameter #1 $authorizationHeader of method SGalinski\SgApiCore\Security\ApiTokenAuthenticationService::extractBearerTokenFromAuthorizationHeader() expects string, mixed given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Security/ApiTokenAuthenticationService.php
@@ -1711,19 +1771,19 @@ parameters:
 			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
 
 		-
-			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
+			rawMessage: 'Offset 1 on array{non-falsy-string, non-empty-string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
+
+		-
+			rawMessage: 'Parameter #1 $authorizationHeader of method SGalinski\SgApiCore\Security\BearerOpaqueTokenProvider::extractBearerTokenFromAuthorizationHeader() expects string, mixed given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
 
 		-
 			rawMessage: 'Parameter #1 $json of function json_decode expects string, mixed given.'
-			identifier: argument.type
-			count: 1
-			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
-
-		-
-			rawMessage: 'Parameter #1 $string of function substr expects string, mixed given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Security/BearerOpaqueTokenProvider.php
@@ -1753,13 +1813,13 @@ parameters:
 			path: ../../Classes/Security/JwtAccessTokenProvider.php
 
 		-
-			rawMessage: 'Parameter #1 $haystack of function str_starts_with expects string, mixed given.'
-			identifier: argument.type
+			rawMessage: 'Offset 1 on array{non-falsy-string, non-empty-string} on left side of ?? always exists and is not nullable.'
+			identifier: nullCoalesce.offset
 			count: 1
 			path: ../../Classes/Security/JwtAccessTokenProvider.php
 
 		-
-			rawMessage: 'Parameter #1 $string of function substr expects string, mixed given.'
+			rawMessage: 'Parameter #1 $authorizationHeader of method SGalinski\SgApiCore\Security\JwtAccessTokenProvider::extractBearerTokenFromAuthorizationHeader() expects string, mixed given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Security/JwtAccessTokenProvider.php
@@ -2001,7 +2061,7 @@ parameters:
 		-
 			rawMessage: 'Argument of an invalid type mixed supplied for foreach, only iterables are supported.'
 			identifier: foreach.nonIterable
-			count: 1
+			count: 2
 			path: ../../Classes/Service/EndpointDiscoveryService.php
 
 		-
@@ -2042,12 +2102,6 @@ parameters:
 
 		-
 			rawMessage: Binary operation "." between 'List ' and mixed results in an error.
-			identifier: binaryOp.invalid
-			count: 1
-			path: ../../Classes/Service/EndpointDiscoveryService.php
-
-		-
-			rawMessage: Binary operation "." between 'Returns a paginated…' and mixed results in an error.
 			identifier: binaryOp.invalid
 			count: 1
 			path: ../../Classes/Service/EndpointDiscoveryService.php
@@ -2205,11 +2259,41 @@ parameters:
 		-
 			rawMessage: Cannot cast mixed to float.
 			identifier: cast.double
+			count: 4
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: Cannot cast mixed to int.
+			identifier: cast.int
 			count: 2
 			path: ../../Classes/Service/EndpointDiscoveryService.php
 
 		-
+			rawMessage: Cannot cast mixed to string.
+			identifier: cast.string
+			count: 11
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::__construct() has parameter $endpointFilters with no value type specified in iterable type iterable.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceIdPathParam() has parameter $fieldMetadata with no value type specified in iterable type array.'
+			identifier: missingType.iterableValue
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
 			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::generateResourceEndpoints() should return list<array{apiId: list<string>, version: list<string>, path: string, methods: list<string>, authMode: list<string>, tenants: list<string>, summary: string, description: string, ...}> but returns list<array{apiId: list<string>, version: list<string>, path: string, methods: list<string>, authMode: list<string>, tenants?: list<string>, summary: string, description: string, ...}>.'
+			identifier: return.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Method SGalinski\SgApiCore\Service\EndpointDiscoveryService::getAllEndpoints() should return list<array{apiId: list<string>, version: list<string>, path: string, methods: list<string>, authMode: list<string>, tenants: list<string>, summary: string, description: string, ...}> but returns array<int, array<string, mixed>>.'
 			identifier: return.type
 			count: 1
 			path: ../../Classes/Service/EndpointDiscoveryService.php
@@ -2251,7 +2335,43 @@ parameters:
 			path: ../../Classes/Service/EndpointDiscoveryService.php
 
 		-
+			rawMessage: 'Parameter #1 $readFields of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceFilterDescription() expects array<int, string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $readFields of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceFilterSchema() expects array<int, string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
 			rawMessage: 'Parameter #1 $string of function rtrim expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceBodyFieldExample() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceFilterExample() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceIdPathParam() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #1 $tableName of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceListDescription() expects string, mixed given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Service/EndpointDiscoveryService.php
@@ -2287,7 +2407,37 @@ parameters:
 			path: ../../Classes/Service/EndpointDiscoveryService.php
 
 		-
+			rawMessage: 'Parameter #2 $fieldMetadata of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceFilterSchema() expects array<string, array<string, mixed>>, array<array<string, mixed>> given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $fieldName of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceBodyFieldExample() expects string, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
 			rawMessage: 'Parameter #2 $haystack of function in_array expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $readFields of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceFilterExample() expects array<int, string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #2 $readFields of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceListDescription() expects array<int, string>, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Parameter #3 $type of method SGalinski\SgApiCore\Service\EndpointDiscoveryService::buildResourceBodyFieldExample() expects string, mixed given.'
 			identifier: argument.type
 			count: 1
 			path: ../../Classes/Service/EndpointDiscoveryService.php
@@ -2314,6 +2464,12 @@ parameters:
 			rawMessage: Possibly invalid array key type mixed.
 			identifier: offsetAccess.invalidOffset
 			count: 3
+			path: ../../Classes/Service/EndpointDiscoveryService.php
+
+		-
+			rawMessage: 'Property SGalinski\SgApiCore\Service\EndpointDiscoveryService::$endpoints (list<array{apiId: list<string>, version: list<string>, path: string, methods: list<string>, authMode: list<string>, tenants: list<string>, summary: string, description: string, ...}>|null) does not accept array<int, array<string, mixed>>.'
+			identifier: assign.propertyType
+			count: 1
 			path: ../../Classes/Service/EndpointDiscoveryService.php
 
 		-
@@ -4083,37 +4239,49 @@ parameters:
 		-
 			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Mapper\TcaMapper::method().'
 			identifier: method.notFound
-			count: 5
+			count: 21
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\PaginationService::method().'
 			identifier: method.notFound
-			count: 3
+			count: 5
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\ResponseService::method().'
 			identifier: method.notFound
-			count: 5
+			count: 12
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: 'Call to an undefined method PHPUnit\Framework\MockObject\MockObject|TYPO3\CMS\Core\Database\ConnectionPool::method().'
 			identifier: method.notFound
-			count: 5
+			count: 15
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Call to method PHPUnit\Framework\Assert::assertSame() with 99 and 99 will always evaluate to true.'
+			identifier: method.alreadyNarrowedType
+			count: 1
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: Cannot access offset 'NEW1' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 4
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'colPos' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: Cannot access offset 'columns' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 3
+			count: 4
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
@@ -4123,15 +4291,33 @@ parameters:
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
+			rawMessage: Cannot access offset 'pages' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
 			rawMessage: Cannot access offset 'pid' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 2
+			count: 4
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'sys_language_uid' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: Cannot access offset 'title' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: Cannot access offset 'tt_content' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 7
+			count: 9
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
@@ -4141,15 +4327,57 @@ parameters:
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
-			rawMessage: 'Parameter #1 $data of class TYPO3\CMS\Core\Http\JsonResponse constructor expects array|null, mixed given.'
+			rawMessage: 'Parameter #1 $connectionPool of class SGalinski\SgApiCore\Controller\ResourceController constructor expects TYPO3\CMS\Core\Database\ConnectionPool, PHPUnit\Framework\MockObject\MockObject|TYPO3\CMS\Core\Database\ConnectionPool given.'
 			identifier: argument.type
 			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #1 $data of class TYPO3\CMS\Core\Http\JsonResponse constructor expects array|null, mixed given.'
+			identifier: argument.type
+			count: 3
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
 			rawMessage: 'Parameter #2 $status of class TYPO3\CMS\Core\Http\JsonResponse constructor expects int, mixed given.'
 			identifier: argument.type
 			count: 1
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #2 $tcaMapper of class SGalinski\SgApiCore\Controller\ResourceController constructor expects SGalinski\SgApiCore\Mapper\TcaMapper, PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Mapper\TcaMapper given.'
+			identifier: argument.type
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #4 $paginationService of class SGalinski\SgApiCore\Controller\ResourceController constructor expects SGalinski\SgApiCore\Service\PaginationService, PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\PaginationService given.'
+			identifier: argument.type
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #5 $logService of class SGalinski\SgApiCore\Controller\ResourceController constructor expects SGalinski\SgApiCore\Service\LogService, PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Service\LogService given.'
+			identifier: argument.type
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #6 $extensionConfiguration of class SGalinski\SgApiCore\Controller\ResourceController constructor expects SGalinski\SgApiCore\Configuration\ExtensionConfiguration, PHPUnit\Framework\MockObject\MockObject|SGalinski\SgApiCore\Configuration\ExtensionConfiguration given.'
+			identifier: argument.type
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #7 $languageServiceFactory of class SGalinski\SgApiCore\Controller\ResourceController constructor expects TYPO3\CMS\Core\Localization\LanguageServiceFactory, PHPUnit\Framework\MockObject\MockObject|TYPO3\CMS\Core\Localization\LanguageServiceFactory given.'
+			identifier: argument.type
+			count: 2
+			path: ../../tests/Unit/Controller/ResourceControllerTest.php
+
+		-
+			rawMessage: 'Parameter #8 $typo3Version of class SGalinski\SgApiCore\Controller\ResourceController constructor expects TYPO3\CMS\Core\Information\Typo3Version, PHPUnit\Framework\MockObject\MockObject|TYPO3\CMS\Core\Information\Typo3Version given.'
+			identifier: argument.type
+			count: 2
 			path: ../../tests/Unit/Controller/ResourceControllerTest.php
 
 		-
@@ -4519,7 +4747,25 @@ parameters:
 			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
 
 		-
+			rawMessage: Cannot access offset 'pages' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 3
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'pid' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
 			rawMessage: Cannot access offset 'title' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'tt_content' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
@@ -4527,13 +4773,25 @@ parameters:
 		-
 			rawMessage: Cannot access offset 'tx_test' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
+			count: 2
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'type' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
 			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
 
 		-
 			rawMessage: 'Offset ''resource'' might not exist on array{apiId: list<string>, version: list<string>, path: string, methods: list<string>, authMode: list<string>, tenants: list<string>, summary: string, description: string, ...}.'
 			identifier: offsetAccess.notFound
 			count: 1
+			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $haystack of method PHPUnit\Framework\Assert::assertStringContainsString() expects string, string|null given.'
+			identifier: argument.type
+			count: 2
 			path: ../../tests/Unit/Service/EndpointDiscoveryServiceTest.php
 
 		-
@@ -4677,7 +4935,7 @@ parameters:
 		-
 			rawMessage: 'Offset ''isError'' might not exist on array{isError?: bool, content: list<array{type: string, text: string}>, structuredContent: array<mixed>}.'
 			identifier: offsetAccess.notFound
-			count: 9
+			count: 10
 			path: ../../tests/Unit/Service/McpToolServiceTest.php
 
 		-
@@ -4729,6 +4987,12 @@ parameters:
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
+			rawMessage: Cannot access offset '/pages' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
 			rawMessage: Cannot access offset '/partner-only' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 4
@@ -4760,6 +5024,12 @@ parameters:
 
 		-
 			rawMessage: Cannot access offset 'GlobalObject' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'additionalProperties' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
@@ -4801,9 +5071,21 @@ parameters:
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
+			rawMessage: Cannot access offset 'doktype' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
 			rawMessage: Cannot access offset 'example' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 4
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'explode' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4815,7 +5097,7 @@ parameters:
 		-
 			rawMessage: Cannot access offset 'get' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 11
+			count: 12
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4837,9 +5119,21 @@ parameters:
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
+			rawMessage: Cannot access offset 'pages' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
 			rawMessage: Cannot access offset 'parameters' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 8
+			count: 9
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: Cannot access offset 'pid' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4851,7 +5145,7 @@ parameters:
 		-
 			rawMessage: Cannot access offset 'properties' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 16
+			count: 19
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4875,7 +5169,7 @@ parameters:
 		-
 			rawMessage: Cannot access offset 'schema' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 12
+			count: 17
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4891,6 +5185,12 @@ parameters:
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
+			rawMessage: Cannot access offset 'style' on mixed.
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
 			rawMessage: Cannot access offset 'summary' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -4899,7 +5199,7 @@ parameters:
 		-
 			rawMessage: Cannot access offset 'title' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 4
+			count: 5
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4923,7 +5223,7 @@ parameters:
 		-
 			rawMessage: Cannot access offset 'type' on mixed.
 			identifier: offsetAccess.nonOffsetAccessible
-			count: 11
+			count: 15
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
@@ -4963,6 +5263,12 @@ parameters:
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-
+			rawMessage: 'Parameter #1 $array of function array_filter expects array, mixed given.'
+			identifier: argument.type
+			count: 1
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
 			rawMessage: 'Parameter #1 $controllers of class SGalinski\SgApiCore\Service\EndpointDiscoveryService constructor expects iterable<object>, iterable given.'
 			identifier: argument.type
 			count: 1
@@ -4978,6 +5284,12 @@ parameters:
 			rawMessage: 'Parameter #2 $array of method PHPUnit\Framework\Assert::assertArrayNotHasKey() expects array<mixed>|ArrayAccess<(int|string), mixed>, mixed given.'
 			identifier: argument.type
 			count: 6
+			path: ../../tests/Unit/Service/OpenApiServiceTest.php
+
+		-
+			rawMessage: 'Parameter #2 $callback of function array_filter expects (callable(mixed): bool)|null, Closure(array): bool given.'
+			identifier: argument.type
+			count: 1
 			path: ../../tests/Unit/Service/OpenApiServiceTest.php
 
 		-

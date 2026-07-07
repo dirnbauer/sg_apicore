@@ -310,6 +310,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$this->tcaMapper->method('mapRecords')->willReturn([]);
 		$this->responseService->method('createSuccessResponse')->willReturn(new JsonResponse([]));
 
+		GeneralUtility::addInstance(DeletedRestriction::class, $this->createStub(DeletedRestriction::class));
 		$this->controller->listAction($request);
 	}
 
@@ -385,6 +386,7 @@ class ResourceControllerTest extends UnitTestCase {
 		$restrictions->expects($this->once())->method('removeAll');
 		$restrictions->expects($this->once())->method('add')->with($this->isInstanceOf(DeletedRestriction::class));
 
+		GeneralUtility::addInstance(DeletedRestriction::class, $this->createStub(DeletedRestriction::class));
 		$response = $this->controller->getAction($request, '677');
 
 		$this->assertSame(200, $response->getStatusCode());
@@ -837,6 +839,8 @@ class ResourceControllerTest extends UnitTestCase {
 			fn ($data) => new JsonResponse($data)
 		);
 
+		GeneralUtility::addInstance(DeletedRestriction::class, $this->createStub(DeletedRestriction::class));
+		GeneralUtility::addInstance(DeletedRestriction::class, $this->createStub(DeletedRestriction::class));
 		$response = $this->controller->updateAction($request, '4471');
 
 		$this->assertInstanceOf(JsonResponse::class, $response);
@@ -979,6 +983,8 @@ class ResourceControllerTest extends UnitTestCase {
 			fn ($data) => new JsonResponse($data)
 		);
 
+		GeneralUtility::addInstance(DeletedRestriction::class, $this->createStub(DeletedRestriction::class));
+		GeneralUtility::addInstance(DeletedRestriction::class, $this->createStub(DeletedRestriction::class));
 		$response = $this->controller->updateAction($request, '677');
 
 		$this->assertSame(200, $response->getStatusCode());
